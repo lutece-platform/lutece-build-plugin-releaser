@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+    <body>
+        <links>
+            <item name="EN" href="../index.html" />
+        </links>
+        
+        <menu name="Plugin releaser">
+            <item name="Accueil" href="index.html"/>
+        </menu>
+        
+        <menu name="TÃ©lÃ©chargements" inherit="bottom" >
+            <item name="Versions stables" href="../../../stable_builds/plugins/plugin-releaser/"/>
+            <item name="Nightly builds" href="../../../nightly_builds/plugins/plugin-releaser/" />
+        </menu>
+
+    <!--
+        <menu name="Other links">
+            <item name="" href="" target="_blank"/>
+        </menu>	    
+    -->
+        
+        <menu ref="reports" />
+    </body>
+</project>

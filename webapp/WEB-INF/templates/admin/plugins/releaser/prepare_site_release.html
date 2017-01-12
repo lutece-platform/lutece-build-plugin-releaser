@@ -1,0 +1,59 @@
+<div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <h1>Pr&eacute;paration de la release du site : ${site.name}</h1>
+        <h3>${site.description}</h3>
+        Art&eacute;fact ID du site : ${site.artifactId !''}
+        <br>
+        <br>
+        <h2>Composants Projet</h2>    
+        <table class="table table-striped table-condensed table-bordered table-hover">
+            <tr>
+                <th>Composant</th>
+                <th>Version actuelle</th>
+                <th>Version cible pour la release</th>
+                <th>Observations</th>
+                <th>Actions</th>
+            </tr>
+            <#list site.components as component>
+            <#if component.project>
+            <tr>
+                <td>${component.artifactId}</td>
+                <td>${component.currentVersion}</td>
+                <td>${component.targetVersion}</td>
+                <td>${component.releaseComment!''}</td>
+                <td>
+                    <button class="btn btn-primary btn-sm">Modifier</button>
+                </td>
+            </tr>
+            </#if>
+            </#list>
+        </table>
+
+        <h2>Composants externes</h2>    
+        <table class="table table-striped table-condensed table-bordered table-hover">
+            <tr>
+                <th>Composant</th>
+                <th>Version actuelle</th>
+                <th>Version cible pour la release</th>
+                <th>Observations</th>
+                <th>Actions</th>
+            </tr>
+            <#list site.components as component>
+            <#if ! component.project>
+            <tr>
+                <td>${component.artifactId}</td>
+                <td>${component.currentVersion}</td>
+                <td>${component.targetVersion}</td>
+                <td>${component.releaseComment!''}</td>
+                <td>
+                    <button class="btn btn-primary btn-sm">Modifier</button>
+                    <#if component.lastAvailableVersion??>
+                    <button class="btn btn-primary btn-sm">Mettre &agrave; jour</button>
+                    </#if>
+                </td>
+            </tr>
+            </#if>
+            </#list>
+        </table>
+    </div>
+</div>

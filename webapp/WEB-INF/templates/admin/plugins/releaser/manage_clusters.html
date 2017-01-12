@@ -1,0 +1,43 @@
+<#include "managesites_tabs.html" />
+<@tabs2 tab="cluster" />
+
+<@box>
+	<@boxHeader title='#i18n{releaser.manage_cluster.title}' boxTools=true>
+		<@tform class='form-inline pull-right' name='manage_cluster' action='jsp/admin/plugins/releaser/ManageClusters.jsp'>
+			<@button type='submit' name='view_createCluster' buttonIcon='plus' title='#i18n{releaser.manage_cluster.buttonAdd}' />
+		</@tform>
+	</@boxHeader>
+	<@boxBody>    
+    <@messages infos=infos />
+    <@paginationAdmin paginator=paginator combo=1 />
+    <div class="clearfix"></div>
+    <@table>
+        <tr>
+            <input type="hidden" id="id" name="id"/>
+            <th>#i18n{releaser.manage_cluster.columnName}</th>
+            <th>#i18n{releaser.manage_cluster.columnDescription}</th>
+            <th>#i18n{portal.util.labelActions}</th>
+        </tr>
+        <@tableHeadBodySeparator />
+            <#list cluster_list as cluster >
+        <tr>
+            <input type="hidden" id="id" name="id"/>
+            <td>
+                ${cluster.name}
+            </td>
+            <td>
+                ${cluster.description}
+            </td>
+        <td>
+						<@aButton href='jsp/admin/plugins/releaser/ManageClusters.jsp?view=modifyCluster&id=${cluster.id}' title='#i18n{portal.util.labelModify}' buttonIcon='pencil' showTitle=false />
+						
+						<@aButton href='jsp/admin/plugins/releaser/ManageClusters.jsp?action=confirmRemoveCluster&id=${cluster.id}' title='#i18n{portal.util.labelDelete}' buttonIcon='trash' color='btn-danger' showTitle=false />
+        </td>
+        </tr>
+        </#list>
+    </@table>
+
+    <@paginationAdmin paginator=paginator />
+
+  </@boxBody>
+</@box>

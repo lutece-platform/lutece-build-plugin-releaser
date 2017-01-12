@@ -1,0 +1,59 @@
+<#include "managesites_tabs.html" />
+<@tabs2 tab="site" />
+
+<@box>
+	<@boxHeader title='#i18n{releaser.manage_site.title}' boxTools=true>
+		<@tform class='form-inline pull-right' name='manage_site' action='jsp/admin/plugins/releaser/ManageSite.jsp'>
+			<@button type='submit' name='view_createSite' buttonIcon='plus' title='#i18n{releaser.manage_site.buttonAdd}' />
+		</@tform>
+	</@boxHeader>
+	<@boxBody>    
+    <@messages infos=infos />
+    <@paginationAdmin paginator=paginator combo=1 />
+    <div class="clearfix"></div>
+    <@table>
+        <tr>
+            <input type="hidden" id="id" name="id"/>
+            <th>#i18n{releaser.manage_site.columnArtifactId}</th>
+            <th>#i18n{releaser.manage_site.columnIdCluster}</th>
+            <th>#i18n{releaser.manage_site.columnScmUrl}</th>
+            <th>#i18n{releaser.manage_site.columnName}</th>
+            <th>#i18n{releaser.manage_site.columnDescription}</th>
+            <th>#i18n{releaser.manage_site.columnJiraKey}</th>
+            <th>#i18n{portal.util.labelActions}</th>
+        </tr>
+        <@tableHeadBodySeparator />
+            <#list site_list as site >
+        <tr>
+            <input type="hidden" id="id" name="id"/>
+            <td>
+                ${site.artifactId}
+            </td>
+            <td>
+                ${site.idCluster}
+            </td>
+            <td>
+                ${site.scmUrl}
+            </td>
+            <td>
+                ${site.name}
+            </td>
+            <td>
+                ${site.description}
+            </td>
+            <td>
+                ${site.jiraKey}
+            </td>
+        <td>
+						<@aButton href='jsp/admin/plugins/releaser/ManageSite.jsp?view=modifySite&id=${site.id}' title='#i18n{portal.util.labelModify}' buttonIcon='pencil' showTitle=false />
+						
+						<@aButton href='jsp/admin/plugins/releaser/ManageSite.jsp?action=confirmRemoveSite&id=${site.id}' title='#i18n{portal.util.labelDelete}' buttonIcon='trash' color='btn-danger' showTitle=false />
+        </td>
+        </tr>
+        </#list>
+    </@table>
+
+    <@paginationAdmin paginator=paginator />
+
+  </@boxBody>
+</@box>

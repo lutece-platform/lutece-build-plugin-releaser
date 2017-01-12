@@ -1,0 +1,32 @@
+<#include "managesites_tabs.html" />
+<@tabs2 tab="site" />
+<@box>
+	<@boxHeader title='#i18n{releaser.create_site.title}' />
+	<@boxBody>
+    <@tform name='create_site' action='jsp/admin/plugins/releaser/ManageSite.jsp'>
+        <@messages errors=errors />
+        <input type="hidden" id="id" name="id"/>
+        
+				<@formGroup labelKey='#i18n{releaser.create_site.labelArtifactId}' helpKey='#i18n{releaser.create_site.labelArtifactId.help}' mandatory=true>
+					<@input type='text' name='artifact_id' value='${site.artifactId!\'\'}' />
+				</@formGroup>
+				<@formGroup labelKey='#i18n{releaser.create_site.labelIdCluster}' helpKey='#i18n{releaser.create_site.labelIdCluster.help}' mandatory=true>
+					<@input type='text' name='id_cluster' value='${site.idCluster!\'\'}' />
+				</@formGroup>
+				<@formGroup labelKey='#i18n{releaser.create_site.labelScmUrl}' helpKey='#i18n{releaser.create_site.labelScmUrl.help}' mandatory=true>
+					<@input type='text' name='scm_url' value='${site.scmUrl!\'\'}' />
+				</@formGroup>
+				<@formGroup labelKey='#i18n{releaser.create_site.labelName}' helpKey='#i18n{releaser.create_site.labelName.help}' mandatory=true>
+					<@input type='text' name='name' value='${site.name!\'\'}' />
+				</@formGroup>
+				<@formGroup labelKey='#i18n{releaser.create_site.labelDescription}' helpKey='#i18n{releaser.create_site.labelDescription.help}' mandatory=true>
+					<@input type='text' name='description' value='${site.description!\'\'}' />
+				</@formGroup>
+				<@formGroup labelKey='#i18n{releaser.create_site.labelJiraKey}' helpKey='#i18n{releaser.create_site.labelJiraKey.help}' >
+					<@input type='text' name='jira_key' value='${site.jiraKey!\'\'}' />
+				</@formGroup>
+				
+				<@actionButtons button1Name="action_createSite" button2Name="view_manageSite"/>
+    </@tform>
+	</@boxBody>
+</@box>

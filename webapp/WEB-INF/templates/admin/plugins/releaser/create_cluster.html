@@ -1,0 +1,20 @@
+<#include "managesites_tabs.html" />
+<@tabs2 tab="cluster" />
+<@box>
+	<@boxHeader title='#i18n{releaser.create_cluster.title}' />
+	<@boxBody>
+    <@tform name='create_cluster' action='jsp/admin/plugins/releaser/ManageClusters.jsp'>
+        <@messages errors=errors />
+        <input type="hidden" id="id" name="id"/>
+        
+				<@formGroup labelKey='#i18n{releaser.create_cluster.labelName}' helpKey='#i18n{releaser.create_cluster.labelName.help}' mandatory=true>
+					<@input type='text' name='name' value='${cluster.name!\'\'}' />
+				</@formGroup>
+				<@formGroup labelKey='#i18n{releaser.create_cluster.labelDescription}' helpKey='#i18n{releaser.create_cluster.labelDescription.help}' mandatory=true>
+					<@input type='text' name='description' value='${cluster.description!\'\'}' />
+				</@formGroup>
+				
+				<@actionButtons button1Name="action_createCluster" button2Name="view_manageCluster"/>
+    </@tform>
+	</@boxBody>
+</@box>
