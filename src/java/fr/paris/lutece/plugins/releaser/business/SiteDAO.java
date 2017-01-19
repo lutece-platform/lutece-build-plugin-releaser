@@ -57,21 +57,23 @@ public final class SiteDAO implements ISiteDAO
 
     /**
      * Generates a new primary key
-     * @param plugin The Plugin
+     * 
+     * @param plugin
+     *            The Plugin
      * @return The new primary key
      */
-    public int newPrimaryKey( Plugin plugin)
+    public int newPrimaryKey( Plugin plugin )
     {
-        DAOUtil daoUtil = new DAOUtil( SQL_QUERY_NEW_PK , plugin  );
+        DAOUtil daoUtil = new DAOUtil( SQL_QUERY_NEW_PK, plugin );
         daoUtil.executeQuery( );
         int nKey = 1;
 
-        if( daoUtil.next( ) )
+        if ( daoUtil.next( ) )
         {
             nKey = daoUtil.getInt( 1 ) + 1;
         }
 
-        daoUtil.free();
+        daoUtil.free( );
         return nKey;
     }
 
@@ -84,14 +86,14 @@ public final class SiteDAO implements ISiteDAO
         DAOUtil daoUtil = new DAOUtil( SQL_QUERY_INSERT, plugin );
         site.setId( newPrimaryKey( plugin ) );
         int nIndex = 1;
-        
-        daoUtil.setInt( nIndex++ , site.getId( ) );
-        daoUtil.setString( nIndex++ , site.getArtifactId( ) );
-        daoUtil.setInt( nIndex++ , site.getIdCluster( ) );
-        daoUtil.setString( nIndex++ , site.getScmUrl( ) );
-        daoUtil.setString( nIndex++ , site.getName( ) );
-        daoUtil.setString( nIndex++ , site.getDescription( ) );
-        daoUtil.setString( nIndex++ , site.getJiraKey( ) );
+
+        daoUtil.setInt( nIndex++, site.getId( ) );
+        daoUtil.setString( nIndex++, site.getArtifactId( ) );
+        daoUtil.setInt( nIndex++, site.getIdCluster( ) );
+        daoUtil.setString( nIndex++, site.getScmUrl( ) );
+        daoUtil.setString( nIndex++, site.getName( ) );
+        daoUtil.setString( nIndex++, site.getDescription( ) );
+        daoUtil.setString( nIndex++, site.getJiraKey( ) );
 
         daoUtil.executeUpdate( );
         daoUtil.free( );
@@ -104,15 +106,15 @@ public final class SiteDAO implements ISiteDAO
     public Site load( int nKey, Plugin plugin )
     {
         DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECT, plugin );
-        daoUtil.setInt( 1 , nKey );
+        daoUtil.setInt( 1, nKey );
         daoUtil.executeQuery( );
         Site site = null;
 
         if ( daoUtil.next( ) )
         {
-            site = new Site();
+            site = new Site( );
             int nIndex = 1;
-            
+
             site.setId( daoUtil.getInt( nIndex++ ) );
             site.setArtifactId( daoUtil.getString( nIndex++ ) );
             site.setIdCluster( daoUtil.getInt( nIndex++ ) );
@@ -133,7 +135,7 @@ public final class SiteDAO implements ISiteDAO
     public void delete( int nKey, Plugin plugin )
     {
         DAOUtil daoUtil = new DAOUtil( SQL_QUERY_DELETE, plugin );
-        daoUtil.setInt( 1 , nKey );
+        daoUtil.setInt( 1, nKey );
         daoUtil.executeUpdate( );
         daoUtil.free( );
     }
@@ -146,15 +148,15 @@ public final class SiteDAO implements ISiteDAO
     {
         DAOUtil daoUtil = new DAOUtil( SQL_QUERY_UPDATE, plugin );
         int nIndex = 1;
-        
-        daoUtil.setInt( nIndex++ , site.getId( ) );
-        daoUtil.setString( nIndex++ , site.getArtifactId( ) );
-        daoUtil.setInt( nIndex++ , site.getIdCluster( ) );
-        daoUtil.setString( nIndex++ , site.getScmUrl( ) );
-        daoUtil.setString( nIndex++ , site.getName( ) );
-        daoUtil.setString( nIndex++ , site.getDescription( ) );
-        daoUtil.setString( nIndex++ , site.getJiraKey( ) );
-        daoUtil.setInt( nIndex , site.getId( ) );
+
+        daoUtil.setInt( nIndex++, site.getId( ) );
+        daoUtil.setString( nIndex++, site.getArtifactId( ) );
+        daoUtil.setInt( nIndex++, site.getIdCluster( ) );
+        daoUtil.setString( nIndex++, site.getScmUrl( ) );
+        daoUtil.setString( nIndex++, site.getName( ) );
+        daoUtil.setString( nIndex++, site.getDescription( ) );
+        daoUtil.setString( nIndex++, site.getJiraKey( ) );
+        daoUtil.setInt( nIndex, site.getId( ) );
 
         daoUtil.executeUpdate( );
         daoUtil.free( );
@@ -166,15 +168,15 @@ public final class SiteDAO implements ISiteDAO
     @Override
     public List<Site> selectSitesList( Plugin plugin )
     {
-        List<Site> siteList = new ArrayList<Site>(  );
+        List<Site> siteList = new ArrayList<Site>( );
         DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECTALL, plugin );
-        daoUtil.executeQuery(  );
+        daoUtil.executeQuery( );
 
-        while ( daoUtil.next(  ) )
+        while ( daoUtil.next( ) )
         {
-            Site site = new Site(  );
+            Site site = new Site( );
             int nIndex = 1;
-            
+
             site.setId( daoUtil.getInt( nIndex++ ) );
             site.setArtifactId( daoUtil.getString( nIndex++ ) );
             site.setIdCluster( daoUtil.getInt( nIndex++ ) );
@@ -189,7 +191,7 @@ public final class SiteDAO implements ISiteDAO
         daoUtil.free( );
         return siteList;
     }
-    
+
     /**
      * {@inheritDoc }
      */
@@ -198,9 +200,9 @@ public final class SiteDAO implements ISiteDAO
     {
         List<Integer> siteList = new ArrayList<Integer>( );
         DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECTALL_ID, plugin );
-        daoUtil.executeQuery(  );
+        daoUtil.executeQuery( );
 
-        while ( daoUtil.next(  ) )
+        while ( daoUtil.next( ) )
         {
             siteList.add( daoUtil.getInt( 1 ) );
         }
@@ -208,20 +210,20 @@ public final class SiteDAO implements ISiteDAO
         daoUtil.free( );
         return siteList;
     }
-    
+
     /**
      * {@inheritDoc }
      */
     @Override
     public ReferenceList selectSitesReferenceList( Plugin plugin )
     {
-        ReferenceList siteList = new ReferenceList();
+        ReferenceList siteList = new ReferenceList( );
         DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECTALL, plugin );
-        daoUtil.executeQuery(  );
+        daoUtil.executeQuery( );
 
-        while ( daoUtil.next(  ) )
+        while ( daoUtil.next( ) )
         {
-            siteList.addItem( daoUtil.getInt( 1 ) , daoUtil.getString( 2 ) );
+            siteList.addItem( daoUtil.getInt( 1 ), daoUtil.getString( 2 ) );
         }
 
         daoUtil.free( );

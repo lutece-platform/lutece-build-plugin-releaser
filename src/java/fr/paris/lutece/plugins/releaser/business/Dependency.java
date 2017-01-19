@@ -32,7 +32,6 @@
  * License 1.0
  */
 
-
 package fr.paris.lutece.plugins.releaser.business;
 
 /**
@@ -153,4 +152,4 @@ public class Dependency
         _strType = strType;
     }
 
- }
+}

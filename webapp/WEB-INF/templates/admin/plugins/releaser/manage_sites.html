@@ -3,7 +3,7 @@
 
 <@box>
 	<@boxHeader title='#i18n{releaser.manage_site.title}' boxTools=true>
-		<@tform class='form-inline pull-right' name='manage_site' action='jsp/admin/plugins/releaser/ManageSite.jsp'>
+		<@tform class='form-inline pull-right' name='manage_site' action='jsp/admin/plugins/releaser/ManageSites.jsp'>
 			<@button type='submit' name='view_createSite' buttonIcon='plus' title='#i18n{releaser.manage_site.buttonAdd}' />
 		</@tform>
 	</@boxHeader>
@@ -14,11 +14,11 @@
     <@table>
         <tr>
             <input type="hidden" id="id" name="id"/>
+            <th>#i18n{releaser.manage_site.columnName}</th>
+            <th>#i18n{releaser.manage_site.columnDescription}</th>
             <th>#i18n{releaser.manage_site.columnArtifactId}</th>
             <th>#i18n{releaser.manage_site.columnIdCluster}</th>
             <th>#i18n{releaser.manage_site.columnScmUrl}</th>
-            <th>#i18n{releaser.manage_site.columnName}</th>
-            <th>#i18n{releaser.manage_site.columnDescription}</th>
             <th>#i18n{releaser.manage_site.columnJiraKey}</th>
             <th>#i18n{portal.util.labelActions}</th>
         </tr>
@@ -26,6 +26,12 @@
             <#list site_list as site >
         <tr>
             <input type="hidden" id="id" name="id"/>
+            <td>
+                ${site.name}
+            </td>
+            <td>
+                ${site.description}
+            </td>
             <td>
                 ${site.artifactId}
             </td>
@@ -36,18 +42,12 @@
                 ${site.scmUrl}
             </td>
             <td>
-                ${site.name}
-            </td>
-            <td>
-                ${site.description}
-            </td>
-            <td>
                 ${site.jiraKey}
             </td>
         <td>
-						<@aButton href='jsp/admin/plugins/releaser/ManageSite.jsp?view=modifySite&id=${site.id}' title='#i18n{portal.util.labelModify}' buttonIcon='pencil' showTitle=false />
+						<@aButton href='jsp/admin/plugins/releaser/ManageSites.jsp?view=modifySite&id=${site.id}' title='#i18n{portal.util.labelModify}' buttonIcon='pencil' showTitle=false />
 						
-						<@aButton href='jsp/admin/plugins/releaser/ManageSite.jsp?action=confirmRemoveSite&id=${site.id}' title='#i18n{portal.util.labelDelete}' buttonIcon='trash' color='btn-danger' showTitle=false />
+						<@aButton href='jsp/admin/plugins/releaser/ManageSites.jsp?action=confirmRemoveSite&id=${site.id}' title='#i18n{portal.util.labelDelete}' buttonIcon='trash' color='btn-danger' showTitle=false />
         </td>
         </tr>
         </#list>

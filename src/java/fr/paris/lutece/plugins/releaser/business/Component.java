@@ -30,15 +30,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * License 1.0
- */ 
+ */
 package fr.paris.lutece.plugins.releaser.business;
 
 /**
  * This is the business class for the object Component
- */ 
+ */
 public class Component
 {
-    // Variables declarations 
+    // Variables declarations
     private String _strArtifactId;
     private String _strGroupId;
     private String _strType;
@@ -47,150 +47,173 @@ public class Component
     private String _strLastAvailableVersion;
     private String _strReleaseComment;
     private boolean _bIsProject;
-    
-    
-       /**
-        * Returns the ArtifactId
-        * @return The ArtifactId
-        */ 
-    public String getArtifactId()
+
+    /**
+     * Returns the ArtifactId
+     * 
+     * @return The ArtifactId
+     */
+    public String getArtifactId( )
     {
         return _strArtifactId;
     }
-    
-       /**
-        * Sets the ArtifactId
-        * @param strArtifactId The ArtifactId
-        */ 
+
+    /**
+     * Sets the ArtifactId
+     * 
+     * @param strArtifactId
+     *            The ArtifactId
+     */
     public void setArtifactId( String strArtifactId )
     {
         _strArtifactId = strArtifactId;
     }
-    
-       /**
-        * Returns the GroupId
-        * @return The GroupId
-        */ 
-    public String getGroupId()
+
+    /**
+     * Returns the GroupId
+     * 
+     * @return The GroupId
+     */
+    public String getGroupId( )
     {
         return _strGroupId;
     }
-    
-       /**
-        * Sets the GroupId
-        * @param strGroupId The GroupId
-        */ 
+
+    /**
+     * Sets the GroupId
+     * 
+     * @param strGroupId
+     *            The GroupId
+     */
     public void setGroupId( String strGroupId )
     {
         _strGroupId = strGroupId;
     }
-    
-       /**
-        * Returns the Type
-        * @return The Type
-        */ 
-    public String getType()
+
+    /**
+     * Returns the Type
+     * 
+     * @return The Type
+     */
+    public String getType( )
     {
         return _strType;
     }
-    
-       /**
-        * Sets the Type
-        * @param strType The Type
-        */ 
+
+    /**
+     * Sets the Type
+     * 
+     * @param strType
+     *            The Type
+     */
     public void setType( String strType )
     {
         _strType = strType;
     }
-    
-       /**
-        * Returns the CurrentVersion
-        * @return The CurrentVersion
-        */ 
-    public String getCurrentVersion()
+
+    /**
+     * Returns the CurrentVersion
+     * 
+     * @return The CurrentVersion
+     */
+    public String getCurrentVersion( )
     {
         return _strCurrentVersion;
     }
-    
-       /**
-        * Sets the CurrentVersion
-        * @param strCurrentVersion The CurrentVersion
-        */ 
+
+    /**
+     * Sets the CurrentVersion
+     * 
+     * @param strCurrentVersion
+     *            The CurrentVersion
+     */
     public void setCurrentVersion( String strCurrentVersion )
     {
         _strCurrentVersion = strCurrentVersion;
     }
-    
-       /**
-        * Returns the TargetVersion
-        * @return The TargetVersion
-        */ 
-    public String getTargetVersion()
+
+    /**
+     * Returns the TargetVersion
+     * 
+     * @return The TargetVersion
+     */
+    public String getTargetVersion( )
     {
         return _strTargetVersion;
     }
-    
-       /**
-        * Sets the TargetVersion
-        * @param strTargetVersion The TargetVersion
-        */ 
+
+    /**
+     * Sets the TargetVersion
+     * 
+     * @param strTargetVersion
+     *            The TargetVersion
+     */
     public void setTargetVersion( String strTargetVersion )
     {
         _strTargetVersion = strTargetVersion;
     }
-    
-       /**
-        * Returns the IsProject
-        * @return The IsProject
-        */ 
-    public boolean isProject()
+
+    /**
+     * Returns the IsProject
+     * 
+     * @return The IsProject
+     */
+    public boolean isProject( )
     {
         return _bIsProject;
     }
-    
-       /**
-        * Sets the IsProject
-        * @param bIsProject The IsProject
-        */ 
+
+    /**
+     * Sets the IsProject
+     * 
+     * @param bIsProject
+     *            The IsProject
+     */
     public void setIsProject( boolean bIsProject )
     {
         _bIsProject = bIsProject;
     }
-    
-       /**
-        * Returns the LastAvailableVersion
-        * @return The LastAvailableVersion
-        */ 
-    public String getLastAvailableVersion()
+
+    /**
+     * Returns the LastAvailableVersion
+     * 
+     * @return The LastAvailableVersion
+     */
+    public String getLastAvailableVersion( )
     {
         return _strLastAvailableVersion;
     }
-    
-       /**
-        * Sets the LastAvailableVersion
-        * @param strLastAvailableVersion The LastAvailableVersion
-        */ 
+
+    /**
+     * Sets the LastAvailableVersion
+     * 
+     * @param strLastAvailableVersion
+     *            The LastAvailableVersion
+     */
     public void setLastAvailableVersion( String strLastAvailableVersion )
     {
         _strLastAvailableVersion = strLastAvailableVersion;
     }
-    
-       /**
-        * Returns the ReleaseComment
-        * @return The ReleaseComment
-        */ 
-    public String getReleaseComment()
+
+    /**
+     * Returns the ReleaseComment
+     * 
+     * @return The ReleaseComment
+     */
+    public String getReleaseComment( )
     {
         return _strReleaseComment;
     }
-    
-       /**
-        * Sets the ReleaseComment
-        * @param strReleaseComment The ReleaseComment
-        */ 
+
+    /**
+     * Sets the ReleaseComment
+     * 
+     * @param strReleaseComment
+     *            The ReleaseComment
+     */
     public void addReleaseComment( String strReleaseComment )
     {
-        if( _strReleaseComment != null )
+        if ( _strReleaseComment != null )
         {
             _strReleaseComment += strReleaseComment;
         }
@@ -198,5 +221,5 @@ public class Component
         {
             _strReleaseComment = strReleaseComment;
         }
-    }    
- }
+    }
+}

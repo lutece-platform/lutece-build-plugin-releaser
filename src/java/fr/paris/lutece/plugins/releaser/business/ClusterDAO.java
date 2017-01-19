@@ -57,21 +57,23 @@ public final class ClusterDAO implements IClusterDAO
 
     /**
      * Generates a new primary key
-     * @param plugin The Plugin
+     * 
+     * @param plugin
+     *            The Plugin
      * @return The new primary key
      */
-    public int newPrimaryKey( Plugin plugin)
+    public int newPrimaryKey( Plugin plugin )
     {
-        DAOUtil daoUtil = new DAOUtil( SQL_QUERY_NEW_PK , plugin  );
+        DAOUtil daoUtil = new DAOUtil( SQL_QUERY_NEW_PK, plugin );
         daoUtil.executeQuery( );
         int nKey = 1;
 
-        if( daoUtil.next( ) )
+        if ( daoUtil.next( ) )
         {
             nKey = daoUtil.getInt( 1 ) + 1;
         }
 
-        daoUtil.free();
+        daoUtil.free( );
         return nKey;
     }
 
@@ -84,10 +86,10 @@ public final class ClusterDAO implements IClusterDAO
         DAOUtil daoUtil = new DAOUtil( SQL_QUERY_INSERT, plugin );
         cluster.setId( newPrimaryKey( plugin ) );
         int nIndex = 1;
-        
-        daoUtil.setInt( nIndex++ , cluster.getId( ) );
-        daoUtil.setString( nIndex++ , cluster.getName( ) );
-        daoUtil.setString( nIndex++ , cluster.getDescription( ) );
+
+        daoUtil.setInt( nIndex++, cluster.getId( ) );
+        daoUtil.setString( nIndex++, cluster.getName( ) );
+        daoUtil.setString( nIndex++, cluster.getDescription( ) );
 
         daoUtil.executeUpdate( );
         daoUtil.free( );
@@ -100,15 +102,15 @@ public final class ClusterDAO implements IClusterDAO
     public Cluster load( int nKey, Plugin plugin )
     {
         DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECT, plugin );
-        daoUtil.setInt( 1 , nKey );
+        daoUtil.setInt( 1, nKey );
         daoUtil.executeQuery( );
         Cluster cluster = null;
 
         if ( daoUtil.next( ) )
         {
-            cluster = new Cluster();
+            cluster = new Cluster( );
             int nIndex = 1;
-            
+
             cluster.setId( daoUtil.getInt( nIndex++ ) );
             cluster.setName( daoUtil.getString( nIndex++ ) );
             cluster.setDescription( daoUtil.getString( nIndex++ ) );
@@ -125,7 +127,7 @@ public final class ClusterDAO implements IClusterDAO
     public void delete( int nKey, Plugin plugin )
     {
         DAOUtil daoUtil = new DAOUtil( SQL_QUERY_DELETE, plugin );
-        daoUtil.setInt( 1 , nKey );
+        daoUtil.setInt( 1, nKey );
         daoUtil.executeUpdate( );
         daoUtil.free( );
     }
@@ -138,11 +140,11 @@ public final class ClusterDAO implements IClusterDAO
     {
         DAOUtil daoUtil = new DAOUtil( SQL_QUERY_UPDATE, plugin );
         int nIndex = 1;
-        
-        daoUtil.setInt( nIndex++ , cluster.getId( ) );
-        daoUtil.setString( nIndex++ , cluster.getName( ) );
-        daoUtil.setString( nIndex++ , cluster.getDescription( ) );
-        daoUtil.setInt( nIndex , cluster.getId( ) );
+
+        daoUtil.setInt( nIndex++, cluster.getId( ) );
+        daoUtil.setString( nIndex++, cluster.getName( ) );
+        daoUtil.setString( nIndex++, cluster.getDescription( ) );
+        daoUtil.setInt( nIndex, cluster.getId( ) );
 
         daoUtil.executeUpdate( );
         daoUtil.free( );
@@ -154,15 +156,15 @@ public final class ClusterDAO implements IClusterDAO
     @Override
     public List<Cluster> selectClustersList( Plugin plugin )
     {
-        List<Cluster> clusterList = new ArrayList<Cluster>(  );
+        List<Cluster> clusterList = new ArrayList<Cluster>( );
         DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECTALL, plugin );
-        daoUtil.executeQuery(  );
+        daoUtil.executeQuery( );
 
-        while ( daoUtil.next(  ) )
+        while ( daoUtil.next( ) )
         {
-            Cluster cluster = new Cluster(  );
+            Cluster cluster = new Cluster( );
             int nIndex = 1;
-            
+
             cluster.setId( daoUtil.getInt( nIndex++ ) );
             cluster.setName( daoUtil.getString( nIndex++ ) );
             cluster.setDescription( daoUtil.getString( nIndex++ ) );
@@ -173,7 +175,7 @@ public final class ClusterDAO implements IClusterDAO
         daoUtil.free( );
         return clusterList;
     }
-    
+
     /**
      * {@inheritDoc }
      */
@@ -182,9 +184,9 @@ public final class ClusterDAO implements IClusterDAO
     {
         List<Integer> clusterList = new ArrayList<Integer>( );
         DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECTALL_ID, plugin );
-        daoUtil.executeQuery(  );
+        daoUtil.executeQuery( );
 
-        while ( daoUtil.next(  ) )
+        while ( daoUtil.next( ) )
         {
             clusterList.add( daoUtil.getInt( 1 ) );
         }
@@ -192,20 +194,20 @@ public final class ClusterDAO implements IClusterDAO
         daoUtil.free( );
         return clusterList;
     }
-    
+
     /**
      * {@inheritDoc }
      */
     @Override
     public ReferenceList selectClustersReferenceList( Plugin plugin )
     {
-        ReferenceList clusterList = new ReferenceList();
+        ReferenceList clusterList = new ReferenceList( );
         DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECTALL, plugin );
-        daoUtil.executeQuery(  );
+        daoUtil.executeQuery( );
 
-        while ( daoUtil.next(  ) )
+        while ( daoUtil.next( ) )
         {
-            clusterList.addItem( daoUtil.getInt( 1 ) , daoUtil.getString( 2 ) );
+            clusterList.addItem( daoUtil.getInt( 1 ), daoUtil.getString( 2 ) );
         }
 
         daoUtil.free( );

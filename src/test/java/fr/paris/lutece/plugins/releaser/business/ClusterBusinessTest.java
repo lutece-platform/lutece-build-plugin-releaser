@@ -36,7 +36,6 @@ package fr.paris.lutece.plugins.releaser.business;
 
 import fr.paris.lutece.test.LuteceTestCase;
 
-
 public class ClusterBusinessTest extends LuteceTestCase
 {
     private final static String NAME1 = "Name1";
@@ -44,35 +43,35 @@ public class ClusterBusinessTest extends LuteceTestCase
     private final static String DESCRIPTION1 = "Description1";
     private final static String DESCRIPTION2 = "Description2";
 
-    public void testBusiness(  )
+    public void testBusiness( )
     {
         // Initialize an object
-        Cluster cluster = new Cluster();
+        Cluster cluster = new Cluster( );
         cluster.setName( NAME1 );
         cluster.setDescription( DESCRIPTION1 );
 
         // Create test
         ClusterHome.create( cluster );
         Cluster clusterStored = ClusterHome.findByPrimaryKey( cluster.getId( ) );
-        assertEquals( clusterStored.getName() , cluster.getName( ) );
-        assertEquals( clusterStored.getDescription() , cluster.getDescription( ) );
+        assertEquals( clusterStored.getName( ), cluster.getName( ) );
+        assertEquals( clusterStored.getDescription( ), cluster.getDescription( ) );
 
         // Update test
         cluster.setName( NAME2 );
         cluster.setDescription( DESCRIPTION2 );
         ClusterHome.update( cluster );
         clusterStored = ClusterHome.findByPrimaryKey( cluster.getId( ) );
-        assertEquals( clusterStored.getName() , cluster.getName( ) );
-        assertEquals( clusterStored.getDescription() , cluster.getDescription( ) );
+        assertEquals( clusterStored.getName( ), cluster.getName( ) );
+        assertEquals( clusterStored.getDescription( ), cluster.getDescription( ) );
 
         // List test
-        ClusterHome.getClustersList();
+        ClusterHome.getClustersList( );
 
         // Delete test
         ClusterHome.remove( cluster.getId( ) );
         clusterStored = ClusterHome.findByPrimaryKey( cluster.getId( ) );
         assertNull( clusterStored );
-        
+
     }
 
 }

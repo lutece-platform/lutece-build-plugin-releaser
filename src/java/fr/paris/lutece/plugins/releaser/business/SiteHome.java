@@ -31,7 +31,7 @@
  *
  * License 1.0
  */
- package fr.paris.lutece.plugins.releaser.business;
+package fr.paris.lutece.plugins.releaser.business;
 
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.portal.service.plugin.PluginService;
@@ -52,14 +52,16 @@ public final class SiteHome
     /**
      * Private constructor - this class need not be instantiated
      */
-    private SiteHome(  )
+    private SiteHome( )
     {
     }
 
     /**
      * Create an instance of the site class
-     * @param site The instance of the Site which contains the informations to store
-     * @return The  instance of site which has been created with its primary key.
+     * 
+     * @param site
+     *            The instance of the Site which contains the informations to store
+     * @return The instance of site which has been created with its primary key.
      */
     public static Site create( Site site )
     {
@@ -70,8 +72,10 @@ public final class SiteHome
 
     /**
      * Update of the site which is specified in parameter
-     * @param site The instance of the Site which contains the data to store
-     * @return The instance of the  site which has been updated
+     * 
+     * @param site
+     *            The instance of the Site which contains the data to store
+     * @return The instance of the site which has been updated
      */
     public static Site update( Site site )
     {
@@ -82,7 +86,9 @@ public final class SiteHome
 
     /**
      * Remove the site whose identifier is specified in parameter
-     * @param nKey The site Id
+     * 
+     * @param nKey
+     *            The site Id
      */
     public static void remove( int nKey )
     {
@@ -91,39 +97,43 @@ public final class SiteHome
 
     /**
      * Returns an instance of a site whose identifier is specified in parameter
-     * @param nKey The site primary key
+     * 
+     * @param nKey
+     *            The site primary key
      * @return an instance of Site
      */
     public static Site findByPrimaryKey( int nKey )
     {
-        return _dao.load( nKey, _plugin);
+        return _dao.load( nKey, _plugin );
     }
 
     /**
      * Load the data of all the site objects and returns them as a list
+     * 
      * @return the list which contains the data of all the site objects
      */
     public static List<Site> getSitesList( )
     {
         return _dao.selectSitesList( _plugin );
     }
-    
+
     /**
      * Load the id of all the site objects and returns them as a list
+     * 
      * @return the list which contains the id of all the site objects
      */
     public static List<Integer> getIdSitesList( )
     {
         return _dao.selectIdSitesList( _plugin );
     }
-    
+
     /**
      * Load the data of all the site objects and returns them as a referenceList
+     * 
      * @return the referenceList which contains the data of all the site objects
      */
     public static ReferenceList getSitesReferenceList( )
     {
-        return _dao.selectSitesReferenceList(_plugin );
+        return _dao.selectSitesReferenceList( _plugin );
     }
 }
-

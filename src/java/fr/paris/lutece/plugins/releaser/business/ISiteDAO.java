@@ -31,7 +31,7 @@
  *
  * License 1.0
  */
- 
+
 package fr.paris.lutece.plugins.releaser.business;
 
 import fr.paris.lutece.portal.service.plugin.Plugin;
@@ -45,53 +45,71 @@ public interface ISiteDAO
 {
     /**
      * Insert a new record in the table.
-     * @param site instance of the Site object to insert
-     * @param plugin the Plugin
+     * 
+     * @param site
+     *            instance of the Site object to insert
+     * @param plugin
+     *            the Plugin
      */
     void insert( Site site, Plugin plugin );
 
     /**
      * Update the record in the table
-     * @param site the reference of the Site
-     * @param plugin the Plugin
+     * 
+     * @param site
+     *            the reference of the Site
+     * @param plugin
+     *            the Plugin
      */
     void store( Site site, Plugin plugin );
 
     /**
      * Delete a record from the table
-     * @param nKey The identifier of the Site to delete
-     * @param plugin the Plugin
+     * 
+     * @param nKey
+     *            The identifier of the Site to delete
+     * @param plugin
+     *            the Plugin
      */
     void delete( int nKey, Plugin plugin );
 
-    ///////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////
     // Finders
 
     /**
      * Load the data from the table
-     * @param nKey The identifier of the site
-     * @param plugin the Plugin
+     * 
+     * @param nKey
+     *            The identifier of the site
+     * @param plugin
+     *            the Plugin
      * @return The instance of the site
      */
     Site load( int nKey, Plugin plugin );
 
     /**
      * Load the data of all the site objects and returns them as a list
-     * @param plugin the Plugin
+     * 
+     * @param plugin
+     *            the Plugin
      * @return The list which contains the data of all the site objects
      */
     List<Site> selectSitesList( Plugin plugin );
-    
+
     /**
      * Load the id of all the site objects and returns them as a list
-     * @param plugin the Plugin
+     * 
+     * @param plugin
+     *            the Plugin
      * @return The list which contains the id of all the site objects
      */
     List<Integer> selectIdSitesList( Plugin plugin );
-    
+
     /**
      * Load the data of all the site objects and returns them as a referenceList
-     * @param plugin the Plugin
+     * 
+     * @param plugin
+     *            the Plugin
      * @return The referenceList which contains the data of all the site objects
      */
     ReferenceList selectSitesReferenceList( Plugin plugin );

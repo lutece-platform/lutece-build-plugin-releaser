@@ -47,7 +47,6 @@ import javax.servlet.http.HttpServletRequest;
  * ManageSiteRelease JSP Bean abstract class for JSP Bean
  */
 @Controller( controllerJsp = "ManageSiteRelease.jsp", controllerPath = "jsp/admin/plugins/releaser/", right = "RELEASER_SITE_MANAGEMENT" )
-
 public class ManageSiteReleaseJspBean extends MVCAdminJspBean
 {
     private static final String PARAMETER_SITE_ID = "id_site";
@@ -55,23 +54,23 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     private static final String TEMPLATE_PREPARE_SITE_RELEASE = "/admin/plugins/releaser/prepare_site_release.html";
     private static final String MARK_SITE = "site";
     private Site _site;
-    
+
     @View( value = VIEW_MANAGE_SITE_RELEASE, defaultView = true )
     public String getPrepareSiteRelease( HttpServletRequest request )
     {
         int nSiteId = 0;
         try
         {
-            Integer.parseInt( request.getParameter( PARAMETER_SITE_ID ));
+            Integer.parseInt( request.getParameter( PARAMETER_SITE_ID ) );
         }
         catch( NumberFormatException e )
         {
             // TODO
         }
         _site = SiteService.getSite( nSiteId );
-        Map<String, Object> model = getModel();
+        Map<String, Object> model = getModel( );
         model.put( MARK_SITE, _site );
-        HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_PREPARE_SITE_RELEASE, getLocale(), model );
-        return template.getHtml();
+        HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_PREPARE_SITE_RELEASE, getLocale( ), model );
+        return template.getHtml( );
     }
 }

@@ -92,20 +92,22 @@ public class SiteJspBean extends ManageSitesJspBean
     private static final String INFO_SITE_CREATED = "releaser.info.site.created";
     private static final String INFO_SITE_UPDATED = "releaser.info.site.updated";
     private static final String INFO_SITE_REMOVED = "releaser.info.site.removed";
-    
+
     // Session variable to store working values
     private Site _site;
-    
+
     /**
      * Build the Manage View
-     * @param request The HTTP request
+     * 
+     * @param request
+     *            The HTTP request
      * @return The page
      */
     @View( value = VIEW_MANAGE_SITES, defaultView = true )
     public String getManageSites( HttpServletRequest request )
     {
         _site = null;
-        List<Site> listSites = SiteHome.getSitesList(  );
+        List<Site> listSites = SiteHome.getSitesList( );
         Map<String, Object> model = getPaginatedListModel( request, MARK_SITE_LIST, listSites, JSP_MANAGE_SITES );
 
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_SITES, TEMPLATE_MANAGE_SITES, model );
@@ -114,15 +116,16 @@ public class SiteJspBean extends ManageSitesJspBean
     /**
      * Returns the form to create a site
      *
-     * @param request The Http request
+     * @param request
+     *            The Http request
      * @return the html code of the site form
      */
     @View( VIEW_CREATE_SITE )
     public String getCreateSite( HttpServletRequest request )
     {
-        _site = ( _site != null ) ? _site : new Site(  );
+        _site = ( _site != null ) ? _site : new Site( );
 
-        Map<String, Object> model = getModel(  );
+        Map<String, Object> model = getModel( );
         model.put( MARK_SITE, _site );
 
         return getPage( PROPERTY_PAGE_TITLE_CREATE_SITE, TEMPLATE_CREATE_SITE, model );
@@ -131,7 +134,8 @@ public class SiteJspBean extends ManageSitesJspBean
     /**
      * Process the data capture form of a new site
      *
-     * @param request The Http Request
+     * @param request
+     *            The Http Request
      * @return The Jsp URL of the process result
      */
     @Action( ACTION_CREATE_SITE )
@@ -146,16 +150,16 @@ public class SiteJspBean extends ManageSitesJspBean
         }
 
         SiteHome.create( _site );
-        addInfo( INFO_SITE_CREATED, getLocale(  ) );
+        addInfo( INFO_SITE_CREATED, getLocale( ) );
 
         return redirectView( request, VIEW_MANAGE_SITES );
     }
 
     /**
-     * Manages the removal form of a site whose identifier is in the http
-     * request
+     * Manages the removal form of a site whose identifier is in the http request
      *
-     * @param request The Http request
+     * @param request
+     *            The Http request
      * @return the html code to confirm
      */
     @Action( ACTION_CONFIRM_REMOVE_SITE )
@@ -165,7 +169,7 @@ public class SiteJspBean extends ManageSitesJspBean
         UrlItem url = new UrlItem( getActionUrl( ACTION_REMOVE_SITE ) );
         url.addParameter( PARAMETER_ID_SITE, nId );
 
-        String strMessageUrl = AdminMessageService.getMessageUrl( request, MESSAGE_CONFIRM_REMOVE_SITE, url.getUrl(  ), AdminMessage.TYPE_CONFIRMATION );
+        String strMessageUrl = AdminMessageService.getMessageUrl( request, MESSAGE_CONFIRM_REMOVE_SITE, url.getUrl( ), AdminMessage.TYPE_CONFIRMATION );
 
         return redirect( request, strMessageUrl );
     }
@@ -173,7 +177,8 @@ public class SiteJspBean extends ManageSitesJspBean
     /**
      * Handles the removal form of a site
      *
-     * @param request The Http request
+     * @param request
+     *            The Http request
      * @return the jsp URL to display the form to manage sites
      */
     @Action( ACTION_REMOVE_SITE )
@@ -181,7 +186,7 @@ public class SiteJspBean extends ManageSitesJspBean
     {
         int nId = Integer.parseInt( request.getParameter( PARAMETER_ID_SITE ) );
         SiteHome.remove( nId );
-        addInfo( INFO_SITE_REMOVED, getLocale(  ) );
+        addInfo( INFO_SITE_REMOVED, getLocale( ) );
 
         return redirectView( request, VIEW_MANAGE_SITES );
     }
@@ -189,7 +194,8 @@ public class SiteJspBean extends ManageSitesJspBean
     /**
      * Returns the form to update info about a site
      *
-     * @param request The Http request
+     * @param request
+     *            The Http request
      * @return The HTML form to update info
      */
     @View( VIEW_MODIFY_SITE )
@@ -197,12 +203,12 @@ public class SiteJspBean extends ManageSitesJspBean
     {
         int nId = Integer.parseInt( request.getParameter( PARAMETER_ID_SITE ) );
 
-        if ( _site == null || ( _site.getId(  ) != nId ))
+        if ( _site == null || ( _site.getId( ) != nId ) )
         {
             _site = SiteHome.findByPrimaryKey( nId );
         }
 
-        Map<String, Object> model = getModel(  );
+        Map<String, Object> model = getModel( );
         model.put( MARK_SITE, _site );
 
         return getPage( PROPERTY_PAGE_TITLE_MODIFY_SITE, TEMPLATE_MODIFY_SITE, model );
@@ -211,7 +217,8 @@ public class SiteJspBean extends ManageSitesJspBean
     /**
      * Process the change form of a site
      *
-     * @param request The Http request
+     * @param request
+     *            The Http request
      * @return The Jsp URL of the process result
      */
     @Action( ACTION_MODIFY_SITE )
@@ -226,7 +233,7 @@ public class SiteJspBean extends ManageSitesJspBean
         }
 
         SiteHome.update( _site );
-        addInfo( INFO_SITE_UPDATED, getLocale(  ) );
+        addInfo( INFO_SITE_UPDATED, getLocale( ) );
 
         return redirectView( request, VIEW_MANAGE_SITES );
     }

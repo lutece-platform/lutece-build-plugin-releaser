@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2015, Mairie de Paris
+ * Copyright (c) 2002-2017, Mairie de Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,37 +34,34 @@
 
 package fr.paris.lutece.plugins.releaser.service;
 
-import fr.paris.lutece.plugins.releaser.business.Site;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.paris.lutece.portal.service.util.AppPropertiesService;
+import fr.paris.lutece.util.httpaccess.HttpAccess;
+import fr.paris.lutece.util.httpaccess.HttpAccessException;
 import java.io.IOException;
-import org.apache.commons.io.IOUtils;
-import static org.junit.Assert.*;
-import org.junit.Test;
+import java.text.MessageFormat;
 
 /**
- * PomParserTest
+ * ComponentService
  */
-public class PomParserTest
+public class ComponentService
 {
-    private static final String POM_TEST_FILE = "/pom.xml";
+    private static final String PROPERTY_COMPONENT_WEBSERVICE = "releaser.component.webservice.url";
+    private static final String URL_COMPONENT_WEBSERVICE = AppPropertiesService.getProperty( PROPERTY_COMPONENT_WEBSERVICE );
+    private static final String FIELD_COMPONENT = "component";
+    private static final String FIELD_VERSION = "version";
 
-    @Test
-    public void testParse( ) throws IOException
+    private static ObjectMapper _mapper = new ObjectMapper( );
+
+    public static String getLatestVersion( String strArtifactId ) throws HttpAccessException, IOException
     {
-        System.out.println( "testParse" );
-        PomParser parser = new PomParser( );
-        Site site = new Site( );
-        String strPOM = loadFile( POM_TEST_FILE );
-        parser.parse( site, strPOM );
-
-        int nDependenciesCount = site.getCurrentDependencies( ).size( );
-        System.out.println( "Number of dependencies found :" + nDependenciesCount );
-
-        assertTrue( nDependenciesCount > 0 );
+        HttpAccess httpAccess = new HttpAccess( );
+        String strInfosJSON;
+        String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, strArtifactId );
+        strInfosJSON = httpAccess.doGet( strUrl );
+        JsonNode nodeRoot = _mapper.readTree( strInfosJSON );
+        JsonNode nodeComponent = nodeRoot.path( FIELD_COMPONENT );
+        return nodeComponent.get( FIELD_VERSION ).asText( );
     }
-
-    private String loadFile( String strFilePath ) throws IOException
-    {
-        return IOUtils.toString( this.getClass( ).getResourceAsStream( strFilePath ), "UTF-8" );
-    }
-
 }

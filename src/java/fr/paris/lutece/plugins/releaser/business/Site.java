@@ -30,7 +30,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * License 1.0
- */ 
+ */
 package fr.paris.lutece.plugins.releaser.business;
 
 import javax.validation.constraints.*;
@@ -41,42 +41,43 @@ import java.util.List;
 
 /**
  * This is the business class for the object Site
- */ 
+ */
 public class Site implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
-    // Variables declarations 
+    // Variables declarations
     private int _nId;
-    
+
     @NotEmpty( message = "#i18n{releaser.validation.site.ArtifactId.notEmpty}" )
-    @Size( max = 50 , message = "#i18n{releaser.validation.site.ArtifactId.size}" ) 
+    @Size( max = 50, message = "#i18n{releaser.validation.site.ArtifactId.size}" )
     private String _strArtifactId;
-    
+
     private int _nIdCluster;
-    @URL(message = "#i18n{portal.validation.message.url}")
+    @URL( message = "#i18n{portal.validation.message.url}" )
     @NotEmpty( message = "#i18n{releaser.validation.site.ScmUrl.notEmpty}" )
-    @Size( max = 255 , message = "#i18n{releaser.validation.site.ScmUrl.size}" ) 
+    @Size( max = 255, message = "#i18n{releaser.validation.site.ScmUrl.size}" )
     private String _strScmUrl;
-    
+
     @NotEmpty( message = "#i18n{releaser.validation.site.Name.notEmpty}" )
-    @Size( max = 50 , message = "#i18n{releaser.validation.site.Name.size}" ) 
+    @Size( max = 50, message = "#i18n{releaser.validation.site.Name.size}" )
     private String _strName;
-    
+
     @NotEmpty( message = "#i18n{releaser.validation.site.Description.notEmpty}" )
-    @Size( max = 255 , message = "#i18n{releaser.validation.site.Description.size}" ) 
+    @Size( max = 255, message = "#i18n{releaser.validation.site.Description.size}" )
     private String _strDescription;
-    
-    @Size( max = 50 , message = "#i18n{releaser.validation.site.JiraKey.size}" ) 
+
+    @Size( max = 50, message = "#i18n{releaser.validation.site.JiraKey.size}" )
     private String _strJiraKey;
 
     private String _strVersion;
-    
-    private List<Dependency> _listCurrentDependencies = new ArrayList<>();
-    private List<Component> _listComponents = new ArrayList<>();
-    
+
+    private List<Dependency> _listCurrentDependencies = new ArrayList<>( );
+    private List<Component> _listComponents = new ArrayList<>( );
+
     /**
      * Returns the Id
+     * 
      * @return The Id
      */
     public int getId( )
@@ -86,15 +87,18 @@ public class Site implements Serializable
 
     /**
      * Sets the Id
-     * @param nId The Id
-     */ 
+     * 
+     * @param nId
+     *            The Id
+     */
     public void setId( int nId )
     {
         _nId = nId;
     }
-    
+
     /**
      * Returns the ArtifactId
+     * 
      * @return The ArtifactId
      */
     public String getArtifactId( )
@@ -104,15 +108,18 @@ public class Site implements Serializable
 
     /**
      * Sets the ArtifactId
-     * @param strArtifactId The ArtifactId
-     */ 
+     * 
+     * @param strArtifactId
+     *            The ArtifactId
+     */
     public void setArtifactId( String strArtifactId )
     {
         _strArtifactId = strArtifactId;
     }
-    
+
     /**
      * Returns the IdCluster
+     * 
      * @return The IdCluster
      */
     public int getIdCluster( )
@@ -122,15 +129,18 @@ public class Site implements Serializable
 
     /**
      * Sets the IdCluster
-     * @param nIdCluster The IdCluster
-     */ 
+     * 
+     * @param nIdCluster
+     *            The IdCluster
+     */
     public void setIdCluster( int nIdCluster )
     {
         _nIdCluster = nIdCluster;
     }
-    
+
     /**
      * Returns the ScmUrl
+     * 
      * @return The ScmUrl
      */
     public String getScmUrl( )
@@ -140,15 +150,18 @@ public class Site implements Serializable
 
     /**
      * Sets the ScmUrl
-     * @param strScmUrl The ScmUrl
-     */ 
+     * 
+     * @param strScmUrl
+     *            The ScmUrl
+     */
     public void setScmUrl( String strScmUrl )
     {
         _strScmUrl = strScmUrl;
     }
-    
+
     /**
      * Returns the Name
+     * 
      * @return The Name
      */
     public String getName( )
@@ -158,15 +171,18 @@ public class Site implements Serializable
 
     /**
      * Sets the Name
-     * @param strName The Name
-     */ 
+     * 
+     * @param strName
+     *            The Name
+     */
     public void setName( String strName )
     {
         _strName = strName;
     }
-    
+
     /**
      * Returns the Description
+     * 
      * @return The Description
      */
     public String getDescription( )
@@ -176,15 +192,18 @@ public class Site implements Serializable
 
     /**
      * Sets the Description
-     * @param strDescription The Description
-     */ 
+     * 
+     * @param strDescription
+     *            The Description
+     */
     public void setDescription( String strDescription )
     {
         _strDescription = strDescription;
     }
-    
+
     /**
      * Returns the JiraKey
+     * 
      * @return The JiraKey
      */
     public String getJiraKey( )
@@ -194,33 +213,35 @@ public class Site implements Serializable
 
     /**
      * Sets the JiraKey
-     * @param strJiraKey The JiraKey
-     */ 
+     * 
+     * @param strJiraKey
+     *            The JiraKey
+     */
     public void setJiraKey( String strJiraKey )
     {
         _strJiraKey = strJiraKey;
     }
-    
+
     public void addCurrentDependency( Dependency dependency )
     {
         _listCurrentDependencies.add( dependency );
     }
-    
-    public List<Dependency> getCurrentDependencies()
+
+    public List<Dependency> getCurrentDependencies( )
     {
         return _listCurrentDependencies;
     }
-    
+
     public void addComponent( Component component )
     {
         _listComponents.add( component );
     }
-    
-    public List<Component> getComponents()
+
+    public List<Component> getComponents( )
     {
         return _listComponents;
     }
-    
+
     /**
      * Returns the Version
      * 
@@ -242,5 +263,4 @@ public class Site implements Serializable
         _strVersion = strVersion;
     }
 
-    
 }

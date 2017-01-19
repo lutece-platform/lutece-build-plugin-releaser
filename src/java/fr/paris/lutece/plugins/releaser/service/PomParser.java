@@ -64,9 +64,9 @@ public class PomParser
     private static final String TAG_TYPE = "type";
     private static final String TAG_MAIN_NODE = "project";
 
-    private ArrayList<Dependency> _listDependencies = new ArrayList<Dependency>();
+    private ArrayList<Dependency> _listDependencies = new ArrayList<Dependency>( );
 
-    public List<Dependency> getDependencies()
+    public List<Dependency> getDependencies( )
     {
         return _listDependencies;
     }
@@ -75,21 +75,21 @@ public class PomParser
     {
         try
         {
-            DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance( ).newDocumentBuilder( );
             InputSource isPOM = new InputSource( new StringReader( strPOM ) );
             Document doc = dBuilder.parse( isPOM );
 
-            doc.getDocumentElement().normalize();
+            doc.getDocumentElement( ).normalize( );
 
-            NodeList nlSite = doc.getChildNodes().item( 0 ).getChildNodes();
-            filledSite( site , nlSite );
+            NodeList nlSite = doc.getChildNodes( ).item( 0 ).getChildNodes( );
+            filledSite( site, nlSite );
             NodeList nlDenpendency = doc.getElementsByTagName( TAG_DEPENDENCY );
 
-            for( int i = 0; i < nlDenpendency.getLength(); i++ )
+            for ( int i = 0; i < nlDenpendency.getLength( ); i++ )
             {
                 Node n = nlDenpendency.item( i );
                 // test if node dependency is not in configuration node
-                if( n.getNodeType() == Node.ELEMENT_NODE && n.getParentNode().getParentNode().getNodeName().equals( TAG_MAIN_NODE ) )
+                if ( n.getNodeType( ) == Node.ELEMENT_NODE && n.getParentNode( ).getParentNode( ).getNodeName( ).equals( TAG_MAIN_NODE ) )
                 {
                     filledDependency( site, n );
                 }
@@ -97,28 +97,28 @@ public class PomParser
         }
         catch( ParserConfigurationException | SAXException | IOException e )
         {
-            AppLogService.error( e.getMessage(), e );
+            AppLogService.error( e.getMessage( ), e );
         }
     }
 
     private void filledSite( Site site, NodeList nlSite )
     {
-        for( int i = 0; i < nlSite.getLength(); i++ )
+        for ( int i = 0; i < nlSite.getLength( ); i++ )
         {
             Node p = nlSite.item( i );
-            if( p.getNodeType() == Node.ELEMENT_NODE )
+            if ( p.getNodeType( ) == Node.ELEMENT_NODE )
             {
-                if( p.getNodeName().equals( TAG_ARTIFACT_ID ) )
+                if ( p.getNodeName( ).equals( TAG_ARTIFACT_ID ) )
                 {
-                    site.setArtifactId( p.getTextContent().trim() );
+                    site.setArtifactId( p.getTextContent( ).trim( ) );
                 }
-                if( p.getNodeName().equals( TAG_VERSION ) )
+                if ( p.getNodeName( ).equals( TAG_VERSION ) )
                 {
-                    site.setVersion( p.getTextContent().trim() );
+                    site.setVersion( p.getTextContent( ).trim( ) );
                 }
-                if( p.getNodeName().equals( TAG_NAME ) )
+                if ( p.getNodeName( ).equals( TAG_NAME ) )
                 {
-                    site.setName( p.getTextContent().trim() );
+                    site.setName( p.getTextContent( ).trim( ) );
                 }
             }
         }
@@ -126,29 +126,29 @@ public class PomParser
 
     private void filledDependency( Site site, Node n )
     {
-        Dependency dep = new Dependency();
-        NodeList nl = n.getChildNodes();
+        Dependency dep = new Dependency( );
+        NodeList nl = n.getChildNodes( );
 
-        for( int i = 0; i < nl.getLength(); i++ )
+        for ( int i = 0; i < nl.getLength( ); i++ )
         {
-            Node t = n.getChildNodes().item( i );
-            if( t.getNodeType() == Node.ELEMENT_NODE )
+            Node t = n.getChildNodes( ).item( i );
+            if ( t.getNodeType( ) == Node.ELEMENT_NODE )
             {
-                if( t.getNodeName().equals( TAG_ARTIFACT_ID ) )
+                if ( t.getNodeName( ).equals( TAG_ARTIFACT_ID ) )
                 {
-                    dep.setArtifactId( t.getTextContent().trim() );
+                    dep.setArtifactId( t.getTextContent( ).trim( ) );
                 }
-                if( t.getNodeName().equals( TAG_VERSION ) )
+                if ( t.getNodeName( ).equals( TAG_VERSION ) )
                 {
-                    dep.setVersion( t.getTextContent().trim() );
+                    dep.setVersion( t.getTextContent( ).trim( ) );
                 }
-                if( t.getNodeName().equals( TAG_GROUP_ID ) )
+                if ( t.getNodeName( ).equals( TAG_GROUP_ID ) )
                 {
-                    dep.setGroupId( t.getTextContent().trim() );
+                    dep.setGroupId( t.getTextContent( ).trim( ) );
                 }
-                if( t.getNodeName().equals( TAG_TYPE ) )
+                if ( t.getNodeName( ).equals( TAG_TYPE ) )
                 {
-                    dep.setType( t.getTextContent().trim() );
+                    dep.setType( t.getTextContent( ).trim( ) );
                 }
             }
         }

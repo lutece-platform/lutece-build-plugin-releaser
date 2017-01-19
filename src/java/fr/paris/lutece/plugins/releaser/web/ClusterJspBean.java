@@ -92,20 +92,22 @@ public class ClusterJspBean extends ManageSitesJspBean
     private static final String INFO_CLUSTER_CREATED = "releaser.info.cluster.created";
     private static final String INFO_CLUSTER_UPDATED = "releaser.info.cluster.updated";
     private static final String INFO_CLUSTER_REMOVED = "releaser.info.cluster.removed";
-    
+
     // Session variable to store working values
     private Cluster _cluster;
-    
+
     /**
      * Build the Manage View
-     * @param request The HTTP request
+     * 
+     * @param request
+     *            The HTTP request
      * @return The page
      */
     @View( value = VIEW_MANAGE_CLUSTERS, defaultView = true )
     public String getManageClusters( HttpServletRequest request )
     {
         _cluster = null;
-        List<Cluster> listClusters = ClusterHome.getClustersList(  );
+        List<Cluster> listClusters = ClusterHome.getClustersList( );
         Map<String, Object> model = getPaginatedListModel( request, MARK_CLUSTER_LIST, listClusters, JSP_MANAGE_CLUSTERS );
 
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_CLUSTERS, TEMPLATE_MANAGE_CLUSTERS, model );
@@ -114,15 +116,16 @@ public class ClusterJspBean extends ManageSitesJspBean
     /**
      * Returns the form to create a cluster
      *
-     * @param request The Http request
+     * @param request
+     *            The Http request
      * @return the html code of the cluster form
      */
     @View( VIEW_CREATE_CLUSTER )
     public String getCreateCluster( HttpServletRequest request )
     {
-        _cluster = ( _cluster != null ) ? _cluster : new Cluster(  );
+        _cluster = ( _cluster != null ) ? _cluster : new Cluster( );
 
-        Map<String, Object> model = getModel(  );
+        Map<String, Object> model = getModel( );
         model.put( MARK_CLUSTER, _cluster );
 
         return getPage( PROPERTY_PAGE_TITLE_CREATE_CLUSTER, TEMPLATE_CREATE_CLUSTER, model );
@@ -131,7 +134,8 @@ public class ClusterJspBean extends ManageSitesJspBean
     /**
      * Process the data capture form of a new cluster
      *
-     * @param request The Http Request
+     * @param request
+     *            The Http Request
      * @return The Jsp URL of the process result
      */
     @Action( ACTION_CREATE_CLUSTER )
@@ -146,16 +150,16 @@ public class ClusterJspBean extends ManageSitesJspBean
         }
 
         ClusterHome.create( _cluster );
-        addInfo( INFO_CLUSTER_CREATED, getLocale(  ) );
+        addInfo( INFO_CLUSTER_CREATED, getLocale( ) );
 
         return redirectView( request, VIEW_MANAGE_CLUSTERS );
     }
 
     /**
-     * Manages the removal form of a cluster whose identifier is in the http
-     * request
+     * Manages the removal form of a cluster whose identifier is in the http request
      *
-     * @param request The Http request
+     * @param request
+     *            The Http request
      * @return the html code to confirm
      */
     @Action( ACTION_CONFIRM_REMOVE_CLUSTER )
@@ -165,7 +169,7 @@ public class ClusterJspBean extends ManageSitesJspBean
         UrlItem url = new UrlItem( getActionUrl( ACTION_REMOVE_CLUSTER ) );
         url.addParameter( PARAMETER_ID_CLUSTER, nId );
 
-        String strMessageUrl = AdminMessageService.getMessageUrl( request, MESSAGE_CONFIRM_REMOVE_CLUSTER, url.getUrl(  ), AdminMessage.TYPE_CONFIRMATION );
+        String strMessageUrl = AdminMessageService.getMessageUrl( request, MESSAGE_CONFIRM_REMOVE_CLUSTER, url.getUrl( ), AdminMessage.TYPE_CONFIRMATION );
 
         return redirect( request, strMessageUrl );
     }
@@ -173,7 +177,8 @@ public class ClusterJspBean extends ManageSitesJspBean
     /**
      * Handles the removal form of a cluster
      *
-     * @param request The Http request
+     * @param request
+     *            The Http request
      * @return the jsp URL to display the form to manage clusters
      */
     @Action( ACTION_REMOVE_CLUSTER )
@@ -181,7 +186,7 @@ public class ClusterJspBean extends ManageSitesJspBean
     {
         int nId = Integer.parseInt( request.getParameter( PARAMETER_ID_CLUSTER ) );
         ClusterHome.remove( nId );
-        addInfo( INFO_CLUSTER_REMOVED, getLocale(  ) );
+        addInfo( INFO_CLUSTER_REMOVED, getLocale( ) );
 
         return redirectView( request, VIEW_MANAGE_CLUSTERS );
     }
@@ -189,7 +194,8 @@ public class ClusterJspBean extends ManageSitesJspBean
     /**
      * Returns the form to update info about a cluster
      *
-     * @param request The Http request
+     * @param request
+     *            The Http request
      * @return The HTML form to update info
      */
     @View( VIEW_MODIFY_CLUSTER )
@@ -197,12 +203,12 @@ public class ClusterJspBean extends ManageSitesJspBean
     {
         int nId = Integer.parseInt( request.getParameter( PARAMETER_ID_CLUSTER ) );
 
-        if ( _cluster == null || ( _cluster.getId(  ) != nId ))
+        if ( _cluster == null || ( _cluster.getId( ) != nId ) )
         {
             _cluster = ClusterHome.findByPrimaryKey( nId );
         }
 
-        Map<String, Object> model = getModel(  );
+        Map<String, Object> model = getModel( );
         model.put( MARK_CLUSTER, _cluster );
 
         return getPage( PROPERTY_PAGE_TITLE_MODIFY_CLUSTER, TEMPLATE_MODIFY_CLUSTER, model );
@@ -211,7 +217,8 @@ public class ClusterJspBean extends ManageSitesJspBean
     /**
      * Process the change form of a cluster
      *
-     * @param request The Http request
+     * @param request
+     *            The Http request
      * @return The Jsp URL of the process result
      */
     @Action( ACTION_MODIFY_CLUSTER )
@@ -226,7 +233,7 @@ public class ClusterJspBean extends ManageSitesJspBean
         }
 
         ClusterHome.update( _cluster );
-        addInfo( INFO_CLUSTER_UPDATED, getLocale(  ) );
+        addInfo( INFO_CLUSTER_UPDATED, getLocale( ) );
 
         return redirectView( request, VIEW_MANAGE_CLUSTERS );
     }

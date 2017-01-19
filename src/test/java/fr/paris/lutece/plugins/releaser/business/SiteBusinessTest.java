@@ -36,7 +36,6 @@ package fr.paris.lutece.plugins.releaser.business;
 
 import fr.paris.lutece.test.LuteceTestCase;
 
-
 public class SiteBusinessTest extends LuteceTestCase
 {
     private final static String ARTIFACTID1 = "ArtifactId1";
@@ -52,10 +51,10 @@ public class SiteBusinessTest extends LuteceTestCase
     private final static String JIRAKEY1 = "JiraKey1";
     private final static String JIRAKEY2 = "JiraKey2";
 
-    public void testBusiness(  )
+    public void testBusiness( )
     {
         // Initialize an object
-        Site site = new Site();
+        Site site = new Site( );
         site.setArtifactId( ARTIFACTID1 );
         site.setIdCluster( IDCLUSTER1 );
         site.setScmUrl( SCMURL1 );
@@ -66,12 +65,12 @@ public class SiteBusinessTest extends LuteceTestCase
         // Create test
         SiteHome.create( site );
         Site siteStored = SiteHome.findByPrimaryKey( site.getId( ) );
-        assertEquals( siteStored.getArtifactId() , site.getArtifactId( ) );
-        assertEquals( siteStored.getIdCluster() , site.getIdCluster( ) );
-        assertEquals( siteStored.getScmUrl() , site.getScmUrl( ) );
-        assertEquals( siteStored.getName() , site.getName( ) );
-        assertEquals( siteStored.getDescription() , site.getDescription( ) );
-        assertEquals( siteStored.getJiraKey() , site.getJiraKey( ) );
+        assertEquals( siteStored.getArtifactId( ), site.getArtifactId( ) );
+        assertEquals( siteStored.getIdCluster( ), site.getIdCluster( ) );
+        assertEquals( siteStored.getScmUrl( ), site.getScmUrl( ) );
+        assertEquals( siteStored.getName( ), site.getName( ) );
+        assertEquals( siteStored.getDescription( ), site.getDescription( ) );
+        assertEquals( siteStored.getJiraKey( ), site.getJiraKey( ) );
 
         // Update test
         site.setArtifactId( ARTIFACTID2 );
@@ -82,21 +81,21 @@ public class SiteBusinessTest extends LuteceTestCase
         site.setJiraKey( JIRAKEY2 );
         SiteHome.update( site );
         siteStored = SiteHome.findByPrimaryKey( site.getId( ) );
-        assertEquals( siteStored.getArtifactId() , site.getArtifactId( ) );
-        assertEquals( siteStored.getIdCluster() , site.getIdCluster( ) );
-        assertEquals( siteStored.getScmUrl() , site.getScmUrl( ) );
-        assertEquals( siteStored.getName() , site.getName( ) );
-        assertEquals( siteStored.getDescription() , site.getDescription( ) );
-        assertEquals( siteStored.getJiraKey() , site.getJiraKey( ) );
+        assertEquals( siteStored.getArtifactId( ), site.getArtifactId( ) );
+        assertEquals( siteStored.getIdCluster( ), site.getIdCluster( ) );
+        assertEquals( siteStored.getScmUrl( ), site.getScmUrl( ) );
+        assertEquals( siteStored.getName( ), site.getName( ) );
+        assertEquals( siteStored.getDescription( ), site.getDescription( ) );
+        assertEquals( siteStored.getJiraKey( ), site.getJiraKey( ) );
 
         // List test
-        SiteHome.getSitesList();
+        SiteHome.getSitesList( );
 
         // Delete test
         SiteHome.remove( site.getId( ) );
         siteStored = SiteHome.findByPrimaryKey( site.getId( ) );
         assertNull( siteStored );
-        
+
     }
 
 }

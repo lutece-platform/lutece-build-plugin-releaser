@@ -1,15 +1,5 @@
-package fr.paris.lutece.plugins.releaser.service;
-
-import fr.paris.lutece.plugins.releaser.business.Component;
-import fr.paris.lutece.plugins.releaser.business.Dependency;
-import fr.paris.lutece.plugins.releaser.business.Site;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.commons.io.IOUtils;
-
 /*
- * Copyright (c) 2002-2015, Mairie de Paris
+ * Copyright (c) 2002-2017, Mairie de Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,44 +32,69 @@ import org.apache.commons.io.IOUtils;
  * License 1.0
  */
 
+package fr.paris.lutece.plugins.releaser.service;
+
+import fr.paris.lutece.plugins.releaser.business.Component;
+import fr.paris.lutece.plugins.releaser.business.Dependency;
+import fr.paris.lutece.plugins.releaser.business.Site;
+import fr.paris.lutece.plugins.releaser.business.SiteHome;
+import fr.paris.lutece.portal.service.util.AppLogService;
+import fr.paris.lutece.portal.service.util.AppPropertiesService;
+import fr.paris.lutece.util.httpaccess.HttpAccess;
+import fr.paris.lutece.util.httpaccess.HttpAccessException;
+import fr.paris.lutece.util.signrequest.BasicAuthorizationAuthenticator;
+import fr.paris.lutece.util.signrequest.RequestAuthenticator;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * SiteService
  */
-public class SiteService 
+public class SiteService
 {
-    
+    private static final String PROPERTY_SITE_REPOSITORY_LOGIN = "releaser.site.repository.login";
+    private static final String PROPERTY_SITE_REPOSITORY_PASSWORD = "releaser.site.repository.password";
+
     public static Site getSite( int nSiteId )
     {
-        // Site site = SiteHome.findByPrimaryKey( nSiteId );
-        // String strPom = fetchPom( site.getScmUrl() + "/pom.xml" );
-        // PomParser parser = new PomParser();
-        // parser.parse( site, strPOM );
-        //
-        // return site;
-
-        // FIXME
-        Site site = getMockSite();
-        initComponents( site );
-        
+        Site site = SiteHome.findByPrimaryKey( 1 );
+        String strPom = fetchPom( site.getScmUrl( ) + "/pom.xml" );
+        if ( strPom != null )
+        {
+            PomParser parser = new PomParser( );
+            parser.parse( site, strPom );
+            initComponents( site );
+        }
         return site;
     }
 
     private static String fetchPom( String strPomUrl )
     {
-        throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
+        try
+        {
+            RequestAuthenticator authenticator = getSiteAuthenticator( );
+            HttpAccess httpAccess = new HttpAccess( );
+            String strPom = httpAccess.doGet( strPomUrl, authenticator, null );
+            return strPom;
+        }
+        catch( HttpAccessException ex )
+        {
+            Logger.getLogger( SiteService.class.getName( ) ).log( Level.SEVERE, null, ex );
+        }
+        return null;
     }
 
     private static void initComponents( Site site )
     {
-        for( Dependency dependency : site.getCurrentDependencies() )
+        for ( Dependency dependency : site.getCurrentDependencies( ) )
         {
-            Component component = new Component();
+            Component component = new Component( );
 
-            component.setIsProject( isProjectComponent( site , dependency.getArtifactId() ) );
-            component.setArtifactId( dependency.getArtifactId() );
-            component.setGroupId( dependency.getGroupId() );
-            component.setCurrentVersion( dependency.getVersion() );
+            component.setIsProject( isProjectComponent( site, dependency.getArtifactId( ) ) );
+            component.setArtifactId( dependency.getArtifactId( ) );
+            component.setGroupId( dependency.getGroupId( ) );
+            component.setCurrentVersion( dependency.getVersion( ) );
             defineTargetVersion( component );
             checkForNewVersion( component );
             buildReleaseComments( component );
@@ -88,39 +103,39 @@ public class SiteService
     }
 
     private static void defineTargetVersion( Component component )
-    {   // FIXME
-        String strTargetVersion = component.getCurrentVersion();
-        
-        int nPos = strTargetVersion.indexOf( "-SNAPSHOT");
-        if( nPos > 0 && component.isProject() )
+    { // FIXME
+        String strTargetVersion = component.getCurrentVersion( );
+
+        int nPos = strTargetVersion.indexOf( "-SNAPSHOT" );
+        if ( nPos > 0 && component.isProject( ) )
         {
-            strTargetVersion = strTargetVersion.substring( 0 , nPos);
+            strTargetVersion = strTargetVersion.substring( 0, nPos );
         }
-            
+
         component.setTargetVersion( strTargetVersion );
     }
 
-    private static boolean isProjectComponent( Site site , String strArtifactId )
+    private static boolean isProjectComponent( Site site, String strArtifactId )
     {
         // FIXME
-        return ( strArtifactId.contains( "gru" )  || strArtifactId.contains( "ticketing" ) || strArtifactId.contains( "identity" ) );
+        return ( strArtifactId.contains( "gru" ) || strArtifactId.contains( "ticketing" ) || strArtifactId.contains( "identity" ) );
     }
 
     private static void buildReleaseComments( Component component )
     {
-        if( ! component.isProject() && isSnapshot( component.getTargetVersion() ))
+        if ( !component.isProject( ) && isSnapshot( component.getTargetVersion( ) ) )
         {
-            component.addReleaseComment( "Ne pas utiliser des snapshots pour les projets externes.");
-        }
-        
-        if( component.getLastAvailableVersion() != null )
-        {
-            component.addReleaseComment( "Une version " + component.getLastAvailableVersion() + " plus récente est disponible");
+            component.addReleaseComment( "Ne pas utiliser des snapshots pour les projets externes." );
         }
 
-        if( component.isProject() && isSnapshot( component.getCurrentVersion() ))
+        if ( component.getLastAvailableVersion( ) != null )
         {
-            component.addReleaseComment( "A releaser.");
+            component.addReleaseComment( "Une version " + component.getLastAvailableVersion( ) + " plus récente est disponible" );
+        }
+
+        if ( component.isProject( ) && isSnapshot( component.getCurrentVersion( ) ) )
+        {
+            component.addReleaseComment( "A releaser." );
         }
     }
 
@@ -131,59 +146,37 @@ public class SiteService
 
     private static void checkForNewVersion( Component component )
     {
-        if( ! component.isProject() )
+        if ( !component.isProject( ) )
         {
-            String strLastestVersion = getLatestVersion( component );
-            if( ! strLastestVersion.equals( component.getTargetVersion() ))
+            try
             {
-                component.setLastAvailableVersion( strLastestVersion );
+                String strLastestVersion = ComponentService.getLatestVersion( component.getArtifactId( ) );
+                System.out.println( component.getArtifactId( ) + " currentversion:" + component.getTargetVersion( ) + " latestvesion:" + strLastestVersion );
+
+                if ( !strLastestVersion.equals( component.getTargetVersion( ) ) )
+                {
+                    component.setLastAvailableVersion( strLastestVersion );
+                }
+            }
+            catch( HttpAccessException | IOException ex )
+            {
+                AppLogService.error(
+                        "Releaser unable to get the latest version for component : " + component.getArtifactId( ) + " error : " + ex.getMessage( ), ex );
             }
         }
     }
 
-    private static String getLatestVersion( Component component )
-    {
-        // FIXME
-        if( component.getArtifactId().equals( "library-httpaccess"))
-        {
-            return "2.4.2";
-        }
-        if( component.getArtifactId().equals( "plugin-rest"))
-        {
-            return "3.1.1";
-        }
-        return component.getTargetVersion();
-    }
-    
-    
-    
     public String generateTargetPOM( Site site )
     {
-        throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException( "Not supported yet." ); // To change body of generated methods, choose Tools | Templates.
     }
-    
-    private static Site getMockSite()
+
+    private static RequestAuthenticator getSiteAuthenticator( )
     {
-        try
-        {
-            Site site = new Site();
-            site.setName( "Ticketing");
-            site.setDescription( "Site de gestion des sollicitations");
-            String strPOM = loadFile( "/pom.xml" );
-            PomParser parser = new PomParser();
-            parser.parse( site, strPOM );
-            return site;
-        }
-        catch( IOException ex )
-        {
-            Logger.getLogger( SiteService.class.getName() ).log( Level.SEVERE, null, ex );
-            return null;
-        }
-    }
-    
-    private static String loadFile( String strFilePath ) throws IOException
-    {
-        return IOUtils.toString( SiteService.class.getResourceAsStream( strFilePath ),  "UTF-8" );
+        String strLogin = AppPropertiesService.getProperty( PROPERTY_SITE_REPOSITORY_LOGIN );
+        String strPassword = AppPropertiesService.getProperty( PROPERTY_SITE_REPOSITORY_PASSWORD );
+
+        return new BasicAuthorizationAuthenticator( strLogin, strPassword );
     }
 
 }
