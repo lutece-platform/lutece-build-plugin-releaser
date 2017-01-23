@@ -71,6 +71,7 @@ public class Site implements Serializable
     private String _strJiraKey;
 
     private String _strVersion;
+    private String _strCluster;
 
     private List<Dependency> _listCurrentDependencies = new ArrayList<>( );
     private List<Component> _listComponents = new ArrayList<>( );
@@ -263,4 +264,25 @@ public class Site implements Serializable
         _strVersion = strVersion;
     }
 
+    /**
+     * Returns the Cluster
+     * 
+     * @return The Cluster
+     */
+    public String getCluster( )
+    {
+        return _strCluster;
+    }
+
+    /**
+     * Sets the Cluster
+     * 
+     * @param strCluster
+     *            The Cluster
+     */
+    public void setCluster( String strCluster )
+    {
+        _strCluster = strCluster;
+    }
+    
 }

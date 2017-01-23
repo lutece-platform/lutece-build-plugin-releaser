@@ -2,58 +2,111 @@
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
         <h1>Pr&eacute;paration de la release du site : ${site.name}</h1>
         <h3>${site.description}</h3>
-        Art&eacute;fact ID du site : ${site.artifactId !''}
-        <br>
-        <br>
-        <h2>Composants Projet</h2>    
-        <table class="table table-striped table-condensed table-bordered table-hover">
-            <tr>
-                <th>Composant</th>
-                <th>Version actuelle</th>
-                <th>Version cible pour la release</th>
-                <th>Observations</th>
-                <th>Actions</th>
-            </tr>
-            <#list site.components as component>
-            <#if component.project>
-            <tr>
-                <td>${component.artifactId}</td>
-                <td>${component.currentVersion}</td>
-                <td>${component.targetVersion}</td>
-                <td>${component.releaseComment!''}</td>
-                <td>
-                    <button class="btn btn-primary btn-sm">Modifier</button>
-                </td>
-            </tr>
-            </#if>
-            </#list>
-        </table>
+        <div class="pull-right">
+            <@aButton href='jsp/admin/plugins/releaser/ManageClusters.jsp#cluster${site.idCluster}' title='Retour au cluster' buttonIcon='back' showTitle=true />
+        </div>
+        <div class="row">
+            <div class="col-md-3 col-sm-6 col-xs-12">
+                <div class="info-box">
+                    <span class="info-box-icon bg-green"><i class="fa fa-cubes"></i></span>
 
-        <h2>Composants externes</h2>    
-        <table class="table table-striped table-condensed table-bordered table-hover">
-            <tr>
-                <th>Composant</th>
-                <th>Version actuelle</th>
-                <th>Version cible pour la release</th>
-                <th>Observations</th>
-                <th>Actions</th>
-            </tr>
-            <#list site.components as component>
-            <#if ! component.project>
-            <tr>
-                <td>${component.artifactId}</td>
-                <td>${component.currentVersion}</td>
-                <td>${component.targetVersion}</td>
-                <td>${component.releaseComment!''}</td>
-                <td>
-                    <button class="btn btn-primary btn-sm">Modifier</button>
-                    <#if component.lastAvailableVersion??>
-                    <button class="btn btn-primary btn-sm">Mettre &agrave; jour</button>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Cluster</span>
+                        <span class="info-box-number">${site.cluster !''}</span>
+                    </div>
+                    <!-- /.info-box-content -->
+                </div>
+                <!-- /.info-box -->
+            </div>
+            <div class="col-md-3 col-sm-6 col-xs-12">
+                <div class="info-box">
+                    <span class="info-box-icon bg-aqua"><i class="fa fa-cube"></i></span>
+
+                    <div class="info-box-content">
+                        <span class="info-box-text">Artifact ID</span>
+                        <span class="info-box-number">${site.artifactId !''}</span>
+                    </div>
+                    <!-- /.info-box-content -->
+                </div>
+                <!-- /.info-box -->
+            </div>
+            <div class="col-md-3 col-sm-6 col-xs-12">
+                <div class="info-box">
+                    <span class="info-box-icon bg-yellow"><i class="fa fa-puzzle-piece"></i></span>
+
+                    <div class="info-box-content">
+                        <span class="info-box-text">Nombre de plugins</span>
+                        <span class="info-box-number">${site.components?size}</span>
+                    </div>
+                    <!-- /.info-box-content -->
+                </div>
+                <!-- /.info-box -->
+            </div>
+        </div>
+        <br>
+        <br>
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                Liste des composants
+            </div>
+            <div class="panel-body">
+                <table class="table table-striped table-condensed table-bordered table-hover">
+                    <tr>
+                        <td colspan="5">
+                            <h3><span class="fa fa-puzzle-piece"></span> Composants Projet</h3> 
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Composant</th>
+                        <th>Version actuelle</th>
+                        <th>Version cible pour la release</th>
+                        <th>Observations</th>
+                        <th>Actions</th>
+                    </tr>
+                    <#list site.components as component>
+                    <#if component.project>
+                    <tr>
+                        <td>${component.artifactId}</td>
+                        <td>${component.currentVersion}</td>
+                        <td>${component.targetVersion}</td>
+                        <td>${component.releaseComment!''}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm">Modifier</button>
+                        </td>
+                    </tr>
                     </#if>
-                </td>
-            </tr>
-            </#if>
-            </#list>
-        </table>
+                    </#list>
+                    <tr>
+                        <td colspan="5">
+                            <h3><span class="fa fa-puzzle-piece"></span> Composants externes</h3> 
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th>Composant</th>
+                        <th>Version actuelle</th>
+                        <th>Version cible pour la release</th>
+                        <th>Observations</th>
+                        <th>Actions</th>
+                    </tr>
+                    <#list site.components as component>
+                    <#if ! component.project>
+                    <tr>
+                        <td>${component.artifactId}</td>
+                        <td>${component.currentVersion}</td>
+                        <td>${component.targetVersion}</td>
+                        <td>${component.releaseComment!''}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm">Modifier</button>
+                            <#if component.lastAvailableVersion??>
+                            <button class="btn btn-primary btn-sm">Mettre &agrave; jour</button>
+                            </#if>
+                        </td>
+                    </tr>
+                    </#if>
+                    </#list>
+                </table>
+            </div>
+        </div>
     </div>
 </div>

@@ -48,11 +48,15 @@ public final class SiteDAO implements ISiteDAO
 {
     // Constants
     private static final String SQL_QUERY_NEW_PK = "SELECT max( id_site ) FROM releaser_site";
-    private static final String SQL_QUERY_SELECT = "SELECT id_site, artifact_id, id_cluster, scm_url, name, description, jira_key FROM releaser_site WHERE id_site = ?";
+    private static final String SQL_QUERY_SELECT = "SELECT a.id_site, a.name, a.description, a.artifact_id, a.id_cluster, b.name, a.scm_url, a.jira_key "
+            + " FROM releaser_site a , releaser_cluster b  WHERE a.id_site = ? AND a.id_cluster = b.id_cluster";
     private static final String SQL_QUERY_INSERT = "INSERT INTO releaser_site ( id_site, artifact_id, id_cluster, scm_url, name, description, jira_key ) VALUES ( ?, ?, ?, ?, ?, ?, ? ) ";
     private static final String SQL_QUERY_DELETE = "DELETE FROM releaser_site WHERE id_site = ? ";
     private static final String SQL_QUERY_UPDATE = "UPDATE releaser_site SET id_site = ?, artifact_id = ?, id_cluster = ?, scm_url = ?, name = ?, description = ?, jira_key = ? WHERE id_site = ?";
-    private static final String SQL_QUERY_SELECTALL = "SELECT id_site, artifact_id, id_cluster, scm_url, name, description, jira_key FROM releaser_site";
+    private static final String SQL_QUERY_SELECTALL = "SELECT a.id_site, a.name, a.description, a.artifact_id, a.id_cluster, b.name, a.scm_url, a.jira_key "
+            + " FROM releaser_site a , releaser_cluster b  WHERE a.id_cluster = b.id_cluster";
+    private static final String SQL_QUERY_SELECT_BY_CLUSTER = "SELECT a.id_site, a.name, a.description, a.artifact_id, a.id_cluster, b.name, a.scm_url, a.jira_key "
+            + " FROM releaser_site a , releaser_cluster b  WHERE a.id_cluster = b.id_cluster AND a.id_cluster = ?";
     private static final String SQL_QUERY_SELECTALL_ID = "SELECT id_site FROM releaser_site";
 
     /**
@@ -116,16 +120,18 @@ public final class SiteDAO implements ISiteDAO
             int nIndex = 1;
 
             site.setId( daoUtil.getInt( nIndex++ ) );
-            site.setArtifactId( daoUtil.getString( nIndex++ ) );
-            site.setIdCluster( daoUtil.getInt( nIndex++ ) );
-            site.setScmUrl( daoUtil.getString( nIndex++ ) );
             site.setName( daoUtil.getString( nIndex++ ) );
             site.setDescription( daoUtil.getString( nIndex++ ) );
+            site.setArtifactId( daoUtil.getString( nIndex++ ) );
+            site.setIdCluster( daoUtil.getInt( nIndex++ ) );
+            site.setCluster( daoUtil.getString( nIndex++ ) );
+            site.setScmUrl( daoUtil.getString( nIndex++ ) );
             site.setJiraKey( daoUtil.getString( nIndex++ ) );
         }
 
         daoUtil.free( );
         return site;
+        
     }
 
     /**
@@ -178,11 +184,12 @@ public final class SiteDAO implements ISiteDAO
             int nIndex = 1;
 
             site.setId( daoUtil.getInt( nIndex++ ) );
-            site.setArtifactId( daoUtil.getString( nIndex++ ) );
-            site.setIdCluster( daoUtil.getInt( nIndex++ ) );
-            site.setScmUrl( daoUtil.getString( nIndex++ ) );
             site.setName( daoUtil.getString( nIndex++ ) );
             site.setDescription( daoUtil.getString( nIndex++ ) );
+            site.setArtifactId( daoUtil.getString( nIndex++ ) );
+            site.setIdCluster( daoUtil.getInt( nIndex++ ) );
+            site.setCluster( daoUtil.getString( nIndex++ ) );
+            site.setScmUrl( daoUtil.getString( nIndex++ ) );
             site.setJiraKey( daoUtil.getString( nIndex++ ) );
 
             siteList.add( site );
@@ -223,7 +230,39 @@ public final class SiteDAO implements ISiteDAO
 
         while ( daoUtil.next( ) )
         {
-            siteList.addItem( daoUtil.getInt( 1 ), daoUtil.getString( 2 ) );
+            siteList.addItem( daoUtil.getInt( 1 ), daoUtil.getString( 5 ) );
+        }
+
+        daoUtil.free( );
+        return siteList;
+    }
+
+    /**
+     * {@inheritDoc }
+     */
+    @Override
+    public List<Site> selectByCluster( int nClusterId, Plugin plugin )
+    {
+        List<Site> siteList = new ArrayList<Site>( );
+        DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECT_BY_CLUSTER, plugin );
+        daoUtil.setInt( 1 , nClusterId );
+        daoUtil.executeQuery( );
+
+        while ( daoUtil.next( ) )
+        {
+            Site site = new Site( );
+            int nIndex = 1;
+
+            site.setId( daoUtil.getInt( nIndex++ ) );
+            site.setName( daoUtil.getString( nIndex++ ) );
+            site.setDescription( daoUtil.getString( nIndex++ ) );
+            site.setArtifactId( daoUtil.getString( nIndex++ ) );
+            site.setIdCluster( daoUtil.getInt( nIndex++ ) );
+            site.setCluster( daoUtil.getString( nIndex++ ) );
+            site.setScmUrl( daoUtil.getString( nIndex++ ) );
+            site.setJiraKey( daoUtil.getString( nIndex++ ) );
+
+            siteList.add( site );
         }
 
         daoUtil.free( );

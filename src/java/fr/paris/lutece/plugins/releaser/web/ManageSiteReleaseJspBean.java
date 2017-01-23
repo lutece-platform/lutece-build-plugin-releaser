@@ -61,7 +61,7 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         int nSiteId = 0;
         try
         {
-            Integer.parseInt( request.getParameter( PARAMETER_SITE_ID ) );
+            nSiteId = Integer.parseInt( request.getParameter( PARAMETER_SITE_ID ) );
         }
         catch( NumberFormatException e )
         {

@@ -35,6 +35,8 @@ package fr.paris.lutece.plugins.releaser.web;
 
 import fr.paris.lutece.plugins.releaser.business.Cluster;
 import fr.paris.lutece.plugins.releaser.business.ClusterHome;
+import fr.paris.lutece.plugins.releaser.business.Site;
+import fr.paris.lutece.plugins.releaser.business.SiteHome;
 import fr.paris.lutece.portal.service.message.AdminMessage;
 import fr.paris.lutece.portal.service.message.AdminMessageService;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
@@ -56,18 +58,29 @@ public class ClusterJspBean extends ManageSitesJspBean
     private static final String TEMPLATE_MANAGE_CLUSTERS = "/admin/plugins/releaser/manage_clusters.html";
     private static final String TEMPLATE_CREATE_CLUSTER = "/admin/plugins/releaser/create_cluster.html";
     private static final String TEMPLATE_MODIFY_CLUSTER = "/admin/plugins/releaser/modify_cluster.html";
+    private static final String TEMPLATE_CREATE_SITE = "/admin/plugins/releaser/create_site.html";
+    private static final String TEMPLATE_MODIFY_SITE = "/admin/plugins/releaser/modify_site.html";
+
 
     // Parameters
     private static final String PARAMETER_ID_CLUSTER = "id";
+    private static final String PARAMETER_ID_SITE = "id";
 
     // Properties for page titles
     private static final String PROPERTY_PAGE_TITLE_MANAGE_CLUSTERS = "releaser.manage_clusters.pageTitle";
     private static final String PROPERTY_PAGE_TITLE_MODIFY_CLUSTER = "releaser.modify_cluster.pageTitle";
     private static final String PROPERTY_PAGE_TITLE_CREATE_CLUSTER = "releaser.create_cluster.pageTitle";
+    private static final String PROPERTY_PAGE_TITLE_MODIFY_SITE = "releaser.modify_site.pageTitle";
+    private static final String PROPERTY_PAGE_TITLE_CREATE_SITE = "releaser.create_site.pageTitle";
+
+    // Properties
+    private static final String MESSAGE_CONFIRM_REMOVE_SITE = "releaser.message.confirmRemoveSite";
 
     // Markers
     private static final String MARK_CLUSTER_LIST = "cluster_list";
     private static final String MARK_CLUSTER = "cluster";
+    private static final String MARK_CLUSTERS_LIST = "clusters_list";
+    private static final String MARK_SITE = "site";
 
     private static final String JSP_MANAGE_CLUSTERS = "jsp/admin/plugins/releaser/ManageClusters.jsp";
 
@@ -76,25 +89,37 @@ public class ClusterJspBean extends ManageSitesJspBean
 
     // Validations
     private static final String VALIDATION_ATTRIBUTES_PREFIX = "releaser.model.entity.cluster.attribute.";
+    private static final String VALIDATION_ATTRIBUTES_SITE_PREFIX = "releaser.model.entity.site.attribute.";
 
     // Views
     private static final String VIEW_MANAGE_CLUSTERS = "manageClusters";
     private static final String VIEW_CREATE_CLUSTER = "createCluster";
     private static final String VIEW_MODIFY_CLUSTER = "modifyCluster";
+    private static final String VIEW_MANAGE_SITES = "manageSites";
+    private static final String VIEW_CREATE_SITE = "createSite";
+    private static final String VIEW_MODIFY_SITE = "modifySite";
 
     // Actions
     private static final String ACTION_CREATE_CLUSTER = "createCluster";
     private static final String ACTION_MODIFY_CLUSTER = "modifyCluster";
     private static final String ACTION_REMOVE_CLUSTER = "removeCluster";
     private static final String ACTION_CONFIRM_REMOVE_CLUSTER = "confirmRemoveCluster";
+    private static final String ACTION_CREATE_SITE = "createSite";
+    private static final String ACTION_MODIFY_SITE = "modifySite";
+    private static final String ACTION_REMOVE_SITE = "removeSite";
+    private static final String ACTION_CONFIRM_REMOVE_SITE = "confirmRemoveSite";
 
     // Infos
     private static final String INFO_CLUSTER_CREATED = "releaser.info.cluster.created";
     private static final String INFO_CLUSTER_UPDATED = "releaser.info.cluster.updated";
     private static final String INFO_CLUSTER_REMOVED = "releaser.info.cluster.removed";
+    private static final String INFO_SITE_CREATED = "releaser.info.site.created";
+    private static final String INFO_SITE_UPDATED = "releaser.info.site.updated";
+    private static final String INFO_SITE_REMOVED = "releaser.info.site.removed";
 
     // Session variable to store working values
     private Cluster _cluster;
+    private Site _site;
 
     /**
      * Build the Manage View
@@ -107,6 +132,7 @@ public class ClusterJspBean extends ManageSitesJspBean
     public String getManageClusters( HttpServletRequest request )
     {
         _cluster = null;
+        _site = null;
         List<Cluster> listClusters = ClusterHome.getClustersList( );
         Map<String, Object> model = getPaginatedListModel( request, MARK_CLUSTER_LIST, listClusters, JSP_MANAGE_CLUSTERS );
 
@@ -237,4 +263,131 @@ public class ClusterJspBean extends ManageSitesJspBean
 
         return redirectView( request, VIEW_MANAGE_CLUSTERS );
     }
+    
+    /**
+     * Returns the form to create a site
+     *
+     * @param request
+     *            The Http request
+     * @return the html code of the site form
+     */
+    @View( VIEW_CREATE_SITE )
+    public String getCreateSite( HttpServletRequest request )
+    {
+        _site = ( _site != null ) ? _site : new Site( );
+
+        Map<String, Object> model = getModel( );
+        model.put( MARK_SITE, _site );
+        model.put( MARK_CLUSTERS_LIST, ClusterHome.getClustersReferenceList() );
+
+        return getPage( PROPERTY_PAGE_TITLE_CREATE_SITE, TEMPLATE_CREATE_SITE, model );
+    }
+
+    /**
+     * Process the data capture form of a new site
+     *
+     * @param request
+     *            The Http Request
+     * @return The Jsp URL of the process result
+     */
+    @Action( ACTION_CREATE_SITE )
+    public String doCreateSite( HttpServletRequest request )
+    {
+        populate( _site, request );
+
+        // Check constraints
+        if ( !validateBean( _site, VALIDATION_ATTRIBUTES_SITE_PREFIX ) )
+        {
+            return redirectView( request, VIEW_CREATE_SITE );
+        }
+
+        SiteHome.create( _site );
+        addInfo( INFO_SITE_CREATED, getLocale( ) );
+
+        return redirectView( request, VIEW_MANAGE_SITES );
+    }
+
+    /**
+     * Manages the removal form of a site whose identifier is in the http request
+     *
+     * @param request
+     *            The Http request
+     * @return the html code to confirm
+     */
+    @Action( ACTION_CONFIRM_REMOVE_SITE )
+    public String getConfirmRemoveSite( HttpServletRequest request )
+    {
+        int nId = Integer.parseInt( request.getParameter( PARAMETER_ID_SITE ) );
+        UrlItem url = new UrlItem( getActionUrl( ACTION_REMOVE_SITE ) );
+        url.addParameter( PARAMETER_ID_SITE, nId );
+
+        String strMessageUrl = AdminMessageService.getMessageUrl( request, MESSAGE_CONFIRM_REMOVE_SITE, url.getUrl( ), AdminMessage.TYPE_CONFIRMATION );
+
+        return redirect( request, strMessageUrl );
+    }
+
+    /**
+     * Handles the removal form of a site
+     *
+     * @param request
+     *            The Http request
+     * @return the jsp URL to display the form to manage sites
+     */
+    @Action( ACTION_REMOVE_SITE )
+    public String doRemoveSite( HttpServletRequest request )
+    {
+        int nId = Integer.parseInt( request.getParameter( PARAMETER_ID_SITE ) );
+        SiteHome.remove( nId );
+        addInfo( INFO_SITE_REMOVED, getLocale( ) );
+
+        return redirectView( request, VIEW_MANAGE_SITES );
+    }
+
+    /**
+     * Returns the form to update info about a site
+     *
+     * @param request
+     *            The Http request
+     * @return The HTML form to update info
+     */
+    @View( VIEW_MODIFY_SITE )
+    public String getModifySite( HttpServletRequest request )
+    {
+        int nId = Integer.parseInt( request.getParameter( PARAMETER_ID_SITE ) );
+
+        if ( _site == null || ( _site.getId( ) != nId ) )
+        {
+            _site = SiteHome.findByPrimaryKey( nId );
+        }
+
+        Map<String, Object> model = getModel( );
+        model.put( MARK_SITE, _site );
+
+        return getPage( PROPERTY_PAGE_TITLE_MODIFY_SITE, TEMPLATE_MODIFY_SITE, model );
+    }
+
+    /**
+     * Process the change form of a site
+     *
+     * @param request
+     *            The Http request
+     * @return The Jsp URL of the process result
+     */
+    @Action( ACTION_MODIFY_SITE )
+    public String doModifySite( HttpServletRequest request )
+    {
+        populate( _site, request );
+
+        // Check constraints
+        if ( !validateBean( _site, VALIDATION_ATTRIBUTES_SITE_PREFIX ) )
+        {
+            return redirect( request, VIEW_MODIFY_SITE, PARAMETER_ID_SITE, _site.getId( ) );
+        }
+
+        SiteHome.update( _site );
+        addInfo( INFO_SITE_UPDATED, getLocale( ) );
+
+        return redirectView( request, VIEW_MANAGE_SITES );
+    }
+    
 }

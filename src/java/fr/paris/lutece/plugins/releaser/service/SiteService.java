@@ -58,7 +58,7 @@ public class SiteService
 
     public static Site getSite( int nSiteId )
     {
-        Site site = SiteHome.findByPrimaryKey( 1 );
+        Site site = SiteHome.findByPrimaryKey( nSiteId );
         String strPom = fetchPom( site.getScmUrl( ) + "/pom.xml" );
         if ( strPom != null )
         {

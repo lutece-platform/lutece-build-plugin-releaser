@@ -22,19 +22,11 @@
     <!-- Admin features parameters -->
     <admin-features>
         <admin-feature>
-            <feature-id>RELEASER_SITE_MANAGEMENT</feature-id>
-            <feature-title>releaser.adminFeature.ManageSites.name</feature-title>
-            <feature-description>releaser.adminFeature.ManageSites.description</feature-description>
-            <feature-level>0</feature-level>
-            <feature-url>jsp/admin/plugins/releaser/ManageClusters.jsp</feature-url>
-            <feature-icon-url></feature-icon-url>
-      </admin-feature>
-        <admin-feature>
             <feature-id>RELEASER_MANAGEMENT</feature-id>
             <feature-title>releaser.adminFeature.ManageReleaser.name</feature-title>
             <feature-description>releaser.adminFeature.ManageReleaser.description</feature-description>
             <feature-level>0</feature-level>
-            <feature-url>jsp/admin/plugins/releaser/ManageReleaser.jsp</feature-url>
+            <feature-url>jsp/admin/plugins/releaser/ManageClusters.jsp</feature-url>
             <feature-icon-url></feature-icon-url>
       </admin-feature>
     </admin-features>    

@@ -113,4 +113,13 @@ public interface ISiteDAO
      * @return The referenceList which contains the data of all the site objects
      */
     ReferenceList selectSitesReferenceList( Plugin plugin );
+
+    /**
+     * Find all sites for a given cluster 
+     * 
+     * @param nClusterId The cluster ID
+     * @param plugin The plugin
+     * @return the list which contains the data of all the site objects
+     */
+    List<Site> selectByCluster( int nClusterId, Plugin plugin );
 }

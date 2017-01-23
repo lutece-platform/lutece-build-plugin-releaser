@@ -104,7 +104,9 @@ public final class ClusterHome
      */
     public static Cluster findByPrimaryKey( int nKey )
     {
-        return _dao.load( nKey, _plugin );
+        Cluster cluster = _dao.load( nKey, _plugin );
+        cluster.setSites( SiteHome.findByCluster( cluster.getId() ));
+        return cluster;
     }
 
     /**
@@ -114,7 +116,12 @@ public final class ClusterHome
      */
     public static List<Cluster> getClustersList( )
     {
-        return _dao.selectClustersList( _plugin );
+        List<Cluster> listCluster = _dao.selectClustersList( _plugin );
+        for( Cluster cluster : listCluster )
+        {
+            cluster.setSites( SiteHome.findByCluster( cluster.getId() ));
+        }
+        return listCluster;
     }
 
     /**

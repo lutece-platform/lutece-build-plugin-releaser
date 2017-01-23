@@ -36,6 +36,7 @@ package fr.paris.lutece.plugins.releaser.business;
 import javax.validation.constraints.*;
 import org.hibernate.validator.constraints.*;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * This is the business class for the object Cluster
@@ -55,6 +56,7 @@ public class Cluster implements Serializable
     @Size( max = 255, message = "#i18n{releaser.validation.cluster.Description.size}" )
     private String _strDescription;
 
+    private List<Site> _listSites;
     /**
      * Returns the Id
      * 
@@ -117,4 +119,26 @@ public class Cluster implements Serializable
     {
         _strDescription = strDescription;
     }
+    
+    /**
+     * Returns the list of sites
+     * 
+     * @return The list
+     */
+    public List<Site> getSites( )
+    {
+        return _listSites;
+    }
+
+    /**
+     * Sets the list of sites
+     * 
+     * @param listSites
+     *            The list of site
+     */
+    public void setSites( List<Site> listSites )
+    {
+        _listSites = listSites;
+    }
+    
 }
