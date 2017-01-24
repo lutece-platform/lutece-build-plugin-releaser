@@ -48,6 +48,10 @@ public class Component
     private String _strNextSnapshotVersion;
     private String _strReleaseComment;
     private boolean _bIsProject;
+    private String _strJiraCode;
+    private String _strJiraRoadmapUrl;
+    private int _nJiraCurrentVersionClosedIssues;
+    private int _nJiraCurrentVersionOpenedIssues;
 
     /**
      * Returns the ArtifactId
@@ -245,8 +249,95 @@ public class Component
         }
     }
 
+    /**
+     * Reset comments
+     */
     public void resetComments( )
     {
         _strReleaseComment = null;
+    }
+
+    /**
+     * Returns the JiraCode
+     * 
+     * @return The JiraCode
+     */
+    public String getJiraCode( )
+    {
+        return _strJiraCode;
+    }
+
+    /**
+     * Sets the JiraCode
+     * 
+     * @param strJiraCode
+     *            The JiraCode
+     */
+    public void setJiraCode( String strJiraCode )
+    {
+        _strJiraCode = strJiraCode;
+    }
+
+    /**
+     * Returns the JiraRoadmapUrl
+     * 
+     * @return The JiraRoadmapUrl
+     */
+    public String getJiraRoadmapUrl( )
+    {
+        return _strJiraRoadmapUrl;
+    }
+
+    /**
+     * Sets the JiraRoadmapUrl
+     * 
+     * @param strJiraRoadmapUrl
+     *            The JiraRoadmapUrl
+     */
+    public void setJiraRoadmapUrl( String strJiraRoadmapUrl )
+    {
+        _strJiraRoadmapUrl = strJiraRoadmapUrl;
+    }
+
+    /**
+     * Returns the JiraCurrentVersionClosedIssues
+     * 
+     * @return The JiraCurrentVersionClosedIssues
+     */
+    public int getJiraCurrentVersionClosedIssues( )
+    {
+        return _nJiraCurrentVersionClosedIssues;
+    }
+
+    /**
+     * Sets the JiraCurrentVersionClosedIssues
+     * 
+     * @param nJiraCurrentVersionClosedIssues
+     *            The JiraCurrentVersionClosedIssues
+     */
+    public void setJiraCurrentVersionClosedIssues( int nJiraCurrentVersionClosedIssues )
+    {
+        _nJiraCurrentVersionClosedIssues = nJiraCurrentVersionClosedIssues;
+    }
+
+    /**
+     * Returns the JiraCurrentVersionOpenedIssues
+     * 
+     * @return The JiraCurrentVersionOpenedIssues
+     */
+    public int getJiraCurrentVersionOpenedIssues( )
+    {
+        return _nJiraCurrentVersionOpenedIssues;
+    }
+
+    /**
+     * Sets the JiraCurrentVersionOpenedIssues
+     * 
+     * @param nJiraCurrentVersionOpenedIssues
+     *            The JiraCurrentVersionOpenedIssues
+     */
+    public void setJiraCurrentVersionOpenedIssues( int nJiraCurrentVersionOpenedIssues )
+    {
+        _nJiraCurrentVersionOpenedIssues = nJiraCurrentVersionOpenedIssues;
     }
 }

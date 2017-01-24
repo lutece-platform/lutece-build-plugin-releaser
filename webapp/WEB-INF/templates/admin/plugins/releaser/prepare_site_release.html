@@ -89,7 +89,7 @@
                         <th>Composant</th>
                         <th>Version actuelle</th>
                         <th>Version cible pour la release</th>
-                        <th>&nbsp;</th>
+                        <th>Infos JIRA</th>
                         <th>Observations</th>
                         <th>Actions</th>
                     </tr>
@@ -105,7 +105,12 @@
                                 ${component.targetVersion}
                             </#if>
                         </td>
-                        <td>&nbsp;</td>
+                        <td>
+                            <a href="${component.jiraRoadmapUrl}">
+                                <span class="label label-success">${component.jiraCurrentVersionClosedIssues}</span>
+                                <span class="label label-danger">${component.jiraCurrentVersionOpenedIssues}</span>
+                            </a>
+                        </td>
                         <td>${component.releaseComment!''}</td>
                         <td>
                             <@aButton href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=projectComponent&artifact_id=${component.artifactId}' title='Ajouter aux composants projet' buttonIcon='star' color='btn-default' showTitle=false />

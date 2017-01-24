@@ -99,6 +99,7 @@ public class SiteService
             defineTargetVersion( component );
             defineNextSnapshotVersion( component );
             checkForNewVersion( component );
+            ComponentService.getJiraInfos( component );
             site.addComponent( component );
         }
     }
