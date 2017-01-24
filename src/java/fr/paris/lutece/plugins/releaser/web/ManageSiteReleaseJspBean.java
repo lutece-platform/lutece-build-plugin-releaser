@@ -38,6 +38,7 @@ import fr.paris.lutece.plugins.releaser.service.SiteService;
 import fr.paris.lutece.portal.service.template.AppTemplateService;
 import fr.paris.lutece.portal.util.mvc.admin.MVCAdminJspBean;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
+import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.View;
 import fr.paris.lutece.util.html.HtmlTemplate;
 import java.util.Map;
@@ -49,8 +50,18 @@ import javax.servlet.http.HttpServletRequest;
 @Controller( controllerJsp = "ManageSiteRelease.jsp", controllerPath = "jsp/admin/plugins/releaser/", right = "RELEASER_SITE_MANAGEMENT" )
 public class ManageSiteReleaseJspBean extends MVCAdminJspBean
 {
+    // Parameters
     private static final String PARAMETER_SITE_ID = "id_site";
+    private static final String PARAMETER_ARTIFACT_ID = "artifact_id";
+   
+    // Views
     private static final String VIEW_MANAGE_SITE_RELEASE = "siteRelease";
+    
+    // Actions
+    private static final String ACTION_UPGRADE_COMPONENT = "upgradeComponent";
+    private static final String ACTION_PROJECT_COMPONENT = "projectComponent";
+
+
     private static final String TEMPLATE_PREPARE_SITE_RELEASE = "/admin/plugins/releaser/prepare_site_release.html";
     private static final String MARK_SITE = "site";
     private Site _site;
@@ -58,19 +69,46 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     @View( value = VIEW_MANAGE_SITE_RELEASE, defaultView = true )
     public String getPrepareSiteRelease( HttpServletRequest request )
     {
-        int nSiteId = 0;
-        try
+        String strSiteId = request.getParameter( PARAMETER_SITE_ID );
+        if( (_site == null) || (strSiteId != null) )
         {
-            nSiteId = Integer.parseInt( request.getParameter( PARAMETER_SITE_ID ) );
+            try
+            {
+                int nSiteId = 0;
+                nSiteId = Integer.parseInt( strSiteId );
+                _site = SiteService.getSite( nSiteId );
+            }
+            catch( NumberFormatException e )
+            {
+                // TODO
+            }
         }
-        catch( NumberFormatException e )
-        {
-            // TODO
-        }
-        _site = SiteService.getSite( nSiteId );
+        SiteService.buildComments( _site , getLocale() );
         Map<String, Object> model = getModel( );
         model.put( MARK_SITE, _site );
         HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_PREPARE_SITE_RELEASE, getLocale( ), model );
         return template.getHtml( );
     }
+    
+    
+    @Action( ACTION_UPGRADE_COMPONENT )
+    public String doUpgradeComponent( HttpServletRequest request )
+    {
+        String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
+        SiteService.upgradeComponent( _site , strArtifactId );
+        
+        return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
+        
+    }
+    
+    @Action( ACTION_PROJECT_COMPONENT )
+    public String doProjectComponent( HttpServletRequest request )
+    {
+        String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
+        SiteService.toggleProjectComponent( _site , strArtifactId );
+        
+        return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
+        
+    }
+    
 }

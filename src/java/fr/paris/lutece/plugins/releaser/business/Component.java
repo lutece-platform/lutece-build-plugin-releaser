@@ -45,6 +45,7 @@ public class Component
     private String _strCurrentVersion;
     private String _strTargetVersion;
     private String _strLastAvailableVersion;
+    private String _strNextSnapshotVersion;
     private String _strReleaseComment;
     private boolean _bIsProject;
 
@@ -196,6 +197,27 @@ public class Component
     }
 
     /**
+     * Returns the NextSnapshotVersion
+     * 
+     * @return The NextSnapshotVersion
+     */
+    public String getNextSnapshotVersion( )
+    {
+        return _strNextSnapshotVersion;
+    }
+
+    /**
+     * Sets the NextSnapshotVersion
+     * 
+     * @param strNextSnapshotVersion
+     *            The NextSnapshotVersion
+     */
+    public void setNextSnapshotVersion( String strNextSnapshotVersion )
+    {
+        _strNextSnapshotVersion = strNextSnapshotVersion;
+    }
+
+    /**
      * Returns the ReleaseComment
      * 
      * @return The ReleaseComment
@@ -215,11 +237,16 @@ public class Component
     {
         if ( _strReleaseComment != null )
         {
-            _strReleaseComment += strReleaseComment;
+            _strReleaseComment = _strReleaseComment + "<br>\n" + strReleaseComment;
         }
         else
         {
             _strReleaseComment = strReleaseComment;
         }
+    }
+
+    public void resetComments()
+    {
+        _strReleaseComment = null;
     }
 }

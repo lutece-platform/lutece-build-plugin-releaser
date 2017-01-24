@@ -60,6 +60,7 @@
                         <th>Composant</th>
                         <th>Version actuelle</th>
                         <th>Version cible pour la release</th>
+                        <th>Version de la prochaine Snapshot</th>
                         <th>Observations</th>
                         <th>Actions</th>
                     </tr>
@@ -69,9 +70,11 @@
                         <td>${component.artifactId}</td>
                         <td>${component.currentVersion}</td>
                         <td>${component.targetVersion}</td>
+                        <td>${component.nextSnapshotVersion}</td>
                         <td>${component.releaseComment!''}</td>
                         <td>
-                            <button class="btn btn-primary btn-sm">Modifier</button>
+                            <@aButton href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=projectComponent&artifact_id=${component.artifactId}' title='Supprimer des composants projet' buttonIcon='star-o' color='btn-default' showTitle=false />
+                            <@aButton href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=releaseComponent&artifact_id=${component.artifactId}' title='Releaser le composant' buttonIcon='tag' color='btn-success' showTitle=false />
                         </td>
                     </tr>
                     </#if>
@@ -86,6 +89,7 @@
                         <th>Composant</th>
                         <th>Version actuelle</th>
                         <th>Version cible pour la release</th>
+                        <th>&nbsp;</th>
                         <th>Observations</th>
                         <th>Actions</th>
                     </tr>
@@ -94,12 +98,19 @@
                     <tr>
                         <td>${component.artifactId}</td>
                         <td>${component.currentVersion}</td>
-                        <td>${component.targetVersion}</td>
+                        <td>
+                            <#if component.currentVersion != component.targetVersion>
+                            <span class="label label-info">${component.targetVersion}</span>
+                            <#else>
+                                ${component.targetVersion}
+                            </#if>
+                        </td>
+                        <td>&nbsp;</td>
                         <td>${component.releaseComment!''}</td>
                         <td>
-                            <button class="btn btn-primary btn-sm">Modifier</button>
-                            <#if component.lastAvailableVersion??>
-                            <button class="btn btn-primary btn-sm">Mettre &agrave; jour</button>
+                            <@aButton href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=projectComponent&artifact_id=${component.artifactId}' title='Ajouter aux composants projet' buttonIcon='star' color='btn-default' showTitle=false />
+                            <#if component.lastAvailableVersion?? && component.lastAvailableVersion != component.targetVersion >
+                                <@aButton href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=upgradeComponent&artifact_id=${component.artifactId}' title='Upgrader le composant' buttonIcon='arrow-circle-o-up' showTitle=false />
                             </#if>
                         </td>
                     </tr>

@@ -34,32 +34,41 @@
 
 package fr.paris.lutece.plugins.releaser.service;
 
+import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.Dependency;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.SiteHome;
+import fr.paris.lutece.plugins.releaser.util.pom.PomFetcher;
+import fr.paris.lutece.plugins.releaser.util.version.Version;
+import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
+import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.util.AppLogService;
-import fr.paris.lutece.portal.service.util.AppPropertiesService;
-import fr.paris.lutece.util.httpaccess.HttpAccess;
 import fr.paris.lutece.util.httpaccess.HttpAccessException;
-import fr.paris.lutece.util.signrequest.BasicAuthorizationAuthenticator;
-import fr.paris.lutece.util.signrequest.RequestAuthenticator;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Locale;
 
 /**
  * SiteService
  */
 public class SiteService
 {
-    private static final String PROPERTY_SITE_REPOSITORY_LOGIN = "releaser.site.repository.login";
-    private static final String PROPERTY_SITE_REPOSITORY_PASSWORD = "releaser.site.repository.password";
+    private static final String MESSAGE_AVOID_SNAPSHOT = "releaser.message.avoidSnapshot";
+    private static final String MESSAGE_UPGRADE_SELECTED = "releaser.message.upgradeSelected";
+    private static final String MESSAGE_TO_BE_RELEASED = "releaser.message.toBeReleased";
+    private static final String MESSAGE_MORE_RECENT_VERSION_AVAILABLE = "releaser.message.moreRecentVersionAvailable";
+    
+    private static final String NOT_AVAILABLE = "Not available";
 
+    /**
+     * Load a site from its id
+     * @param nSiteId The site id
+     * @return A site object
+     */
     public static Site getSite( int nSiteId )
     {
         Site site = SiteHome.findByPrimaryKey( nSiteId );
-        String strPom = fetchPom( site.getScmUrl( ) + "/pom.xml" );
+        String strPom = PomFetcher.fetchPom( site.getScmUrl( ) + "/pom.xml" );
         if ( strPom != null )
         {
             PomParser parser = new PomParser( );
@@ -69,22 +78,10 @@ public class SiteService
         return site;
     }
 
-    private static String fetchPom( String strPomUrl )
-    {
-        try
-        {
-            RequestAuthenticator authenticator = getSiteAuthenticator( );
-            HttpAccess httpAccess = new HttpAccess( );
-            String strPom = httpAccess.doGet( strPomUrl, authenticator, null );
-            return strPom;
-        }
-        catch( HttpAccessException ex )
-        {
-            Logger.getLogger( SiteService.class.getName( ) ).log( Level.SEVERE, null, ex );
-        }
-        return null;
-    }
-
+    /**
+     * Initialize the component list for a given site
+     * @param site The site
+     */
     private static void initComponents( Site site )
     {
         for ( Dependency dependency : site.getCurrentDependencies( ) )
@@ -96,23 +93,59 @@ public class SiteService
             component.setGroupId( dependency.getGroupId( ) );
             component.setCurrentVersion( dependency.getVersion( ) );
             defineTargetVersion( component );
+            defineNextSnapshotVersion( component );
             checkForNewVersion( component );
-            buildReleaseComments( component );
             site.addComponent( component );
         }
     }
 
+    /**
+     * Define the target version for a given component : <br>
+     * - current version for non project component <br>
+     * - nex release for project component
+     * @param component The component
+     */
     private static void defineTargetVersion( Component component )
-    { // FIXME
-        String strTargetVersion = component.getCurrentVersion( );
-
-        int nPos = strTargetVersion.indexOf( "-SNAPSHOT" );
-        if ( nPos > 0 && component.isProject( ) )
+    { 
+        if( component.isProject() )
         {
-            strTargetVersion = strTargetVersion.substring( 0, nPos );
+            String strTargetVersion = NOT_AVAILABLE;
+            try
+            {
+                strTargetVersion = Version.parse( component.getCurrentVersion( )).nextRelease().getVersion();
+            }
+            catch( VersionParsingException ex )
+            {
+                AppLogService.error( "Error parsing version for component " + component.getArtifactId() + " : " + ex.getMessage() , ex);
+            }
+            component.setTargetVersion( strTargetVersion );
         }
+        else
+        {
+            component.setTargetVersion( component.getCurrentVersion() );
+        }
+    }
 
-        component.setTargetVersion( strTargetVersion );
+    /**
+     * Define the next snapshot version for a given component
+     * @param component The component
+     */
+    private static void defineNextSnapshotVersion( Component component )
+    { 
+        String strNextSnapshotVersion = NOT_AVAILABLE;
+        try
+        {
+            Version version = Version.parse( component.getTargetVersion() );
+            boolean bSnapshot = true;
+            strNextSnapshotVersion = version.nextPatch( bSnapshot ).toString();
+        }
+        catch( VersionParsingException ex )
+        {
+            AppLogService.error( "Error parsing version for component " + component.getArtifactId() + " : " + ex.getMessage() , ex);
+                    
+        }
+        component.setNextSnapshotVersion( strNextSnapshotVersion );
+
     }
 
     private static boolean isProjectComponent( Site site, String strArtifactId )
@@ -121,28 +154,54 @@ public class SiteService
         return ( strArtifactId.contains( "gru" ) || strArtifactId.contains( "ticketing" ) || strArtifactId.contains( "identity" ) );
     }
 
-    private static void buildReleaseComments( Component component )
+    /**
+     * Build release comments for a given site
+     * @param site The site
+     * @param locale The locale to use for comments
+     */
+    public static void buildComments( Site site , Locale locale)
     {
-        if ( !component.isProject( ) && isSnapshot( component.getTargetVersion( ) ) )
+        for( Component component : site.getComponents() )
         {
-            component.addReleaseComment( "Ne pas utiliser des snapshots pour les projets externes." );
-        }
-
-        if ( component.getLastAvailableVersion( ) != null )
-        {
-            component.addReleaseComment( "Une version " + component.getLastAvailableVersion( ) + " plus récente est disponible" );
-        }
-
-        if ( component.isProject( ) && isSnapshot( component.getCurrentVersion( ) ) )
-        {
-            component.addReleaseComment( "A releaser." );
+            component.resetComments();
+            buildReleaseComments( component , locale );
         }
     }
 
-    private static boolean isSnapshot( String strVersion )
+    /**
+     * Build release comments for a given component
+     * @param component The component
+     * @param locale The locale to use for comments
+     */    
+    private static void buildReleaseComments( Component component , Locale locale )
     {
-        return strVersion.contains( "SNAPSHOT" );
+        if ( !component.isProject( ) )
+        {
+            if( Version.isSnapshot( component.getTargetVersion( ) ) )
+            {
+                String strComment = I18nService.getLocalizedString( MESSAGE_AVOID_SNAPSHOT, locale );
+                component.addReleaseComment( strComment );
+            }
+            if( ! component.getTargetVersion().equals( component.getCurrentVersion( ) ))
+            {
+                String strComment = I18nService.getLocalizedString( MESSAGE_UPGRADE_SELECTED , locale );
+                component.addReleaseComment( strComment );              }
+        }
+
+        if ( component.getLastAvailableVersion( ) != null && !component.getLastAvailableVersion( ).equals( component.getTargetVersion() ))
+        {
+            String[] arguments = { component.getLastAvailableVersion( ) };
+            String strComment = I18nService.getLocalizedString( MESSAGE_MORE_RECENT_VERSION_AVAILABLE , arguments, locale );
+            component.addReleaseComment( strComment );
+        }
+
+        if ( component.isProject( ) && Version.isSnapshot( component.getCurrentVersion( ) ) )
+        {
+            String strComment = I18nService.getLocalizedString( MESSAGE_TO_BE_RELEASED , locale );
+            component.addReleaseComment( strComment );
+        }
     }
+
 
     private static void checkForNewVersion( Component component )
     {
@@ -151,7 +210,6 @@ public class SiteService
             try
             {
                 String strLastestVersion = ComponentService.getLatestVersion( component.getArtifactId( ) );
-                System.out.println( component.getArtifactId( ) + " currentversion:" + component.getTargetVersion( ) + " latestvesion:" + strLastestVersion );
 
                 if ( !strLastestVersion.equals( component.getTargetVersion( ) ) )
                 {
@@ -166,17 +224,42 @@ public class SiteService
         }
     }
 
+    public static void upgradeComponent( Site site, String strArtifactId )
+    {
+        for( Component component : site.getComponents() )
+        {
+            if( component.getArtifactId().equals( strArtifactId ))
+            {
+                component.setTargetVersion( component.getLastAvailableVersion() );
+            }
+        }
+    }
+
+    /**
+     * Add or Remove a component from the project's components list
+     * @param site The site
+     * @param strArtifactId The component artifact id 
+     */
+    public static void toggleProjectComponent( Site site, String strArtifactId )
+    {
+        for( Component component : site.getComponents() )
+        {
+            if( component.getArtifactId().equals( strArtifactId ))
+            {
+                component.setIsProject( ! component.isProject() );
+            }
+        }
+    }
+
+    /**
+     * Generate the pom.xml file for a given site
+     * @param site The site
+     * @return The pom.xml content
+     */
     public String generateTargetPOM( Site site )
     {
         throw new UnsupportedOperationException( "Not supported yet." ); // To change body of generated methods, choose Tools | Templates.
     }
 
-    private static RequestAuthenticator getSiteAuthenticator( )
-    {
-        String strLogin = AppPropertiesService.getProperty( PROPERTY_SITE_REPOSITORY_LOGIN );
-        String strPassword = AppPropertiesService.getProperty( PROPERTY_SITE_REPOSITORY_PASSWORD );
-
-        return new BasicAuthorizationAuthenticator( strLogin, strPassword );
-    }
 
 }

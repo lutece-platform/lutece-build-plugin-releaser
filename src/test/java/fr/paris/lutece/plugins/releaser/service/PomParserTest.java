@@ -34,6 +34,7 @@
 
 package fr.paris.lutece.plugins.releaser.service;
 
+import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import java.io.IOException;
 import org.apache.commons.io.IOUtils;
