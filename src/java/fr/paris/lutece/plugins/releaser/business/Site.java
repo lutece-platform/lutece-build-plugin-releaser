@@ -284,5 +284,5 @@ public class Site implements Serializable
     {
         _strCluster = strCluster;
     }
-    
+
 }

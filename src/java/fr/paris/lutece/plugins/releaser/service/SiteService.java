@@ -57,12 +57,14 @@ public class SiteService
     private static final String MESSAGE_UPGRADE_SELECTED = "releaser.message.upgradeSelected";
     private static final String MESSAGE_TO_BE_RELEASED = "releaser.message.toBeReleased";
     private static final String MESSAGE_MORE_RECENT_VERSION_AVAILABLE = "releaser.message.moreRecentVersionAvailable";
-    
+
     private static final String NOT_AVAILABLE = "Not available";
 
     /**
      * Load a site from its id
-     * @param nSiteId The site id
+     * 
+     * @param nSiteId
+     *            The site id
      * @return A site object
      */
     public static Site getSite( int nSiteId )
@@ -80,7 +82,9 @@ public class SiteService
 
     /**
      * Initialize the component list for a given site
-     * @param site The site
+     * 
+     * @param site
+     *            The site
      */
     private static void initComponents( Site site )
     {
@@ -103,46 +107,50 @@ public class SiteService
      * Define the target version for a given component : <br>
      * - current version for non project component <br>
      * - nex release for project component
-     * @param component The component
+     * 
+     * @param component
+     *            The component
      */
     private static void defineTargetVersion( Component component )
-    { 
-        if( component.isProject() )
+    {
+        if ( component.isProject( ) )
         {
             String strTargetVersion = NOT_AVAILABLE;
             try
             {
-                strTargetVersion = Version.parse( component.getCurrentVersion( )).nextRelease().getVersion();
+                strTargetVersion = Version.parse( component.getCurrentVersion( ) ).nextRelease( ).getVersion( );
             }
             catch( VersionParsingException ex )
             {
-                AppLogService.error( "Error parsing version for component " + component.getArtifactId() + " : " + ex.getMessage() , ex);
+                AppLogService.error( "Error parsing version for component " + component.getArtifactId( ) + " : " + ex.getMessage( ), ex );
             }
             component.setTargetVersion( strTargetVersion );
         }
         else
         {
-            component.setTargetVersion( component.getCurrentVersion() );
+            component.setTargetVersion( component.getCurrentVersion( ) );
         }
     }
 
     /**
      * Define the next snapshot version for a given component
-     * @param component The component
+     * 
+     * @param component
+     *            The component
      */
     private static void defineNextSnapshotVersion( Component component )
-    { 
+    {
         String strNextSnapshotVersion = NOT_AVAILABLE;
         try
         {
-            Version version = Version.parse( component.getTargetVersion() );
+            Version version = Version.parse( component.getTargetVersion( ) );
             boolean bSnapshot = true;
-            strNextSnapshotVersion = version.nextPatch( bSnapshot ).toString();
+            strNextSnapshotVersion = version.nextPatch( bSnapshot ).toString( );
         }
         catch( VersionParsingException ex )
         {
-            AppLogService.error( "Error parsing version for component " + component.getArtifactId() + " : " + ex.getMessage() , ex);
-                    
+            AppLogService.error( "Error parsing version for component " + component.getArtifactId( ) + " : " + ex.getMessage( ), ex );
+
         }
         component.setNextSnapshotVersion( strNextSnapshotVersion );
 
@@ -156,52 +164,60 @@ public class SiteService
 
     /**
      * Build release comments for a given site
-     * @param site The site
-     * @param locale The locale to use for comments
+     * 
+     * @param site
+     *            The site
+     * @param locale
+     *            The locale to use for comments
      */
-    public static void buildComments( Site site , Locale locale)
+    public static void buildComments( Site site, Locale locale )
     {
-        for( Component component : site.getComponents() )
+        for ( Component component : site.getComponents( ) )
         {
-            component.resetComments();
-            buildReleaseComments( component , locale );
+            component.resetComments( );
+            buildReleaseComments( component, locale );
         }
     }
 
     /**
      * Build release comments for a given component
-     * @param component The component
-     * @param locale The locale to use for comments
-     */    
-    private static void buildReleaseComments( Component component , Locale locale )
+     * 
+     * @param component
+     *            The component
+     * @param locale
+     *            The locale to use for comments
+     */
+    private static void buildReleaseComments( Component component, Locale locale )
     {
         if ( !component.isProject( ) )
         {
-            if( Version.isSnapshot( component.getTargetVersion( ) ) )
+            if ( Version.isSnapshot( component.getTargetVersion( ) ) )
             {
                 String strComment = I18nService.getLocalizedString( MESSAGE_AVOID_SNAPSHOT, locale );
                 component.addReleaseComment( strComment );
             }
-            if( ! component.getTargetVersion().equals( component.getCurrentVersion( ) ))
+            if ( !component.getTargetVersion( ).equals( component.getCurrentVersion( ) ) )
             {
-                String strComment = I18nService.getLocalizedString( MESSAGE_UPGRADE_SELECTED , locale );
-                component.addReleaseComment( strComment );              }
+                String strComment = I18nService.getLocalizedString( MESSAGE_UPGRADE_SELECTED, locale );
+                component.addReleaseComment( strComment );
+            }
         }
 
-        if ( component.getLastAvailableVersion( ) != null && !component.getLastAvailableVersion( ).equals( component.getTargetVersion() ))
+        if ( component.getLastAvailableVersion( ) != null && !component.getLastAvailableVersion( ).equals( component.getTargetVersion( ) ) )
         {
-            String[] arguments = { component.getLastAvailableVersion( ) };
-            String strComment = I18nService.getLocalizedString( MESSAGE_MORE_RECENT_VERSION_AVAILABLE , arguments, locale );
+            String [ ] arguments = {
+                component.getLastAvailableVersion( )
+            };
+            String strComment = I18nService.getLocalizedString( MESSAGE_MORE_RECENT_VERSION_AVAILABLE, arguments, locale );
             component.addReleaseComment( strComment );
         }
 
         if ( component.isProject( ) && Version.isSnapshot( component.getCurrentVersion( ) ) )
         {
-            String strComment = I18nService.getLocalizedString( MESSAGE_TO_BE_RELEASED , locale );
+            String strComment = I18nService.getLocalizedString( MESSAGE_TO_BE_RELEASED, locale );
             component.addReleaseComment( strComment );
         }
     }
-
 
     private static void checkForNewVersion( Component component )
     {
@@ -226,40 +242,44 @@ public class SiteService
 
     public static void upgradeComponent( Site site, String strArtifactId )
     {
-        for( Component component : site.getComponents() )
+        for ( Component component : site.getComponents( ) )
         {
-            if( component.getArtifactId().equals( strArtifactId ))
+            if ( component.getArtifactId( ).equals( strArtifactId ) )
             {
-                component.setTargetVersion( component.getLastAvailableVersion() );
+                component.setTargetVersion( component.getLastAvailableVersion( ) );
             }
         }
     }
 
     /**
      * Add or Remove a component from the project's components list
-     * @param site The site
-     * @param strArtifactId The component artifact id 
+     * 
+     * @param site
+     *            The site
+     * @param strArtifactId
+     *            The component artifact id
      */
     public static void toggleProjectComponent( Site site, String strArtifactId )
     {
-        for( Component component : site.getComponents() )
+        for ( Component component : site.getComponents( ) )
         {
-            if( component.getArtifactId().equals( strArtifactId ))
+            if ( component.getArtifactId( ).equals( strArtifactId ) )
             {
-                component.setIsProject( ! component.isProject() );
+                component.setIsProject( !component.isProject( ) );
             }
         }
     }
 
     /**
      * Generate the pom.xml file for a given site
-     * @param site The site
+     * 
+     * @param site
+     *            The site
      * @return The pom.xml content
      */
     public String generateTargetPOM( Site site )
     {
         throw new UnsupportedOperationException( "Not supported yet." ); // To change body of generated methods, choose Tools | Templates.
     }
-
 
 }

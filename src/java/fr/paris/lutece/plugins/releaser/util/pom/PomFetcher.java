@@ -32,7 +32,6 @@
  * License 1.0
  */
 
-
 package fr.paris.lutece.plugins.releaser.util.pom;
 
 import fr.paris.lutece.portal.service.util.AppLogService;
@@ -45,15 +44,17 @@ import fr.paris.lutece.util.signrequest.RequestAuthenticator;
 /**
  * PomFetcher
  */
-public class PomFetcher 
+public class PomFetcher
 {
 
     private static final String PROPERTY_SITE_REPOSITORY_LOGIN = "releaser.site.repository.login";
     private static final String PROPERTY_SITE_REPOSITORY_PASSWORD = "releaser.site.repository.password";
-    
+
     /**
      * Fetch the pom.xml content from a repository
-     * @param strPomUrl The POM URL
+     * 
+     * @param strPomUrl
+     *            The POM URL
      * @return The POM content
      */
     public static String fetchPom( String strPomUrl )
@@ -67,13 +68,14 @@ public class PomFetcher
         }
         catch( HttpAccessException ex )
         {
-            AppLogService.error( "Error fecthing pom.xml content : " + ex.getMessage(), ex );
+            AppLogService.error( "Error fecthing pom.xml content : " + ex.getMessage( ), ex );
         }
         return null;
     }
 
     /**
-     * Build an authenticathor to access the site repository 
+     * Build an authenticathor to access the site repository
+     * 
      * @return The authenticator
      */
     private static RequestAuthenticator getSiteAuthenticator( )
@@ -83,5 +85,5 @@ public class PomFetcher
 
         return new BasicAuthorizationAuthenticator( strLogin, strPassword );
     }
-    
+
 }

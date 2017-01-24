@@ -136,17 +136,17 @@ public final class SiteHome
     {
         return _dao.selectSitesReferenceList( _plugin );
     }
-    
+
     /**
-     * Find all sites for a given cluster 
+     * Find all sites for a given cluster
      * 
-     * @param nClusterId The cluster ID
+     * @param nClusterId
+     *            The cluster ID
      * @return the list which contains the data of all the site objects
      */
     public static List<Site> findByCluster( int nClusterId )
     {
-        return _dao.selectByCluster( nClusterId , _plugin );
+        return _dao.selectByCluster( nClusterId, _plugin );
     }
 
-    
 }

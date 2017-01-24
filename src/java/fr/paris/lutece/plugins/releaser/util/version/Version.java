@@ -42,32 +42,37 @@ import java.util.logging.Logger;
 public class Version implements Comparable
 {
     private static final String QUALIFIER_SNAPSHOT = "SNAPSHOT";
-    
-    
+
     private int _nMajor;
     private int _nMinor;
     private int _nPatch;
     private String _strQualifier;
 
     /** Constructor */
-    public Version()
+    public Version( )
     {
     }
-    
+
     /**
      * Constructor
-     * @param nMajor major digit
-     * @param nMinor minor digit
-     * @param nPatch patch digit
-     * @param strQualifier qualifier
+     * 
+     * @param nMajor
+     *            major digit
+     * @param nMinor
+     *            minor digit
+     * @param nPatch
+     *            patch digit
+     * @param strQualifier
+     *            qualifier
      */
-    public Version( int nMajor, int nMinor, int nPatch , String strQualifier )
+    public Version( int nMajor, int nMinor, int nPatch, String strQualifier )
     {
         _nMajor = nMajor;
         _nMinor = nMinor;
         _nPatch = nPatch;
         _strQualifier = strQualifier;
     }
+
     /**
      * @return the nMajor
      */
@@ -166,19 +171,22 @@ public class Version implements Comparable
     }
 
     /**
-     * {@inheritDoc } 
+     * {@inheritDoc }
      */
     @Override
-    public String toString()
+    public String toString( )
     {
-        return getVersion();
+        return getVersion( );
     }
-    
+
     /**
      * Parse a string to extract version
-     * @param strSource The source
+     * 
+     * @param strSource
+     *            The source
      * @return The version object
-     * @throws VersionParsingException if parsing failed 
+     * @throws VersionParsingException
+     *             if parsing failed
      */
     public static Version parse( String strSource ) throws VersionParsingException
     {
@@ -228,53 +236,61 @@ public class Version implements Comparable
 
     /**
      * Build a new version object with major digit incremented
-     * @param bSnapshot if snapshot qualifier needed
+     * 
+     * @param bSnapshot
+     *            if snapshot qualifier needed
      * @return The next version object
      */
     public Version nextMajor( boolean bSnapshot )
     {
         String strQualifier = ( bSnapshot ) ? QUALIFIER_SNAPSHOT : null;
-        
-        return new Version( _nMajor + 1 , _nMinor , _nPatch , strQualifier );
+
+        return new Version( _nMajor + 1, _nMinor, _nPatch, strQualifier );
     }
-    
-    
+
     /**
      * Build a new version object with minor digit incremented
-     * @param bSnapshot if snapshot qualifier needed
+     * 
+     * @param bSnapshot
+     *            if snapshot qualifier needed
      * @return The next version object
      */
     public Version nextMinor( boolean bSnapshot )
     {
         String strQualifier = ( bSnapshot ) ? QUALIFIER_SNAPSHOT : null;
-        
-        return new Version( _nMajor , _nMinor + 1, _nPatch , strQualifier );
+
+        return new Version( _nMajor, _nMinor + 1, _nPatch, strQualifier );
     }
-    
+
     /**
      * Build a new version object with patch digit incremented
-     * @param bSnapshot if snapshot qualifier needed
+     * 
+     * @param bSnapshot
+     *            if snapshot qualifier needed
      * @return The next version object
      */
     public Version nextPatch( boolean bSnapshot )
     {
         String strQualifier = ( bSnapshot ) ? QUALIFIER_SNAPSHOT : null;
-        
-        return new Version( _nMajor , _nMinor , _nPatch + 1 , strQualifier );
+
+        return new Version( _nMajor, _nMinor, _nPatch + 1, strQualifier );
     }
-    
+
     /**
      * Build a new version object with no qualifier
+     * 
      * @return The next version object
      */
-    public Version nextRelease()
+    public Version nextRelease( )
     {
-        return new Version( _nMajor , _nMinor , _nPatch , null );
+        return new Version( _nMajor, _nMinor, _nPatch, null );
     }
-    
+
     /**
      * Check if a given version is a SNAPSHOT
-     * @param strVersion The version to check
+     * 
+     * @param strVersion
+     *            The version to check
      * @return True if snapshot otherwise false
      */
     public static boolean isSnapshot( String strVersion )
@@ -282,7 +298,7 @@ public class Version implements Comparable
         try
         {
             Version version = parse( strVersion );
-            if( QUALIFIER_SNAPSHOT.equals( version.getQualifier() ))
+            if ( QUALIFIER_SNAPSHOT.equals( version.getQualifier( ) ) )
             {
                 return true;
             }

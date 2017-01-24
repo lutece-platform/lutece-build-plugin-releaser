@@ -245,7 +245,7 @@ public class Component
         }
     }
 
-    public void resetComments()
+    public void resetComments( )
     {
         _strReleaseComment = null;
     }

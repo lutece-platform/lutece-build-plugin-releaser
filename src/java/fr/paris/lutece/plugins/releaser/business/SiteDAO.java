@@ -131,7 +131,7 @@ public final class SiteDAO implements ISiteDAO
 
         daoUtil.free( );
         return site;
-        
+
     }
 
     /**
@@ -245,7 +245,7 @@ public final class SiteDAO implements ISiteDAO
     {
         List<Site> siteList = new ArrayList<Site>( );
         DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECT_BY_CLUSTER, plugin );
-        daoUtil.setInt( 1 , nClusterId );
+        daoUtil.setInt( 1, nClusterId );
         daoUtil.executeQuery( );
 
         while ( daoUtil.next( ) )

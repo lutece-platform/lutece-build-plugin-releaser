@@ -47,20 +47,19 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * ManageSiteRelease JSP Bean abstract class for JSP Bean
  */
-@Controller( controllerJsp = "ManageSiteRelease.jsp", controllerPath = "jsp/admin/plugins/releaser/", right = "RELEASER_SITE_MANAGEMENT" )
+@Controller( controllerJsp = "ManageSiteRelease.jsp", controllerPath = "jsp/admin/plugins/releaser/", right = "RELEASER_MANAGEMENT" )
 public class ManageSiteReleaseJspBean extends MVCAdminJspBean
 {
     // Parameters
     private static final String PARAMETER_SITE_ID = "id_site";
     private static final String PARAMETER_ARTIFACT_ID = "artifact_id";
-   
+
     // Views
     private static final String VIEW_MANAGE_SITE_RELEASE = "siteRelease";
-    
+
     // Actions
     private static final String ACTION_UPGRADE_COMPONENT = "upgradeComponent";
     private static final String ACTION_PROJECT_COMPONENT = "projectComponent";
-
 
     private static final String TEMPLATE_PREPARE_SITE_RELEASE = "/admin/plugins/releaser/prepare_site_release.html";
     private static final String MARK_SITE = "site";
@@ -70,7 +69,7 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     public String getPrepareSiteRelease( HttpServletRequest request )
     {
         String strSiteId = request.getParameter( PARAMETER_SITE_ID );
-        if( (_site == null) || (strSiteId != null) )
+        if ( ( _site == null ) || ( strSiteId != null ) )
         {
             try
             {
@@ -83,32 +82,31 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
                 // TODO
             }
         }
-        SiteService.buildComments( _site , getLocale() );
+        SiteService.buildComments( _site, getLocale( ) );
         Map<String, Object> model = getModel( );
         model.put( MARK_SITE, _site );
         HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_PREPARE_SITE_RELEASE, getLocale( ), model );
         return template.getHtml( );
     }
-    
-    
+
     @Action( ACTION_UPGRADE_COMPONENT )
     public String doUpgradeComponent( HttpServletRequest request )
     {
         String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
-        SiteService.upgradeComponent( _site , strArtifactId );
-        
+        SiteService.upgradeComponent( _site, strArtifactId );
+
         return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
-        
+
     }
-    
+
     @Action( ACTION_PROJECT_COMPONENT )
     public String doProjectComponent( HttpServletRequest request )
     {
         String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
-        SiteService.toggleProjectComponent( _site , strArtifactId );
-        
+        SiteService.toggleProjectComponent( _site, strArtifactId );
+
         return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
-        
+
     }
-    
+
 }

@@ -51,7 +51,7 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * This class provides the user interface to manage Cluster features ( manage, create, modify, remove )
  */
-@Controller( controllerJsp = "ManageClusters.jsp", controllerPath = "jsp/admin/plugins/releaser/", right = "RELEASER_SITE_MANAGEMENT" )
+@Controller( controllerJsp = "ManageClusters.jsp", controllerPath = "jsp/admin/plugins/releaser/", right = "RELEASER_MANAGEMENT" )
 public class ClusterJspBean extends ManageSitesJspBean
 {
     // Templates
@@ -60,7 +60,6 @@ public class ClusterJspBean extends ManageSitesJspBean
     private static final String TEMPLATE_MODIFY_CLUSTER = "/admin/plugins/releaser/modify_cluster.html";
     private static final String TEMPLATE_CREATE_SITE = "/admin/plugins/releaser/create_site.html";
     private static final String TEMPLATE_MODIFY_SITE = "/admin/plugins/releaser/modify_site.html";
-
 
     // Parameters
     private static final String PARAMETER_ID_CLUSTER = "id";
@@ -263,7 +262,7 @@ public class ClusterJspBean extends ManageSitesJspBean
 
         return redirectView( request, VIEW_MANAGE_CLUSTERS );
     }
-    
+
     /**
      * Returns the form to create a site
      *
@@ -278,7 +277,7 @@ public class ClusterJspBean extends ManageSitesJspBean
 
         Map<String, Object> model = getModel( );
         model.put( MARK_SITE, _site );
-        model.put( MARK_CLUSTERS_LIST, ClusterHome.getClustersReferenceList() );
+        model.put( MARK_CLUSTERS_LIST, ClusterHome.getClustersReferenceList( ) );
 
         return getPage( PROPERTY_PAGE_TITLE_CREATE_SITE, TEMPLATE_CREATE_SITE, model );
     }
@@ -389,5 +388,5 @@ public class ClusterJspBean extends ManageSitesJspBean
 
         return redirectView( request, VIEW_MANAGE_SITES );
     }
-    
+
 }

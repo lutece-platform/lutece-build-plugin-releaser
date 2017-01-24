@@ -48,9 +48,6 @@ import javax.servlet.http.HttpServletRequest;
  */
 public abstract class ManageSitesJspBean extends MVCAdminJspBean
 {
-    // Rights
-    public static final String RIGHT_MANAGESITES = "RELEASER_SITE_MANAGEMENT";
-
     // Properties
     private static final String PROPERTY_DEFAULT_LIST_ITEM_PER_PAGE = "releaser.listItems.itemsPerPage";
 

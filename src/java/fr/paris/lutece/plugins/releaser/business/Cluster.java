@@ -57,6 +57,7 @@ public class Cluster implements Serializable
     private String _strDescription;
 
     private List<Site> _listSites;
+
     /**
      * Returns the Id
      * 
@@ -119,7 +120,7 @@ public class Cluster implements Serializable
     {
         _strDescription = strDescription;
     }
-    
+
     /**
      * Returns the list of sites
      * 
@@ -140,5 +141,5 @@ public class Cluster implements Serializable
     {
         _listSites = listSites;
     }
-    
+
 }
