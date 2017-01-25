@@ -74,11 +74,19 @@ public class SiteService
         {
             PomParser parser = new PomParser( );
             parser.parse( site, strPom );
-            initComponents( site );
+            initSite( site );
         }
         return site;
     }
 
+    
+    private static void initSite( Site site )
+    {
+        site.setReleaseVersion( Version.getReleaseVersion( site.getVersion() ));
+        site.setNextSnapshotVersion( Version.getNextSnapshotVersion( site.getVersion()) );
+
+        initComponents( site );
+    }
     /**
      * Initialize the component list for a given site
      * 
@@ -116,15 +124,7 @@ public class SiteService
         if ( component.isProject( ) )
         {
             component.setTargetVersions( Version.getNextReleaseVersions( component.getCurrentVersion() ));
-            String strTargetVersion = Version.NOT_AVAILABLE;
-            try
-            {
-                strTargetVersion = Version.parse( component.getCurrentVersion( ) ).nextRelease( ).getVersion( );
-            }
-            catch( VersionParsingException ex )
-            {
-                AppLogService.error( "Error parsing version for component " + component.getArtifactId( ) + " : " + ex.getMessage( ), ex );
-            }
+            String strTargetVersion = Version.getReleaseVersion( component.getCurrentVersion() );
             component.setTargetVersion( strTargetVersion );
         }
         else

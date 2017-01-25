@@ -335,7 +335,7 @@ public class Version implements Comparable
     }
     
     /**
-     * Get a list of next versions for a given version
+     * Get the next snapshot version for a given version
      * @param strVersion The current version
      * @return The version
      */
@@ -353,5 +353,24 @@ public class Version implements Comparable
             AppLogService.error( "Error parsing version " + strVersion + " : " + ex.getMessage( ), ex );
         }
         return strSnapshotVersion;
+    }
+    
+    /**
+     * Get the next release version for a given version
+     * @param strVersion The current version
+     * @return The version
+     */
+    public static String getReleaseVersion( String strVersion )
+    {
+        String strTargetVersion = Version.NOT_AVAILABLE;
+        try
+        {
+            strTargetVersion = Version.parse( strVersion ).nextRelease( ).getVersion( );
+        }
+        catch( VersionParsingException ex )
+        {
+            AppLogService.error( "Error parsing version " + strVersion + " : " + ex.getMessage( ), ex );
+        }
+        return strTargetVersion;
     }
 }

@@ -75,6 +75,9 @@ public class Site implements Serializable
 
     private List<Dependency> _listCurrentDependencies = new ArrayList<>( );
     private List<Component> _listComponents = new ArrayList<>( );
+    
+    private String _strReleaseVersion;
+    private String _strNextSnapshotVersion;
 
     /**
      * Returns the Id
@@ -285,4 +288,47 @@ public class Site implements Serializable
         _strCluster = strCluster;
     }
 
+    /**
+     * Returns the Release Version
+     * 
+     * @return The Release Version
+     */
+    public String getReleaseVersion( )
+    {
+        return _strReleaseVersion;
+    }
+
+    /**
+     * Sets the Release Version
+     * 
+     * @param strReleaseVersion
+     *            The Release Version
+     */
+    public void setReleaseVersion( String strReleaseVersion )
+    {
+        _strReleaseVersion = strReleaseVersion;
+    }
+
+    /**
+     * Returns the NextSnapshotVersion
+     * 
+     * @return The NextSnapshotVersion
+     */
+    public String getNextSnapshotVersion( )
+    {
+        return _strNextSnapshotVersion;
+    }
+
+    /**
+     * Sets the NextSnapshotVersion
+     * 
+     * @param strNextSnapshotVersion
+     *            The NextSnapshotVersion
+     */
+    public void setNextSnapshotVersion( String strNextSnapshotVersion )
+    {
+        _strNextSnapshotVersion = strNextSnapshotVersion;
+    }
+
+    
 }
