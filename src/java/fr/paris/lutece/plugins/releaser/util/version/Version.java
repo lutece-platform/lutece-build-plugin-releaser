@@ -33,14 +33,16 @@
  */
 package fr.paris.lutece.plugins.releaser.util.version;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import fr.paris.lutece.portal.service.util.AppLogService;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Version
  */
 public class Version implements Comparable
 {
+    public static final String NOT_AVAILABLE = "Not available";
     private static final String QUALIFIER_SNAPSHOT = "SNAPSHOT";
 
     private int _nMajor;
@@ -245,7 +247,7 @@ public class Version implements Comparable
     {
         String strQualifier = ( bSnapshot ) ? QUALIFIER_SNAPSHOT : null;
 
-        return new Version( _nMajor + 1, _nMinor, _nPatch, strQualifier );
+        return new Version( _nMajor + 1, 0 , 0, strQualifier );
     }
 
     /**
@@ -259,7 +261,7 @@ public class Version implements Comparable
     {
         String strQualifier = ( bSnapshot ) ? QUALIFIER_SNAPSHOT : null;
 
-        return new Version( _nMajor, _nMinor + 1, _nPatch, strQualifier );
+        return new Version( _nMajor, _nMinor + 1, 0 , strQualifier );
     }
 
     /**
@@ -305,8 +307,51 @@ public class Version implements Comparable
         }
         catch( VersionParsingException ex )
         {
+            AppLogService.error( "Error parsing version " + strVersion + " : " + ex.getMessage( ), ex );
         }
         return false;
     }
 
+    /**
+     * Get a list of next versions for a given version
+     * @param strVersion The current version
+     * @return The list
+     */
+    public static List<String> getNextReleaseVersions( String strVersion )
+    {
+        List<String> listVersions = new ArrayList<>();
+        try
+        {
+            Version version = parse( strVersion );
+            listVersions.add( version.nextRelease().getVersion() );
+            listVersions.add( version.nextMinor( false ).getVersion() );
+            listVersions.add( version.nextMajor( false ).getVersion() );
+        }
+        catch( VersionParsingException ex )
+        {
+            AppLogService.error( "Error parsing version " + strVersion + " : " + ex.getMessage( ), ex );
+        }
+        return listVersions;
+    }
+    
+    /**
+     * Get a list of next versions for a given version
+     * @param strVersion The current version
+     * @return The version
+     */
+    public static String getNextSnapshotVersion( String strVersion )
+    {
+        String strSnapshotVersion = NOT_AVAILABLE;
+        try
+        {
+            Version version = Version.parse( strVersion );
+            boolean bSnapshot = true;
+            strSnapshotVersion = version.nextPatch( bSnapshot ).toString( );
+        }
+        catch( VersionParsingException ex )
+        {
+            AppLogService.error( "Error parsing version " + strVersion + " : " + ex.getMessage( ), ex );
+        }
+        return strSnapshotVersion;
+    }
 }

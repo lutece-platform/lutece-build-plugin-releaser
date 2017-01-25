@@ -60,9 +60,13 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     // Actions
     private static final String ACTION_UPGRADE_COMPONENT = "upgradeComponent";
     private static final String ACTION_PROJECT_COMPONENT = "projectComponent";
+    private static final String ACTION_CHANGE_NEXT_RELEASE_VERSION = "versionComponent";
 
     private static final String TEMPLATE_PREPARE_SITE_RELEASE = "/admin/plugins/releaser/prepare_site_release.html";
     private static final String MARK_SITE = "site";
+    
+    private static final String JSP_MANAGE_CLUSTERS = "ManageClusters.jsp";
+    
     private Site _site;
 
     @View( value = VIEW_MANAGE_SITE_RELEASE, defaultView = true )
@@ -79,7 +83,7 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
             }
             catch( NumberFormatException e )
             {
-                // TODO
+                return redirect( request, JSP_MANAGE_CLUSTERS );
             }
         }
         SiteService.buildComments( _site, getLocale( ) );
@@ -96,7 +100,6 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         SiteService.upgradeComponent( _site, strArtifactId );
 
         return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
-
     }
 
     @Action( ACTION_PROJECT_COMPONENT )
@@ -106,7 +109,15 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         SiteService.toggleProjectComponent( _site, strArtifactId );
 
         return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
+    }
 
+    @Action( ACTION_CHANGE_NEXT_RELEASE_VERSION )
+    public String doChangeNextReleaseVersion( HttpServletRequest request )
+    {
+        String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
+        SiteService.changeNextReleaseVersion( _site, strArtifactId );
+
+        return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
     }
 
 }

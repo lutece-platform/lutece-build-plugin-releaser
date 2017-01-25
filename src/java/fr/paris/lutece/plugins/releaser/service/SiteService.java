@@ -46,6 +46,7 @@ import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.util.httpaccess.HttpAccessException;
 import java.io.IOException;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -57,8 +58,6 @@ public class SiteService
     private static final String MESSAGE_UPGRADE_SELECTED = "releaser.message.upgradeSelected";
     private static final String MESSAGE_TO_BE_RELEASED = "releaser.message.toBeReleased";
     private static final String MESSAGE_MORE_RECENT_VERSION_AVAILABLE = "releaser.message.moreRecentVersionAvailable";
-
-    private static final String NOT_AVAILABLE = "Not available";
 
     /**
      * Load a site from its id
@@ -116,7 +115,8 @@ public class SiteService
     {
         if ( component.isProject( ) )
         {
-            String strTargetVersion = NOT_AVAILABLE;
+            component.setTargetVersions( Version.getNextReleaseVersions( component.getCurrentVersion() ));
+            String strTargetVersion = Version.NOT_AVAILABLE;
             try
             {
                 strTargetVersion = Version.parse( component.getCurrentVersion( ) ).nextRelease( ).getVersion( );
@@ -141,7 +141,7 @@ public class SiteService
      */
     private static void defineNextSnapshotVersion( Component component )
     {
-        String strNextSnapshotVersion = NOT_AVAILABLE;
+        String strNextSnapshotVersion = Version.NOT_AVAILABLE;
         try
         {
             Version version = Version.parse( component.getTargetVersion( ) );
@@ -190,6 +190,7 @@ public class SiteService
      */
     private static void buildReleaseComments( Component component, Locale locale )
     {
+        component.setShouldBeReleased( false );
         if ( !component.isProject( ) )
         {
             if ( Version.isSnapshot( component.getTargetVersion( ) ) )
@@ -213,10 +214,14 @@ public class SiteService
             component.addReleaseComment( strComment );
         }
 
-        if ( component.isProject( ) && Version.isSnapshot( component.getCurrentVersion( ) ) )
+        if ( component.isProject( ) )
         {
-            String strComment = I18nService.getLocalizedString( MESSAGE_TO_BE_RELEASED, locale );
-            component.addReleaseComment( strComment );
+            if(  Version.isSnapshot( component.getCurrentVersion( ) ) )
+            {
+                String strComment = I18nService.getLocalizedString( MESSAGE_TO_BE_RELEASED, locale );
+                component.addReleaseComment( strComment );
+                component.setShouldBeReleased( true );
+            }
         }
     }
 
@@ -271,6 +276,31 @@ public class SiteService
         }
     }
 
+    /**
+     * Change the next release version
+     * 
+     * @param site
+     *            The site
+     * @param strArtifactId
+     *            The component artifact id
+     */
+    public static void changeNextReleaseVersion( Site site, String strArtifactId )
+    {
+        for ( Component component : site.getComponents( ) )
+        {
+            if ( component.getArtifactId( ).equals( strArtifactId ) )
+            {
+                List<String> listTargetVersions = component.getTargetVersions();
+                int nNewIndex = (component.getTargetVersionIndex() + 1) % listTargetVersions.size();
+                String strTargetVersion = listTargetVersions.get( nNewIndex );
+                component.setTargetVersion( strTargetVersion );
+                component.setTargetVersionIndex( nNewIndex );
+                component.setNextSnapshotVersion( Version.getNextSnapshotVersion( strTargetVersion ));
+            }
+        }
+    }
+
+    
     /**
      * Generate the pom.xml file for a given site
      * 

@@ -61,6 +61,7 @@
                         <th>Version actuelle</th>
                         <th>Version cible pour la release</th>
                         <th>Version de la prochaine Snapshot</th>
+                        <th>Infos JIRA</th>
                         <th>Observations</th>
                         <th>Actions</th>
                     </tr>
@@ -71,10 +72,23 @@
                         <td>${component.currentVersion}</td>
                         <td>${component.targetVersion}</td>
                         <td>${component.nextSnapshotVersion}</td>
+                        <td>
+                            <a href="${component.jiraRoadmapUrl}">
+                                <span class="label label-success">${component.jiraCurrentVersionClosedIssues}</span>
+                                <#if component.jiraCurrentVersionOpenedIssues = 0 >
+                                    <span class="label label-success">${component.jiraCurrentVersionOpenedIssues}</span>
+                                <#else>
+                                    <span class="label label-danger">${component.jiraCurrentVersionOpenedIssues}</span>
+                                </#if>
+                            </a>
+                        </td>
                         <td>${component.releaseComment!''}</td>
                         <td>
                             <@aButton href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=projectComponent&artifact_id=${component.artifactId}' title='Supprimer des composants projet' buttonIcon='star-o' color='btn-default' showTitle=false />
-                            <@aButton href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=releaseComponent&artifact_id=${component.artifactId}' title='Releaser le composant' buttonIcon='tag' color='btn-success' showTitle=false />
+                            <#if component.shouldBeReleased() >
+                                <@aButton href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=releaseComponent&artifact_id=${component.artifactId}' title='Releaser le composant' buttonIcon='tag' color='btn-success' showTitle=false />
+                                <@aButton href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=versionComponent&artifact_id=${component.artifactId}' title='Modifier la version pour la release' buttonIcon='toggle-up' color='btn-primary' showTitle=false />
+                            </#if>
                         </td>
                     </tr>
                     </#if>
@@ -89,6 +103,7 @@
                         <th>Composant</th>
                         <th>Version actuelle</th>
                         <th>Version cible pour la release</th>
+                        <th>&nbsp;</th>
                         <th>Infos JIRA</th>
                         <th>Observations</th>
                         <th>Actions</th>
@@ -105,10 +120,15 @@
                                 ${component.targetVersion}
                             </#if>
                         </td>
+                        <td>&nbsp;</td>
                         <td>
                             <a href="${component.jiraRoadmapUrl}">
                                 <span class="label label-success">${component.jiraCurrentVersionClosedIssues}</span>
-                                <span class="label label-danger">${component.jiraCurrentVersionOpenedIssues}</span>
+                                <#if component.jiraCurrentVersionOpenedIssues = 0 >
+                                    <span class="label label-success">${component.jiraCurrentVersionOpenedIssues}</span>
+                                <#else>
+                                    <span class="label label-danger">${component.jiraCurrentVersionOpenedIssues}</span>
+                                </#if>
                             </a>
                         </td>
                         <td>${component.releaseComment!''}</td>

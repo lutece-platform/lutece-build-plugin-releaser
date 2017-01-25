@@ -33,6 +33,8 @@
  */
 package fr.paris.lutece.plugins.releaser.business;
 
+import java.util.List;
+
 /**
  * This is the business class for the object Component
  */
@@ -51,7 +53,10 @@ public class Component
     private String _strJiraCode;
     private String _strJiraRoadmapUrl;
     private int _nJiraCurrentVersionClosedIssues;
-    private int _nJiraCurrentVersionOpenedIssues;
+    private int _nJiraCurrentVersionOpenedIssues;   
+    private List<String> _listTargetVersions;
+    private int _nTargetVersionIndex;
+    private boolean _bShouldBeReleased;
 
     /**
      * Returns the ArtifactId
@@ -340,4 +345,47 @@ public class Component
     {
         _nJiraCurrentVersionOpenedIssues = nJiraCurrentVersionOpenedIssues;
     }
+    
+    public void setTargetVersions( List<String> listTargetVersions )
+    {
+        _listTargetVersions = listTargetVersions;
+    }
+    
+    public List<String> getTargetVersions()
+    {
+        return _listTargetVersions;
+    }
+    
+    public void setTargetVersionIndex( int nIndex )
+    {
+        _nTargetVersionIndex = nIndex;
+    }
+    
+    public int getTargetVersionIndex()
+    {
+        return _nTargetVersionIndex;
+    }
+    
+    /**
+     * Returns the IsProject
+     * 
+     * @return True if should be released
+     */
+    public boolean shouldBeReleased( )
+    {
+        return _bShouldBeReleased;
+    }
+
+    /**
+     * Sets if the component should be released
+     * 
+     * @param bShouldBeReleased  the shouldbereleased flag
+     */
+    public void setShouldBeReleased( boolean bShouldBeReleased )
+    {
+        _bShouldBeReleased = bShouldBeReleased;
+    }
+
+    
+            
 }
