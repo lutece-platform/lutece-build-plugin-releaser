@@ -77,6 +77,8 @@ public class Site implements Serializable
     private List<Component> _listComponents = new ArrayList<>( );
     
     private String _strReleaseVersion;
+    private List<String> _listTargetVersions;
+    private int _nTargetVersionIndex;
     private String _strNextSnapshotVersion;
 
     /**
@@ -330,5 +332,41 @@ public class Site implements Serializable
         _strNextSnapshotVersion = strNextSnapshotVersion;
     }
 
+    /**
+     * Set target versions list
+     * @param listTargetVersions The target versions list 
+     */
+    public void setTargetVersions( List<String> listTargetVersions )
+    {
+        _listTargetVersions = listTargetVersions;
+    }
+    
+    /**
+     * Gets the target versions list
+     * @return the target versions list
+     */
+    public List<String> getTargetVersions()
+    {
+        return _listTargetVersions;
+    }
+    
+    /**
+     * Set the target version index
+     * @param nIndex the target version index
+     */
+    public void setTargetVersionIndex( int nIndex )
+    {
+        _nTargetVersionIndex = nIndex;
+    }
+    
+    /**
+     * Get the target version index
+     * @return the target version index 
+     */
+    public int getTargetVersionIndex()
+    {
+        return _nTargetVersionIndex;
+    }
+    
     
 }

@@ -84,6 +84,7 @@ public class SiteService
     {
         site.setReleaseVersion( Version.getReleaseVersion( site.getVersion() ));
         site.setNextSnapshotVersion( Version.getNextSnapshotVersion( site.getVersion()) );
+        site.setTargetVersions( Version.getNextReleaseVersions( site.getVersion() ));
 
         initComponents( site );
     }
@@ -300,6 +301,23 @@ public class SiteService
         }
     }
 
+    /**
+     * Change the next release version
+     * 
+     * @param site
+     *            The site
+     */
+    public static void changeNextReleaseVersion( Site site )
+    {
+        List<String> listTargetVersions = site.getTargetVersions();
+        int nNewIndex = (site.getTargetVersionIndex() + 1) % listTargetVersions.size();
+        String strTargetVersion = listTargetVersions.get( nNewIndex );
+        site.setReleaseVersion( strTargetVersion );
+        site.setTargetVersionIndex( nNewIndex );
+        site.setNextSnapshotVersion( Version.getNextSnapshotVersion( strTargetVersion ));
+    }
+
+    
     
     /**
      * Generate the pom.xml file for a given site

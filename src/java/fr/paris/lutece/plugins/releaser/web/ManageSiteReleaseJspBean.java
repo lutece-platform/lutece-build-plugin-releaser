@@ -60,7 +60,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     // Actions
     private static final String ACTION_UPGRADE_COMPONENT = "upgradeComponent";
     private static final String ACTION_PROJECT_COMPONENT = "projectComponent";
-    private static final String ACTION_CHANGE_NEXT_RELEASE_VERSION = "versionComponent";
+    private static final String ACTION_CHANGE_COMPONENT_NEXT_RELEASE_VERSION = "versionComponent";
+    private static final String ACTION_CHANGE_SITE_NEXT_RELEASE_VERSION = "versionSite";
 
     private static final String TEMPLATE_PREPARE_SITE_RELEASE = "/admin/plugins/releaser/prepare_site_release.html";
     private static final String MARK_SITE = "site";
@@ -111,8 +112,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
     }
 
-    @Action( ACTION_CHANGE_NEXT_RELEASE_VERSION )
-    public String doChangeNextReleaseVersion( HttpServletRequest request )
+    @Action( ACTION_CHANGE_COMPONENT_NEXT_RELEASE_VERSION )
+    public String doChangeComponentNextReleaseVersion( HttpServletRequest request )
     {
         String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
         SiteService.changeNextReleaseVersion( _site, strArtifactId );
@@ -120,4 +121,13 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
     }
 
+    @Action( ACTION_CHANGE_SITE_NEXT_RELEASE_VERSION )
+    public String doChangeSiteNextReleaseVersion( HttpServletRequest request )
+    {
+        SiteService.changeNextReleaseVersion( _site );
+
+        return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
+    }
+
+    
 }
