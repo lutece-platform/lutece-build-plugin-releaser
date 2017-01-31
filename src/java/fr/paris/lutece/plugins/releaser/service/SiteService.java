@@ -39,7 +39,7 @@ import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.Dependency;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.SiteHome;
-import fr.paris.lutece.plugins.releaser.util.pom.PomFetcher;
+import fr.paris.lutece.plugins.releaser.util.svn.SvnSiteService;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
 import fr.paris.lutece.portal.service.i18n.I18nService;
@@ -69,7 +69,7 @@ public class SiteService
     public static Site getSite( int nSiteId )
     {
         Site site = SiteHome.findByPrimaryKey( nSiteId );
-        String strPom = PomFetcher.fetchPom( site.getScmUrl( ) + "/pom.xml" );
+        String strPom = SvnSiteService.fetchPom( site.getScmUrl( ) + "/pom.xml" );
         if ( strPom != null )
         {
             PomParser parser = new PomParser( );
@@ -82,9 +82,11 @@ public class SiteService
     
     private static void initSite( Site site )
     {
-        site.setReleaseVersion( Version.getReleaseVersion( site.getVersion() ));
+        site.setNextReleaseVersion( Version.getReleaseVersion( site.getVersion() ));
         site.setNextSnapshotVersion( Version.getNextSnapshotVersion( site.getVersion()) );
         site.setTargetVersions( Version.getNextReleaseVersions( site.getVersion() ));
+        String strLastReleaseVersion = SvnSiteService.getLastRelease( site.getArtifactId() , site.getScmUrl() );
+        site.setLastReleaseVersion( strLastReleaseVersion );
 
         initComponents( site );
     }
@@ -312,7 +314,7 @@ public class SiteService
         List<String> listTargetVersions = site.getTargetVersions();
         int nNewIndex = (site.getTargetVersionIndex() + 1) % listTargetVersions.size();
         String strTargetVersion = listTargetVersions.get( nNewIndex );
-        site.setReleaseVersion( strTargetVersion );
+        site.setNextReleaseVersion( strTargetVersion );
         site.setTargetVersionIndex( nNewIndex );
         site.setNextSnapshotVersion( Version.getNextSnapshotVersion( strTargetVersion ));
     }
