@@ -65,8 +65,7 @@ public class SvnSiteService
         {
             RequestAuthenticator authenticator = getSiteAuthenticator( );
             HttpAccess httpAccess = new HttpAccess( );
-            String strPom = httpAccess.doGet( strPomUrl, authenticator, null );
-            return strPom;
+            return httpAccess.doGet( strPomUrl, authenticator, null );
         }
         catch( HttpAccessException ex )
         {
@@ -99,7 +98,7 @@ public class SvnSiteService
             AppLogService.error( "SvnSiteService : Error retrieving release version : " + e.getMessage( ), e );
         }
 
-        return ( list.size() > 0 ) ? list.get( list.size() - 1 ) : null;
+        return ( !list.isEmpty() ) ? list.get( list.size() - 1 ) : null;
         
     }
     
@@ -121,7 +120,7 @@ public class SvnSiteService
         {
             strCurrent = strCurrent.substring( nPos );
 
-            int nEndTag = strCurrent.indexOf( ">" );
+            int nEndTag = strCurrent.indexOf( '>' );
             int nTagEnd = strCurrent.indexOf( "</a>" );
             String strTag = strCurrent.substring( nEndTag + 1, nTagEnd ).replaceAll( "\\/", "" );
             if( strTag.startsWith( strPrefix ))

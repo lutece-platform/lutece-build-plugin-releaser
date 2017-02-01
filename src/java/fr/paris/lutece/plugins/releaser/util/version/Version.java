@@ -147,11 +147,11 @@ public class Version implements Comparable
      */
     public void setQualifier( String strQualifier )
     {
-        Pattern p = Pattern.compile( PATTERN_NUMBER );
-        Matcher m = p.matcher( strQualifier );
-        if( m.find() )
+        Pattern pattern = Pattern.compile( PATTERN_NUMBER );
+        Matcher matcher = pattern.matcher( strQualifier );
+        if( matcher.find() )
         {
-            String strNumber = m.group();
+            String strNumber = matcher.group();
             _nQualifierNumber = Integer.parseInt( strNumber );
             _strQualifierRadix = strQualifier.substring( 0 , strQualifier.indexOf( strNumber ));
         }
@@ -345,11 +345,7 @@ public class Version implements Comparable
      */
     public boolean isSnapshot()
     {
-        if ( QUALIFIER_SNAPSHOT.equals( _strQualifier ) )
-        {
-            return true;
-        }
-        return false;        
+        return QUALIFIER_SNAPSHOT.equals( _strQualifier );
     }
     
     /**
@@ -358,11 +354,7 @@ public class Version implements Comparable
      */
     public boolean isCandidate()
     {
-        if ( ( _strQualifier != null ) && ( _strQualifier.startsWith( QUALIFIER_CANDIDATE )))
-        {
-            return true;
-        }
-        return false; 
+        return ( _strQualifier != null ) && ( _strQualifier.startsWith( QUALIFIER_CANDIDATE ));
     }
     
     /**

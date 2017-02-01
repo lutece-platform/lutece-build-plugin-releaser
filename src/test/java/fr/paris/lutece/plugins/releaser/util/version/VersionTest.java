@@ -90,10 +90,10 @@ public class VersionTest {
         {
             System.out.println( "- " + strVersion );
         }
-        assertTrue( listVersions.get( 0 ).equals( "12.10.24-RC-01" ) );
-        assertTrue( listVersions.get( 1 ).equals( "12.10.24" ) );
-        assertTrue( listVersions.get( 2 ).equals( "12.11.0" ) );
-        assertTrue( listVersions.get( 3 ).equals( "13.0.0" ) );
+        assertEquals( listVersions.get( 0 ), "12.10.24-RC-01" );
+        assertEquals( listVersions.get( 1 ), "12.10.24" );
+        assertEquals( listVersions.get( 2 ), "12.11.0" );
+        assertEquals( listVersions.get( 3 ), "13.0.0" );
 
         strSource = "12.10.23-RC-01";
         listVersions = Version.getNextReleaseVersions( strSource );
@@ -102,10 +102,10 @@ public class VersionTest {
         {
             System.out.println( "- " + strVersion );
         }
-        assertTrue( listVersions.get( 0 ).equals( "12.10.23-RC-02" ) );
-        assertTrue( listVersions.get( 1 ).equals( "12.10.23" ) );
-        assertTrue( listVersions.get( 2 ).equals( "12.11.0" ) );
-        assertTrue( listVersions.get( 3 ).equals( "13.0.0" ) );
+        assertEquals( listVersions.get( 0 ), "12.10.23-RC-02" );
+        assertEquals( listVersions.get( 1 ), "12.10.23" );
+        assertEquals( listVersions.get( 2 ), "12.11.0" );
+        assertEquals( listVersions.get( 3 ), "13.0.0" );
 
         strSource = "12.10.23-SNAPSHOT";
         listVersions = Version.getNextReleaseVersions( strSource );
@@ -114,12 +114,13 @@ public class VersionTest {
         {
             System.out.println( "- " + strVersion );
         }
-        assertTrue( listVersions.get( 0 ).equals( "12.10.23-RC-01" ) );
-        assertTrue( listVersions.get( 1 ).equals( "12.10.23" ) );
-        assertTrue( listVersions.get( 2 ).equals( "12.11.0" ) );
-        assertTrue( listVersions.get( 3 ).equals( "13.0.0" ) );
+        assertEquals( listVersions.get( 0 ), "12.10.23-RC-01" );
+        assertEquals( listVersions.get( 1 ), "12.10.23" );
+        assertEquals( listVersions.get( 2 ), "12.11.0" );
+        assertEquals( listVersions.get( 3 ), "13.0.0" ); 
 
 
     }
 
+    
 }

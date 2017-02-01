@@ -48,6 +48,8 @@ import fr.paris.lutece.util.httpaccess.HttpAccessException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * SiteService
@@ -82,14 +84,43 @@ public class SiteService
     
     private static void initSite( Site site )
     {
-        site.setNextReleaseVersion( Version.getReleaseVersion( site.getVersion() ));
-        site.setNextSnapshotVersion( Version.getNextSnapshotVersion( site.getVersion()) );
-        site.setTargetVersions( Version.getNextReleaseVersions( site.getVersion() ));
+        // Find last release in the repository
         String strLastReleaseVersion = SvnSiteService.getLastRelease( site.getArtifactId() , site.getScmUrl() );
         site.setLastReleaseVersion( strLastReleaseVersion );
+        
+        // To find next releases
+        
+        String strOriginVersion = getOriginVersion( strLastReleaseVersion, site.getVersion() );
+        
+        site.setNextReleaseVersion( Version.getReleaseVersion( strOriginVersion ));
+        site.setNextSnapshotVersion( Version.getNextSnapshotVersion( strOriginVersion ) );
+        site.setTargetVersions( Version.getNextReleaseVersions( strOriginVersion ));
 
         initComponents( site );
     }
+    
+    /**
+     * Define which version between last released or current snapshot should be the origin
+     * for next release versions. Ex of cases :<br>
+     * last release : 3.2.1         current : 4.0.0-SNAPSHOT  --> current> <br>
+     * last release : 3.2.1         current : 3.2.2-SNAPSHOT  --> last or current <br>
+     * last release : missing       current : 1.0.0-SNAPSHOT  --> current <br>
+     * last release : 3.2.1-RC-02   current : 3.2.1-SNAPSHOT  --> last <br>
+     * 
+     * @param strLastRelease The last release
+     * @param strCurrentVersion The current release
+     * @return The origin version
+     */
+    public static String getOriginVersion( String strLastRelease , String strCurrentVersion )
+    {
+        String strOriginVersion = strCurrentVersion;
+        if( ( strLastRelease != null ) && Version.isCandidate( strLastRelease ))
+        {
+            strOriginVersion = strLastRelease;
+        }
+        return strOriginVersion;
+    }
+    
     /**
      * Initialize the component list for a given site
      * 
