@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2016, Mairie de Paris
+ * Copyright (c) 2002-2017, Mairie de Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -90,7 +90,7 @@ public abstract class ManageSitesJspBean extends MVCAdminJspBean
 
         Map<String, Object> model = getModel( );
 
-        model.put( MARK_NB_ITEMS_PER_PAGE, "" + _nItemsPerPage );
+        model.put( MARK_NB_ITEMS_PER_PAGE, String.valueOf(  _nItemsPerPage ));
         model.put( MARK_PAGINATOR, paginator );
         model.put( strBookmark, paginator.getPageItems( ) );
 

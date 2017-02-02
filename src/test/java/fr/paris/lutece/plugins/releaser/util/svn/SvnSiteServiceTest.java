@@ -31,47 +31,30 @@
  *
  * License 1.0
  */
-
-package fr.paris.lutece.plugins.releaser.business;
+package fr.paris.lutece.plugins.releaser.util.svn;
 
 import fr.paris.lutece.test.LuteceTestCase;
+import org.junit.Test;
 
-public class ClusterBusinessTest extends LuteceTestCase
+/**
+ *
+ * SvnSiteService Test
+ */
+public class SvnSiteServiceTest extends LuteceTestCase
 {
-    private final static String NAME1 = "Name1";
-    private final static String NAME2 = "Name2";
-    private final static String DESCRIPTION1 = "Description1";
-    private final static String DESCRIPTION2 = "Description2";
 
-    public void testBusiness( )
+
+    /**
+     * Test of getLastRelease method, of class SvnSiteService.
+     */
+    @Test
+    public void testGetLastRelease()
     {
-        // Initialize an object
-        Cluster cluster = new Cluster( );
-        cluster.setName( NAME1 );
-        cluster.setDescription( DESCRIPTION1 );
-
-        // Create test
-        ClusterHome.create( cluster );
-        Cluster clusterStored = ClusterHome.findByPrimaryKey( cluster.getId( ) );
-        assertEquals( clusterStored.getName( ), cluster.getName( ) );
-        assertEquals( clusterStored.getDescription( ), cluster.getDescription( ) );
-
-        // Update test
-        cluster.setName( NAME2 );
-        cluster.setDescription( DESCRIPTION2 );
-        ClusterHome.update( cluster );
-        clusterStored = ClusterHome.findByPrimaryKey( cluster.getId( ) );
-        assertEquals( clusterStored.getName( ), cluster.getName( ) );
-        assertEquals( clusterStored.getDescription( ), cluster.getDescription( ) );
-
-        // List test
-        ClusterHome.getClustersList( );
-
-        // Delete test
-        ClusterHome.remove( cluster.getId( ) );
-        clusterStored = ClusterHome.findByPrimaryKey( cluster.getId( ) );
-        assertNull( clusterStored );
-
+        System.out.println( "getLastRelease" );
+        String strSiteArtifactId = "moncompte";
+        String strTrunkUrl = "http://dev.lutece.paris.fr/svn/sites/gru/multi-sites/moncompte/trunk/";
+        String result = SvnSiteService.getLastRelease( strSiteArtifactId, strTrunkUrl );
+        System.out.println( result ); 
     }
-
+    
 }

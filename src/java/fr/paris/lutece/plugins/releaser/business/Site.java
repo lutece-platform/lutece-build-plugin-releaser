@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2016, Mairie de Paris
+ * Copyright (c) 2002-2017, Mairie de Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -70,13 +70,14 @@ public class Site implements Serializable
     @Size( max = 50, message = "#i18n{releaser.validation.site.JiraKey.size}" )
     private String _strJiraKey;
 
-    private String _strVersion;
     private String _strCluster;
 
     private List<Dependency> _listCurrentDependencies = new ArrayList<>( );
     private List<Component> _listComponents = new ArrayList<>( );
     
-    private String _strReleaseVersion;
+    private String _strCurrentVersion;
+    private String _strLastReleaseVersion;
+    private String _strNextReleaseVersion;
     private List<String> _listTargetVersions;
     private int _nTargetVersionIndex;
     private String _strNextSnapshotVersion;
@@ -255,7 +256,7 @@ public class Site implements Serializable
      */
     public String getVersion( )
     {
-        return _strVersion;
+        return _strCurrentVersion;
     }
 
     /**
@@ -266,7 +267,7 @@ public class Site implements Serializable
      */
     public void setVersion( String strVersion )
     {
-        _strVersion = strVersion;
+        _strCurrentVersion = strVersion;
     }
 
     /**
@@ -291,24 +292,45 @@ public class Site implements Serializable
     }
 
     /**
-     * Returns the Release Version
+     * Returns the Last Release Version
      * 
      * @return The Release Version
      */
-    public String getReleaseVersion( )
+    public String getLastReleaseVersion( )
     {
-        return _strReleaseVersion;
+        return _strLastReleaseVersion;
     }
 
     /**
-     * Sets the Release Version
+     * Sets the Last Release Version
      * 
-     * @param strReleaseVersion
+     * @param strLastReleaseVersion
      *            The Release Version
      */
-    public void setReleaseVersion( String strReleaseVersion )
+    public void setLastReleaseVersion( String strLastReleaseVersion )
     {
-        _strReleaseVersion = strReleaseVersion;
+        _strLastReleaseVersion = strLastReleaseVersion;
+    }
+
+    /**
+     * Returns the Next Release Version
+     * 
+     * @return The Release Version
+     */
+    public String getNextReleaseVersion( )
+    {
+        return _strNextReleaseVersion;
+    }
+
+    /**
+     * Sets the Next Release Version
+     * 
+     * @param strNextReleaseVersion
+     *            The Release Version
+     */
+    public void setNextReleaseVersion( String strNextReleaseVersion )
+    {
+        _strNextReleaseVersion = strNextReleaseVersion;
     }
 
     /**
