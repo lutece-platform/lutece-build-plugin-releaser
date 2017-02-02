@@ -39,7 +39,7 @@ import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.Dependency;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.SiteHome;
-import fr.paris.lutece.plugins.releaser.util.pom.PomFetcher;
+import fr.paris.lutece.plugins.releaser.util.svn.SvnSiteService;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
 import fr.paris.lutece.portal.service.i18n.I18nService;
@@ -48,6 +48,8 @@ import fr.paris.lutece.util.httpaccess.HttpAccessException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * SiteService
@@ -69,7 +71,7 @@ public class SiteService
     public static Site getSite( int nSiteId )
     {
         Site site = SiteHome.findByPrimaryKey( nSiteId );
-        String strPom = PomFetcher.fetchPom( site.getScmUrl( ) + "/pom.xml" );
+        String strPom = SvnSiteService.fetchPom( site.getScmUrl( ) + "/pom.xml" );
         if ( strPom != null )
         {
             PomParser parser = new PomParser( );
@@ -82,12 +84,43 @@ public class SiteService
     
     private static void initSite( Site site )
     {
-        site.setReleaseVersion( Version.getReleaseVersion( site.getVersion() ));
-        site.setNextSnapshotVersion( Version.getNextSnapshotVersion( site.getVersion()) );
-        site.setTargetVersions( Version.getNextReleaseVersions( site.getVersion() ));
+        // Find last release in the repository
+        String strLastReleaseVersion = SvnSiteService.getLastRelease( site.getArtifactId() , site.getScmUrl() );
+        site.setLastReleaseVersion( strLastReleaseVersion );
+        
+        // To find next releases
+        
+        String strOriginVersion = getOriginVersion( strLastReleaseVersion, site.getVersion() );
+        
+        site.setNextReleaseVersion( Version.getReleaseVersion( strOriginVersion ));
+        site.setNextSnapshotVersion( Version.getNextSnapshotVersion( strOriginVersion ) );
+        site.setTargetVersions( Version.getNextReleaseVersions( strOriginVersion ));
 
         initComponents( site );
     }
+    
+    /**
+     * Define which version between last released or current snapshot should be the origin
+     * for next release versions. Ex of cases :<br>
+     * last release : 3.2.1         current : 4.0.0-SNAPSHOT  --> current> <br>
+     * last release : 3.2.1         current : 3.2.2-SNAPSHOT  --> last or current <br>
+     * last release : missing       current : 1.0.0-SNAPSHOT  --> current <br>
+     * last release : 3.2.1-RC-02   current : 3.2.1-SNAPSHOT  --> last <br>
+     * 
+     * @param strLastRelease The last release
+     * @param strCurrentVersion The current release
+     * @return The origin version
+     */
+    public static String getOriginVersion( String strLastRelease , String strCurrentVersion )
+    {
+        String strOriginVersion = strCurrentVersion;
+        if( ( strLastRelease != null ) && Version.isCandidate( strLastRelease ))
+        {
+            strOriginVersion = strLastRelease;
+        }
+        return strOriginVersion;
+    }
+    
     /**
      * Initialize the component list for a given site
      * 
@@ -257,6 +290,22 @@ public class SiteService
             }
         }
     }
+    
+    public static void releaseComponent( Site site, String strArtifactId )
+    {
+        for ( Component component : site.getComponents( ) )
+        {
+            if ( component.getArtifactId( ).equals( strArtifactId ) )
+            {
+                //Get Scm Infos 
+                ComponentService.getScmInfos( component ) ;
+                
+            }
+        }
+    }
+    
+    
+    
 
     /**
      * Add or Remove a component from the project's components list
@@ -312,7 +361,7 @@ public class SiteService
         List<String> listTargetVersions = site.getTargetVersions();
         int nNewIndex = (site.getTargetVersionIndex() + 1) % listTargetVersions.size();
         String strTargetVersion = listTargetVersions.get( nNewIndex );
-        site.setReleaseVersion( strTargetVersion );
+        site.setNextReleaseVersion( strTargetVersion );
         site.setTargetVersionIndex( nNewIndex );
         site.setNextSnapshotVersion( Version.getNextSnapshotVersion( strTargetVersion ));
     }
@@ -330,5 +379,6 @@ public class SiteService
     {
         throw new UnsupportedOperationException( "Not supported yet." ); // To change body of generated methods, choose Tools | Templates.
     }
+    
 
 }

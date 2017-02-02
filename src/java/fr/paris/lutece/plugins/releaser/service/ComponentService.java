@@ -34,15 +34,26 @@
 
 package fr.paris.lutece.plugins.releaser.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import fr.paris.lutece.plugins.releaser.business.Component;
-import fr.paris.lutece.portal.service.util.AppLogService;
-import fr.paris.lutece.portal.service.util.AppPropertiesService;
-import fr.paris.lutece.util.httpaccess.HttpAccess;
-import fr.paris.lutece.util.httpaccess.HttpAccessException;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.Locale;
+
+import org.apache.commons.lang.StringUtils;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import fr.paris.lutece.plugins.releaser.business.Component;
+import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
+import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
+import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
+import fr.paris.lutece.plugins.workflowcore.business.state.State;
+import fr.paris.lutece.portal.service.util.AppException;
+import fr.paris.lutece.portal.service.util.AppLogService;
+import fr.paris.lutece.portal.service.util.AppPropertiesService;
+import fr.paris.lutece.portal.service.workflow.WorkflowService;
+import fr.paris.lutece.util.httpaccess.HttpAccess;
+import fr.paris.lutece.util.httpaccess.HttpAccessException;
 
 /**
  * ComponentService
@@ -57,6 +68,8 @@ public class ComponentService
     private static final String FIELD_ROADMAP_URL = "jira_roadmap_url";
     private static final String FIELD_CLOSED_ISSUES = "jira_current_version_closed_issues";
     private static final String FIELD_OPENED_ISSUES = "jira_current_version_opened_issues";
+    private static final String FIELD_SCM_DEVELOPER_CONNECTION = "scm_developer_connection";
+    
 
     private static ObjectMapper _mapper = new ObjectMapper( );
 
@@ -92,4 +105,60 @@ public class ComponentService
         }
 
     }
+    public static void getScmInfos( Component component )
+    {
+        try
+        {
+            HttpAccess httpAccess = new HttpAccess( );
+            String strInfosJSON;
+            String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, component.getArtifactId( ) );
+            strInfosJSON = httpAccess.doGet( strUrl );
+            JsonNode nodeRoot = _mapper.readTree( strInfosJSON );
+            JsonNode nodeComponent = nodeRoot.path( FIELD_COMPONENT );
+            component.setScmDeveloperConnection( nodeComponent.get( FIELD_SCM_DEVELOPER_CONNECTION ).asText( ) );
+         
+        }
+        catch( HttpAccessException | IOException ex )
+        {
+            AppLogService.error( "Error getting SCM infos : " + ex.getMessage( ), ex );
+        }
+
+    }
+    
+    public static void release( Component component ,Locale locale)
+    {
+            
+        
+        WorkflowReleaseContext context=new WorkflowReleaseContext( );
+        context.setComponent( component );
+        int nIdWorkflow=WorkflowReleaseContextService.getService( ).getIdWorkflow( context );
+        int nIdWorkflowContext=WorkflowReleaseContextService.getService( ).addWorkflowDeploySiteContext( context );
+        
+        State state = WorkflowService.getInstance(  )
+                .getState( nIdWorkflowContext,
+                        WorkflowReleaseContext.WORKFLOW_RESOURCE_TYPE, nIdWorkflow,
+                        ConstanteUtils.CONSTANTE_ID_NULL );
+        ReleaserUtils.startCommandResult( context );
+        try
+        {
+            WorkflowService.getInstance(  ).doProcessAutomaticReflexiveActions(nIdWorkflowContext, WorkflowReleaseContext.WORKFLOW_RESOURCE_TYPE, state.getId( ), -1, locale);
+           
+        }
+        catch( AppException appe )
+        {
+            AppLogService.error( appe );
+        }
+        finally
+        {
+            ReleaserUtils.stopCommandResult( context );
+        }
+         
+    }
+    
+    
+    public static boolean isGitComponent(Component component)
+    {
+        return !StringUtils.isEmpty( component.getScmDeveloperConnection( ))  && component.getScmDeveloperConnection( ).trim( ).startsWith(ConstanteUtils.CONSTANTE_SUFFIX_GIT);
+     }
+    
 }

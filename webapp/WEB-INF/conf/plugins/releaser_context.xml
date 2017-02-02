@@ -6,6 +6,10 @@
 
     <bean id="releaser.siteDAO" class="fr.paris.lutece.plugins.releaser.business.SiteDAO" />
     <bean id="releaser.clusterDAO" class="fr.paris.lutece.plugins.releaser.business.ClusterDAO" />
+    
+    <!-- services -->
+    <bean id="releaser.workflowReleaseContextService" class="fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService" />
+    <bean id="releaser.mavenService" class="fr.paris.lutece.plugins.releaser.service.MavenService" />
 
 
 </beans>

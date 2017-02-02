@@ -33,21 +33,21 @@
  */
 package fr.paris.lutece.plugins.releaser.util.pom;
 
-import fr.paris.lutece.plugins.releaser.business.Dependency;
-import fr.paris.lutece.plugins.releaser.business.Site;
-import fr.paris.lutece.portal.service.util.AppLogService;
-import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
+
+import fr.paris.lutece.plugins.releaser.business.jaxb.maven.Model;
+import fr.paris.lutece.plugins.releaser.business.Dependency;
+import fr.paris.lutece.plugins.releaser.business.Site;
+import fr.paris.lutece.portal.service.util.AppLogService;
 
 /**
  * PomParser
@@ -56,13 +56,7 @@ public class PomParser
 {
     // Tags
 
-    private static final String TAG_DEPENDENCY = "dependency";
-    private static final String TAG_GROUP_ID = "groupId";
-    private static final String TAG_ARTIFACT_ID = "artifactId";
-    private static final String TAG_NAME = "name";
-    private static final String TAG_VERSION = "version";
-    private static final String TAG_TYPE = "type";
-    private static final String TAG_MAIN_NODE = "project";
+
 
     private ArrayList<Dependency> _listDependencies = new ArrayList<Dependency>( );
 
@@ -75,83 +69,58 @@ public class PomParser
     {
         try
         {
-            DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance( ).newDocumentBuilder( );
             InputSource isPOM = new InputSource( new StringReader( strPOM ) );
-            Document doc = dBuilder.parse( isPOM );
-
-            doc.getDocumentElement( ).normalize( );
-
-            NodeList nlSite = doc.getChildNodes( ).item( 0 ).getChildNodes( );
-            filledSite( site, nlSite );
-            NodeList nlDenpendency = doc.getElementsByTagName( TAG_DEPENDENCY );
-
-            for ( int i = 0; i < nlDenpendency.getLength( ); i++ )
+            Model model = unmarshal( Model.class, isPOM );
+         
+            filledSite( site, model );
+         
+             fr.paris.lutece.plugins.releaser.business.jaxb.maven.Model.Dependencies dependencies=model.getDependencies( );
+             
+            if(dependencies!=null)
             {
-                Node n = nlDenpendency.item( i );
-                // test if node dependency is not in configuration node
-                if ( n.getNodeType( ) == Node.ELEMENT_NODE && n.getParentNode( ).getParentNode( ).getNodeName( ).equals( TAG_MAIN_NODE ) )
+                for (  fr.paris.lutece.plugins.releaser.business.jaxb.maven.Dependency jaxDependency: dependencies.getDependency( ))
                 {
-                    filledDependency( site, n );
+                      filledDependency( site, jaxDependency );
+                    
                 }
             }
         }
-        catch( ParserConfigurationException | SAXException | IOException e )
+        catch ( JAXBException e )
         {
-            AppLogService.error( e.getMessage( ), e );
+           AppLogService.error( e );
         }
     }
 
-    private void filledSite( Site site, NodeList nlSite )
+    private void filledSite( Site site, Model model )
     {
-        for ( int i = 0; i < nlSite.getLength( ); i++ )
-        {
-            Node p = nlSite.item( i );
-            if ( p.getNodeType( ) == Node.ELEMENT_NODE )
-            {
-                if ( p.getNodeName( ).equals( TAG_ARTIFACT_ID ) )
-                {
-                    site.setArtifactId( p.getTextContent( ).trim( ) );
-                }
-                if ( p.getNodeName( ).equals( TAG_VERSION ) )
-                {
-                    site.setVersion( p.getTextContent( ).trim( ) );
-                }
-                if ( p.getNodeName( ).equals( TAG_NAME ) )
-                {
-                    site.setName( p.getTextContent( ).trim( ) );
-                }
-            }
-        }
+        site.setArtifactId(model.getArtifactId( ) );
+        site.setVersion( model.getVersion( ) );
     }
 
-    private void filledDependency( Site site, Node n )
+    private void filledDependency( Site site,fr.paris.lutece.plugins.releaser.business.jaxb.maven.Dependency  jaxDependency )
     {
         Dependency dep = new Dependency( );
-        NodeList nl = n.getChildNodes( );
-
-        for ( int i = 0; i < nl.getLength( ); i++ )
-        {
-            Node t = n.getChildNodes( ).item( i );
-            if ( t.getNodeType( ) == Node.ELEMENT_NODE )
-            {
-                if ( t.getNodeName( ).equals( TAG_ARTIFACT_ID ) )
-                {
-                    dep.setArtifactId( t.getTextContent( ).trim( ) );
-                }
-                if ( t.getNodeName( ).equals( TAG_VERSION ) )
-                {
-                    dep.setVersion( t.getTextContent( ).trim( ) );
-                }
-                if ( t.getNodeName( ).equals( TAG_GROUP_ID ) )
-                {
-                    dep.setGroupId( t.getTextContent( ).trim( ) );
-                }
-                if ( t.getNodeName( ).equals( TAG_TYPE ) )
-                {
-                    dep.setType( t.getTextContent( ).trim( ) );
-                }
-            }
-        }
+        dep.setArtifactId( jaxDependency.getArtifactId( ) );
+        dep.setVersion( jaxDependency.getVersion( ));
+        dep.setGroupId( jaxDependency.getGroupId( ) );
+        dep.setType( jaxDependency.getType( ) );
+        
         site.addCurrentDependency( dep );
     }
+    
+    
+
+    public static <T> T unmarshal( Class<T> docClass, InputSource inputSource )
+        throws JAXBException
+    {
+        String packageName = docClass.getPackage(  ).getName(  );
+        JAXBContext jc = JAXBContext.newInstance( packageName );
+        Unmarshaller u = jc.createUnmarshaller(  );
+        JAXBElement<T> doc = (JAXBElement<T>) u.unmarshal( inputSource );
+
+        return doc.getValue(  );
+    }
+
+   
+
 }

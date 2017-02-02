@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2016, Mairie de Paris
+ * Copyright (c) 2002-2017, Mairie de Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,6 +57,7 @@ public class Component
     private List<String> _listTargetVersions;
     private int _nTargetVersionIndex;
     private boolean _bShouldBeReleased;
+    private String _strScmDeveloperConnection;
 
     /**
      * Returns the ArtifactId
@@ -402,6 +403,23 @@ public class Component
         _bShouldBeReleased = bShouldBeReleased;
     }
 
+    
+    /**
+     * 
+     * @return scm developer connection url
+     */
+    public String getScmDeveloperConnection( )
+    {
+        return _strScmDeveloperConnection;
+    }
+    /**
+     * 
+     * @param _strScmDeveloperConnection scm developer connection url
+     */
+    public void setScmDeveloperConnection( String _strScmDeveloperConnection )
+    {
+        this._strScmDeveloperConnection = _strScmDeveloperConnection;
+    }
     
             
 }
