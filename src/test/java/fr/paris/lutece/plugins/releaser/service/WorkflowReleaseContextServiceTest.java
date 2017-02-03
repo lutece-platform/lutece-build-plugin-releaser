@@ -1,4 +1,4 @@
-package fr.paris.lutece.plugins.releaser.services;
+package fr.paris.lutece.plugins.releaser.service;
 
 import java.io.IOException;
 import java.util.Locale;
