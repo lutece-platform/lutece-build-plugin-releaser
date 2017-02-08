@@ -146,12 +146,12 @@ public class MavenService implements IMavenService
         InvocationRequest request = new DefaultInvocationRequest( );
         request.setPomFile( new File( strPathPom ) );
         request.setGoals( goals );
-        String strProxyHost=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_MAVEN_PROXY_HOST );
-        String strProxyPort=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_MAVEN_PROXY_PORT );
+        String strProxyHost=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_PROXY_HOST );
+        String strProxyPort=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_PROXY_PORT );
          
-        if(StringUtils.isEmpty( strProxyHost ) && StringUtils.isEmpty( strProxyPort ))
+        if(!StringUtils.isEmpty( strProxyHost ) && !StringUtils.isEmpty( strProxyPort ))
         {
-            request.setMavenOpts( "-Dhttps.proxyHost="+strProxyHost+"  -Dhttps.proxyPort="+strProxyPort+"-Dhttp.proxyHost="+strProxyHost+"  -Dhttp.proxyPort="+strProxyPort);
+            request.setMavenOpts( "-Dhttps.proxyHost="+strProxyHost+"  -Dhttps.proxyPort="+strProxyPort+" -Dhttp.proxyHost="+strProxyHost+"  -Dhttp.proxyPort="+strProxyPort);
         }
         InvocationResult invocationResult = null;
         try

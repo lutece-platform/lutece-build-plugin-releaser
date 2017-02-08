@@ -16,10 +16,30 @@ import fr.paris.lutece.test.LuteceTestCase;
 public class WorkflowReleaseContextServiceTest extends LuteceTestCase
 {
 
+    
+    
+   @Test
+   public void testReleaseComponentGit() throws IOException
+   {
+       
+      WorkflowReleaseContext context=initContextServiceTest( this.getResourcesDir( ), this.getClass( ).getCanonicalName( ));
+      
+      
+      ReleaserUtils.startCommandResult( context ) ;
+      
+      WorkflowReleaseContextService.getService( ).gitCloneRepository( context, Locale.FRENCH );
+      WorkflowReleaseContextService.getService( ).gitMerge( context, Locale.FRENCH );
+      WorkflowReleaseContextService.getService( ).realeasePrepareGit( context, Locale.FRENCH );
+      WorkflowReleaseContextService.getService( ).realeasePerformGit( context, Locale.FRENCH );
+        
+      ReleaserUtils.stopCommandResult( context ) ;
+       
+   }
+   
    
     
-    @Test
-    public void testGitCloneRepository() throws IOException
+   @Test
+    private void testGitCloneRepository() throws IOException
     {
         
        WorkflowReleaseContext context=initContextServiceTest( this.getResourcesDir( ), this.getClass( ).getCanonicalName( ));
@@ -33,53 +53,7 @@ public class WorkflowReleaseContextServiceTest extends LuteceTestCase
         
     }
     
-    @Test
-    public void testGitMergeRepository() throws IOException
-    {
-        
-       WorkflowReleaseContext context=initContextServiceTest( this.getResourcesDir( ), this.getClass( ).getCanonicalName( ));
-       
-       
-       ReleaserUtils.startCommandResult( context ) ;   
-      
-       WorkflowReleaseContextService.getService( ).gitMerge( context, Locale.FRENCH );
-      
-       ReleaserUtils.stopCommandResult( context ) ;   
-        
-    }
-    
-    
-    @Test
-    public void testRealeasePrepareGit() throws IOException
-    {
-        
-       WorkflowReleaseContext context=initContextServiceTest( this.getResourcesDir( ), this.getClass( ).getCanonicalName( ));
-       
-       
-       ReleaserUtils.startCommandResult( context ) ;   
-      
-       WorkflowReleaseContextService.getService( ).realeasePrepareGit( context, Locale.FRENCH );
-      
-       ReleaserUtils.stopCommandResult( context ) ;   
-        
-    }
-    
-    @Test
-    public void testRealeasePerform() throws IOException
-    {
-        
-       WorkflowReleaseContext context=initContextServiceTest( this.getResourcesDir( ), this.getClass( ).getCanonicalName( ));
-       
-       
-       ReleaserUtils.startCommandResult( context ) ;   
-      
-       WorkflowReleaseContextService.getService( ).realeasePerformGit( context, Locale.FRENCH );
-      
-       ReleaserUtils.stopCommandResult( context ) ;   
-        
-    }
-    
-    
+  
     
     
    public static WorkflowReleaseContext initContextServiceTest(String strRessourceDir,String strClassName) throws IOException

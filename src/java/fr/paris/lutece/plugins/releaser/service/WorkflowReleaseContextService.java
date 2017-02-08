@@ -23,6 +23,7 @@ import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.plugins.releaser.util.file.FileUtils;
 import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
 import fr.paris.lutece.portal.service.datastore.DatastoreService;
+import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 
@@ -407,5 +408,22 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     {
 
     }
+    
+    public  void sendTweet( WorkflowReleaseContext context, Locale locale )
+    {
+       
+        CommandResult commandResult = context.getCommandResult( );
+        Component component = context.getComponent( );
+       
+        
+        String strComponentName = ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) );
+        String strLocalComponentPomPath = ReleaserUtils.getLocalComponentPomPath( strComponentName );
+
+     String strTweet="";
+        
+       TwitterService.getService( ).sendTweet( strTweet, commandResult );
+        
+    }
+    
 
 }
