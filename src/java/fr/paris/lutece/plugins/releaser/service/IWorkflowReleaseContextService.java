@@ -1,15 +1,28 @@
 package fr.paris.lutece.plugins.releaser.service;
 
+import java.util.List;
 import java.util.Locale;
 
+import javax.servlet.http.HttpServletRequest;
+
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
+import fr.paris.lutece.portal.business.user.AdminUser;
 
 public interface IWorkflowReleaseContextService
 {
 
-    int addWorkflowDeploySiteContext( WorkflowReleaseContext context );
+    
+    void startWorkflowReleaseComponent(WorkflowReleaseContext context,int nIdWorkflow, Locale locale,HttpServletRequest request,AdminUser user );
 
-    WorkflowReleaseContext getWorkflowDeploySiteContext( int nIdContext );
+    int addWorkflowReleaseContext( WorkflowReleaseContext context );
+    
+    void saveWorkflowReleaseContext( WorkflowReleaseContext context );
+
+    WorkflowReleaseContext getWorkflowReleaseContext( int nIdContext );
+    
+    WorkflowReleaseContext getWorkflowReleaseContextHistory( int nIdContext, String strArtifactId );
+    
+    List<WorkflowReleaseContext> getListWorkflowReleaseContextHistory( String strArtifactId );
     
     int getIdWorkflow(WorkflowReleaseContext context);
     
@@ -22,5 +35,9 @@ public interface IWorkflowReleaseContextService
     void realeasePrepareGit( WorkflowReleaseContext context, Locale locale );
     
     void realeasePerformGit( WorkflowReleaseContext context, Locale locale );
+    
+    void sendTweet( WorkflowReleaseContext context, Locale locale );
+    
+    void init();
 
 }

@@ -1,7 +1,18 @@
-<@box>
-	<@boxHeader title='#i18n{releaser.modify_site.title}' />
-	<@boxBody>
-    <@tform class="form-horizontal" method="post" name="modify_site" action="jsp/admin/plugins/releaser/ManageClusters.jsp">
+<div class="app-wrapper">
+<div class="cards">
+  <section class="row">
+    <div class="col-xs-12 col-sm-3 col-md-2 cards-info">
+				<h1>
+      		<i class="fa fa-cube fa-5x"></i>
+				</h1>
+    </div>
+		<div class="xs-12 col-sm-9 col-md-10">
+			<div class="row">
+				<div class="col-xs-12 col-sm-offset-2 col-sm-6 col-md-offset-2 col-md-6 col-lg-offset-2 col-lg-6">
+      		<h3>#i18n{releaser.modify_site.title}</h3>
+				</div>
+			</div>
+    	<@tform class="form-horizontal" method="post" name="modify_site" action="jsp/admin/plugins/releaser/ManageClusters.jsp">
         <@messages errors=errors />
         <input type="hidden" id="id" name="id" value="${site.id}"/>
 
@@ -25,5 +36,5 @@
                 </@formGroup>
         <@actionButtons button1Name="action_modifySite" button2Name="view_manageSite"/>
     </@tform>
-	</@boxBody>
-</@box>
+	</div>
+</div>

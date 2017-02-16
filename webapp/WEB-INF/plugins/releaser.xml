@@ -29,7 +29,14 @@
             <feature-url>jsp/admin/plugins/releaser/ManageClusters.jsp</feature-url>
             <feature-icon-url></feature-icon-url>
       </admin-feature>
-    </admin-features>    
+    </admin-features>
+    
+    <!-- Admin css -->
+     <admin-css-stylesheets>
+        <admin-css-stylesheet>css/admin/AdminLTEv2.css</admin-css-stylesheet>
+        <admin-css-stylesheet>css/plugins/releaser/butns.min.css</admin-css-stylesheet>
+<!--         <admin-css-stylesheet>css/plugins/releaser/portal_admin_deploy.css</admin-css-stylesheet> -->
+    </admin-css-stylesheets>    
 
     <!-- XPages parameters -->
     <applications>

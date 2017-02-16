@@ -34,15 +34,27 @@
 package fr.paris.lutece.plugins.releaser.web;
 
 import fr.paris.lutece.plugins.releaser.business.Site;
+import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.service.SiteService;
+import fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService;
+import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.portal.service.template.AppTemplateService;
 import fr.paris.lutece.portal.util.mvc.admin.MVCAdminJspBean;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.View;
 import fr.paris.lutece.util.html.HtmlTemplate;
+import fr.paris.lutece.util.json.AbstractJsonResponse;
+import fr.paris.lutece.util.json.ErrorJsonResponse;
+import fr.paris.lutece.util.json.JsonResponse;
+import fr.paris.lutece.util.json.JsonUtil;
+
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.StringUtils;
+
+
 
 /**
  * ManageSiteRelease JSP Bean abstract class for JSP Bean
@@ -53,11 +65,16 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     // Parameters
     private static final String PARAMETER_SITE_ID = "id_site";
     private static final String PARAMETER_ARTIFACT_ID = "artifact_id";
+    private static final String PARAMETER_ID_CONTEXT = "id_context";
+    
 
     // Views
     private static final String VIEW_MANAGE_SITE_RELEASE = "siteRelease";
+    private static final String VIEW_RELEASE_INFO_JSON = "releaseInfoJson";
+    
 
     // Actions
+    private static final String ACTION_RELEASE_COMPONENT = "releaseComponent";
     private static final String ACTION_UPGRADE_COMPONENT = "upgradeComponent";
     private static final String ACTION_PROJECT_COMPONENT = "projectComponent";
     private static final String ACTION_CHANGE_COMPONENT_NEXT_RELEASE_VERSION = "versionComponent";
@@ -67,6 +84,7 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     private static final String MARK_SITE = "site";
     
     private static final String JSP_MANAGE_CLUSTERS = "ManageClusters.jsp";
+    private static final String JSON_ERROR_RELEASE_CONTEXT_NOT_EXIST= "RELEASE_CONTEXT_NOT_EXIST";
     
     private Site _site;
 
@@ -93,7 +111,40 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_PREPARE_SITE_RELEASE, getLocale( ), model );
         return template.getHtml( );
     }
+    
+    @View( value = VIEW_RELEASE_INFO_JSON)
+    public String getReleaseInfoJson( HttpServletRequest request )
+    {
+        
+        AbstractJsonResponse jsonResponse = null;
 
+        String strIdReleaseContext = request.getParameter( PARAMETER_ID_CONTEXT );
+        
+        if ( !StringUtils.isEmpty( strIdReleaseContext ))
+        {
+            WorkflowReleaseContext context=WorkflowReleaseContextService.getService( ).getWorkflowReleaseContext( ReleaserUtils.convertStringToInt( strIdReleaseContext ) );
+            if(context!=null)
+            {
+             jsonResponse=new JsonResponse( context );
+               
+            }
+            else
+            {
+                jsonResponse=new ErrorJsonResponse( JSON_ERROR_RELEASE_CONTEXT_NOT_EXIST );
+                
+            }
+        }
+        else
+        {
+            jsonResponse=new ErrorJsonResponse( JSON_ERROR_RELEASE_CONTEXT_NOT_EXIST );
+            
+        }
+        return JsonUtil.buildJsonResponse( jsonResponse );
+        
+     }
+    
+    
+  
     @Action( ACTION_UPGRADE_COMPONENT )
     public String doUpgradeComponent( HttpServletRequest request )
     {
@@ -101,6 +152,16 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         SiteService.upgradeComponent( _site, strArtifactId );
 
         return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
+    }
+    @Action( ACTION_RELEASE_COMPONENT )
+    public String doReleaseComponent( HttpServletRequest request )
+    {
+        String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
+        AbstractJsonResponse jsonResponse = null;
+        Integer nidContext= SiteService.releaseComponent( _site, strArtifactId ,getLocale( ),getUser( ),request);
+        jsonResponse=new JsonResponse( nidContext );
+        
+        return JsonUtil.buildJsonResponse( jsonResponse );
     }
 
     @Action( ACTION_PROJECT_COMPONENT )

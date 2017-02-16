@@ -36,9 +36,16 @@ package fr.paris.lutece.plugins.releaser.service;
 
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.Collection;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
+
+import sun.security.acl.WorldGroupImpl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,7 +54,10 @@ import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
+import fr.paris.lutece.plugins.workflowcore.business.action.Action;
 import fr.paris.lutece.plugins.workflowcore.business.state.State;
+import fr.paris.lutece.portal.business.user.AdminUser;
+import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
@@ -58,8 +68,10 @@ import fr.paris.lutece.util.httpaccess.HttpAccessException;
 /**
  * ComponentService
  */
-public class ComponentService
+public class ComponentService implements IComponentService
 {
+    private  ExecutorService _executor;
+    private  ObjectMapper _mapper;
     private static final String PROPERTY_COMPONENT_WEBSERVICE = "releaser.component.webservice.url";
     private static final String URL_COMPONENT_WEBSERVICE = AppPropertiesService.getProperty( PROPERTY_COMPONENT_WEBSERVICE );
     private static final String FIELD_COMPONENT = "component";
@@ -69,11 +81,22 @@ public class ComponentService
     private static final String FIELD_CLOSED_ISSUES = "jira_current_version_closed_issues";
     private static final String FIELD_OPENED_ISSUES = "jira_current_version_opened_issues";
     private static final String FIELD_SCM_DEVELOPER_CONNECTION = "scm_developer_connection";
+    private static IComponentService _instance;
+
+    public static IComponentService getService()
+    {
+        if(_instance==null)
+        {
+            _instance=SpringContextService.getBean(ConstanteUtils.BEAN_COMPONENT_SERVICE);
+            _instance.init( );
+        }
+            
+      return _instance;
+        
+    }
     
 
-    private static ObjectMapper _mapper = new ObjectMapper( );
-
-    public static String getLatestVersion( String strArtifactId ) throws HttpAccessException, IOException
+    public String getLatestVersion( String strArtifactId ) throws HttpAccessException, IOException
     {
         HttpAccess httpAccess = new HttpAccess( );
         String strInfosJSON;
@@ -84,7 +107,7 @@ public class ComponentService
         return nodeComponent.get( FIELD_VERSION ).asText( );
     }
 
-    public static void getJiraInfos( Component component )
+    public void getJiraInfos( Component component )
     {
         try
         {
@@ -105,7 +128,7 @@ public class ComponentService
         }
 
     }
-    public static void getScmInfos( Component component )
+    public  void getScmInfos( Component component )
     {
         try
         {
@@ -125,40 +148,38 @@ public class ComponentService
 
     }
     
-    public static void release( Component component ,Locale locale)
+    public int release( Component component ,Locale locale,AdminUser user,HttpServletRequest request)
     {
             
-        
+        String strGitHubUserLogin=AppPropertiesService.getProperty(ConstanteUtils.PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_LOGIN );
+        String strGitHubUserPassword=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_PASSWORD);
+       
         WorkflowReleaseContext context=new WorkflowReleaseContext( );
         context.setComponent( component );
+        context.setGitHubUserLogin( strGitHubUserLogin );
+        context.setGitHubUserPassord( strGitHubUserPassword );
+       
         int nIdWorkflow=WorkflowReleaseContextService.getService( ).getIdWorkflow( context );
-        int nIdWorkflowContext=WorkflowReleaseContextService.getService( ).addWorkflowDeploySiteContext( context );
-        
-        State state = WorkflowService.getInstance(  )
-                .getState( nIdWorkflowContext,
-                        WorkflowReleaseContext.WORKFLOW_RESOURCE_TYPE, nIdWorkflow,
-                        ConstanteUtils.CONSTANTE_ID_NULL );
-        ReleaserUtils.startCommandResult( context );
-        try
-        {
-            WorkflowService.getInstance(  ).doProcessAutomaticReflexiveActions(nIdWorkflowContext, WorkflowReleaseContext.WORKFLOW_RESOURCE_TYPE, state.getId( ), -1, locale);
-           
-        }
-        catch( AppException appe )
-        {
-            AppLogService.error( appe );
-        }
-        finally
-        {
-            ReleaserUtils.stopCommandResult( context );
-        }
-         
+        WorkflowReleaseContextService.getService( ).addWorkflowReleaseContext( context );
+        //start
+        WorkflowReleaseContextService.getService( ).startWorkflowReleaseComponent( context, nIdWorkflow, locale, request, user );
+      
+         return context.getId( );
     }
     
     
-    public static boolean isGitComponent(Component component)
+    public boolean isGitComponent(Component component)
     {
         return !StringUtils.isEmpty( component.getScmDeveloperConnection( ))  && component.getScmDeveloperConnection( ).trim( ).startsWith(ConstanteUtils.CONSTANTE_SUFFIX_GIT);
      }
+    
+   public  void init()
+    {
+     
+        _mapper=new ObjectMapper( );
+        _executor= Executors.newFixedThreadPool(AppPropertiesService.getPropertyInt(ConstanteUtils.PROPERTY_THREAD_RELEASE_POOL_MAX_SIZE,10));
+
+    }
+    
     
 }

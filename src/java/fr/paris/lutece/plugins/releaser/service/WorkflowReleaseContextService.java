@@ -2,9 +2,17 @@ package fr.paris.lutece.plugins.releaser.service;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeResult;
@@ -18,20 +26,26 @@ import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
+import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
 import fr.paris.lutece.plugins.releaser.util.PluginUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.plugins.releaser.util.file.FileUtils;
 import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
+import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.datastore.DatastoreService;
 import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
+import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
+import fr.paris.lutece.util.ReferenceItem;
+import fr.paris.lutece.util.ReferenceList;
 
 public class WorkflowReleaseContextService implements IWorkflowReleaseContextService
 {
 
     private static IWorkflowReleaseContextService _singleton;
     private HashMap<Integer, WorkflowReleaseContext> _mapWorkflowReleaseContext = new HashMap<Integer, WorkflowReleaseContext>( );
+    private ExecutorService _executor;
 
     /*
      * (non-Javadoc)
@@ -40,7 +54,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
      * WorkflowReleaseContext)
      */
     @Override
-    public synchronized int addWorkflowDeploySiteContext( WorkflowReleaseContext context )
+    public synchronized int addWorkflowReleaseContext( WorkflowReleaseContext context )
     {
         int nIdKey = Integer.parseInt( DatastoreService.getDataValue( ConstanteUtils.CONSTANTE_MAX_RELEASE_CONTEXT_KEY, "0" ) ) + 1;
         // stored key in database
@@ -57,16 +71,79 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
      * @see fr.paris.lutece.plugins.releaser.service.IWorkflowReleaseContextService#getWorkflowDeploySiteContext(int)
      */
     @Override
-    public WorkflowReleaseContext getWorkflowDeploySiteContext( int nIdContext )
+    public WorkflowReleaseContext getWorkflowReleaseContext( int nIdContext )
     {
         return _mapWorkflowReleaseContext.get( nIdContext );
+    }
+
+    public synchronized void saveWorkflowReleaseContext( WorkflowReleaseContext context )
+    {
+        try
+        {
+            String strJsonContext = MapperJsonUtil.getJson( context );
+            DatastoreService
+                    .setDataValue( ReleaserUtils.getWorklowContextDataKey( context.getComponent( ).getArtifactId( ), context.getId( ) ), strJsonContext );
+
+        }
+        catch( IOException e )
+        {
+            AppLogService.error( "error during save context json", e );
+        }
+    }
+
+    public WorkflowReleaseContext getWorkflowReleaseContextHistory( int nIdContext, String strArtifactId )
+    {
+        WorkflowReleaseContext context = null;
+        try
+        {
+
+            String strJsonContext = DatastoreService.getDataValue( ReleaserUtils.getWorklowContextDataKey( strArtifactId, nIdContext ), null );
+            context = MapperJsonUtil.parse( strJsonContext, WorkflowReleaseContext.class );
+
+        }
+        catch( IOException e )
+        {
+            AppLogService.error( "error during get context in the datastore", e );
+        }
+        return context;
+
+    }
+
+    public List<WorkflowReleaseContext> getListWorkflowReleaseContextHistory( String strArtifactId )
+    {
+        WorkflowReleaseContext context = null;
+        List<WorkflowReleaseContext> listContext = new ArrayList<WorkflowReleaseContext>( );
+
+        try
+        {
+
+            ReferenceList refListContextHistory = DatastoreService.getDataByPrefix( ConstanteUtils.CONSTANTE_RELEASE_CONTEXT_PREFIX );
+            if ( !CollectionUtils.isEmpty( refListContextHistory ) )
+            {
+                for ( Iterator iterator = refListContextHistory.iterator( ); iterator.hasNext( ); )
+                {
+                    ReferenceItem referenceItem = (ReferenceItem) iterator.next( );
+                    context = MapperJsonUtil.parse( referenceItem.getCode( ), WorkflowReleaseContext.class );
+                    if ( context != null )
+                    {
+                        listContext.add( context );
+                    }
+                }
+            }
+        }
+        catch( IOException e )
+        {
+            AppLogService.error( "error during get context in the datastore", e );
+        }
+        return listContext;
+
     }
 
     public int getIdWorkflow( WorkflowReleaseContext context )
     {
         int nIdWorkflow = ConstanteUtils.CONSTANTE_ID_NULL;
 
-        if ( ComponentService.isGitComponent( context.getComponent( ) ) )
+        if ( ComponentService.getService( ).isGitComponent( context.getComponent( ) ) )
         {
             nIdWorkflow = AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_ID_WORKFLOW_GIT_COMPONENT, ConstanteUtils.CONSTANTE_ID_NULL );
         }
@@ -83,16 +160,17 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         if ( _singleton == null )
         {
 
-            _singleton = SpringContextService.getBean( ConstanteUtils.BEAN_WORKFLOW_RELEASE_CONTEXT_SERVICE);
+            _singleton = SpringContextService.getBean( ConstanteUtils.BEAN_WORKFLOW_RELEASE_CONTEXT_SERVICE );
+            _singleton.init( );
         }
 
         return _singleton;
     }
 
-    public  void gitCloneRepository( WorkflowReleaseContext context, Locale locale )
+    public void gitCloneRepository( WorkflowReleaseContext context, Locale locale )
     {
-
-        FileRepository fLocalRepo = null;
+        Git git = null;
+        // FileRepository fLocalRepo = null;
         CommandResult commandResult = context.getCommandResult( );
         Component component = context.getComponent( );
         String strComponentName = ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) );
@@ -112,45 +190,35 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             commandResult.getLog( ).append( "Local repository has been cleaned\n" );
         }
 
+        commandResult.getLog( ).append( "Cloning repository ...\n" );
         try
         {
-            commandResult.getLog( ).append( "Cloning repository ...\n" );
-            GitUtils.cloneRepo( strLocalComponentPath, component.getScmDeveloperConnection( ) );
-            fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
-            Git git = new Git( fLocalRepo );
-            GitUtils.createLocalBranch( git, GitUtils.DEVELOP_BRANCH );
-            GitUtils.createLocalBranch( git, GitUtils.MASTER_BRANCH);
-            fLocalRepo.getConfig( ).setString( "user", null, "name", context.getGitHubUserLogin( ) );
-            fLocalRepo.getConfig( ).setString( "user", null, "email", context.getGitHubUserLogin( ) + "@users.noreply.github.com" );
-            fLocalRepo.getConfig( ).save( );
+
+            git = GitUtils.cloneRepo( strLocalComponentPath, component.getScmDeveloperConnection( ), commandResult, context.getGitHubUserLogin( ) );
+            // fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
+            // git = new Git( fLocalRepo );
+            GitUtils.createLocalBranch( git, GitUtils.DEVELOP_BRANCH, commandResult );
+            GitUtils.createLocalBranch( git, GitUtils.MASTER_BRANCH, commandResult );
             commandResult.getLog( ).append( "the repository has been successfully cloned.\n" );
             commandResult.getLog( ).append( "Checkout branch \"" + GitUtils.DEVELOP_BRANCH + "\" ...\n" );
-            GitUtils.checkoutRepoBranch( git,  GitUtils.DEVELOP_BRANCH);
-            commandResult.getLog( ).append( "Checkout bracnh develop successfull\n" );
+            GitUtils.checkoutRepoBranch( git, GitUtils.DEVELOP_BRANCH, commandResult );
 
         }
-        catch( InvalidRemoteException e )
+        finally
         {
+            if ( git != null )
+            {
 
-            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+                git.close( );
 
+            }
         }
-        catch( TransportException e )
-        {
-            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
 
-        }
-        catch( IOException e )
-        {
-            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
-        }
-        catch( GitAPIException e )
-        {
-            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
-        }
+        commandResult.getLog( ).append( "Checkout branch develop successfull\n" );
+
     }
 
-    public  void gitMerge( WorkflowReleaseContext context, Locale locale )
+    public void gitMerge( WorkflowReleaseContext context, Locale locale )
     {
 
         FileRepository fLocalRepo = null;
@@ -158,12 +226,12 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         Component component = context.getComponent( );
         String strComponentName = ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) );
         String strLocalComponentPath = ReleaserUtils.getLocalComponentPath( strComponentName );
-
+        Git git=null;
         try
         {
 
             fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
-            Git git = new Git( fLocalRepo );
+            git = new Git( fLocalRepo );
             commandResult.getLog( ).append( "Checking if local repository " + strComponentName + " exist\n" );
             if ( !fLocalRepo.getDirectory( ).exists( ) )
             {
@@ -174,7 +242,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             else
             {
                 commandResult.getLog( ).append( "Checkout branch \"" + GitUtils.MASTER_BRANCH + "\" ...\n" );
-                GitUtils.checkoutRepoBranch( git, GitUtils.MASTER_BRANCH );
+                GitUtils.checkoutRepoBranch( git, GitUtils.MASTER_BRANCH,commandResult);
                 commandResult.getLog( ).append( "Checkout successfull\n" );
                 commandResult.getLog( ).append( "Going to merge '" + GitUtils.DEVELOP_BRANCH + "' branch on 'master' branch...\n" );
                 MergeResult mergeResult = GitUtils.mergeRepoBranch( git, GitUtils.DEVELOP_BRANCH );
@@ -217,7 +285,23 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         {
             ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
         }
+        finally
+        {
+            
+            if ( fLocalRepo != null )
+            {
 
+                fLocalRepo.close( );
+
+            }
+            if ( git != null )
+            {
+
+                git.close( );
+
+            }
+            
+        }
     }
 
     public void realeasePrepareGit( WorkflowReleaseContext context, Locale locale )
@@ -229,23 +313,24 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         String strLocalComponentPomPath = ReleaserUtils.getLocalComponentPomPath( strComponentName );
 
         String strComponentReleaseVersion = component.getTargetVersion( );
-        String strComponentReleaseTagName = component.getArtifactId( )+"-"+component.getTargetVersion( ) ;
+        String strComponentReleaseTagName = component.getArtifactId( ) + "-" + component.getTargetVersion( );
         String strComponentReleaseNewDeveloppmentVersion = component.getNextSnapshotVersion( );
 
         // Switch to develop branch
-        FileRepository fLocalRepo;
+        FileRepository fLocalRepo=null;
+        Git git=null;
         try
         {
             fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
 
-            Git git = new Git( fLocalRepo );
+            git = new Git( fLocalRepo );
             git.checkout( ).setName( GitUtils.DEVELOP_BRANCH ).call( );
 
             if ( PluginUtils.isCore( strComponentName ) )
             {
                 // update core xml
-                String strCoreXMLPath = PluginUtils.getCoreXMLFile( strLocalComponentPath);
-              
+                String strCoreXMLPath = PluginUtils.getCoreXMLFile( strLocalComponentPath );
+
                 if ( StringUtils.isNotBlank( strCoreXMLPath ) )
                 {
                     commandResult.getLog( ).append( "Updating Core XML " + strComponentName + " to " + strComponentReleaseVersion + "\n" );
@@ -308,8 +393,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             if ( PluginUtils.isCore( strComponentName ) )
             {
                 // update core xml
-                String strCoreXMLPath = PluginUtils.getCoreXMLFile( strLocalComponentPath);
-             
+                String strCoreXMLPath = PluginUtils.getCoreXMLFile( strLocalComponentPath );
+
                 if ( StringUtils.isNotBlank( strCoreXMLPath ) )
                 {
                     commandResult.getLog( ).append( "Updating Core XML " + strComponentName + " to " + strComponentReleaseNewDeveloppmentVersion + "\n" );
@@ -354,7 +439,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                     PluginUtils.updatePluginXMLVersion( pluginXMLPath, strComponentReleaseNewDeveloppmentVersion, commandResult );
                     // Commit Plugin xml modification version
                     git.add( ).addFilepattern( "." ).setUpdate( true ).call( );
-                    git.commit( ).setMessage( "[site-release] Update plugin version to " + strComponentReleaseNewDeveloppmentVersion + " for " + strComponentName )
+                    git.commit( )
+                            .setMessage( "[site-release] Update plugin version to " + strComponentReleaseNewDeveloppmentVersion + " for " + strComponentName )
                             .call( );
                     git.push( )
                             .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getGitHubUserLogin( ), context.getGitHubUserPassord( ) ) )
@@ -383,16 +469,33 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         {
             ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
         }
+        
+        finally
+        {
+            
+            if ( fLocalRepo != null )
+            {
+
+                fLocalRepo.close( );
+
+            }
+            if ( git != null )
+            {
+
+                git.close( );
+
+            }
+            
+        }
 
     }
 
-    public  void realeasePerformGit( WorkflowReleaseContext context, Locale locale )
+    public void realeasePerformGit( WorkflowReleaseContext context, Locale locale )
     {
-       
+
         CommandResult commandResult = context.getCommandResult( );
         Component component = context.getComponent( );
-       
-        
+
         String strComponentName = ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) );
         String strLocalComponentPomPath = ReleaserUtils.getLocalComponentPomPath( strComponentName );
 
@@ -408,22 +511,36 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     {
 
     }
-    
-    public  void sendTweet( WorkflowReleaseContext context, Locale locale )
+
+    public void sendTweet( WorkflowReleaseContext context, Locale locale )
     {
-       
+
         CommandResult commandResult = context.getCommandResult( );
         Component component = context.getComponent( );
-       
-        
-        String strComponentName = ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) );
-        String strLocalComponentPomPath = ReleaserUtils.getLocalComponentPomPath( strComponentName );
 
-     String strTweet="";
-        
-       TwitterService.getService( ).sendTweet( strTweet, commandResult );
-        
+        String strComponentName = ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) );
+        String strComponentReleaseVersion = component.getTargetVersion( );
+
+        Object [ ] messageAgrs = {
+                strComponentName, strComponentReleaseVersion
+        };
+
+        String strTweetMessage = I18nService.getLocalizedString( ConstanteUtils.I18_TWITTER_MESSAGE, messageAgrs, locale );
+
+        TwitterService.getService( ).sendTweet( strTweetMessage, commandResult );
+
     }
-    
+
+    public void startWorkflowReleaseComponent( WorkflowReleaseContext context, int nIdWorkflow, Locale locale, HttpServletRequest request, AdminUser user )
+    {
+        _executor.execute( new ReleaseComponentTask( nIdWorkflow, context, request, user, locale ) );
+    }
+
+    public void init( )
+    {
+
+        _executor = Executors.newFixedThreadPool( AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_THREAD_RELEASE_POOL_MAX_SIZE, 10 ) );
+
+    }
 
 }

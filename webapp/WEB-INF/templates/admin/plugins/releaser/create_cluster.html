@@ -1,18 +1,28 @@
-<@box>
-	<@boxHeader title='#i18n{releaser.create_cluster.title}' />
-	<@boxBody>
-    <@tform name='create_cluster' action='jsp/admin/plugins/releaser/ManageClusters.jsp'>
+<div class="app-wrapper">
+<div class="cards">
+  <section class="row">
+    <div class="col-xs-12 col-sm-3 col-md-2 cards-info">
+				<h1>
+      		<i class="fa fa-cubes fa-5x"></i>
+				</h1>
+    </div>
+		<div class="xs-12 col-sm-9 col-md-10">
+			<div class="row">
+				<div class="col-xs-12 col-sm-offset-2 col-sm-6 col-md-offset-2 col-md-6 col-lg-offset-2 col-lg-6">
+      		<h3>#i18n{releaser.create_cluster.title}</h3>
+				</div>
+			</div>
+		  <@tform name='create_cluster' action='jsp/admin/plugins/releaser/ManageClusters.jsp'>
         <@messages errors=errors />
-        <input type="hidden" id="id" name="id"/>
-        
+        <input type="hidden" id="id" name="id">
 				<@formGroup labelKey='#i18n{releaser.create_cluster.labelName}' helpKey='#i18n{releaser.create_cluster.labelName.help}' mandatory=true>
 					<@input type='text' name='name' value='${cluster.name!\'\'}' />
 				</@formGroup>
 				<@formGroup labelKey='#i18n{releaser.create_cluster.labelDescription}' helpKey='#i18n{releaser.create_cluster.labelDescription.help}' mandatory=true>
 					<@input type='text' name='description' value='${cluster.description!\'\'}' />
 				</@formGroup>
-				
 				<@actionButtons button1Name="action_createCluster" button2Name="view_manageCluster"/>
     </@tform>
-	</@boxBody>
-</@box>
+	</section>
+</div>
+</div>

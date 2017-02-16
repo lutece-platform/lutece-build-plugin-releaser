@@ -34,6 +34,8 @@
 
 package fr.paris.lutece.plugins.releaser.service;
 
+import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
+import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.Dependency;
@@ -42,6 +44,7 @@ import fr.paris.lutece.plugins.releaser.business.SiteHome;
 import fr.paris.lutece.plugins.releaser.util.svn.SvnSiteService;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
+import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.util.httpaccess.HttpAccessException;
@@ -50,6 +53,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * SiteService
@@ -140,7 +145,7 @@ public class SiteService
             defineTargetVersion( component );
             defineNextSnapshotVersion( component );
             checkForNewVersion( component );
-            ComponentService.getJiraInfos( component );
+            ComponentService.getService( ).getJiraInfos( component );
             site.addComponent( component );
         }
     }
@@ -194,7 +199,7 @@ public class SiteService
     private static boolean isProjectComponent( Site site, String strArtifactId )
     {
         // FIXME
-        return ( strArtifactId.contains( "gru" ) || strArtifactId.contains( "ticketing" ) || strArtifactId.contains( "identity" ) );
+        return ( strArtifactId.contains( "gru" ) || strArtifactId.contains( "ticketing" ) || strArtifactId.contains( "identity" ) || strArtifactId.contains( "test" ));
     }
 
     /**
@@ -265,7 +270,7 @@ public class SiteService
         {
             try
             {
-                String strLastestVersion = ComponentService.getLatestVersion( component.getArtifactId( ) );
+                String strLastestVersion = ComponentService.getService( ).getLatestVersion( component.getArtifactId( ) );
 
                 if ( !strLastestVersion.equals( component.getTargetVersion( ) ) )
                 {
@@ -291,17 +296,20 @@ public class SiteService
         }
     }
     
-    public static void releaseComponent( Site site, String strArtifactId )
+    public static int releaseComponent( Site site, String strArtifactId,Locale locale,AdminUser user,HttpServletRequest request)
     {
         for ( Component component : site.getComponents( ) )
         {
             if ( component.getArtifactId( ).equals( strArtifactId ) )
             {
                 //Get Scm Infos 
-                ComponentService.getScmInfos( component ) ;
+                ComponentService.getService( ).getScmInfos( component ) ;
+                //Release component
+               return  ComponentService.getService( ).release( component, locale,user,request );
                 
             }
         }
+        return ConstanteUtils.CONSTANTE_ID_NULL;
     }
     
     

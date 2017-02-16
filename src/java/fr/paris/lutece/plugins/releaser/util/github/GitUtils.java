@@ -41,35 +41,110 @@ public class GitUtils  {
     public static final String DEVELOP_BRANCH = "develop";
     
 
-	public static  void cloneRepo(String sClonePath, String sRepoURL) throws IOException, InvalidRemoteException, TransportException, GitAPIException
+	public static  Git cloneRepo(String sClonePath, String sRepoURL, CommandResult commandResult,String strGitHubUserLogin) 
 	{
-		FileRepositoryBuilder builder = new FileRepositoryBuilder();
+	    Git git=null;
+	    Repository repository=null;
+	    try
+        {
+	    FileRepositoryBuilder builder = new FileRepositoryBuilder();
 		File fGitDir = new File(sClonePath);
-		Repository repository = builder.setGitDir(fGitDir).readEnvironment().findGitDir().build();
+		
+		CloneCommand clone = Git.cloneRepository().setBare(false).setCloneAllBranches(true).setDirectory(fGitDir).setURI(getRepoUrl( sRepoURL ));
+		
+		git=clone.call( );
+		
+		repository = builder.setGitDir(fGitDir).readEnvironment().findGitDir().build();
+        repository.getConfig( ).setString( "user", null, "name", strGitHubUserLogin );
+        repository.getConfig( ).setString( "user", null, "email", strGitHubUserLogin + "@users.noreply.github.com" );
+        repository.getConfig( ).save( );
+      
+		
+        }
+        catch( InvalidRemoteException  e )
+        {
 
-		CloneCommand clone = Git.cloneRepository().setBare(false).setCloneAllBranches(true).setDirectory(fGitDir).setURI(sRepoURL);
-		
-		clone.call();
-		
-		repository.close();
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+
+        }
+        catch( TransportException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+
+        }
+        catch( IOException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+        }
+        catch( GitAPIException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+        }
+        finally
+        {
+           
+            repository.close();
+            
+         }
+		return git;
 		
 	}
 	
 	
-	public static void checkoutRepoBranch(Git git, String sBranchName) throws IOException, RefAlreadyExistsException, RefNotFoundException, InvalidRefNameException, CheckoutConflictException, GitAPIException
+	public static void checkoutRepoBranch(Git git, String sBranchName,CommandResult commandResult)
 	{
+	    try
+        {
 		git.checkout().setName(sBranchName).call();
 		
+        }
+        catch( InvalidRemoteException  e )
+        {
+
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+
+        }
+        catch( TransportException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+
+        }
+       
+        catch( GitAPIException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+        }
+        
 	}
 	
-	public static void createLocalBranch(Git git, String sBranchName) throws IOException, RefAlreadyExistsException, RefNotFoundException, InvalidRefNameException, GitAPIException
+	public static void createLocalBranch(Git git, String sBranchName,CommandResult commandResult) 
 	{
-		git.branchCreate() 
+	    try
+        {
+	    git.branchCreate() 
 	       .setName(sBranchName)
 	       .setUpstreamMode(SetupUpstreamMode.SET_UPSTREAM)
 	       .setStartPoint("origin/" + sBranchName)
 	       .setForce(true)
 	       .call();
+        }
+        catch( InvalidRemoteException  e )
+        {
+
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+
+        }
+        catch( TransportException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+
+        }
+       
+        catch( GitAPIException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+        }
+        
 	}
 	
 	public static PullResult pullRepoBranch(Git git, String sRepoURL, String sBranchName) throws IOException, WrongRepositoryStateException, InvalidConfigurationException, DetachedHeadException, InvalidRemoteException, CanceledException, RefNotFoundException, NoHeadException, TransportException, GitAPIException
@@ -183,7 +258,18 @@ public class GitUtils  {
     }
 	
 	
-
+private static String getRepoUrl(String strRepoUrl)
+{
+    
+    if(strRepoUrl!=null && strRepoUrl.startsWith( "scm:git:" ))
+     {
+        strRepoUrl=strRepoUrl.substring( 8 );
+               
+               
+          }
+    
+    return strRepoUrl;
 	
 	
+}
 }

@@ -10,6 +10,8 @@
     <!-- services -->
     <bean id="releaser.workflowReleaseContextService" class="fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService" />
     <bean id="releaser.mavenService" class="fr.paris.lutece.plugins.releaser.service.MavenService" />
+    <bean id="releaser.componentService" class="fr.paris.lutece.plugins.releaser.service.ComponentService" />
+    
 
 
 </beans>

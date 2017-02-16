@@ -41,9 +41,8 @@ public class WorkflowReleaseContextServiceTest extends LuteceTestCase
    @Test
     private void testGitCloneRepository() throws IOException
     {
-        
-       WorkflowReleaseContext context=initContextServiceTest( this.getResourcesDir( ), this.getClass( ).getCanonicalName( ));
-       
+     
+      WorkflowReleaseContext context=initContextServiceTest( this.getResourcesDir( ), this.getClass( ).getCanonicalName( ));
        
        ReleaserUtils.startCommandResult( context ) ;   
       

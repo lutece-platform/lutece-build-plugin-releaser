@@ -8,11 +8,15 @@ public class ConstanteUtils
     public static final String CONSTANTE_TRUNK = "trunk";
     public static final String CONSTANTE_EMPTY_STRING = "";
     public static final String CONSTANTE_MAX_RELEASE_CONTEXT_KEY = "max_release_context_key";
+    public static final String CONSTANTE_RELEASE_CONTEXT_PREFIX = "release_context_";
+    
     public static final String CONSTANTE_SUFFIX_GIT="scm:git";
     public static final String CONSTANTE_POM_XML = "pom.xml";
     
     public static final String BEAN_WORKFLOW_RELEASE_CONTEXT_SERVICE= "releaser.workflowReleaseContextService";
     public static final String BEAN_MAVEN_SERVICE= "releaser.mavenService";
+    public static final String BEAN_COMPONENT_SERVICE= "releaser.componentService";
+    
     public static final String BEAN_TWITTER_SERVICE= "releaser.twitterService";
     
     
@@ -35,6 +39,8 @@ public class ConstanteUtils
     public static final String PROPERTY_TWITTER_OAUTH_REQUEST_TOKEN_URL="releaser.requestTokenURL";
     public static final String PROPERTY_TWITTER_OAUTH_AUTHORIZATION_URL="releaser.authorizationURL";
     public static final String PROPERTY_TWITTER_OAUTH_ACCESSTOKEN_URL="releaser.accessTokenURL";
+    public static final String PROPERTY_THREAD_RELEASE_POOL_MAX_SIZE="releaser.threadReleasePoolMaxSize";
+    public static final String I18_TWITTER_MESSAGE="releaser.message.twitterMessage";
     
     
 
