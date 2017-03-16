@@ -34,6 +34,7 @@
 package fr.paris.lutece.plugins.releaser.util;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,6 +56,10 @@ public class CommandResult implements Cloneable, Serializable
     private int _nStatus;
     private int _nErrorType;
     private boolean _bRunning;
+    private Date _dBegin;
+    private Date _dEnd;
+    private int progressValue;
+    
     private String _strError;
  
     private Map<String,String> _mResultInformations=new HashMap<String, String>();
@@ -162,6 +167,36 @@ public class CommandResult implements Cloneable, Serializable
 	public void setErrorType(int _nErrorType) {
 		this._nErrorType = _nErrorType;
 	}
+	
+	 public Date getDateBegin( )
+	    {
+	        return _dBegin;
+	    }
+
+	    public void setDateBegin( Date _dBegin )
+	    {
+	        this._dBegin = _dBegin;
+	    }
+
+	    public Date getDateEnd( )
+	    {
+	        return _dEnd;
+	    }
+
+	    public void setDateEnd( Date _dEnd )
+	    {
+	        this._dEnd = _dEnd;
+	    }
+
+        public int getProgressValue( )
+        {
+            return progressValue;
+        }
+
+        public void setProgressValue( int progressValue )
+        {
+            this.progressValue = progressValue;
+        }
 
 	
 }

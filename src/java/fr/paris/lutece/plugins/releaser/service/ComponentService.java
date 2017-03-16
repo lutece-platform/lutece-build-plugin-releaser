@@ -96,24 +96,24 @@ public class ComponentService implements IComponentService
     }
     
 
-    public String getLatestVersion( String strArtifactId ) throws HttpAccessException, IOException
+    public String getLatestVersion( String strArtifactId,boolean bCache) throws HttpAccessException, IOException
     {
         HttpAccess httpAccess = new HttpAccess( );
         String strInfosJSON;
-        String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, strArtifactId );
+        String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, strArtifactId,bCache );
         strInfosJSON = httpAccess.doGet( strUrl );
         JsonNode nodeRoot = _mapper.readTree( strInfosJSON );
         JsonNode nodeComponent = nodeRoot.path( FIELD_COMPONENT );
         return nodeComponent.get( FIELD_VERSION ).asText( );
     }
 
-    public void getJiraInfos( Component component )
+    public void getJiraInfos( Component component,boolean bCache)
     {
         try
         {
             HttpAccess httpAccess = new HttpAccess( );
             String strInfosJSON;
-            String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, component.getArtifactId( ) );
+            String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, component.getArtifactId( ),bCache  );
             strInfosJSON = httpAccess.doGet( strUrl );
             JsonNode nodeRoot = _mapper.readTree( strInfosJSON );
             JsonNode nodeComponent = nodeRoot.path( FIELD_COMPONENT );
@@ -128,13 +128,13 @@ public class ComponentService implements IComponentService
         }
 
     }
-    public  void getScmInfos( Component component )
+    public  void getScmInfos( Component component,boolean bCache )
     {
         try
         {
             HttpAccess httpAccess = new HttpAccess( );
             String strInfosJSON;
-            String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, component.getArtifactId( ) );
+            String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, component.getArtifactId( ),bCache );
             strInfosJSON = httpAccess.doGet( strUrl );
             JsonNode nodeRoot = _mapper.readTree( strInfosJSON );
             JsonNode nodeComponent = nodeRoot.path( FIELD_COMPONENT );
@@ -162,7 +162,7 @@ public class ComponentService implements IComponentService
         int nIdWorkflow=WorkflowReleaseContextService.getService( ).getIdWorkflow( context );
         WorkflowReleaseContextService.getService( ).addWorkflowReleaseContext( context );
         //start
-        WorkflowReleaseContextService.getService( ).startWorkflowReleaseComponent( context, nIdWorkflow, locale, request, user );
+        WorkflowReleaseContextService.getService( ).startWorkflowReleaseContext( context, nIdWorkflow, locale, request, user );
       
          return context.getId( );
     }

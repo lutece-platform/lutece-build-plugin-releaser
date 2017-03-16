@@ -12,7 +12,7 @@ public interface IWorkflowReleaseContextService
 {
 
     
-    void startWorkflowReleaseComponent(WorkflowReleaseContext context,int nIdWorkflow, Locale locale,HttpServletRequest request,AdminUser user );
+    void startWorkflowReleaseContext(WorkflowReleaseContext context,int nIdWorkflow, Locale locale,HttpServletRequest request,AdminUser user );
 
     int addWorkflowReleaseContext( WorkflowReleaseContext context );
     
@@ -37,6 +37,15 @@ public interface IWorkflowReleaseContextService
     void realeasePerformGit( WorkflowReleaseContext context, Locale locale );
     
     void sendTweet( WorkflowReleaseContext context, Locale locale );
+    
+    
+    void checkoutSite( WorkflowReleaseContext context, Locale locale );
+    
+    
+    void tagSite( WorkflowReleaseContext context, Locale locale );
+    
+    
+    
     
     void init();
 

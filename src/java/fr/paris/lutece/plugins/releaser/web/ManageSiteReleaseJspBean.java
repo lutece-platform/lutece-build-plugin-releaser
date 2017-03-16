@@ -49,6 +49,7 @@ import fr.paris.lutece.util.json.ErrorJsonResponse;
 import fr.paris.lutece.util.json.JsonResponse;
 import fr.paris.lutece.util.json.JsonUtil;
 
+import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
@@ -71,17 +72,25 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     // Views
     private static final String VIEW_MANAGE_SITE_RELEASE = "siteRelease";
     private static final String VIEW_RELEASE_INFO_JSON = "releaseInfoJson";
+    private static final String VIEW_RELEASE_COMPONENT_HISTORY = "releaseComponentHistory";
+    
     
 
     // Actions
+    private static final String ACTION_RELEASE_SITE = "releaseSite";
     private static final String ACTION_RELEASE_COMPONENT = "releaseComponent";
     private static final String ACTION_UPGRADE_COMPONENT = "upgradeComponent";
     private static final String ACTION_PROJECT_COMPONENT = "projectComponent";
     private static final String ACTION_CHANGE_COMPONENT_NEXT_RELEASE_VERSION = "versionComponent";
     private static final String ACTION_CHANGE_SITE_NEXT_RELEASE_VERSION = "versionSite";
+    
 
     private static final String TEMPLATE_PREPARE_SITE_RELEASE = "/admin/plugins/releaser/prepare_site_release.html";
+    private static final String TEMPLATE_RELEASE_COMPONENT_HISTORY = "/admin/plugins/releaser/release_component_history.html";
+    
     private static final String MARK_SITE = "site";
+    private static final String MARK_RELEASE_COMPONENT_HISTORY_LIST= "release_component_history_list";
+    
     
     private static final String JSP_MANAGE_CLUSTERS = "ManageClusters.jsp";
     private static final String JSON_ERROR_RELEASE_CONTEXT_NOT_EXIST= "RELEASE_CONTEXT_NOT_EXIST";
@@ -111,6 +120,28 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_PREPARE_SITE_RELEASE, getLocale( ), model );
         return template.getHtml( );
     }
+    
+    @View( value = VIEW_RELEASE_COMPONENT_HISTORY)
+    public String getReleaseComponentHistory( HttpServletRequest request )
+    {
+        
+        
+        String strArtifactId= request.getParameter( PARAMETER_ARTIFACT_ID );
+        List<WorkflowReleaseContext> listReleaseComponentHistory=null;
+        if ( !StringUtils.isEmpty( strArtifactId ))
+        {
+            
+            listReleaseComponentHistory=WorkflowReleaseContextService.getService( ).getListWorkflowReleaseContextHistory( strArtifactId );
+            
+         }
+        
+        Map<String, Object> model = getModel( );
+        model.put( MARK_RELEASE_COMPONENT_HISTORY_LIST, listReleaseComponentHistory );
+        HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_RELEASE_COMPONENT_HISTORY, getLocale( ), model );
+        return template.getHtml( );
+
+        
+     }
     
     @View( value = VIEW_RELEASE_INFO_JSON)
     public String getReleaseInfoJson( HttpServletRequest request )
@@ -162,6 +193,16 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         jsonResponse=new JsonResponse( nidContext );
         
         return JsonUtil.buildJsonResponse( jsonResponse );
+    }
+    
+    @Action( ACTION_RELEASE_SITE )
+    public String doReleaseSite( HttpServletRequest request )
+    {
+       
+        
+      SiteService.releaseSite( _site, getLocale( ), getUser( ), request );
+
+        return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
     }
 
     @Action( ACTION_PROJECT_COMPONENT )

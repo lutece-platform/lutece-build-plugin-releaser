@@ -33,6 +33,7 @@
  */
 package fr.paris.lutece.plugins.releaser.service;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -46,23 +47,29 @@ import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
 import org.tmatesoft.svn.core.wc.ISVNEventHandler;
+import org.tmatesoft.svn.core.wc.SVNCommitPacket;
 import org.tmatesoft.svn.core.wc.SVNEvent;
 import org.tmatesoft.svn.core.wc.SVNEventAction;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
+import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
+import fr.paris.lutece.plugins.releaser.util.pom.PomUpdater;
 import fr.paris.lutece.plugins.releaser.util.svn.ReleaseSvnCheckoutClient;
 import fr.paris.lutece.plugins.releaser.util.svn.ReleaseSvnCommitClient;
 import fr.paris.lutece.plugins.releaser.util.svn.ReleaseSvnCopyClient;
 import fr.paris.lutece.plugins.releaser.util.svn.SvnUtils;
 import fr.paris.lutece.plugins.releaser.util.svn.SvnUser;
+import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 
 
 public class SvnService implements ISvnService
 {
+    
+    private static ISvnService _instance;
     // private static ISvnService _singleton;
   
     //    public static ISvnService getInstance(  )
@@ -76,7 +83,20 @@ public class SvnService implements ISvnService
     //    }
     private SvnService(  )
     {
-        init(  );
+  
+    }
+    
+    
+    public static ISvnService getService()
+    {
+        if(_instance==null)
+        {
+            _instance=SpringContextService.getBean(ConstanteUtils.BEAN_SVN_SERVICE );
+            _instance.init( );
+        }
+            
+      return _instance;
+        
     }
 
     /* (non-Javadoc)
@@ -101,13 +121,14 @@ public class SvnService implements ISvnService
 
   
 
-    public String doSvnCheckoutSite( String strSiteName, String strSvnUrl, SvnUser user, CommandResult commandResult )
+    public String doSvnCheckoutSite(  Site site, String strSvnLogin,String strSvnPassword, CommandResult commandResult)
     {
-        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager( user.getLogin(  ),
-                user.getPasword(  ) );
-        String strSiteLocalBasePath = ReleaserUtils.getPathCheckoutSite( strSiteName );
+        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager( strSvnLogin,
+                strSvnPassword );
+       
+        String strSiteLocalBasePath = ReleaserUtils.getLocalSitePath( site.getArtifactId( ) );
 
-        if ( StringUtils.isNotBlank( strSiteName ) && ( user != null ) )
+        if ( StringUtils.isNotBlank( strSiteLocalBasePath ) && ( strSvnLogin != null ) )
         {
             ReleaseSvnCheckoutClient updateClient = new ReleaseSvnCheckoutClient( authManager,
                     SVNWCUtil.createDefaultOptions( false ) );
@@ -116,7 +137,7 @@ public class SvnService implements ISvnService
 
             try
             {
-                strError = SvnUtils.doSvnCheckoutSite( strSiteName, strSvnUrl, strSiteLocalBasePath, updateClient,
+                strError = SvnUtils.doSvnCheckoutSite( site.getArtifactId( ), site.getScmUrl( ), strSiteLocalBasePath, updateClient,
                         commandResult );
             }
             catch ( Exception e )
@@ -124,23 +145,7 @@ public class SvnService implements ISvnService
             	ReleaserUtils.addTechnicalError(commandResult,"errreur lors du checkout du site "+ e.getMessage(),e);
             }
         }
-        else
-        {
-            //        	 ErrorCommandThread thread;
-            //         	if ( StringUtils.isBlank( strSiteName) )
-            //         	{
-            //             	thread = new ErrorCommandThread( AppPropertiesService
-            //                        .getProperty( ConstanteUtils.PROPERTY_MESSAGE_CHECKOUT_ERROR_SITE_EMPTY ), ConstanteUtils.CONSTANTE_CHECKOUT_ERROR );
-            //         	}
-            //         	else
-            //         	{
-            //             	thread = new ErrorCommandThread( AppPropertiesService
-            //                        .getProperty(ConstanteUtils.PROPERTY_MESSAGE_CHECKOUT_ERROR_LOGIN_MDP_EMPTY ), ConstanteUtils.CONSTANTE_CHECKOUT_ERROR );
-            //         	}
-            //         	
-            //         	ThreadUtils.launchThread( thread, user );
-            //        	 
-        }
+        
 
         return ConstanteUtils.CONSTANTE_EMPTY_STRING;
     }
@@ -148,16 +153,17 @@ public class SvnService implements ISvnService
     /* (non-Javadoc)
          * @see fr.paris.lutece.plugins.deployment.service.ISvnService#doSvnTagSite(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, fr.paris.lutece.plugins.deployment.business.User)
          */
-    public String doSvnTagSite( String strSiteName, String strUrlSite, String strTagName, String strNextVersion,
-        String strVersion, SvnUser user, CommandResult commandResult )
+    public String doSvnTagSite( Site site, String strSvnLogin,String strSvnPassword, CommandResult commandResult )
     {
-        String strSiteLocalBasePath = ReleaserUtils.getPathCheckoutSite( strSiteName );
+        String strSiteLocalBasePath = ReleaserUtils.getLocalSitePath( site.getArtifactId( ) );
+        
+        String strSitePomLocalBasePath = ReleaserUtils.getLocalSitePomPath( site.getArtifactId( ) );
+        
+        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(strSvnLogin,
+                strSvnLogin );
 
-        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager( user.getLogin(  ),
-                user.getPasword(  ) );
-
-        String strSrcURL = SvnUtils.getSvnUrlTrunkSite( strUrlSite );
-        String strDstURL = SvnUtils.getSvnUrlTagSite( strUrlSite, strTagName );
+        String strSrcURL = site.getScmUrl( );
+        String strDstURL = SvnUtils.getSvnUrlTagSite( site.getScmUrl( ), site.getArtifactId( )+site.getNextReleaseVersion( ) );
 
         ReleaseSvnCommitClient commitClient = new ReleaseSvnCommitClient( authManager,
                 SVNWCUtil.createDefaultOptions( false ) );
@@ -198,23 +204,45 @@ public class SvnService implements ISvnService
                 } );
 
             sbLog.append( "Preparing tag\n" );
-            sbLog.append( "Updating pom version to " + strVersion + "...\n" );
+            sbLog.append( "Updating pom version to " + site.getNextReleaseVersion( ) + "...\n" );
+            sbLog.append( "Updating dependency version ...\n" );
+            PomUpdater.updateSiteBeforeTag( site );
+            
+            
+            SVNCommitPacket commitPacket = commitClient.doCollectCommitItems( new File[] { new File( strSitePomLocalBasePath ) },
+                    false, false, false );
+
+            if ( !SVNCommitPacket.EMPTY.equals( commitPacket ) )
+            {
+                commitClient.doCommit( commitPacket, false, "[site-release] update pom before tag " );
+            }
+       
+            
            // sbLog.append( ReleaserUtils.updateReleaseVersion( strSiteLocalBasePath, strVersion,
             //        "[site-release] Prepare tag for " + strSiteName, commitClient ) );
             sbLog.append( "Pom updated\n" );
 
-            sbLog.append( "Tagging site to " + strTagName + "...\n" );
+            sbLog.append( "Tagging site to " + site.getNextReleaseVersion( ) + "...\n" );
             
             
-            String strErrorDuringTag=SvnUtils.doTagSite( strSiteName, strTagName, strSrcURL, strDstURL, copyClient );
+            String strErrorDuringTag=SvnUtils.doTagSite( site.getArtifactId( ), site.getArtifactId( )+site.getNextReleaseVersion( ), strSrcURL, strDstURL, copyClient );
            
             if(StringUtils.isEmpty(strErrorDuringTag))
             {
 	            sbLog.append( "Tag done\n" );
 	
-	            sbLog.append( "Updating pom to next development " + strNextVersion + "\n" );
-	           // sbLog.append( ReleaserUtils.updateReleaseVersion( strSiteLocalBasePath, strNextVersion,
-	            //        "[site-release] Update pom version for " + strSiteName, commitClient ) );
+	            sbLog.append( "Updating pom to next development " + site.getNextSnapshotVersion( ) + "\n" );
+	            
+	            PomUpdater.updateSiteAfterTag( site );
+	            
+	            
+
+	            if ( !SVNCommitPacket.EMPTY.equals( commitPacket ) )
+	            {
+	                commitClient.doCommit( commitPacket, false, "[site-release] update Updating pom to next development " );
+	            }
+	           
+	            
 	            sbLog.append( "Pom updated\n" );
             }
             else

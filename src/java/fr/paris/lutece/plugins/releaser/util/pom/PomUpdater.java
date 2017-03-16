@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Iterator;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -13,6 +14,8 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import fr.paris.lutece.plugins.releaser.business.Component;
+import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.jaxb.maven.Model;
 import fr.paris.lutece.plugins.releaser.business.jaxb.maven.ObjectFactory;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
@@ -21,37 +24,50 @@ import fr.paris.lutece.portal.service.util.AppLogService;
 public class PomUpdater
 {
 
-    public static String updateSiteVersion( String strPomFile, String strNewVersion ) throws JAXBException
+    public static String updateSiteBeforeTag( Site site ) throws JAXBException
     {
-        
+
         InputStream inputStream = null;
         OutputStream outputStream = null;
+        String strSiteLocalPomPath = ReleaserUtils.getLocalSitePomPath( site.getArtifactId( ) );
 
         try
         {
-                inputStream = new FileInputStream( strPomFile );
-            
-            
 
+            inputStream = new FileInputStream( strSiteLocalPomPath );
             Model model = unmarshal( Model.class, inputStream );
+            
+            model.setVersion( site.getNextReleaseVersion( ) );
+            model.setDescription( site.getTagInformation( ) );
 
-            if ( !model.getVersion( ).equals( strNewVersion ) )
+            fr.paris.lutece.plugins.releaser.business.jaxb.maven.Model.Dependencies dependencies = model.getDependencies( );
+            //update dependencies
+            if ( dependencies != null )
             {
-                model.setVersion( strNewVersion );
+                for ( fr.paris.lutece.plugins.releaser.business.jaxb.maven.Dependency jaxDependency : dependencies.getDependency( ) )
+                {
+                    for ( Component component : site.getComponents( ) )
+                    {
 
-                outputStream = new FileOutputStream( strPomFile );
+                        if ( jaxDependency.getArtifactId( ).equals( component.getArtifactId( ) ) )
+                        {
 
-                save( model, outputStream );
+                            jaxDependency.setVersion( component.getTargetVersion( ) );
+
+                        }
+                    }
+
+                }
             }
 
-            else
-            {
-                return "Pom already up to date\n";
-            }
+            outputStream = new FileOutputStream( strSiteLocalPomPath );
+
+            save( model, outputStream );
+
         }
         catch( FileNotFoundException e )
         {
-          AppLogService.error( e );
+            AppLogService.error( e );
         }
         finally
         {
@@ -72,6 +88,73 @@ public class PomUpdater
         return "";
     }
 
+    public static String updateSiteAfterTag( Site site ) throws JAXBException
+    {
+
+        InputStream inputStream = null;
+        OutputStream outputStream = null;
+        String strSiteLocalPomPath = ReleaserUtils.getLocalSitePomPath( site.getArtifactId( ) );
+
+        try
+        {
+
+            inputStream = new FileInputStream( strSiteLocalPomPath );
+            Model model = unmarshal( Model.class, inputStream );
+            
+            model.setVersion( site.getNextSnapshotVersion( ) );
+            model.setDescription( "");
+
+            fr.paris.lutece.plugins.releaser.business.jaxb.maven.Model.Dependencies dependencies = model.getDependencies( );
+            //update dependencies
+            if ( dependencies != null )
+            {
+                for ( fr.paris.lutece.plugins.releaser.business.jaxb.maven.Dependency jaxDependency : dependencies.getDependency( ) )
+                {
+                    for ( Component component : site.getComponents( ) )
+                    {
+
+                        if ( jaxDependency.getArtifactId( ).equals( component.getArtifactId( ) ) )
+                        {
+
+                            if(component.isProject( ))
+                            {
+                                jaxDependency.setVersion( component.getNextSnapshotVersion( ) );
+                                
+                            }
+
+                        }
+                    }
+
+                }
+            }
+
+            outputStream = new FileOutputStream( strSiteLocalPomPath );
+
+            save( model, outputStream );
+
+        }
+        catch( FileNotFoundException e )
+        {
+            AppLogService.error( e );
+        }
+        finally
+        {
+            if ( outputStream != null )
+            {
+                try
+                {
+                    outputStream.close( );
+                }
+                catch( IOException ex )
+                {
+                    // nothing...
+                    AppLogService.error( ex );
+                }
+            }
+        }
+
+        return "";
+    }
     public static void save( Model model, OutputStream outputStream ) throws JAXBException
     {
         String packageName = model.getClass( ).getPackage( ).getName( );

@@ -267,15 +267,12 @@ public final class SvnUtils
         return listSites;
     }
 
-    public static String getSvnUrlTrunkSite( String strUrlSite )
+ 
+    public static String getSvnUrlTagSite( String strScmUrl, String strTagName )
     {
-        return strUrlSite + ConstanteUtils.CONSTANTE_SEPARATOR_SLASH + ConstanteUtils.CONSTANTE_TRUNK;
-    }
-
-    public static String getSvnUrlTagSite( String strUrlSite, String strTagName )
-    {
-        return strUrlSite + ConstanteUtils.CONSTANTE_SEPARATOR_SLASH + ConstanteUtils.CONSTANTE_TAGS +
-        ConstanteUtils.CONSTANTE_SEPARATOR_SLASH + strTagName;
+        
+        String strUrl=strScmUrl.contains( ConstanteUtils.CONSTANTE_TRUNK )?strScmUrl.replace( ConstanteUtils.CONSTANTE_TRUNK, ConstanteUtils.CONSTANTE_TAGS ):strScmUrl;
+        return strUrl+ConstanteUtils.CONSTANTE_SEPARATOR_SLASH + strTagName;
     }
 
    

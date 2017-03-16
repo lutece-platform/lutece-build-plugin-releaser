@@ -1,0 +1,32 @@
+<div class="app-wrapper">
+        <@messages infos=infos />
+   <#list release_component_history_list?sort_by(['commandResult','dateBegin'])?reverse as release_history>
+    <a name="" ></a>
+        <!-- widget-app -->
+        <div class="box box-widget widget-app collapsed-box">
+            <div class="info-box">
+                <span class="info-box-icon bg-green"><i class="fa fa-history"></i></span>
+                <div class="info-box-content">
+                            <div class="col-xs-12 col-sm-5 col-md-6">
+                        <h4>${release_history.component.artifactId} ${release_history.component.targetVersion} /${release_history.commandResult.dateBegin?string('dd.MM.yyyy HH:mm:ss')}-${release_history.commandResult.dateEnd?string('HH:mm:ss')} / <#if release_history.commandResult.status==1 && !release_history.commandResult.running> <span class="label label-success">OK</span> <#else> <span class="label label-danger">KO</span></#if></h4>
+                      
+                    </div>
+                    <div class="col-xs-12 col-sm-6 col-md-5"></div>
+                    <div class="hidden-xs col-sm-1">
+    
+                        <button type="button" class="btn btn-default collaspe pull-right"
+                            data-widget="collapse">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        <div class="box-body no-padding">
+            <h2 class="hidden">
+                <strong>Infos</small>
+            </h2>
+            <pre> ${release_history.commandResult.log}</pre>
+        </div>
+    </div>
+    </#list>
+  </div>

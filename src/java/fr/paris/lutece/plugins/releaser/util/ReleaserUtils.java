@@ -1,6 +1,7 @@
 package fr.paris.lutece.plugins.releaser.util;
 
 import java.io.File;
+import java.util.Date;
 
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.portal.service.util.AppException;
@@ -18,11 +19,16 @@ public class ReleaserUtils
 
     
    
-    public static String getPathCheckoutSite( String strSiteName )
+    public static String getLocalSitePath( String strSiteName )
     {
         String strCheckoutBasePath = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_LOCAL_SITE_BASE_PAH );
 
         return strCheckoutBasePath + File.separator + strSiteName;
+    }
+    
+    public static String getLocalSitePomPath( String strSiteName  )
+    {
+        return getLocalSitePath( strSiteName ) + File.separator + ConstanteUtils.CONSTANTE_POM_XML;
     }
 
     public static String getLocalComponentPath( String strComponentName )
@@ -66,6 +72,7 @@ public class ReleaserUtils
             commandResult.setStatus( CommandResult.STATUS_ERROR );
             commandResult.setRunning( false );
             commandResult.setErrorType( CommandResult.ERROR_TYPE_STOP );
+            commandResult.setDateEnd( new Date( ));
         }
         if ( e != null )
         {
@@ -85,17 +92,33 @@ public class ReleaserUtils
     public static void startCommandResult( WorkflowReleaseContext context )
     {
         CommandResult commandResult = new CommandResult( );
+        commandResult.setDateBegin( new Date( ));
         commandResult.setLog( new StringBuffer( ) );
         commandResult.setRunning( true );
         commandResult.setStatus( CommandResult.STATUS_OK );
-
+        commandResult.setProgressValue( 0 );
         context.setCommandResult( commandResult );
 
+    }
+    
+    public static void logStartAction( WorkflowReleaseContext context,String strActionName )
+    {
+       
+        context.getCommandResult( ).getLog( ).append( "******************Start Action: \""+strActionName +"\" *******************\n\r" );
+   
+    }
+
+    public static void logEndAction( WorkflowReleaseContext context,String strActionName )
+    {
+        context.getCommandResult( ).getLog( ).append( "******************End Action:\"" +strActionName +"\" *******************\n\r" );
+   
     }
 
     public static void stopCommandResult( WorkflowReleaseContext context )
     {
         context.getCommandResult( ).setRunning( false );
+        context.getCommandResult( ).setDateEnd( new Date( ));
+        context.getCommandResult( ).setProgressValue( 100 );
     }
     
 

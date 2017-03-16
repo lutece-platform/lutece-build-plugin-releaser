@@ -35,6 +35,10 @@ package fr.paris.lutece.plugins.releaser.business;
 
 import java.util.List;
 
+import com.sun.jna.platform.win32.OaIdl.CURRENCY._CURRENCY;
+
+import fr.paris.lutece.plugins.releaser.util.version.Version;
+
 /**
  * This is the business class for the object Component
  */
@@ -49,6 +53,7 @@ public class Component
     private String _strLastAvailableVersion;
     private String _strNextSnapshotVersion;
     private String _strReleaseComment;
+    private String _strDescription; 
     private boolean _bIsProject;
     private String _strJiraCode;
     private String _strJiraRoadmapUrl;
@@ -58,6 +63,9 @@ public class Component
     private int _nTargetVersionIndex;
     private boolean _bShouldBeReleased;
     private String _strScmDeveloperConnection;
+   
+    
+        
 
     /**
      * Returns the ArtifactId
@@ -421,5 +429,17 @@ public class Component
         this._strScmDeveloperConnection = _strScmDeveloperConnection;
     }
     
+    /**
+     * 
+     * @return
+     */
+    public boolean isSnapshotVersion()
+    {
+         return  Version.isSnapshot(getCurrentVersion( ));
+    }
+
+ 
+   
+
             
 }

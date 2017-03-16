@@ -59,12 +59,19 @@
                             <span class="artifact up">
                                 ${component.artifactId!}
                             </span>
-                            <#if component.shouldBeReleased() >
-                            <!-- Reintégrer les boutons ci-dessous -->
-                            </#if>
-                            <a class="button transition border-orange small btn-release" data-artifactid="${component.artifactId!}" title="Modifier la version pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=versionComponent&artifact_id=${component.artifactId}' >
-                                <i class="fa fa-cog fa-fw"></i> Releaser le composant
-                            </a>
+                          
+                             <#if component.shouldBeReleased()>
+                                    
+                                 <a class="button transition border-orange small btn-release" data-artifactid="${component.artifactId!}" title="Modifier la version pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=versionComponent&artifact_id=${component.artifactId}' >
+                                    <i class="fa fa-cog fa-fw"></i> Releaser le composant
+                                </a>
+                                
+                             </#if>
+                                <a class="button transition border-blue small btn-release-history"  title="Visuliser l'historique des releases" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?view=releaseComponentHistory&artifact_id=${component.artifactId}' >
+                                    <i class="fa fa-cog fa-fw"></i> Visualiser l'historique des releases
+                                </a>   
+                             
+                            <div id="release-result-${component.artifactId!}"></div>
                             <span class="number pull-right">
                                 JIRA
                                 <a href="${component.jiraRoadmapUrl!}">
@@ -80,12 +87,12 @@
                             <p><#if component.releaseComment! !=''><i class="fa fa-info-circle text-info"></i> ${component.releaseComment!''}</#if></p>
                             <div id="progress-wrapper-${component.artifactId!}" class="progress-wrapper clearfix">
                                 <div class="progress active pull-left ">
-                                    <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width: 20%">
-                                        <span class="sr-only">20% Complete</span>
+                                    <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+                                        <span class="sr-only">0% Complete</span>
                                     </div>
                                 </div>
                                 <div class="pull-left">
-                                    <button href="#" data-toggle="modal" data-target="#modalLogs" class="button transition small fill-whitish-black">
+                                    <button href="#" data-toggle="modal"   data-artifactid="${component.artifactId!}" id="view_log_btn_${component.artifactId!}"  data-target="#modalLogs" data-context_release_id="" class="view_log_btn button transition small fill-whitish-black">
                                         Voir les logs
                                     </button>
                                 </div>
@@ -95,9 +102,11 @@
                                     Version actuelle <strong class="button transition fill-lightblue small">${component.currentVersion}</strong>
                                     <i class="fa fa-arrow-right"></i> Version cible <strong class="button transition fill-lightblue small">${component.targetVersion}</strong>
                                 </span>
-                                    <a class="button transition border-lightblue small" title="Modifier la version pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=versionComponent&artifact_id=${component.artifactId}' >
-                                    <i class="fa fa-level-up fa-fw"></i> Modifier la version pour la release
-                              </a>
+                                     <#if component.shouldBeReleased()>
+                                            <a class="button transition border-lightblue small" title="Modifier la version pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=versionComponent&artifact_id=${component.artifactId}' >
+                                                 <i class="fa fa-level-up fa-fw"></i> Modifier la version pour la release
+                                         </a>
+                                     </#if>    
                                 Prochaine Snapshot : <span class="button transition fill-lightblue small">${component.nextSnapshotVersion}</span>
                              </p>
                         </div>
@@ -208,10 +217,25 @@
 
 <script>
 $(".progress-wrapper").toggle();
+var artifactIdInProgress;
+
+$(".view_log_btn").click( function(e){
+    $("#console_wf_log").html(" ");
+    var artifactId=$(this).attr("data-artifactid");
+    var contextId=$(this).attr("context_release_id");
+    artifactIdInProgress=artifactId;
+    var progressId="#progress-wrapper-" + artifactId;
+    callReleaseInfo( contextId,progressId,artifactId) 
+   }
+);
+
 
 $(".btn-release").click( function(e){
      $("#console_wf_log").html(" ");
-      var progressId="#progress-wrapper-" + $(this).attr("data-artifactid");
+     
+     var artifactId=$(this).attr("data-artifactid");
+     
+      var progressId="#progress-wrapper-" + artifactId;
         $( progressId ).toggle();
      
      $.ajax({
@@ -220,9 +244,9 @@ $(".btn-release").click( function(e){
             dataType : "json",
             success: function( data ) {
              if (data.status == 'OK') {
-               callReleaseInfo(data.result,progressId);
-                   
-                } 
+                   callReleaseInfo(data.result,progressId,artifactId);
+                   $( "#view_log_btn_"+artifactId).attr("data-context_release_id",data.result);   
+              } 
              else if ( data.status == 'ERROR'  )
              {
              
@@ -236,7 +260,7 @@ $(".btn-release").click( function(e){
   
 });
 
-function callReleaseInfo( nIdReleaseContext,progressId) 
+function callReleaseInfo( nIdReleaseContext,progressId,artifactId) 
 {
     $.ajax({
         url: "jsp/admin/plugins/releaser/ReleaseComponentJson.jsp?view=releaseInfoJson&id_context="+nIdReleaseContext,
@@ -244,19 +268,45 @@ function callReleaseInfo( nIdReleaseContext,progressId)
         dataType : "json",
         success: function( data ) {
          if (data.status == 'OK') {
-          
-             $("#console_wf_log").html(data.result.commandResult.log);
-             if ( data.result.commandResult.running )
-             {
-                 /* still running */
-                 setTimeout(  function(){callReleaseInfo(nIdReleaseContext,progressId);}, 10000 );
+             
+             
+             if(data.result.commandResult)
+              {
+                 if(artifactId==artifactIdInProgress)
+                {
+                      $("#console_wf_log").html(data.result.commandResult.log);
+                }
+                 if ( data.result.commandResult.running )
+                 {
+                     /* still running */
+                     setTimeout(  function(){callReleaseInfo(nIdReleaseContext,progressId,artifactId);}, 10000 );
+                     
+                 }
+                 else
+                {
+                     if(data.result.commandResult.status==1)
+                    {
+                         $('#release-result-'+artifactId).html('<span class="label label-success">OK</span>');
+                    } 
+                     else
+                    {
+                         $('#release-result-'+artifactId).html('<span class="label label-danger">KO</span>');
+                    }
+                     $(progressId).toggle();
+                     
+                }
+             
+                 $( progressId +" .progress-bar").attr("style","width:"+data.result.commandResult.progressValue+"%");
              }
              else
             {
-                    $( progressId ).toggle();
+                 /*reload*/
+                 setTimeout(  function(){callReleaseInfo(nIdReleaseContext,progressId,artifactId);}, 10000 );
+                 
             }
+         
+         }
             
-            }
             else if ( data.status == 'ERROR'  )
            {
          

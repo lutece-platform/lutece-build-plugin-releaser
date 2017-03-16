@@ -41,12 +41,14 @@ import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.Dependency;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.SiteHome;
+import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.util.svn.SvnSiteService;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
 import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.util.AppLogService;
+import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.util.httpaccess.HttpAccessException;
 import java.io.IOException;
 import java.util.List;
@@ -65,6 +67,8 @@ public class SiteService
     private static final String MESSAGE_UPGRADE_SELECTED = "releaser.message.upgradeSelected";
     private static final String MESSAGE_TO_BE_RELEASED = "releaser.message.toBeReleased";
     private static final String MESSAGE_MORE_RECENT_VERSION_AVAILABLE = "releaser.message.moreRecentVersionAvailable";
+    private static final String MESSAGE_AN_RELEASE_VERSION_ALREADY_EXIST = "releaser.message.releleaseVersionAlreadyExist";
+    
 
     /**
      * Load a site from its id
@@ -126,6 +130,8 @@ public class SiteService
         return strOriginVersion;
     }
     
+   
+    
     /**
      * Initialize the component list for a given site
      * 
@@ -145,10 +151,12 @@ public class SiteService
             defineTargetVersion( component );
             defineNextSnapshotVersion( component );
             checkForNewVersion( component );
-            ComponentService.getService( ).getJiraInfos( component );
+            ComponentService.getService( ).getJiraInfos( component,component.isProject( )?false:true );
             site.addComponent( component );
         }
     }
+    
+    
 
     /**
      * Define the target version for a given component : <br>
@@ -255,11 +263,25 @@ public class SiteService
 
         if ( component.isProject( ) )
         {
-            if(  Version.isSnapshot( component.getCurrentVersion( ) ) )
+            if(  component.isSnapshotVersion( ) )
             {
-                String strComment = I18nService.getLocalizedString( MESSAGE_TO_BE_RELEASED, locale );
-                component.addReleaseComment( strComment );
-                component.setShouldBeReleased( true );
+                if ( component.getLastAvailableVersion( ) != null  )
+                {
+                    String [ ] arguments = {
+                        component.getLastAvailableVersion( )
+                    };
+                    String strComment = I18nService.getLocalizedString( MESSAGE_AN_RELEASE_VERSION_ALREADY_EXIST, arguments, locale );
+                    component.addReleaseComment( strComment );
+                }
+                else
+                {
+                
+                    String strComment = I18nService.getLocalizedString( MESSAGE_TO_BE_RELEASED, locale );
+                    component.addReleaseComment( strComment );
+                    component.setShouldBeReleased( true );
+                    
+                }
+                
             }
         }
     }
@@ -270,7 +292,7 @@ public class SiteService
         {
             try
             {
-                String strLastestVersion = ComponentService.getService( ).getLatestVersion( component.getArtifactId( ) );
+                String strLastestVersion = ComponentService.getService( ).getLatestVersion( component.getArtifactId( ),true );
 
                 if ( !strLastestVersion.equals( component.getTargetVersion( ) ) )
                 {
@@ -283,6 +305,28 @@ public class SiteService
                         "Releaser unable to get the latest version for component : " + component.getArtifactId( ) + " error : " + ex.getMessage( ), ex );
             }
         }
+        else if(Version.isSnapshot(component.getCurrentVersion( )))
+        {
+            try
+            {
+                String strLastestVersion = ComponentService.getService( ).getLatestVersion( component.getArtifactId( ),false );
+
+                if ( strLastestVersion.equals( component.getTargetVersion( ) ) )
+                {
+                    component.setLastAvailableVersion( strLastestVersion );
+                }
+            }
+            catch( HttpAccessException | IOException ex )
+            {
+                AppLogService.error(
+                        "Releaser unable to get the latest version for component : " + component.getArtifactId( ) + " error : " + ex.getMessage( ), ex );
+            }
+     
+            
+        }
+        
+        
+
     }
 
     public static void upgradeComponent( Site site, String strArtifactId )
@@ -303,13 +347,37 @@ public class SiteService
             if ( component.getArtifactId( ).equals( strArtifactId ) )
             {
                 //Get Scm Infos 
-                ComponentService.getService( ).getScmInfos( component ) ;
+                ComponentService.getService( ).getScmInfos( component,true ) ;
                 //Release component
                return  ComponentService.getService( ).release( component, locale,user,request );
                 
             }
         }
         return ConstanteUtils.CONSTANTE_ID_NULL;
+    }
+    
+    
+    public static int releaseSite( Site site,Locale locale,AdminUser user,HttpServletRequest request)
+    {
+       
+        String strSvnUserLogin=AppPropertiesService.getProperty(ConstanteUtils.PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_LOGIN );
+        String strSvnUserPassword=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_PASSWORD);
+       
+        WorkflowReleaseContext context=new WorkflowReleaseContext( );
+        context.setSite( site );
+        context.setSvnUserLogin( strSvnUserLogin );
+        context.setSvnUserPassword(  strSvnUserPassword );
+       
+        int nIdWorkflow=WorkflowReleaseContextService.getService( ).getIdWorkflow( context );
+        WorkflowReleaseContextService.getService( ).addWorkflowReleaseContext( context );
+        //start
+        WorkflowReleaseContextService.getService( ).startWorkflowReleaseContext( context, nIdWorkflow, locale, request, user );
+      
+         return context.getId( );
+        
+       
+        
+        
     }
     
     

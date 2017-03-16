@@ -1,6 +1,7 @@
 package fr.paris.lutece.plugins.releaser.business;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 
@@ -12,17 +13,15 @@ public class WorkflowReleaseContext implements Serializable
     private static final long serialVersionUID = 8956577881980599537L;
     private int _nId;
     private Component _component;
+    private Site _site;
     private CommandResult _commandResult;
     private String _strSvnUserLogin;
     private String _strSvnUserPassword;
     private String _strGitHubUserLogin;
     private String _strGitHubUserPassord;
-    
-    
-    
-    
-    
-    
+
+
+ 
     public int getId( )
     {
         return _nId;
@@ -92,5 +91,26 @@ public class WorkflowReleaseContext implements Serializable
     {
         this._strGitHubUserPassord = _strGitHubUserPassord;
     }
+    
+    public void setSite(Site site)
+    {
+        _site=site;    
+    }
 
+    public Site getSite()
+    {
+        return _site;
+    }
+    
+    /**
+     * 
+     * @return true if the component is a lutece site
+     */
+    public boolean isLuteceSite( )
+    {
+        return _component==null && _site!=null;
+    }
+    
+    
+    
 }

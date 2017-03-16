@@ -69,7 +69,9 @@ public class Site implements Serializable
 
     @Size( max = 50, message = "#i18n{releaser.validation.site.JiraKey.size}" )
     private String _strJiraKey;
-
+    
+    private String _strTagInformation;
+    
     private String _strCluster;
 
     private List<Dependency> _listCurrentDependencies = new ArrayList<>( );
@@ -388,6 +390,16 @@ public class Site implements Serializable
     public int getTargetVersionIndex()
     {
         return _nTargetVersionIndex;
+    }
+
+    public String getTagInformation( )
+    {
+        return _strTagInformation;
+    }
+
+    public void setTagInformation( String _strTagInfotmation )
+    {
+        this._strTagInformation = _strTagInfotmation;
     }
     
     

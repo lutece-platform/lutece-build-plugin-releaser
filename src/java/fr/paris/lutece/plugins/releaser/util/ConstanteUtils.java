@@ -15,6 +15,8 @@ public class ConstanteUtils
     
     public static final String BEAN_WORKFLOW_RELEASE_CONTEXT_SERVICE= "releaser.workflowReleaseContextService";
     public static final String BEAN_MAVEN_SERVICE= "releaser.mavenService";
+    public static final String BEAN_SVN_SERVICE= "releaser.svnService";
+    
     public static final String BEAN_COMPONENT_SERVICE= "releaser.componentService";
     
     public static final String BEAN_TWITTER_SERVICE= "releaser.twitterService";
@@ -22,6 +24,8 @@ public class ConstanteUtils
     
     public static final String PROPERTY_ID_WORKFLOW_GIT_COMPONENT="releaser.idWorkflowGitComponent";
     public static final String PROPERTY_ID_WORKFLOW_SVN_COMPONENT="releaser.idWorkflowSvnComponent";
+    public static final String PROPERTY_ID_WORKFLOW_LUTECE_SITE="releaser.idWorkflowLuteceSite";
+    
     public static final String PROPERTY_LOCAL_SITE_BASE_PAH = "releaser.localSiteBasePath";
     public static final String PROPERTY_LOCAL_COMPONENT_BASE_PAH = "releaser.localComponentBasePath";
     public static final String PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_LOGIN= "releaser.svnReleaseComponetAccount.login";
