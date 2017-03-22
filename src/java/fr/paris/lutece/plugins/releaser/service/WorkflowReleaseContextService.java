@@ -82,7 +82,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         {
             String strJsonContext = MapperJsonUtil.getJson( context );
             DatastoreService
-                    .setDataValue( ReleaserUtils.getWorklowContextDataKey( context.getComponent( ).getArtifactId( ), context.getId( ) ), strJsonContext );
+                    .setDataValue( ReleaserUtils.getWorklowContextDataKey( context.getComponent( )!=null?context.getComponent( ).getArtifactId( ):context.getSite( ).getArtifactId( ), context.getId( ) ), strJsonContext );
 
         }
         catch( IOException e )
@@ -117,7 +117,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         try
         {
 
-            ReferenceList refListContextHistory = DatastoreService.getDataByPrefix( ConstanteUtils.CONSTANTE_RELEASE_CONTEXT_PREFIX+strArtifactId );
+            ReferenceList refListContextHistory = DatastoreService.getDataByPrefix( ConstanteUtils.CONSTANTE_RELEASE_CONTEXT_PREFIX + strArtifactId );
             if ( !CollectionUtils.isEmpty( refListContextHistory ) )
             {
                 for ( Iterator iterator = refListContextHistory.iterator( ); iterator.hasNext( ); )
@@ -143,20 +143,19 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     {
         int nIdWorkflow = ConstanteUtils.CONSTANTE_ID_NULL;
 
-        if(context.isLuteceSite( ))
+        if ( context.isLuteceSite( ) )
         {
-            nIdWorkflow = AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_ID_WORKFLOW_GIT_COMPONENT, ConstanteUtils.CONSTANTE_ID_NULL );
-            
-            
+            nIdWorkflow = AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_ID_WORKFLOW_LUTECE_SITE, ConstanteUtils.CONSTANTE_ID_NULL );
+
         }
         else
         {
-        
+
             if ( ComponentService.getService( ).isGitComponent( context.getComponent( ) ) )
             {
                 nIdWorkflow = AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_ID_WORKFLOW_GIT_COMPONENT, ConstanteUtils.CONSTANTE_ID_NULL );
             }
-            else 
+            else
             {
                 nIdWorkflow = AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_ID_WORKFLOW_SVN_COMPONENT, ConstanteUtils.CONSTANTE_ID_NULL );
             }
@@ -205,8 +204,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         try
         {
 
-            //PROGRESS 5%
-            commandResult.setProgressValue( commandResult.getProgressValue( )+5 );
+            // PROGRESS 5%
+            commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
             git = GitUtils.cloneRepo( strLocalComponentPath, component.getScmDeveloperConnection( ), commandResult, context.getGitHubUserLogin( ) );
             // fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
             // git = new Git( fLocalRepo );
@@ -215,9 +214,9 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             commandResult.getLog( ).append( "the repository has been successfully cloned.\n" );
             commandResult.getLog( ).append( "Checkout branch \"" + GitUtils.DEVELOP_BRANCH + "\" ...\n" );
             GitUtils.checkoutRepoBranch( git, GitUtils.DEVELOP_BRANCH, commandResult );
-            //PROGRESS 10%
-            commandResult.setProgressValue( commandResult.getProgressValue( )+5 );
-            
+            // PROGRESS 10%
+            commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
+
         }
         finally
         {
@@ -230,7 +229,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         }
 
         commandResult.getLog( ).append( "Checkout branch develop successfull\n" );
-        
+
         ReleaserUtils.logEndAction( context, " Clone Repository" );
 
     }
@@ -244,7 +243,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         ReleaserUtils.logStartAction( context, " Merge DEVELOP/MASTER" );
         String strComponentName = ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) );
         String strLocalComponentPath = ReleaserUtils.getLocalComponentPath( strComponentName );
-        Git git=null;
+        Git git = null;
         try
         {
 
@@ -260,11 +259,11 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             else
             {
                 commandResult.getLog( ).append( "Checkout branch \"" + GitUtils.MASTER_BRANCH + "\" ...\n" );
-                GitUtils.checkoutRepoBranch( git, GitUtils.MASTER_BRANCH,commandResult);
+                GitUtils.checkoutRepoBranch( git, GitUtils.MASTER_BRANCH, commandResult );
                 commandResult.getLog( ).append( "Checkout successfull\n" );
-                //PROGRESS 15%
-                commandResult.setProgressValue( commandResult.getProgressValue( )+5 );
-              
+                // PROGRESS 15%
+                commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
+
                 commandResult.getLog( ).append( "Going to merge '" + GitUtils.DEVELOP_BRANCH + "' branch on 'master' branch...\n" );
                 MergeResult mergeResult = GitUtils.mergeRepoBranch( git, GitUtils.DEVELOP_BRANCH );
                 if ( mergeResult.getMergeStatus( ).equals( MergeResult.MergeStatus.CHECKOUT_CONFLICT )
@@ -284,8 +283,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                     commandResult.getLog( ).append( mergeResult.getMergeStatus( ) );
                 }
                 ReleaserUtils.logEndAction( context, " Merge DEVELOP/MASTER" );
-                //PROGRESS 25%
-                commandResult.setProgressValue( commandResult.getProgressValue( )+10 );
+                // PROGRESS 25%
+                commandResult.setProgressValue( commandResult.getProgressValue( ) + 10 );
 
             }
 
@@ -311,7 +310,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         }
         finally
         {
-            
+
             if ( fLocalRepo != null )
             {
 
@@ -324,7 +323,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                 git.close( );
 
             }
-            
+
         }
     }
 
@@ -341,10 +340,10 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         String strComponentReleaseNewDeveloppmentVersion = component.getNextSnapshotVersion( );
 
         // Switch to develop branch
-        FileRepository fLocalRepo=null;
-        Git git=null;
+        FileRepository fLocalRepo = null;
+        Git git = null;
         ReleaserUtils.logStartAction( context, " Release Prepare" );
-        
+
         try
         {
             fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
@@ -369,8 +368,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                             .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getGitHubUserLogin( ), context.getGitHubUserPassord( ) ) )
                             .call( );
                     commandResult.getLog( ).append( "Core XML updated to " + strComponentReleaseVersion + "\n" );
-                    //PROGRESS 30%
-                    commandResult.setProgressValue( commandResult.getProgressValue( )+5 );
+                    // PROGRESS 30%
+                    commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
 
                 }
 
@@ -410,9 +409,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                             .call( );
 
                     commandResult.getLog( ).append( "Plugin XML updated to " + strComponentReleaseVersion + "\n" );
-                    //PROGRESS 30%
-                    commandResult.setProgressValue( commandResult.getProgressValue( )+5 );
-
+                    // PROGRESS 30%
+                    commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
 
                 }
             }
@@ -421,9 +419,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                     strComponentReleaseNewDeveloppmentVersion, context.getGitHubUserLogin( ), context.getGitHubUserPassord( ), commandResult );
             // Merge Master
             GitUtils.mergeBack( git, context.getGitHubUserLogin( ), context.getGitHubUserPassord( ), commandResult );
-            //PROGRESS 50%
-            commandResult.setProgressValue( commandResult.getProgressValue( )+20 );
-
+            // PROGRESS 50%
+            commandResult.setProgressValue( commandResult.getProgressValue( ) + 20 );
 
             // Modify plugin version on develop
             git.checkout( ).setName( GitUtils.DEVELOP_BRANCH ).call( );
@@ -465,7 +462,6 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                 {
                     commandResult.getLog( ).append( "No AppInfo file found..." );
                 }
-               
 
             }
             else
@@ -487,12 +483,11 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                     commandResult.getLog( ).append( "Plugin XML updated to " + strComponentReleaseNewDeveloppmentVersion + "\n" );
                 }
             }
-            //PROGRESS 65%
-            commandResult.setProgressValue( commandResult.getProgressValue( )+15 );
+            // PROGRESS 65%
+            commandResult.setProgressValue( commandResult.getProgressValue( ) + 15 );
 
-            
             ReleaserUtils.logEndAction( context, " Release Prepare" );
-            
+
         }
         catch( InvalidRemoteException e )
         {
@@ -513,10 +508,10 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         {
             ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
         }
-        
+
         finally
         {
-            
+
             if ( fLocalRepo != null )
             {
 
@@ -529,7 +524,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                 git.close( );
 
             }
-            
+
         }
 
     }
@@ -539,60 +534,82 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
         CommandResult commandResult = context.getCommandResult( );
         Component component = context.getComponent( );
-        
+
         ReleaserUtils.logStartAction( context, " Release Perform" );
-        
+
         String strComponentName = ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) );
         String strLocalComponentPomPath = ReleaserUtils.getLocalComponentPomPath( strComponentName );
-        
-        //PROGRESS 75%
-        commandResult.setProgressValue( commandResult.getProgressValue( )+10 );
+
+        // PROGRESS 75%
+        commandResult.setProgressValue( commandResult.getProgressValue( ) + 10 );
 
         MavenService.getService( ).mvnReleasePerform( strLocalComponentPomPath, context.getGitHubUserLogin( ), context.getGitHubUserPassord( ), commandResult );
-   
+
         ReleaserUtils.logEndAction( context, " Release Perform" );
     }
-    
-    
+
     public void checkoutSite( WorkflowReleaseContext context, Locale locale )
     {
         CommandResult commandResult = context.getCommandResult( );
-        
+
         ReleaserUtils.logStartAction( context, " checkout Site" );
 
-        
-       
-        SvnService.getService( ).doSvnCheckoutSite( context.getSite( ), context.getSvnUserLogin( ),context.getSvnUserPassword( ),
-                context.getCommandResult(  ) );
-        //PROGRESS 10%
-        commandResult.setProgressValue( commandResult.getProgressValue( )+10 );
+        SvnService.getService( ).doSvnCheckoutSite( context.getSite( ), context.getSvnUserLogin( ), context.getSvnUserPassword( ), context.getCommandResult( ) );
+        // PROGRESS 30%
+        commandResult.setProgressValue( commandResult.getProgressValue( ) + 30 );
 
         ReleaserUtils.logEndAction( context, " checkout Site" );
 
     }
     
-    public void tagSite( WorkflowReleaseContext context, Locale locale )
+    
+    public void checkoutComponent( WorkflowReleaseContext context, Locale locale )
     {
         CommandResult commandResult = context.getCommandResult( );
-        
-        ReleaserUtils.logStartAction( context, " tag Site" );
+       
+        ReleaserUtils.logStartAction( context, " Checkout Svn Component " );
+        String strComponentName =  context.getComponent( ).getArtifactId( );
+        String strLocalComponentPath = ReleaserUtils.getLocalComponentPath( strComponentName );
 
-        
-        //PROGRESS 10%
-        commandResult.setProgressValue( commandResult.getProgressValue( )+10 );
+        File file = new File( strLocalComponentPath );
 
-        context.getCommandResult(  ).getLog(  ).append( "Starting Action Tag  Site...\n" );
-        SvnService.getService( ).doSvnTagSite( context.getSite( ), context.getSvnUserLogin( ),context.getSvnUserPassword( ),
-                context.getCommandResult(  ) );
-        
-        
-        
-        
-        ReleaserUtils.logEndAction( context, " tag SIte" );
+        if ( file.exists( ) )
+        {
+
+            commandResult.getLog( ).append( "Local SVN Component " + strComponentName + " exist\nCleaning Local folder...\n" );
+            if ( !FileUtils.delete( file, commandResult.getLog( ) ) )
+            {
+                commandResult.setError( commandResult.getLog( ).toString( ) );
+
+            }
+            commandResult.getLog( ).append( "Local SVN Component has been cleaned\n" );
+        }
+        // PROGRESS 5%
+        commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
+     
+
+        commandResult.getLog( ).append( "Checkout SVN Component ...\n" );
+        SvnService.getService( ).doSvnCheckoutComponent( context.getComponent( ), context.getSvnUserLogin( ), context.getSvnUserPassword( ), context.getCommandResult( ) );
+        // PROGRESS 10%
+        commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
+
+        ReleaserUtils.logEndAction( context, "Checkout Svn Component " );
 
     }
 
-    
+    public void tagSite( WorkflowReleaseContext context, Locale locale )
+    {
+        CommandResult commandResult = context.getCommandResult( );
+
+        ReleaserUtils.logStartAction( context, " tag Site" );
+
+       
+        context.getCommandResult( ).getLog( ).append( "Starting Action Tag  Site...\n" );
+        SvnService.getService( ).doSvnTagSite( context.getSite( ), context.getSvnUserLogin( ), context.getSvnUserPassword( ), context.getCommandResult( ) );
+
+        ReleaserUtils.logEndAction( context, " tag SIte" );
+
+    }
 
     public static void realeasePrepareSvn( WorkflowReleaseContext context, Locale locale )
     {
@@ -609,9 +626,9 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
         CommandResult commandResult = context.getCommandResult( );
         Component component = context.getComponent( );
-        
+
         ReleaserUtils.logStartAction( context, " send Tweet" );
-        
+
         String strComponentName = ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) );
         String strComponentReleaseVersion = component.getTargetVersion( );
 
@@ -622,7 +639,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         String strTweetMessage = I18nService.getLocalizedString( ConstanteUtils.I18_TWITTER_MESSAGE, messageAgrs, locale );
 
         TwitterService.getService( ).sendTweet( strTweetMessage, commandResult );
-        
+
         ReleaserUtils.logEndAction( context, " send Tweet" );
 
     }

@@ -67,10 +67,13 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     private static final String PARAMETER_SITE_ID = "id_site";
     private static final String PARAMETER_ARTIFACT_ID = "artifact_id";
     private static final String PARAMETER_ID_CONTEXT = "id_context";
+    private static final String PARAMETER_TAG_INFORMATION = "tag_information";
     
 
     // Views
     private static final String VIEW_MANAGE_SITE_RELEASE = "siteRelease";
+    private static final String VIEW_RELEASE_SITE_RESULT = "releaseSiteResult";
+    
     private static final String VIEW_RELEASE_INFO_JSON = "releaseInfoJson";
     private static final String VIEW_RELEASE_COMPONENT_HISTORY = "releaseComponentHistory";
     
@@ -86,9 +89,13 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     
 
     private static final String TEMPLATE_PREPARE_SITE_RELEASE = "/admin/plugins/releaser/prepare_site_release.html";
+    private static final String TEMPLATE_RELEASE_SITE_RESULT = "/admin/plugins/releaser/release_site_result.html";
+    
     private static final String TEMPLATE_RELEASE_COMPONENT_HISTORY = "/admin/plugins/releaser/release_component_history.html";
     
     private static final String MARK_SITE = "site";
+    private static final String MARK_RELEASE_CTX_RESULT = "release_ctx_result";
+    
     private static final String MARK_RELEASE_COMPONENT_HISTORY_LIST= "release_component_history_list";
     
     
@@ -96,6 +103,7 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     private static final String JSON_ERROR_RELEASE_CONTEXT_NOT_EXIST= "RELEASE_CONTEXT_NOT_EXIST";
     
     private Site _site;
+    private  Map<String, Integer> _mapReleaseSiteContext;
 
     @View( value = VIEW_MANAGE_SITE_RELEASE, defaultView = true )
     public String getPrepareSiteRelease( HttpServletRequest request )
@@ -120,6 +128,11 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_PREPARE_SITE_RELEASE, getLocale( ), model );
         return template.getHtml( );
     }
+    
+    
+    
+   
+    
     
     @View( value = VIEW_RELEASE_COMPONENT_HISTORY)
     public String getReleaseComponentHistory( HttpServletRequest request )
@@ -184,6 +197,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
 
         return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
     }
+    
+    
     @Action( ACTION_RELEASE_COMPONENT )
     public String doReleaseComponent( HttpServletRequest request )
     {
@@ -198,11 +213,34 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     @Action( ACTION_RELEASE_SITE )
     public String doReleaseSite( HttpServletRequest request )
     {
-       
+    
         
-      SiteService.releaseSite( _site, getLocale( ), getUser( ), request );
+    String strTagInformation=request.getParameter( PARAMETER_TAG_INFORMATION );
+    _site.setTagInformation( strTagInformation );
+      
+    _mapReleaseSiteContext = SiteService.releaseSite( _site, getLocale( ), getUser( ), request );
 
-        return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
+    
+        return redirectView( request, VIEW_RELEASE_SITE_RESULT );
+    }
+    
+    @View( value = VIEW_RELEASE_SITE_RESULT )
+    public String getReleaseSiteResult( HttpServletRequest request )
+    {
+        if(_mapReleaseSiteContext == null || _site == null)
+        {
+            return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
+        }
+        Map<String, Object> model = getModel( );
+        model.put( MARK_SITE, _site );
+        model.put( MARK_RELEASE_CTX_RESULT, _mapReleaseSiteContext );
+        HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_RELEASE_SITE_RESULT, getLocale( ), model );
+        String strTemplate=template.getHtml( );
+       //reinit site
+        _site=null;
+        _mapReleaseSiteContext=null;
+        return strTemplate;
+    
     }
 
     @Action( ACTION_PROJECT_COMPONENT )

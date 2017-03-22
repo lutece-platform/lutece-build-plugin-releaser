@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.log4j.Logger;
 import org.tmatesoft.svn.core.ISVNDirEntryHandler;
 import org.tmatesoft.svn.core.SVNAuthenticationException;
@@ -54,6 +55,7 @@ import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import org.tmatesoft.svn.core.wc.ISVNEventHandler;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
+import org.tmatesoft.svn.core.wc.SVNCommitPacket;
 import org.tmatesoft.svn.core.wc.SVNCopyClient;
 import org.tmatesoft.svn.core.wc.SVNCopySource;
 import org.tmatesoft.svn.core.wc.SVNEvent;
@@ -102,6 +104,28 @@ public final class SvnUtils
          */
         FSRepositoryFactory.setup(  );
     }
+    
+
+    
+    /**
+     * Commit
+     * @param strSiteName le nom du site
+     * @param strTagName le nom du tag
+     * @param copyClient le client svn permettant la copie
+     * @throws SVNException
+     */
+    public static void  doCommit(  String strPathFile,String strCommitMessage,
+            ReleaseSvnCommitClient commitClient  ) throws SVNException
+    {
+        SVNCommitPacket commitPacket = commitClient.doCollectCommitItems( new File[] { new File( strPathFile ) },
+                false, false, false );
+
+        if ( !SVNCommitPacket.EMPTY.equals( commitPacket ) )
+        {
+            commitClient.doCommit( commitPacket, false, strCommitMessage );
+        }
+    }
+
 
     /**
      * Tag un site
@@ -132,7 +156,7 @@ public final class SvnUtils
         return null;
     }
 
-    public static String doSvnCheckoutSite( String strSiteName, String strUrl, String strCheckoutBaseSitePath,
+    public static String doSvnCheckout( String strUrl, String strCheckoutBaseSitePath,
         ReleaseSvnCheckoutClient updateClient, CommandResult result )
         throws SVNException
     {
@@ -274,6 +298,23 @@ public final class SvnUtils
         String strUrl=strScmUrl.contains( ConstanteUtils.CONSTANTE_TRUNK )?strScmUrl.replace( ConstanteUtils.CONSTANTE_TRUNK, ConstanteUtils.CONSTANTE_TAGS ):strScmUrl;
         return strUrl+ConstanteUtils.CONSTANTE_SEPARATOR_SLASH + strTagName;
     }
+    
+    
+    public static String getRepoUrl(String strRepoUrl)
+    {
+        
+        if(strRepoUrl!=null && strRepoUrl.startsWith( "scm:svn:" ))
+         {
+            strRepoUrl=strRepoUrl.substring( 8 );
+                   
+                   
+              }
+        
+        return strRepoUrl;
+        
+        
+    }
+    
 
    
 }

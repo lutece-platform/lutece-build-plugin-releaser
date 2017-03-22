@@ -8,8 +8,12 @@
                 <span class="info-box-icon bg-green"><i class="fa fa-history"></i></span>
                 <div class="info-box-content">
                             <div class="col-xs-12 col-sm-5 col-md-6">
-                        <h4>${release_history.component.artifactId} ${release_history.component.targetVersion} /${release_history.commandResult.dateBegin?string('dd.MM.yyyy HH:mm:ss')}-${release_history.commandResult.dateEnd?string('HH:mm:ss')} / <#if release_history.commandResult.status==1 && !release_history.commandResult.running> <span class="label label-success">OK</span> <#else> <span class="label label-danger">KO</span></#if></h4>
-                      
+                         <#if release_history.component??>  
+                             <h4>${release_history.component.artifactId} ${release_history.component.targetVersion} /${release_history.commandResult.dateBegin?string('dd.MM.yyyy HH:mm:ss')}-${release_history.commandResult.dateEnd?string('HH:mm:ss')} / <#if release_history.commandResult.status==1 && !release_history.commandResult.running> <span class="label label-success">OK</span> <#else> <span class="label label-danger">KO</span></#if></h4>
+                        <#else>
+                              <h4>${release_history.site.artifactId} ${release_history.site.nextReleaseVersion} /${release_history.commandResult.dateBegin?string('dd.MM.yyyy HH:mm:ss')}-${release_history.commandResult.dateEnd?string('HH:mm:ss')} / <#if release_history.commandResult.status==1 && !release_history.commandResult.running> <span class="label label-success">OK</span> <#else> <span class="label label-danger">KO</span></#if></h4>
+             
+                        </#if>
                     </div>
                     <div class="col-xs-12 col-sm-6 col-md-5"></div>
                     <div class="hidden-xs col-sm-1">

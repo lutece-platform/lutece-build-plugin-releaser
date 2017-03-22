@@ -33,6 +33,7 @@
  */
 package fr.paris.lutece.plugins.releaser.service;
 
+import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.svn.SvnUser;
@@ -46,4 +47,7 @@ public interface ISvnService
     String doSvnCheckoutSite( Site site, String strSvnLogin,String strSvnPassword, CommandResult commandResult);
     
     String doSvnTagSite( Site site, String strSvnLogin,String strSvnPassword, CommandResult commandResult);
+    
+    
+    String doSvnCheckoutComponent( Component component, String strSvnLogin,String strSvnPassword, CommandResult commandResult);
 }

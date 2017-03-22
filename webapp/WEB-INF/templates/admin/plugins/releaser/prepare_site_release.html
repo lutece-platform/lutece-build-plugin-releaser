@@ -184,15 +184,21 @@
         <h4 class="modal-title" id="modalReleaseLabel">Release - Informations de version du site </h4>
       </div>
       <div class="modal-body">
+            <@tform name='release_site' action='jsp/admin/plugins/releaser/ManageSiteRelease.jsp'>
                 <p>Derni&egrave;re version releas&eacute;e ${site.lastReleaseVersion!'n/a'}
                 <p>Version courante du site : <strong>${site.version!}</strong></p>
                 <p>Version de la release : <strong>${site.nextReleaseVersion!}</strong></p>
                 <p>Version de la prochaine de travail : <strong>${site.nextSnapshotVersion!}</strong></p>
+                <@formGroup labelKey='#i18n{releaser.prepare_site_release.labelTagInformation}' helpKey='#i18n{releaser.prepare_site_release.labelTagInformation.help}' mandatory=true>
+                    <@input type='text' name='tag_information' value='${site.tagInformation!\'\'}' />
+                </@formGroup>
+                
             </div>
             <div class="modal-footer">
                 <@aButton href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=versionSite' title='Modifier la version &agrave; releaser' buttonIcon='level-up' color='button transition border-lightblue small' showTitle=true />
-                <button type="submit" class="button transition border-green small"><i class="fa fa-cogs"></i> Releaser</button>
-        <button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Fermer</button>
+                <@actionButtons button1Name="action_releaseSite" />
+         </@tform>
+         <button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Fermer</button>
         </div>
         </div>
     </div>
@@ -215,105 +221,55 @@
     </div>
 </div>
 
+<script src="js/plugins/releaser/releaser.js" type="text/javascript"></script>
+
 <script>
-$(".progress-wrapper").toggle();
 var artifactIdInProgress;
-
-$(".view_log_btn").click( function(e){
-    $("#console_wf_log").html(" ");
-    var artifactId=$(this).attr("data-artifactid");
-    var contextId=$(this).attr("context_release_id");
-    artifactIdInProgress=artifactId;
-    var progressId="#progress-wrapper-" + artifactId;
-    callReleaseInfo( contextId,progressId,artifactId) 
-   }
-);
-
-
-$(".btn-release").click( function(e){
-     $("#console_wf_log").html(" ");
-     
-     var artifactId=$(this).attr("data-artifactid");
-     
-      var progressId="#progress-wrapper-" + artifactId;
-        $( progressId ).toggle();
-     
-     $.ajax({
-            url: "jsp/admin/plugins/releaser/ReleaseComponentJson.jsp?action=releaseComponent&artifact_id="+$(this).attr("data-artifactid"),
-            type: "GET",
-            dataType : "json",
-            success: function( data ) {
-             if (data.status == 'OK') {
-                   callReleaseInfo(data.result,progressId,artifactId);
-                   $( "#view_log_btn_"+artifactId).attr("data-context_release_id",data.result);   
-              } 
-             else if ( data.status == 'ERROR'  )
-             {
-             
-            }
-           }
-                 
-    });
-  
-    e.preventDefault();
-
-  
+	$(function() {
+		
+		$(".progress-wrapper").toggle();
+		
+		
+		$(".view_log_btn").click( function(e){
+		    $("#console_wf_log").html(" ");
+		    var artifactId=$(this).attr("data-artifactid");
+		    var contextId=$(this).attr("context_release_id");
+		    artifactIdInProgress=artifactId;
+		    var progressId="#progress-wrapper-" + artifactId;
+		    callReleaseInfo( contextId,progressId,artifactId) 
+		   }
+		);
+		
+		
+		$(".btn-release").click( function(e){
+		     $("#console_wf_log").html(" ");
+		     
+		     var artifactId=$(this).attr("data-artifactid");
+		     
+		      var progressId="#progress-wrapper-" + artifactId;
+		        $( progressId ).toggle();
+		     
+		     $.ajax({
+		            url: "jsp/admin/plugins/releaser/ReleaseComponentJson.jsp?action=releaseComponent&artifact_id="+$(this).attr("data-artifactid"),
+		            type: "GET",
+		            dataType : "json",
+		            success: function( data ) {
+		             if (data.status == 'OK') {
+		                   callReleaseInfo(data.result,progressId,artifactId);
+		                   $( "#view_log_btn_"+artifactId).attr("data-context_release_id",data.result);   
+		              } 
+		             else if ( data.status == 'ERROR'  )
+		             {
+		             
+		            }
+		           }
+		                 
+		    });
+		  
+		    e.preventDefault();
+	
+	  
+	});
 });
 
-function callReleaseInfo( nIdReleaseContext,progressId,artifactId) 
-{
-    $.ajax({
-        url: "jsp/admin/plugins/releaser/ReleaseComponentJson.jsp?view=releaseInfoJson&id_context="+nIdReleaseContext,
-        type: "GET",
-        dataType : "json",
-        success: function( data ) {
-         if (data.status == 'OK') {
-             
-             
-             if(data.result.commandResult)
-              {
-                 if(artifactId==artifactIdInProgress)
-                {
-                      $("#console_wf_log").html(data.result.commandResult.log);
-                }
-                 if ( data.result.commandResult.running )
-                 {
-                     /* still running */
-                     setTimeout(  function(){callReleaseInfo(nIdReleaseContext,progressId,artifactId);}, 10000 );
-                     
-                 }
-                 else
-                {
-                     if(data.result.commandResult.status==1)
-                    {
-                         $('#release-result-'+artifactId).html('<span class="label label-success">OK</span>');
-                    } 
-                     else
-                    {
-                         $('#release-result-'+artifactId).html('<span class="label label-danger">KO</span>');
-                    }
-                     $(progressId).toggle();
-                     
-                }
-             
-                 $( progressId +" .progress-bar").attr("style","width:"+data.result.commandResult.progressValue+"%");
-             }
-             else
-            {
-                 /*reload*/
-                 setTimeout(  function(){callReleaseInfo(nIdReleaseContext,progressId,artifactId);}, 10000 );
-                 
-            }
-         
-         }
-            
-            else if ( data.status == 'ERROR'  )
-           {
-         
-           }
-        }
-             
-    });
-
-}
 </script>

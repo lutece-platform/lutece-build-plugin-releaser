@@ -51,8 +51,10 @@ import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.util.httpaccess.HttpAccessException;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -344,7 +346,7 @@ public class SiteService
     {
         for ( Component component : site.getComponents( ) )
         {
-            if ( component.getArtifactId( ).equals( strArtifactId ) )
+            if ( component.getArtifactId( ).equals( strArtifactId )  && component.shouldBeReleased( ))
             {
                 //Get Scm Infos 
                 ComponentService.getService( ).getScmInfos( component,true ) ;
@@ -357,11 +359,28 @@ public class SiteService
     }
     
     
-    public static int releaseSite( Site site,Locale locale,AdminUser user,HttpServletRequest request)
+    public static Map<String, Integer> releaseSite( Site site,Locale locale,AdminUser user,HttpServletRequest request)
     {
-       
-        String strSvnUserLogin=AppPropertiesService.getProperty(ConstanteUtils.PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_LOGIN );
-        String strSvnUserPassword=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_PASSWORD);
+        Map<String, Integer> mapResultContext=new HashMap<String, Integer>();
+        
+        
+        Integer nIdWfContext;
+        //Release all snapshot comonent
+        for ( Component component : site.getComponents( ) )
+        {
+            if ( component.shouldBeReleased( ))
+            {
+                //Get Scm Infos 
+                ComponentService.getService( ).getScmInfos( component,true ) ;
+                //Release component
+                nIdWfContext=ComponentService.getService( ).release( component, locale,user,request );
+                mapResultContext.put( component.getArtifactId( ), nIdWfContext );
+            }
+        }
+        
+        
+        String strSvnUserLogin=AppPropertiesService.getProperty(ConstanteUtils.PROPERTY_SITE_REPOSITORY_LOGIN );
+        String strSvnUserPassword=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SITE_REPOSITORY_PASSWORD);
        
         WorkflowReleaseContext context=new WorkflowReleaseContext( );
         context.setSite( site );
@@ -372,8 +391,10 @@ public class SiteService
         WorkflowReleaseContextService.getService( ).addWorkflowReleaseContext( context );
         //start
         WorkflowReleaseContextService.getService( ).startWorkflowReleaseContext( context, nIdWorkflow, locale, request, user );
-      
-         return context.getId( );
+        //Add wf site context
+        mapResultContext.put( site.getArtifactId( ), context.getId( ) );
+        
+         return mapResultContext;
         
        
         
