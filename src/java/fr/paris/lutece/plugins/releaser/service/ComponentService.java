@@ -151,18 +151,10 @@ public class ComponentService implements IComponentService
     public int release( Component component ,Locale locale,AdminUser user,HttpServletRequest request)
     {
             
-        String strGitHubUserLogin=AppPropertiesService.getProperty(ConstanteUtils.PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_LOGIN );
-        String strGitHubUserPassword=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_PASSWORD);
-        String strSvnUserLogin=AppPropertiesService.getProperty(ConstanteUtils.PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_LOGIN );
-        String strSvnUserPassword=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_PASSWORD);
-       
         WorkflowReleaseContext context=new WorkflowReleaseContext( );
         context.setComponent( component );
-        context.setGitHubUserLogin( strGitHubUserLogin );
-        context.setGitHubUserPassord( strGitHubUserPassword );
-        context.setSvnUserLogin( strSvnUserLogin );
-        context.setSvnUserPassword( strSvnUserPassword );
-       
+        context.setReleaserUser( ReleaserUtils.getReleaserUser( user.getUserId( ), locale ) );
+     
         int nIdWorkflow=WorkflowReleaseContextService.getService( ).getIdWorkflow( context );
         WorkflowReleaseContextService.getService( ).addWorkflowReleaseContext( context );
         //start

@@ -46,6 +46,9 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     private static IWorkflowReleaseContextService _singleton;
     private HashMap<Integer, WorkflowReleaseContext> _mapWorkflowReleaseContext = new HashMap<Integer, WorkflowReleaseContext>( );
     private ExecutorService _executor;
+    private  IMavenPrepareUpdateRemoteRepository  _svnMavenPrepareUpadteRepo ;
+    private  IMavenPrepareUpdateRemoteRepository  _gitMavenPrepareUpadteRepo;
+    
 
     /*
      * (non-Javadoc)
@@ -81,8 +84,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         try
         {
             String strJsonContext = MapperJsonUtil.getJson( context );
-            DatastoreService
-                    .setDataValue( ReleaserUtils.getWorklowContextDataKey( context.getComponent( )!=null?context.getComponent( ).getArtifactId( ):context.getSite( ).getArtifactId( ), context.getId( ) ), strJsonContext );
+            DatastoreService.setDataValue( ReleaserUtils.getWorklowContextDataKey( context.getComponent( ) != null ? context.getComponent( ).getArtifactId( )
+                    : context.getSite( ).getArtifactId( ), context.getId( ) ), strJsonContext );
 
         }
         catch( IOException e )
@@ -206,7 +209,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
             // PROGRESS 5%
             commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
-            git = GitUtils.cloneRepo( strLocalComponentPath, component.getScmDeveloperConnection( ), commandResult, context.getGitHubUserLogin( ) );
+            git = GitUtils.cloneRepo( strLocalComponentPath, component.getScmDeveloperConnection( ), commandResult, context.getReleaserUser( ).getGithubComponentAccountLogin( ) );
             // fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
             // git = new Git( fLocalRepo );
             GitUtils.createLocalBranch( git, GitUtils.DEVELOP_BRANCH, commandResult );
@@ -278,7 +281,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                 else
                 {
                     git.push( )
-                            .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getGitHubUserLogin( ), context.getGitHubUserPassord( ) ) )
+                            .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ) ) )
                             .call( );
                     commandResult.getLog( ).append( mergeResult.getMergeStatus( ) );
                 }
@@ -327,209 +330,16 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         }
     }
 
-    public void realeasePrepareGit( WorkflowReleaseContext context, Locale locale )
+    public void releasePrepareGit( WorkflowReleaseContext context, Locale locale )
     {
-        CommandResult commandResult = context.getCommandResult( );
-        Component component = context.getComponent( );
-        String strComponentName = ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) );
-        String strLocalComponentPath = ReleaserUtils.getLocalComponentPath( strComponentName );
-        String strLocalComponentPomPath = ReleaserUtils.getLocalComponentPomPath( strComponentName );
-
-        String strComponentReleaseVersion = component.getTargetVersion( );
-        String strComponentReleaseTagName = component.getArtifactId( ) + "-" + component.getTargetVersion( );
-        String strComponentReleaseNewDeveloppmentVersion = component.getNextSnapshotVersion( );
-
-        // Switch to develop branch
-        FileRepository fLocalRepo = null;
-        Git git = null;
-        ReleaserUtils.logStartAction( context, " Release Prepare" );
-
-        try
-        {
-            fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
-
-            git = new Git( fLocalRepo );
-            git.checkout( ).setName( GitUtils.DEVELOP_BRANCH ).call( );
-
-            if ( PluginUtils.isCore( strComponentName ) )
-            {
-                // update core xml
-                String strCoreXMLPath = PluginUtils.getCoreXMLFile( strLocalComponentPath );
-
-                if ( StringUtils.isNotBlank( strCoreXMLPath ) )
-                {
-                    commandResult.getLog( ).append( "Updating Core XML " + strComponentName + " to " + strComponentReleaseVersion + "\n" );
-
-                    PluginUtils.updatePluginXMLVersion( strLocalComponentPath, strComponentReleaseVersion, commandResult );
-                    // Commit Plugin xml modification version
-                    git.add( ).addFilepattern( "." ).setUpdate( true ).call( );
-                    git.commit( ).setMessage( "[site-release] Update core version to " + strComponentReleaseVersion ).call( );
-                    git.push( )
-                            .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getGitHubUserLogin( ), context.getGitHubUserPassord( ) ) )
-                            .call( );
-                    commandResult.getLog( ).append( "Core XML updated to " + strComponentReleaseVersion + "\n" );
-                    // PROGRESS 30%
-                    commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
-
-                }
-
-                // update appinfo.java
-                String strAppInfoFilePath = PluginUtils.getAppInfoFile( strLocalComponentPath, PluginUtils.CORE_PLUGIN_NAME1 );
-                if ( StringUtils.isBlank( strAppInfoFilePath ) )
-                {
-                    strAppInfoFilePath = PluginUtils.getAppInfoFile( strLocalComponentPath, PluginUtils.CORE_PLUGIN_NAME2 );
-                }
-                if ( StringUtils.isNotBlank( strAppInfoFilePath ) )
-                {
-                    PluginUtils.updateAppInfoFile( strAppInfoFilePath, strComponentReleaseVersion, commandResult );
-                    git.add( ).addFilepattern( "." ).setUpdate( true ).call( );
-                    git.commit( ).setMessage( "[site-release] Update AppInfo.java version" ).call( );
-                    git.push( )
-                            .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getGitHubUserLogin( ), context.getGitHubUserPassord( ) ) )
-                            .call( );
-                }
-                else
-                {
-                    commandResult.getLog( ).append( "No AppInfo file found..." );
-                }
-
-            }
-            else
-            {
-                String [ ] pluginNames = PluginUtils.getPluginXMLFile( strLocalComponentPath );
-                for ( String pluginXMLPath : pluginNames )
-                {
-                    commandResult.getLog( ).append( "Updating plugin XML " + strComponentName + " to " + strComponentReleaseVersion + "\n" );
-                    PluginUtils.updatePluginXMLVersion( pluginXMLPath, strComponentReleaseVersion, commandResult );
-                    // Commit Plugin xml modification version
-                    git.add( ).addFilepattern( "." ).setUpdate( true ).call( );
-                    git.commit( ).setMessage( "[site-release] Update plugin version to " + strComponentReleaseVersion + " for " + strComponentName ).call( );
-                    git.push( )
-                            .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getGitHubUserLogin( ), context.getGitHubUserPassord( ) ) )
-                            .call( );
-
-                    commandResult.getLog( ).append( "Plugin XML updated to " + strComponentReleaseVersion + "\n" );
-                    // PROGRESS 30%
-                    commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
-
-                }
-            }
-
-            MavenService.getService( ).mvnReleasePrepare( strLocalComponentPomPath, strComponentReleaseVersion, strComponentReleaseTagName,
-                    strComponentReleaseNewDeveloppmentVersion, context.getGitHubUserLogin( ), context.getGitHubUserPassord( ), commandResult );
-            // Merge Master
-            GitUtils.mergeBack( git, context.getGitHubUserLogin( ), context.getGitHubUserPassord( ), commandResult );
-            // PROGRESS 50%
-            commandResult.setProgressValue( commandResult.getProgressValue( ) + 20 );
-
-            // Modify plugin version on develop
-            git.checkout( ).setName( GitUtils.DEVELOP_BRANCH ).call( );
-            if ( PluginUtils.isCore( strComponentName ) )
-            {
-                // update core xml
-                String strCoreXMLPath = PluginUtils.getCoreXMLFile( strLocalComponentPath );
-
-                if ( StringUtils.isNotBlank( strCoreXMLPath ) )
-                {
-                    commandResult.getLog( ).append( "Updating Core XML " + strComponentName + " to " + strComponentReleaseNewDeveloppmentVersion + "\n" );
-
-                    PluginUtils.updatePluginXMLVersion( strLocalComponentPath, strComponentReleaseNewDeveloppmentVersion, commandResult );
-                    // Commit Plugin xml modification version
-                    git.add( ).addFilepattern( "." ).setUpdate( true ).call( );
-                    git.commit( ).setMessage( "[site-release] Update core version to " + strComponentReleaseNewDeveloppmentVersion ).call( );
-                    git.push( )
-                            .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getGitHubUserLogin( ), context.getGitHubUserPassord( ) ) )
-                            .call( );
-                    commandResult.getLog( ).append( "Core XML updated to " + strComponentReleaseNewDeveloppmentVersion + "\n" );
-                }
-
-                // update appinfo.java
-                String strAppInfoFilePath = PluginUtils.getAppInfoFile( strLocalComponentPath, PluginUtils.CORE_PLUGIN_NAME1 );
-                if ( StringUtils.isBlank( strAppInfoFilePath ) )
-                {
-                    strAppInfoFilePath = PluginUtils.getAppInfoFile( strLocalComponentPath, PluginUtils.CORE_PLUGIN_NAME2 );
-                }
-                if ( StringUtils.isNotBlank( strAppInfoFilePath ) )
-                {
-                    PluginUtils.updateAppInfoFile( strAppInfoFilePath, strComponentReleaseNewDeveloppmentVersion, commandResult );
-                    git.add( ).addFilepattern( "." ).setUpdate( true ).call( );
-                    git.commit( ).setMessage( "[site-release] Update AppInfo.java version" ).call( );
-                    git.push( )
-                            .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getGitHubUserLogin( ), context.getGitHubUserPassord( ) ) )
-                            .call( );
-                }
-                else
-                {
-                    commandResult.getLog( ).append( "No AppInfo file found..." );
-                }
-
-            }
-            else
-            {
-                String [ ] pluginNames = PluginUtils.getPluginXMLFile( strLocalComponentPath );
-                for ( String pluginXMLPath : pluginNames )
-                {
-                    commandResult.getLog( ).append( "Updating plugin XML " + strComponentName + " to " + strComponentReleaseNewDeveloppmentVersion + "\n" );
-                    PluginUtils.updatePluginXMLVersion( pluginXMLPath, strComponentReleaseNewDeveloppmentVersion, commandResult );
-                    // Commit Plugin xml modification version
-                    git.add( ).addFilepattern( "." ).setUpdate( true ).call( );
-                    git.commit( )
-                            .setMessage( "[site-release] Update plugin version to " + strComponentReleaseNewDeveloppmentVersion + " for " + strComponentName )
-                            .call( );
-                    git.push( )
-                            .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getGitHubUserLogin( ), context.getGitHubUserPassord( ) ) )
-                            .call( );
-
-                    commandResult.getLog( ).append( "Plugin XML updated to " + strComponentReleaseNewDeveloppmentVersion + "\n" );
-                }
-            }
-            // PROGRESS 65%
-            commandResult.setProgressValue( commandResult.getProgressValue( ) + 15 );
-
-            ReleaserUtils.logEndAction( context, " Release Prepare" );
-
-        }
-        catch( InvalidRemoteException e )
-        {
-
-            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
-
-        }
-        catch( TransportException e )
-        {
-            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
-
-        }
-        catch( IOException e )
-        {
-            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
-        }
-        catch( GitAPIException e )
-        {
-            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
-        }
-
-        finally
-        {
-
-            if ( fLocalRepo != null )
-            {
-
-                fLocalRepo.close( );
-
-            }
-            if ( git != null )
-            {
-
-                git.close( );
-
-            }
-
-        }
+        String strComponentName = ReleaserUtils.getGitComponentName( context.getComponent( ).getScmDeveloperConnection( ) );
+        
+        realeasePrepare(strComponentName, context.getReleaserUser( ).getGithubComponentAccountLogin( ),context.getReleaserUser( ).getGithubComponentAccountPassword( ),_gitMavenPrepareUpadteRepo,
+                context, locale );
 
     }
 
-    public void realeasePerformGit( WorkflowReleaseContext context, Locale locale )
+    public void releasePerformGit( WorkflowReleaseContext context, Locale locale )
     {
 
         CommandResult commandResult = context.getCommandResult( );
@@ -543,7 +353,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         // PROGRESS 75%
         commandResult.setProgressValue( commandResult.getProgressValue( ) + 10 );
 
-        MavenService.getService( ).mvnReleasePerform( strLocalComponentPomPath, context.getGitHubUserLogin( ), context.getGitHubUserPassord( ), commandResult );
+        MavenService.getService( ).mvnReleasePerform( strLocalComponentPomPath, context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ), commandResult );
 
         ReleaserUtils.logEndAction( context, " Release Perform" );
     }
@@ -554,21 +364,20 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
         ReleaserUtils.logStartAction( context, " checkout Site" );
 
-        SvnService.getService( ).doSvnCheckoutSite( context.getSite( ), context.getSvnUserLogin( ), context.getSvnUserPassword( ), context.getCommandResult( ) );
+        SvnService.getService( ).doSvnCheckoutSite( context.getSite( ), context.getReleaserUser( ).getSvnSiteAccountLogin( ), context.getReleaserUser( ).getSvnSiteAccountPassword( ), context.getCommandResult( ) );
         // PROGRESS 30%
         commandResult.setProgressValue( commandResult.getProgressValue( ) + 30 );
 
         ReleaserUtils.logEndAction( context, " checkout Site" );
 
     }
-    
-    
+
     public void checkoutComponent( WorkflowReleaseContext context, Locale locale )
     {
         CommandResult commandResult = context.getCommandResult( );
-       
+
         ReleaserUtils.logStartAction( context, " Checkout Svn Component " );
-        String strComponentName =  context.getComponent( ).getArtifactId( );
+        String strComponentName = context.getComponent( ).getArtifactId( );
         String strLocalComponentPath = ReleaserUtils.getLocalComponentPath( strComponentName );
 
         File file = new File( strLocalComponentPath );
@@ -586,10 +395,10 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         }
         // PROGRESS 5%
         commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
-     
 
         commandResult.getLog( ).append( "Checkout SVN Component ...\n" );
-        SvnService.getService( ).doSvnCheckoutComponent( context.getComponent( ), context.getSvnUserLogin( ), context.getSvnUserPassword( ), context.getCommandResult( ) );
+        SvnService.getService( ).doSvnCheckoutComponent( context.getComponent( ), context.getReleaserUser( ).getSvnComponentAccountLogin( ), context.getReleaserUser( ).getSvnComponentAccountPassword( ),
+                context.getCommandResult( ) );
         // PROGRESS 10%
         commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
 
@@ -603,22 +412,39 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
         ReleaserUtils.logStartAction( context, " tag Site" );
 
-       
         context.getCommandResult( ).getLog( ).append( "Starting Action Tag  Site...\n" );
-        SvnService.getService( ).doSvnTagSite( context.getSite( ), context.getSvnUserLogin( ), context.getSvnUserPassword( ), context.getCommandResult( ) );
+        SvnService.getService( ).doSvnTagSite( context.getSite( ), context.getReleaserUser( ).getSvnSiteAccountLogin( ), context.getReleaserUser( ).getSvnSiteAccountPassword( ), context.getCommandResult( ) );
 
         ReleaserUtils.logEndAction( context, " tag SIte" );
 
     }
 
-    public static void realeasePrepareSvn( WorkflowReleaseContext context, Locale locale )
+    public void releasePrepareSvn( WorkflowReleaseContext context, Locale locale )
     {
+        String strComponentName = context.getComponent( ).getArtifactId( );
+        
+        
+     realeasePrepare(strComponentName,context.getReleaserUser( ).getSvnComponentAccountLogin( ),context.getReleaserUser( ).getSvnComponentAccountLogin( ), _svnMavenPrepareUpadteRepo,
+                context, locale );
 
     }
 
-    public static void realeasePerformSvn( WorkflowReleaseContext context, Locale locale )
+    public void releasePerformSvn( WorkflowReleaseContext context, Locale locale )
     {
+        CommandResult commandResult = context.getCommandResult( );
+       
+        ReleaserUtils.logStartAction( context, " Release Perform" );
 
+        String strComponentName = context.getComponent( ).getArtifactId( );
+        String strLocalComponentPomPath = ReleaserUtils.getLocalComponentPomPath( strComponentName );
+
+
+        // PROGRESS 75%
+        commandResult.setProgressValue( commandResult.getProgressValue( ) + 10 );
+
+        MavenService.getService( ).mvnReleasePerform( strLocalComponentPomPath, context.getReleaserUser( ).getSvnComponentAccountLogin( ), context.getReleaserUser( ).getSvnComponentAccountPassword( ), commandResult );
+
+        ReleaserUtils.logEndAction( context, " Release Perform" );
     }
 
     public void sendTweet( WorkflowReleaseContext context, Locale locale )
@@ -653,6 +479,138 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     {
 
         _executor = Executors.newFixedThreadPool( AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_THREAD_RELEASE_POOL_MAX_SIZE, 10 ) );
+        _svnMavenPrepareUpadteRepo =SpringContextService.getBean( ConstanteUtils.BEAN_SVN_MAVEN_PREPARE_UPDATE_REMOTE_REPOSITORY );
+         _gitMavenPrepareUpadteRepo =SpringContextService.getBean( ConstanteUtils.BEAN_GIT_MAVEN_PREPARE_UPDATE_REMOTE_REPOSITORY );
+        
+
+    }
+
+    private void realeasePrepare( String strComponentName,String strUserLogin,String strUserPassword,IMavenPrepareUpdateRemoteRepository mavenPrepareUpdateRepo, WorkflowReleaseContext context, Locale locale )
+    {
+
+        CommandResult commandResult = context.getCommandResult( );
+        Component component = context.getComponent( );
+        String strLocalComponentPath = ReleaserUtils.getLocalComponentPath( strComponentName );
+        String strLocalComponentPomPath = ReleaserUtils.getLocalComponentPomPath( strComponentName );
+
+        String strComponentReleaseVersion = component.getTargetVersion( );
+        String strComponentReleaseTagName = component.getArtifactId( ) + "-" + component.getTargetVersion( );
+        String strComponentReleaseNewDeveloppmentVersion = component.getNextSnapshotVersion( );
+
+        ReleaserUtils.logStartAction( context, " Release Prepare" );
+
+        if ( PluginUtils.isCore( strComponentName ) )
+        {
+            // update core xml
+            String strCoreXMLPath = PluginUtils.getCoreXMLFile( strLocalComponentPath );
+
+            if ( StringUtils.isNotBlank( strCoreXMLPath ) )
+            {
+                commandResult.getLog( ).append( "Updating Core XML " + strComponentName + " to " + strComponentReleaseVersion + "\n" );
+
+                
+                PluginUtils.updatePluginXMLVersion( strLocalComponentPath, strComponentReleaseVersion, commandResult );
+                // Commit Plugin xml modification version
+                mavenPrepareUpdateRepo.updateDevelopBranch( strLocalComponentPath,context, locale, "[site-release] Update core version to " + strComponentReleaseVersion );
+                commandResult.getLog( ).append( "Core XML updated to " + strComponentReleaseVersion + "\n" );
+                // PROGRESS 30%
+                commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
+
+            }
+
+            // update appinfo.java
+            String strAppInfoFilePath = PluginUtils.getAppInfoFile( strLocalComponentPath, PluginUtils.CORE_PLUGIN_NAME1 );
+            if ( StringUtils.isBlank( strAppInfoFilePath ) )
+            {
+                strAppInfoFilePath = PluginUtils.getAppInfoFile( strLocalComponentPath, PluginUtils.CORE_PLUGIN_NAME2 );
+            }
+            if ( StringUtils.isNotBlank( strAppInfoFilePath ) )
+            {
+                PluginUtils.updateAppInfoFile( strAppInfoFilePath, strComponentReleaseVersion, commandResult );
+                mavenPrepareUpdateRepo.updateDevelopBranch( strAppInfoFilePath,context, locale, "[site-release] Update AppInfo.java version" );
+
+            }
+            else
+            {
+                commandResult.getLog( ).append( "No AppInfo file found..." );
+            }
+
+        }
+        else
+        {
+            String [ ] pluginNames = PluginUtils.getPluginXMLFile( strLocalComponentPath );
+            for ( String pluginXMLPath : pluginNames )
+            {
+                commandResult.getLog( ).append( "Updating plugin XML " + strComponentName + " to " + strComponentReleaseVersion + "\n" );
+                PluginUtils.updatePluginXMLVersion( pluginXMLPath, strComponentReleaseVersion, commandResult );
+                mavenPrepareUpdateRepo.updateDevelopBranch(pluginXMLPath, context, locale, "[site-release] Update plugin version to " + strComponentReleaseVersion + " for "
+                        + strComponentName );
+
+                commandResult.getLog( ).append( "Plugin XML updated to " + strComponentReleaseVersion + "\n" );
+                // PROGRESS 30%
+                commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
+
+            }
+        }
+
+        MavenService.getService( ).mvnReleasePrepare( strLocalComponentPomPath, strComponentReleaseVersion, strComponentReleaseTagName,
+                strComponentReleaseNewDeveloppmentVersion, strUserLogin, strUserPassword, commandResult );
+        // Merge Master
+        mavenPrepareUpdateRepo.updateReleaseBranch( strLocalComponentPomPath,context, locale );
+        // PROGRESS 50%
+        commandResult.setProgressValue( commandResult.getProgressValue( ) + 20 );
+
+        // Modify plugin version on develop
+        if ( PluginUtils.isCore( strComponentName ) )
+        {
+            // update core xml
+            String strCoreXMLPath = PluginUtils.getCoreXMLFile( strLocalComponentPath );
+
+            if ( StringUtils.isNotBlank( strCoreXMLPath ) )
+            {
+                commandResult.getLog( ).append( "Updating Core XML " + strComponentName + " to " + strComponentReleaseNewDeveloppmentVersion + "\n" );
+
+                PluginUtils.updatePluginXMLVersion( strLocalComponentPath, strComponentReleaseNewDeveloppmentVersion, commandResult );
+                // Commit Plugin xml modification version
+                mavenPrepareUpdateRepo.updateDevelopBranch(strLocalComponentPath,  context, locale, "[site-release] Update core version to "
+                        + strComponentReleaseNewDeveloppmentVersion );
+            }
+
+            // update appinfo.java
+            String strAppInfoFilePath = PluginUtils.getAppInfoFile( strLocalComponentPath, PluginUtils.CORE_PLUGIN_NAME1 );
+            if ( StringUtils.isBlank( strAppInfoFilePath ) )
+            {
+                strAppInfoFilePath = PluginUtils.getAppInfoFile( strLocalComponentPath, PluginUtils.CORE_PLUGIN_NAME2 );
+            }
+            if ( StringUtils.isNotBlank( strAppInfoFilePath ) )
+            {
+                mavenPrepareUpdateRepo.updateDevelopBranch(strAppInfoFilePath, context, locale, "[site-release] Update AppInfo.java version" );
+
+            }
+            else
+            {
+                commandResult.getLog( ).append( "No AppInfo file found..." );
+            }
+
+        }
+        else
+        {
+            String [ ] pluginNames = PluginUtils.getPluginXMLFile( strLocalComponentPath );
+            for ( String pluginXMLPath : pluginNames )
+            {
+                commandResult.getLog( ).append( "Updating plugin XML " + strComponentName + " to " + strComponentReleaseNewDeveloppmentVersion + "\n" );
+                PluginUtils.updatePluginXMLVersion( pluginXMLPath, strComponentReleaseNewDeveloppmentVersion, commandResult );
+                // Commit Plugin xml modification version
+                mavenPrepareUpdateRepo.updateDevelopBranch( pluginXMLPath,context, locale, "[site-release] Update plugin version to "
+                        + strComponentReleaseNewDeveloppmentVersion + " for " + strComponentName );
+
+                commandResult.getLog( ).append( "Plugin XML updated to " + strComponentReleaseNewDeveloppmentVersion + "\n" );
+            }
+        }
+        // PROGRESS 65%
+        commandResult.setProgressValue( commandResult.getProgressValue( ) + 15 );
+
+        ReleaserUtils.logEndAction( context, " Release Prepare" );
 
     }
 

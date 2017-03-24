@@ -16,7 +16,9 @@ public class ConstanteUtils
     public static final String BEAN_WORKFLOW_RELEASE_CONTEXT_SERVICE= "releaser.workflowReleaseContextService";
     public static final String BEAN_MAVEN_SERVICE= "releaser.mavenService";
     public static final String BEAN_SVN_SERVICE= "releaser.svnService";
-    
+    public static final String BEAN_GIT_MAVEN_PREPARE_UPDATE_REMOTE_REPOSITORY= "releaser.gitMavenPrepareUpdateRemoteRepository";
+    public static final String BEAN_SVN_MAVEN_PREPARE_UPDATE_REMOTE_REPOSITORY= "releaser.svnMavenPrepareUpdateRemoteRepository";
+   
     public static final String BEAN_COMPONENT_SERVICE= "releaser.componentService";
     
     public static final String BEAN_TWITTER_SERVICE= "releaser.twitterService";
@@ -28,14 +30,16 @@ public class ConstanteUtils
     
     public static final String PROPERTY_LOCAL_SITE_BASE_PAH = "releaser.localSiteBasePath";
     public static final String PROPERTY_LOCAL_COMPONENT_BASE_PAH = "releaser.localComponentBasePath";
+    
+    public static final String PROPERTY_APPLICATION_ACCOUNT_ENABLE="releaser.applicationAccountEnable";
     public static final String PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_LOGIN= "releaser.svnReleaseComponetAccount.login";
     public static final String PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_PASSWORD="releaser.svnReleaseComponetAccount.password";
     public static final String PROPERTY_SITE_REPOSITORY_LOGIN= "releaser.site.repository.login";
     public static final String PROPERTY_SITE_REPOSITORY_PASSWORD= "releaser.site.repository.password";
-    
-  
     public static final String PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_LOGIN= "releaser.githubReleaseComponetAccount.login";
     public static final String PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_PASSWORD="releaser.githubReleaseComponetAccount.password";
+    
+    
     public static final String PROPERTY_MAVEN_LOCAL_REPOSITORY = "releaser.mavenLocalRepository";
     public static final String PROPERTY_MAVEN_HOME_PATH = "releaser.mavenHomePath";
     public static final String PROPERTY_PROXY_HOST="httpAccess.proxyHost";
@@ -51,6 +55,7 @@ public class ConstanteUtils
     public static final String I18_TWITTER_MESSAGE="releaser.message.twitterMessage";
     
     
-
+ 
+    
     
 }

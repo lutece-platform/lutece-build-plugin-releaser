@@ -1,4 +1,3 @@
-<div class="app-wrapper">
 <div class="cards">
   <section class="row">
     <div class="col-xs-12 col-sm-3 col-md-2 cards-info">
@@ -14,8 +13,7 @@
 			</div>
     	<@tform name='create_site' action='jsp/admin/plugins/releaser/ManageClusters.jsp'>
         <@messages errors=errors />
-        <input type="hidden" id="id" name="id"/>
-
+        <input type="hidden" id="id" name="id">
             <@formGroup labelKey='#i18n{releaser.create_site.labelName}' helpKey='#i18n{releaser.create_site.labelName.help}' mandatory=true>
                     <@input type='text' name='name' value='${site.name!\'\'}' />
             </@formGroup>
@@ -38,5 +36,4 @@
             <@actionButtons button1Name="action_createSite" button2Name="view_manageSite"/>
     </@tform>
 	</div>
-</div>
 </div>

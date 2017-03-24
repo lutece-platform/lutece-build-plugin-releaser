@@ -6,6 +6,7 @@ import java.util.Locale;
 import org.junit.Test;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
+import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
@@ -29,8 +30,8 @@ public class WorkflowReleaseContextServiceTest extends LuteceTestCase
       
       WorkflowReleaseContextService.getService( ).gitCloneRepository( context, Locale.FRENCH );
       WorkflowReleaseContextService.getService( ).gitMerge( context, Locale.FRENCH );
-      WorkflowReleaseContextService.getService( ).realeasePrepareGit( context, Locale.FRENCH );
-      WorkflowReleaseContextService.getService( ).realeasePerformGit( context, Locale.FRENCH );
+      WorkflowReleaseContextService.getService( ).releasePrepareGit( context, Locale.FRENCH );
+      WorkflowReleaseContextService.getService( ).releasePerformGit( context, Locale.FRENCH );
         
       ReleaserUtils.stopCommandResult( context ) ;
        
@@ -78,9 +79,10 @@ public class WorkflowReleaseContextServiceTest extends LuteceTestCase
         component.setNextSnapshotVersion( strReleaserNewDeveloppmentVersion );
         component.setTargetVersion( strReleaserVersion );
     
-        
-        context.setGitHubUserLogin( strGitHubUserLogin );
-        context.setGitHubUserPassord( strGitHubUserPassword );
+        ReleaserUser user=new ReleaserUser( );
+        user.setGithubComponentAccountLogin( strGitHubUserLogin );
+        user.setGithubComponentAccountPassword( strGitHubUserPassword );
+        context.setReleaserUser( user );
         context.setComponent(component );
         return context;
         

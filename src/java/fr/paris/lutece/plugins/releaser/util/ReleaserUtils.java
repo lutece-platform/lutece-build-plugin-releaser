@@ -2,7 +2,9 @@ package fr.paris.lutece.plugins.releaser.util;
 
 import java.io.File;
 import java.util.Date;
+import java.util.Locale;
 
+import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
@@ -146,6 +148,28 @@ public class ReleaserUtils
         }
 
         return nIdParameter;
+    }
+    
+    
+    public static ReleaserUser getReleaserUser( int nIdAdminUser, Locale locale )
+    {
+        
+            ReleaserUser releaserUser = null;
+       
+            
+            if( AppPropertiesService.getPropertyBoolean( ConstanteUtils.PROPERTY_APPLICATION_ACCOUNT_ENABLE,false))
+            {
+                
+                releaserUser=new ReleaserUser( );
+                releaserUser.setGithubComponentAccountLogin( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_LOGIN ) );
+                releaserUser.setGithubComponentAccountPassword( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_PASSWORD ) );
+                releaserUser.setSvnComponentAccountLogin( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_LOGIN ) );
+                releaserUser.setSvnComponentAccountPassword( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_PASSWORD ) );
+                releaserUser.setSvnSiteAccountLogin( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SITE_REPOSITORY_LOGIN) );
+                releaserUser.setSvnSiteAccountPassword( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SITE_REPOSITORY_PASSWORD ) );     
+            }
+            
+        return releaserUser;
     }
 
 

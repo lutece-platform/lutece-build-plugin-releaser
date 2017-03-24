@@ -32,9 +32,13 @@ public interface IWorkflowReleaseContextService
     void gitMerge( WorkflowReleaseContext context, Locale locale );
     
     
-    void realeasePrepareGit( WorkflowReleaseContext context, Locale locale );
+    void releasePrepareGit( WorkflowReleaseContext context, Locale locale );
     
-    void realeasePerformGit( WorkflowReleaseContext context, Locale locale );
+    void releasePrepareSvn( WorkflowReleaseContext context, Locale locale );
+    
+    void releasePerformGit( WorkflowReleaseContext context, Locale locale );
+    
+    void releasePerformSvn( WorkflowReleaseContext context, Locale locale );
     
     void sendTweet( WorkflowReleaseContext context, Locale locale );
     

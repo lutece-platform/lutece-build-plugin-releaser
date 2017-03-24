@@ -15,11 +15,7 @@ public class WorkflowReleaseContext implements Serializable
     private Component _component;
     private Site _site;
     private CommandResult _commandResult;
-    private String _strSvnUserLogin;
-    private String _strSvnUserPassword;
-    private String _strGitHubUserLogin;
-    private String _strGitHubUserPassord;
-
+    private ReleaserUser _releaserUser;
 
  
     public int getId( )
@@ -52,45 +48,7 @@ public class WorkflowReleaseContext implements Serializable
         this._commandResult = _commandResult;
     }
 
-    public String getSvnUserLogin( )
-    {
-        return _strSvnUserLogin;
-    }
-
-    public void setSvnUserLogin( String _strSvnUserLogin )
-    {
-        this._strSvnUserLogin = _strSvnUserLogin;
-    }
-
-    public String getSvnUserPassword( )
-    {
-        return _strSvnUserPassword;
-    }
-
-    public void setSvnUserPassword( String _strSvnUserPassword )
-    {
-        this._strSvnUserPassword = _strSvnUserPassword;
-    }
-
-    public String getGitHubUserLogin( )
-    {
-        return _strGitHubUserLogin;
-    }
-
-    public void setGitHubUserLogin( String _strGitHubUserLogin )
-    {
-        this._strGitHubUserLogin = _strGitHubUserLogin;
-    }
-
-    public String getGitHubUserPassord( )
-    {
-        return _strGitHubUserPassord;
-    }
-
-    public void setGitHubUserPassord( String _strGitHubUserPassord )
-    {
-        this._strGitHubUserPassord = _strGitHubUserPassord;
-    }
+   
     
     public void setSite(Site site)
     {
@@ -109,6 +67,16 @@ public class WorkflowReleaseContext implements Serializable
     public boolean isLuteceSite( )
     {
         return _component==null && _site!=null;
+    }
+
+    public ReleaserUser getReleaserUser( )
+    {
+        return _releaserUser;
+    }
+
+    public void setReleaserUser( ReleaserUser _releaserUser )
+    {
+        this._releaserUser = _releaserUser;
     }
     
     

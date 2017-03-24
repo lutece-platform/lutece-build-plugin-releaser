@@ -379,13 +379,10 @@ public class SiteService
         }
         
         
-        String strSvnUserLogin=AppPropertiesService.getProperty(ConstanteUtils.PROPERTY_SITE_REPOSITORY_LOGIN );
-        String strSvnUserPassword=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SITE_REPOSITORY_PASSWORD);
        
         WorkflowReleaseContext context=new WorkflowReleaseContext( );
         context.setSite( site );
-        context.setSvnUserLogin( strSvnUserLogin );
-        context.setSvnUserPassword(  strSvnUserPassword );
+        context.setReleaserUser( ReleaserUtils.getReleaserUser( user.getUserId( ), locale ) );
        
         int nIdWorkflow=WorkflowReleaseContextService.getService( ).getIdWorkflow( context );
         WorkflowReleaseContextService.getService( ).addWorkflowReleaseContext( context );
