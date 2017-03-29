@@ -13,6 +13,6 @@ public interface IMavenPrepareUpdateRemoteRepository
     
     void updateReleaseBranch(String strLocalBasePath,WorkflowReleaseContext context, Locale locale);
     
-    
+    void rollbackRelease(String strLocalBasePath, WorkflowReleaseContext context, Locale locale);
     
 }

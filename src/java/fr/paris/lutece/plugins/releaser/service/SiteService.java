@@ -46,6 +46,7 @@ import fr.paris.lutece.plugins.releaser.util.svn.SvnSiteService;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
 import fr.paris.lutece.portal.business.user.AdminUser;
+import fr.paris.lutece.portal.service.datastore.DatastoreService;
 import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
@@ -170,7 +171,7 @@ public class SiteService
      */
     private static void defineTargetVersion( Component component )
     {
-        if ( component.isProject( ) )
+        if ( component.isProject( ) && component.isSnapshotVersion( ) )
         {
             component.setTargetVersions( Version.getNextReleaseVersions( component.getCurrentVersion() ));
             String strTargetVersion = Version.getReleaseVersion( component.getCurrentVersion() );
@@ -208,9 +209,35 @@ public class SiteService
 
     private static boolean isProjectComponent( Site site, String strArtifactId )
     {
-        // FIXME
-        return ( strArtifactId.contains( "gru" ) || strArtifactId.contains( "ticketing" ) || strArtifactId.contains( "identity" ) || strArtifactId.contains( "test" ));
+        return new Boolean(DatastoreService.getDataValue( getComponetIsProjectDataKey( site, strArtifactId ), Boolean.FALSE.toString( ) ));
     }
+    
+    public  static void updateComponentAsProjectStatus( Site site, String strArtifactId ,Boolean bIsProject)
+    {
+       DatastoreService.setDataValue( getComponetIsProjectDataKey(  site, strArtifactId),bIsProject.toString( ));
+       
+    }
+    
+    public  static void removeComponentAsProjectBySite( int  nIdSite )
+    {
+        DatastoreService.removeDataByPrefix( getPrefixIsProjectDataKey( nIdSite ) );
+       
+    }
+    
+   private static String getComponetIsProjectDataKey(  Site site, String strArtifactId )
+   {
+       
+       return getPrefixIsProjectDataKey( site.getId( ) ) +strArtifactId;
+       
+   }
+   
+   private static String getPrefixIsProjectDataKey(  int  nIdSite  )
+   {
+       
+       return ConstanteUtils.CONSTANTE_COMPONENT_PROJECT_PREFIX+"_"+nIdSite+"_";
+       
+   }
+    
 
     /**
      * Build release comments for a given site
@@ -290,7 +317,7 @@ public class SiteService
 
     private static void checkForNewVersion( Component component )
     {
-        if ( !component.isProject( ) )
+        if ( !component.isSnapshotVersion( ) )
         {
             try
             {
@@ -382,7 +409,7 @@ public class SiteService
        
         WorkflowReleaseContext context=new WorkflowReleaseContext( );
         context.setSite( site );
-        context.setReleaserUser( ReleaserUtils.getReleaserUser( user.getUserId( ), locale ) );
+        context.setReleaserUser( ReleaserUtils.getReleaserUser( request, locale ) );
        
         int nIdWorkflow=WorkflowReleaseContextService.getService( ).getIdWorkflow( context );
         WorkflowReleaseContextService.getService( ).addWorkflowReleaseContext( context );
@@ -416,6 +443,7 @@ public class SiteService
             if ( component.getArtifactId( ).equals( strArtifactId ) )
             {
                 component.setIsProject( !component.isProject( ) );
+                updateComponentAsProjectStatus( site, strArtifactId, component.isProject( ) );
             }
         }
     }

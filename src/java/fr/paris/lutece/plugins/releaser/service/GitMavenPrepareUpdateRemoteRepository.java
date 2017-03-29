@@ -1,13 +1,20 @@
 package fr.paris.lutece.plugins.releaser.service;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Locale;
 
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.LogCommand;
+import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
@@ -150,7 +157,127 @@ public class GitMavenPrepareUpdateRemoteRepository implements IMavenPrepareUpdat
         
 
     }
+    
+    
+    @Override
+    public void rollbackRelease(String strLocalBasePath, WorkflowReleaseContext context, Locale locale)
+    {
+        
+        FileRepository fLocalRepo = null;
+        Git git = null;
+        CommandResult commandResult = context.getCommandResult( );
+        Component component = context.getComponent( );
+        String strComponentName = ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) );
+        String strLocalComponentPath = ReleaserUtils.getLocalComponentPath( strComponentName );
+        
+        try
+        {
+     
+            fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
+    
+            git = new Git( fLocalRepo );
+            
+            
+            
+            //RESET commit on develop
+            if(!StringUtils.isEmpty( context.getRefBranchDev( )))
+            {
+                git.checkout().setName( GitUtils.DEVELOP_BRANCH ).call();
+                git.reset().setRef( context.getRefBranchDev( ) ).setMode( ResetType.HARD ).call( );
+                git.push( ).setForce( true )
+                .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ) ) )
+                .call( );
+                
+           }
+            //Reset Commit on Master
+            if(!StringUtils.isEmpty( context.getRefBranchRelease( )))
+            {
 
+                git.checkout().setName( GitUtils.MASTER_BRANCH).call();
+                git.reset().setRef( context.getRefBranchRelease( ) ).setMode( ResetType.HARD ).call( );
+                git.push( ).setForce( true )
+                .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ) ) )
+                .call( );       
+             }
+            //Delete Tag if exist
+            List<Ref> call = git.tagList().call();
+            String strTagName=component.getArtifactId( )+"-"+component.getTargetVersion( ) ;
+            for (Ref refTag : call) {
+                
+                if(refTag.getName( ).contains(strTagName))
+                {
+                
+                    LogCommand log = git.log().setMaxCount(1);
+    
+                    Ref peeledRef = git.getRepository( ).peel(refTag);
+                    if(peeledRef.getPeeledObjectId() != null) {
+                        log.add(peeledRef.getPeeledObjectId());
+                    } else {
+                        log.add(refTag.getObjectId());
+                    }
+        
+                    Iterable<RevCommit> logs = log.call();
+                    for (RevCommit rev : logs) {
+                        //Test if the tag was created by the release
+                        if(!rev.getName( ).equals( context.getRefBranchRelease( ) ))
+                        {
+                            
+                            git.branchDelete().setBranchNames(refTag.getName( )).setForce(true).call();
+                            RefSpec refSpec = new RefSpec()
+                                    .setSource(null)
+                                    .setDestination(refTag.getName( ));
+                            git.push().setRefSpecs(refSpec).setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ) ) ).
+                            setRemote("origin").call();
+                        }
+                        
+                        
+                    }
+                
+            
+            }
+    
+            }
+        }
+        catch( InvalidRemoteException e )
+        {
+
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+
+        }
+        catch( TransportException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+
+        }
+        catch( IOException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+        }
+        catch( GitAPIException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+        }
+
+        finally
+        {
+
+            if ( fLocalRepo != null )
+            {
+
+                fLocalRepo.close( );
+
+            }
+            if ( git != null )
+            {
+
+                git.close( );
+
+            }
+
+        }
+        
+        
+    }
   
 
 }

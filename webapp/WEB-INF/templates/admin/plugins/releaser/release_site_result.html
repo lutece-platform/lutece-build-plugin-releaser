@@ -2,7 +2,7 @@
 <section class="content-header">
     <h1>
         <a href="jsp/admin/plugins/releaser/ManageClusters.jsp" title="Release de sites et de clusters">Release de sites et de clusters</a>
-        <small class="hidden-xs hidden-sm">Pr&eacute;paration de la release du site</small>
+        <small class="hidden-xs hidden-sm">Release en cours</small>
     </h1>
     <ol class="breadcrumb applications">
     </ol>
@@ -18,9 +18,7 @@
           <div class="col-xs-7 col-sm-10">
             <span class="info-box-text">
               ${site.name} [${site.artifactId !''}]
-              - <i class="fa fa-cubes text-green"></i>  Cluster <strong>${site.cluster !''}</strong>
-              - <i class="fa fa-puzzle-piece text-yellow"></i> Nombre de plugins <strong>${site.components?size}</strong>
-            </span>
+             </span>
             <span class="info-box-number">${site.description}</span>
           </div>
         </div>
@@ -46,7 +44,7 @@
                 <strong class="button transition fill-lightblue small">${site.nextReleaseVersion!}</strong>
               </span>
               <span id="release-result-${site.artifactId!}"></span>
-              <a id="histo-${site.artifactId!}" class="button transition border-blue small btn-release-history"  title="Visuliser l'historique des releases" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?view=releaseComponentHistory&artifact_id=${site.artifactId!}' >
+              <a id="histo-${site.artifactId!}" class="button transition border-blue small btn-release-history"  title="Visuliser l'historique des releases" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?view=releaseComponentHistory&artifact_id=${site.artifactId!}' target="_blank" >
                 <i class="fa fa-cog fa-fw"></i> Visualiser l'historique des releases
               </a>
             </p>
@@ -78,7 +76,7 @@
     </div>
     <ul class="list-group list-components fa-padding">
       <#list site.components as component>
-        <#if component.project>
+        <#if component.project && component.shouldBeReleased()>
           <li class="list-group-item">
             <div class="media">
               <div class="media-left"></div>
@@ -89,7 +87,7 @@
                     <strong class="button transition fill-lightblue small">${component.targetVersion}</strong>
                   </span>
                   <span id="release-result-${component.artifactId!}"></span>
-                  <a id="histo-${component.artifactId!}" class="button transition border-blue small btn-release-history"  title="Visuliser l'historique des releases" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?view=releaseComponentHistory&artifact_id=${component.artifactId}' >
+                  <a id="histo-${component.artifactId!}" class="button transition border-blue small btn-release-history"  title="Visuliser l'historique des releases" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?view=releaseComponentHistory&artifact_id=${component.artifactId}' target="_blank" >
                     <i class="fa fa-cog fa-fw"></i> Visualiser l'historique des releases
                   </a>
                 </p>

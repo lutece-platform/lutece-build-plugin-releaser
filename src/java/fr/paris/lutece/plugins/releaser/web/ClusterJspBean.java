@@ -35,8 +35,11 @@ package fr.paris.lutece.plugins.releaser.web;
 
 import fr.paris.lutece.plugins.releaser.business.Cluster;
 import fr.paris.lutece.plugins.releaser.business.ClusterHome;
+import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.SiteHome;
+import fr.paris.lutece.plugins.releaser.service.SiteService;
+import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.portal.service.message.AdminMessage;
 import fr.paris.lutece.portal.service.message.AdminMessageService;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
@@ -80,8 +83,13 @@ public class ClusterJspBean extends ManageSitesJspBean
     private static final String MARK_CLUSTER = "cluster";
     private static final String MARK_CLUSTERS_LIST = "clusters_list";
     private static final String MARK_SITE = "site";
+    private static final String MARK_USER = "user";
+    private static final String MARK_IS_APPLICATION_ACCOUNT = "is_application_account";
+    
+    
 
     private static final String JSP_MANAGE_CLUSTERS = "jsp/admin/plugins/releaser/ManageClusters.jsp";
+    private static final String JSP_MANAGE_SITE_RELEASE = "ManageSiteRelease.jsp";
 
     // Properties
     private static final String MESSAGE_CONFIRM_REMOVE_CLUSTER = "releaser.message.confirmRemoveCluster";
@@ -89,6 +97,8 @@ public class ClusterJspBean extends ManageSitesJspBean
     // Validations
     private static final String VALIDATION_ATTRIBUTES_PREFIX = "releaser.model.entity.cluster.attribute.";
     private static final String VALIDATION_ATTRIBUTES_SITE_PREFIX = "releaser.model.entity.site.attribute.";
+    private static final String VALIDATION_ATTRIBUTES_USER_PREFIX = "releaser.model.entity.user.attribute.";
+    
 
     // Views
     private static final String VIEW_MANAGE_CLUSTERS = "manageClusters";
@@ -100,6 +110,8 @@ public class ClusterJspBean extends ManageSitesJspBean
 
     // Actions
     private static final String ACTION_CREATE_CLUSTER = "createCluster";
+    private static final String ACTION_RELEASE_SITE = "releaseSite";
+    
     private static final String ACTION_MODIFY_CLUSTER = "modifyCluster";
     private static final String ACTION_REMOVE_CLUSTER = "removeCluster";
     private static final String ACTION_CONFIRM_REMOVE_CLUSTER = "confirmRemoveCluster";
@@ -134,7 +146,9 @@ public class ClusterJspBean extends ManageSitesJspBean
         _site = null;
         List<Cluster> listClusters = ClusterHome.getClustersList( );
         Map<String, Object> model = getPaginatedListModel( request, MARK_CLUSTER_LIST, listClusters, JSP_MANAGE_CLUSTERS );
-
+        model.put( MARK_USER, ReleaserUtils.getReleaserUser( request, getLocale( ) ));
+        model.put( MARK_IS_APPLICATION_ACCOUNT, ReleaserUtils.isApplicationAccountEnable( ));
+        
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_CLUSTERS, TEMPLATE_MANAGE_CLUSTERS, model );
     }
 
@@ -155,7 +169,8 @@ public class ClusterJspBean extends ManageSitesJspBean
 
         return getPage( PROPERTY_PAGE_TITLE_CREATE_CLUSTER, TEMPLATE_CREATE_CLUSTER, model );
     }
-
+    
+    
     /**
      * Process the data capture form of a new cluster
      *
@@ -178,6 +193,37 @@ public class ClusterJspBean extends ManageSitesJspBean
         addInfo( INFO_CLUSTER_CREATED, getLocale( ) );
 
         return redirectView( request, VIEW_MANAGE_CLUSTERS );
+    }
+
+    /**
+     * Process the data capture form of a new cluster
+     *
+     * @param request
+     *            The Http Request
+     * @return The Jsp URL of the process result
+     */
+    @Action( ACTION_RELEASE_SITE )
+    public String doReleaseSite( HttpServletRequest request )
+    {
+        ReleaserUser user=ReleaserUtils.getReleaserUser( request, getLocale( ) );
+        String strIdSite=request.getParameter( PARAMETER_ID_SITE );
+        if(user==null)
+        {
+            user=new ReleaserUser( );
+            
+        }
+        populate( user, request );
+
+        // Check constraints
+        if ( !validateBean( user, VALIDATION_ATTRIBUTES_USER_PREFIX ) )
+        {
+            
+            redirectView( request, VIEW_MANAGE_CLUSTERS );
+        }
+
+        ReleaserUtils.setReleaserUser( request, user );
+        
+        return redirect( request, JSP_MANAGE_SITE_RELEASE+"?id_site="+strIdSite );
     }
 
     /**
@@ -337,6 +383,7 @@ public class ClusterJspBean extends ManageSitesJspBean
     {
         int nId = Integer.parseInt( request.getParameter( PARAMETER_ID_SITE ) );
         SiteHome.remove( nId );
+        SiteService.removeComponentAsProjectBySite( nId );
         addInfo( INFO_SITE_REMOVED, getLocale( ) );
 
         return redirectView( request, VIEW_MANAGE_SITES );

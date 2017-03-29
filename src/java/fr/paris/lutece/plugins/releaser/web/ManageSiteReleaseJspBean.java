@@ -122,6 +122,13 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
                 return redirect( request, JSP_MANAGE_CLUSTERS );
             }
         }
+        
+        if(ReleaserUtils.getReleaserUser( request, getLocale( ) )==null)
+        {
+            return redirect( request, JSP_MANAGE_CLUSTERS );
+        }
+        
+        
         SiteService.buildComments( _site, getLocale( ) );
         Map<String, Object> model = getModel( );
         model.put( MARK_SITE, _site );
@@ -206,6 +213,10 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         AbstractJsonResponse jsonResponse = null;
         Integer nidContext= SiteService.releaseComponent( _site, strArtifactId ,getLocale( ),getUser( ),request);
         jsonResponse=new JsonResponse( nidContext );
+        if(ReleaserUtils.getReleaserUser( request, getLocale( ) )==null)
+        {
+            return redirect( request, JSP_MANAGE_CLUSTERS );
+        }
         
         return JsonUtil.buildJsonResponse( jsonResponse );
     }
@@ -215,9 +226,16 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     {
     
         
+    if(ReleaserUtils.getReleaserUser( request, getLocale( ) )==null)
+    {
+        return redirect( request, JSP_MANAGE_CLUSTERS );
+    }
+    
+    
+     
     String strTagInformation=request.getParameter( PARAMETER_TAG_INFORMATION );
     _site.setTagInformation( strTagInformation );
-      
+        
     _mapReleaseSiteContext = SiteService.releaseSite( _site, getLocale( ), getUser( ), request );
 
     

@@ -44,6 +44,7 @@ import java.util.concurrent.Executors;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import sun.security.acl.WorldGroupImpl;
 
@@ -150,15 +151,40 @@ public class ComponentService implements IComponentService
     
     public int release( Component component ,Locale locale,AdminUser user,HttpServletRequest request)
     {
-            
+        
+        
+        
+        //Test if version already exist before release
+        try
+        {
+            component.setLastAvailableVersion( getLatestVersion( component.getArtifactId( ), false ) );
+            if(component.getTargetVersion( )!=null && component.getTargetVersion( ).equals( component.getLastAvailableVersion( ) ) )
+            {
+                component.setShouldBeReleased( false );
+                 return -1;
+                
+            }
+        }
+        catch( HttpAccessException | IOException e )
+        {
+          
+            AppLogService.error( "error during checking version already exist", e );
+        }
+       
+        
         WorkflowReleaseContext context=new WorkflowReleaseContext( );
         context.setComponent( component );
-        context.setReleaserUser( ReleaserUtils.getReleaserUser( user.getUserId( ), locale ) );
+        context.setReleaserUser( ReleaserUtils.getReleaserUser(request, locale ) );
      
         int nIdWorkflow=WorkflowReleaseContextService.getService( ).getIdWorkflow( context );
         WorkflowReleaseContextService.getService( ).addWorkflowReleaseContext( context );
-        //start
-        WorkflowReleaseContextService.getService( ).startWorkflowReleaseContext( context, nIdWorkflow, locale, request, user );
+        
+        //Compare Latest vesion of component before rekease 
+         
+            WorkflowReleaseContextService.getService( ).startWorkflowReleaseContext( context, nIdWorkflow, locale, request, user );
+            
+        
+        
       
          return context.getId( );
     }

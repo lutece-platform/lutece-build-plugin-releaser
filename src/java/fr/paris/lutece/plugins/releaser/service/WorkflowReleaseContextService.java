@@ -16,6 +16,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.TransportException;
@@ -35,6 +36,7 @@ import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.datastore.DatastoreService;
 import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
+import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.util.ReferenceItem;
@@ -125,11 +127,18 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             {
                 for ( Iterator iterator = refListContextHistory.iterator( ); iterator.hasNext( ); )
                 {
+                    
+                    
                     ReferenceItem referenceItem = (ReferenceItem) iterator.next( );
-                    context = MapperJsonUtil.parse( referenceItem.getName( ), WorkflowReleaseContext.class );
-                    if ( context != null )
+                    
+                    //return only the reference item associated to the artifact id
+                    if(referenceItem.getCode( ).startsWith( ConstanteUtils.CONSTANTE_RELEASE_CONTEXT_PREFIX + strArtifactId+"_"  ))
                     {
-                        listContext.add( context );
+                        context = MapperJsonUtil.parse( referenceItem.getName( ), WorkflowReleaseContext.class );
+                        if ( context != null )
+                        {
+                            listContext.add( context );
+                        }
                     }
                 }
             }
@@ -214,6 +223,15 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             // git = new Git( fLocalRepo );
             GitUtils.createLocalBranch( git, GitUtils.DEVELOP_BRANCH, commandResult );
             GitUtils.createLocalBranch( git, GitUtils.MASTER_BRANCH, commandResult );
+            context.setRefBranchDev( GitUtils.getRefBranch( git, GitUtils.DEVELOP_BRANCH, commandResult ) );
+            context.setRefBranchRelease( GitUtils.getRefBranch( git, GitUtils.MASTER_BRANCH, commandResult ) );
+            
+            
+            //String ref = git.getRepository( ).findRef( GitUtils.MASTER_BRANCH ).getName( ); 
+//            git.reset( ).setRef( ref  ).setMode( ResetType.HARD ).call( );
+//            git.push( )
+//            .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ) ) ).setRe
+//            .call( );
             commandResult.getLog( ).append( "the repository has been successfully cloned.\n" );
             commandResult.getLog( ).append( "Checkout branch \"" + GitUtils.DEVELOP_BRANCH + "\" ...\n" );
             GitUtils.checkoutRepoBranch( git, GitUtils.DEVELOP_BRANCH, commandResult );
@@ -221,6 +239,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
 
         }
+      
         finally
         {
             if ( git != null )
@@ -330,12 +349,28 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         }
     }
 
+    public void rollBackReleasePrepareGit( WorkflowReleaseContext context, Locale locale )
+    {
+       
+        String strComponentName = ReleaserUtils.getGitComponentName( context.getComponent( ).getScmDeveloperConnection( ) );
+        _gitMavenPrepareUpadteRepo.rollbackRelease( ReleaserUtils.getLocalComponentPath( strComponentName) , context, locale );
+            
+    }
+    
     public void releasePrepareGit( WorkflowReleaseContext context, Locale locale )
     {
         String strComponentName = ReleaserUtils.getGitComponentName( context.getComponent( ).getScmDeveloperConnection( ) );
         
+        try
+        {
         realeasePrepare(strComponentName, context.getReleaserUser( ).getGithubComponentAccountLogin( ),context.getReleaserUser( ).getGithubComponentAccountPassword( ),_gitMavenPrepareUpadteRepo,
                 context, locale );
+        
+        }catch(AppException ex)
+        {
+            _gitMavenPrepareUpadteRepo.rollbackRelease( ReleaserUtils.getLocalComponentPath( strComponentName) , context, locale );
+            
+        }
 
     }
 
@@ -424,7 +459,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         String strComponentName = context.getComponent( ).getArtifactId( );
         
         
-     realeasePrepare(strComponentName,context.getReleaserUser( ).getSvnComponentAccountLogin( ),context.getReleaserUser( ).getSvnComponentAccountLogin( ), _svnMavenPrepareUpadteRepo,
+     realeasePrepare(strComponentName,context.getReleaserUser( ).getSvnComponentAccountLogin( ),context.getReleaserUser( ).getSvnComponentAccountPassword( ), _svnMavenPrepareUpadteRepo,
                 context, locale );
 
     }
@@ -553,6 +588,9 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             }
         }
 
+       
+       
+        
         MavenService.getService( ).mvnReleasePrepare( strLocalComponentPomPath, strComponentReleaseVersion, strComponentReleaseTagName,
                 strComponentReleaseNewDeveloppmentVersion, strUserLogin, strUserPassword, commandResult );
         // Merge Master
@@ -609,7 +647,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         }
         // PROGRESS 65%
         commandResult.setProgressValue( commandResult.getProgressValue( ) + 15 );
-
+        
         ReleaserUtils.logEndAction( context, " Release Prepare" );
 
     }

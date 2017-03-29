@@ -49,6 +49,12 @@ public class SvnMavenPrepareUpdateRemoteRepository implements IMavenPrepareUpdat
 
         
     }
+    
+    @Override
+    public void rollbackRelease(String strLocalBasePath, WorkflowReleaseContext context, Locale locale)
+    {
+    
+    }
 
   
 

@@ -45,7 +45,7 @@ function callReleaseInfo( nIdReleaseContext,progressId,artifactId)
                  $('#release-result-'+artifactId).html('<strong class="text-danger"><i class="fa fa-warning"></i> Erreur de release </strong>');
                  $( '#histo-'+artifactId ).notify("Une erreur est intervenue..", { position:"right", style:"releaser", className:"problem" } );
                }
-               $(progressId).toggle();
+               $(progressId).hide();
             }
              $( progressId +" .progress-bar").attr("style","width:"+data.result.commandResult.progressValue+"%");
             }

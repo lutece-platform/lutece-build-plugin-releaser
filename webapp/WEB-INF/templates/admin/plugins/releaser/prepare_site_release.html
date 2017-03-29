@@ -67,7 +67,7 @@
                   </a>
                 </#if>
                </span>
-                <a id="histo-${component.artifactId!}" class="button transition border-blue small btn-release-history"  title="Visuliser l'historique des releases" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?view=releaseComponentHistory&artifact_id=${component.artifactId}' >
+                <a id="histo-${component.artifactId!}" class="button transition border-blue small btn-release-history"  title="Visuliser l'historique des releases" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?view=releaseComponentHistory&artifact_id=${component.artifactId}' target="_blank">
                   <i class="fa fa-cog fa-fw"></i> Visualiser l'historique des releases
                 </a>
                   <span class="number pull-right">
@@ -94,20 +94,36 @@
                     </button>
                   </div>
                 </div>
-                <div class="row">
-                  <div class="col-xs-12 col-sm-4">
+                
+                <#if component.shouldBeReleased()>
+	                <div class="row">
+	                  <div class="col-xs-12 col-sm-4">
+	                    Version actuelle <strong class="button transition fill-lightblue small">${component.currentVersion}</strong>
+	                     <i class="fa fa-arrow-right"></i> Version cible <strong class="button transition fill-lightblue small"> ${component.targetVersion}</strong>
+	                  </div>
+	                  <div class="col-xs-12 col-sm-7">
+	                    Prochaine Snapshot : <span class="button transition fill-lightblue small">${component.nextSnapshotVersion}</span>
+	                        <a class="button transition border-lightblue small" title="Modifier la version pour la release" id="btn-upgrade-version-${component.artifactId}" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=versionComponent&artifact_id=${component.artifactId}'>
+	                        <i class="fa fa-level-up fa-fw"></i> Modifier la version pour la release
+	                      </a>
+	                  </div>
+	                </div>
+	             <#else>
+	               <p class="info">
                     Version actuelle <strong class="button transition fill-lightblue small">${component.currentVersion}</strong>
-                     <i class="fa fa-arrow-right"></i> Version cible <strong class="button transition fill-lightblue small"> ${component.targetVersion}</strong>
-                  </div>
-                  <div class="col-xs-12 col-sm-7">
-                    Prochaine Snapshot : <span class="button transition fill-lightblue small">${component.nextSnapshotVersion}</span>
-                    <#if component.shouldBeReleased()>
-                      <a class="button transition border-lightblue small" title="Modifier la version pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=versionComponent&artifact_id=${component.artifactId}' >
-                        <i class="fa fa-level-up fa-fw"></i> Modifier la version pour la release
+                    Version cible pour la release
+                    <#if component.currentVersion != component.targetVersion>
+                     <strong class="button transition fill-lightblue small">${component.targetVersion}</strong>
+                    <#else>
+                      <strong>${component.targetVersion}</strong>
+                    </#if>
+                    <#if component.lastAvailableVersion?? && component.lastAvailableVersion != component.targetVersion >
+                      <a class="button transition border-lightblue small" title="Modifier la version pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=upgradeComponent&artifact_id=${component.artifactId}' >
+                        <i class="fa fa-level-up"></i> Upgrader le composant
                       </a>
-                     </#if>
-                  </div>
-                </div>
+                    </#if>
+                   </p>
+	             </#if>    
               </div>
             </li>
           </#if>
@@ -259,6 +275,8 @@ var artifactIdInProgress;
 		$(".btn-release").click( function(e){
 		     $("#console_wf_log").html(" ");
 		     var artifactId=$(this).attr("data-artifactid");
+		     
+		     $("#btn-upgrade-version-"+artifactId).hide();
 	      var progressId="#progress-wrapper-" + artifactId;
         $( progressId ).toggle();
 		     $.ajax({

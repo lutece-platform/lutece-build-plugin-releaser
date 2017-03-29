@@ -4,8 +4,12 @@ import java.io.File;
 import java.util.Date;
 import java.util.Locale;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
+import fr.paris.lutece.portal.service.security.LuteceUser;
 import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
@@ -151,13 +155,13 @@ public class ReleaserUtils
     }
     
     
-    public static ReleaserUser getReleaserUser( int nIdAdminUser, Locale locale )
+    public static ReleaserUser getReleaserUser(HttpServletRequest request, Locale locale )
     {
         
             ReleaserUser releaserUser = null;
        
             
-            if( AppPropertiesService.getPropertyBoolean( ConstanteUtils.PROPERTY_APPLICATION_ACCOUNT_ENABLE,false))
+            if( isApplicationAccountEnable( ))
             {
                 
                 releaserUser=new ReleaserUser( );
@@ -168,9 +172,40 @@ public class ReleaserUtils
                 releaserUser.setSvnSiteAccountLogin( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SITE_REPOSITORY_LOGIN) );
                 releaserUser.setSvnSiteAccountPassword( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SITE_REPOSITORY_PASSWORD ) );     
             }
+            else
+            {
+                
+                HttpSession session = ( request != null ) ? request.getSession( true ) : null;
+
+                if ( session != null )
+                {
+                    return (ReleaserUser) session.getAttribute( ConstanteUtils.ATTRIBUTE_RELEASER_USER );
+                }
+
+            }
             
         return releaserUser;
     }
+    
+    public static void setReleaserUser(HttpServletRequest request,ReleaserUser releaserUser )
+    {
+     
+            
+            HttpSession session = ( request != null ) ? request.getSession( true ) : null;
 
+            if ( session != null )
+            {
+                 session.setAttribute( ConstanteUtils.ATTRIBUTE_RELEASER_USER,releaserUser );
+            }
+
+      }
+    
+    
+    public static boolean isApplicationAccountEnable()
+    {
+        
+       return  AppPropertiesService.getPropertyBoolean( ConstanteUtils.PROPERTY_APPLICATION_ACCOUNT_ENABLE,false);
+        
+    }
 
 }

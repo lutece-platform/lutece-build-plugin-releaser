@@ -3,6 +3,9 @@ package fr.paris.lutece.plugins.releaser.business;
 import java.io.Serializable;
 import java.util.Date;
 
+import fr.paris.lutece.plugins.releaser.business.Component;
+import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
+import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 
 public class WorkflowReleaseContext implements Serializable
@@ -16,7 +19,9 @@ public class WorkflowReleaseContext implements Serializable
     private Site _site;
     private CommandResult _commandResult;
     private ReleaserUser _releaserUser;
-
+    private String _strRefBranchRelease;
+    private String _strRefBranchDev;
+    
  
     public int getId( )
     {
@@ -77,6 +82,26 @@ public class WorkflowReleaseContext implements Serializable
     public void setReleaserUser( ReleaserUser _releaserUser )
     {
         this._releaserUser = _releaserUser;
+    }
+
+    public String getRefBranchRelease( )
+    {
+        return _strRefBranchRelease;
+    }
+
+    public void setRefBranchRelease( String _strRefBranchRelease )
+    {
+        this._strRefBranchRelease = _strRefBranchRelease;
+    }
+
+    public String getRefBranchDev( )
+    {
+        return _strRefBranchDev;
+    }
+
+    public void setRefBranchDev( String _strRefBranchDev )
+    {
+        this._strRefBranchDev = _strRefBranchDev;
     }
     
     

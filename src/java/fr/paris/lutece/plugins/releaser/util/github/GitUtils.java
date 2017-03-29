@@ -26,10 +26,12 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
+import fr.paris.lutece.portal.service.util.AppLogService;
 
 
 
@@ -147,6 +149,48 @@ public class GitUtils  {
         
 	}
 	
+	public static String getRefBranch(Git git, String sBranchName,CommandResult commandResult) 
+    {
+	    
+	    
+	    String refLastCommit=null;
+        try
+        {
+             git.checkout().setName(sBranchName).call();
+             refLastCommit= getLastCommitId( git );
+        }
+  
+     
+        catch( RefAlreadyExistsException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+        }
+        catch( RefNotFoundException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+        }
+        catch( InvalidRefNameException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+        }
+        catch( CheckoutConflictException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+        }
+        catch( GitAPIException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+        }
+        return refLastCommit;
+    }
+
+	public static void  pushForce(Git git, String strRefSpec, String strUserName, String strPassword) throws InvalidRemoteException, TransportException, GitAPIException
+	{
+	
+	    git.push( ).setRemote( "origin" ).setRefSpecs( new RefSpec( strRefSpec ) ).setForce( true ).setCredentialsProvider(new UsernamePasswordCredentialsProvider(strUserName, strPassword)).call();
+    
+	}
+	
 	public static PullResult pullRepoBranch(Git git, String sRepoURL, String sBranchName) throws IOException, WrongRepositoryStateException, InvalidConfigurationException, DetachedHeadException, InvalidRemoteException, CanceledException, RefNotFoundException, NoHeadException, TransportException, GitAPIException
 	{
 		PullResult pPullResult = git.pull().call();		
@@ -183,6 +227,21 @@ public class GitUtils  {
 		return sCommitMessages;
 	}
 	
+	
+	public  static String getLastCommitId(Git git) throws NoHeadException, GitAPIException
+    {
+        Iterable<RevCommit> logList = git.log().setMaxCount(1).call();
+        Iterator i = logList.iterator();
+       String strCommitId = null;
+        while (i.hasNext())
+        {
+            RevCommit revCommit = (RevCommit) i.next();
+            strCommitId = revCommit.getName( );
+          
+        }
+        return strCommitId;
+    }
+    
 	
 	  
     public static MergeResult mergeBack(Git git, String strUserName, String strPassword, CommandResult commandResult) throws IOException, GitAPIException
