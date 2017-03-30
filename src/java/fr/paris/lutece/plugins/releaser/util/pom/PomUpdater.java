@@ -116,9 +116,16 @@ public class PomUpdater
                         if ( jaxDependency.getArtifactId( ).equals( component.getArtifactId( ) ) )
                         {
 
-                            if(component.isProject( ))
+                            if(component.isProject( ) && component.isSnapshotVersion( ))
                             {
-                                jaxDependency.setVersion( component.getNextSnapshotVersion( ) );
+                                if(component.shouldBeReleased( ))
+                                {
+                                    jaxDependency.setVersion( component.getNextSnapshotVersion( ) );
+                                }
+                                else
+                                {
+                                    jaxDependency.setVersion( component.getCurrentVersion( ));
+                                }
                                 
                             }
 

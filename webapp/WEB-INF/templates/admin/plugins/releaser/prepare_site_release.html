@@ -65,7 +65,20 @@
                   <a class="button transition border-orange small btn-release" data-artifactid="${component.artifactId!}" title="Modifier la version pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=versionComponent&artifact_id=${component.artifactId}' >
                     <i class="fa fa-cog fa-fw"></i> Releaser le composant
                   </a>
+                    <#if component.lastAvailableVersion?? >
+	                  <a class="button transition border-blue small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=downgradeComponent&artifact_id=${component.artifactId}' >
+	                    <i class="fa fa-cog fa-fw"></i> Utiliser la version ${component.lastAvailableVersion} pour la release
+	                  </a>
+                    </#if>
                 </#if>
+                <#if component.downgrade>
+                    <#if component.lastAvailableVersion?? >
+                      <a class="button transition border-red small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=cancelDowngradeComponent&artifact_id=${component.artifactId}' >
+                        <i class="fa fa-cog fa-fw"></i> Ne plus utiliser  la version ${component.lastAvailableVersion} pour la release
+                      </a>
+                    </#if>
+                </#if>
+                
                </span>
                 <a id="histo-${component.artifactId!}" class="button transition border-blue small btn-release-history"  title="Visuliser l'historique des releases" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?view=releaseComponentHistory&artifact_id=${component.artifactId}' target="_blank">
                   <i class="fa fa-cog fa-fw"></i> Visualiser l'historique des releases
@@ -303,3 +316,14 @@ var artifactIdInProgress;
 });
 
 </script>
+
+
+<#if open_site_version?? && open_site_version=="1" >
+    <script>
+        $(function() {
+        
+        	$('#modalRelease').modal();
+         
+        });
+    </script>
+</#if>

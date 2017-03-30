@@ -53,7 +53,7 @@ public class SvnSiteServiceTest extends LuteceTestCase
         System.out.println( "getLastRelease" );
         String strSiteArtifactId = "moncompte";
         String strTrunkUrl = "http://dev.lutece.paris.fr/svn/sites/gru/multi-sites/moncompte/trunk/";
-        String result = SvnSiteService.getLastRelease( strSiteArtifactId, strTrunkUrl );
+        String result = SvnSiteService.getLastRelease( strSiteArtifactId, strTrunkUrl,null,null );
         System.out.println( result ); 
     }
     

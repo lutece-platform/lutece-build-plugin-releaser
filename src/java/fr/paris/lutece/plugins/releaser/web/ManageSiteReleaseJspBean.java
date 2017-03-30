@@ -68,6 +68,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     private static final String PARAMETER_ARTIFACT_ID = "artifact_id";
     private static final String PARAMETER_ID_CONTEXT = "id_context";
     private static final String PARAMETER_TAG_INFORMATION = "tag_information";
+    private static final String PARAMETER_OPEN_SITE_VERSION = "open_site_version";
+    
     
 
     // Views
@@ -83,6 +85,10 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     private static final String ACTION_RELEASE_SITE = "releaseSite";
     private static final String ACTION_RELEASE_COMPONENT = "releaseComponent";
     private static final String ACTION_UPGRADE_COMPONENT = "upgradeComponent";
+    private static final String ACTION_DOWNGRADE_COMPONENT = "downgradeComponent";
+    private static final String ACTION_CANCEL_DOWNGRADE_COMPONENT = "cancelDowngradeComponent";
+    
+    
     private static final String ACTION_PROJECT_COMPONENT = "projectComponent";
     private static final String ACTION_CHANGE_COMPONENT_NEXT_RELEASE_VERSION = "versionComponent";
     private static final String ACTION_CHANGE_SITE_NEXT_RELEASE_VERSION = "versionSite";
@@ -95,11 +101,15 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     
     private static final String MARK_SITE = "site";
     private static final String MARK_RELEASE_CTX_RESULT = "release_ctx_result";
+    private static final String MARK_OPEN_SITE_VERSION = "open_site_version";
     
     private static final String MARK_RELEASE_COMPONENT_HISTORY_LIST= "release_component_history_list";
     
     
     private static final String JSP_MANAGE_CLUSTERS = "ManageClusters.jsp";
+    private static final String JSP_MANAGE_RELEASE_SITE = "ManageSiteRelease.jsp";
+    
+    
     private static final String JSON_ERROR_RELEASE_CONTEXT_NOT_EXIST= "RELEASE_CONTEXT_NOT_EXIST";
     
     private Site _site;
@@ -109,13 +119,17 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     public String getPrepareSiteRelease( HttpServletRequest request )
     {
         String strSiteId = request.getParameter( PARAMETER_SITE_ID );
+        if(ReleaserUtils.getReleaserUser( request, getLocale( ) )==null)
+        {
+            return redirect( request, JSP_MANAGE_CLUSTERS );
+        }
         if ( ( _site == null ) || ( strSiteId != null ) )
         {
             try
             {
                 int nSiteId = 0;
                 nSiteId = Integer.parseInt( strSiteId );
-                _site = SiteService.getSite( nSiteId );
+                _site = SiteService.getSite( nSiteId,request,getLocale( ) );
             }
             catch( NumberFormatException e )
             {
@@ -123,15 +137,13 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
             }
         }
         
-        if(ReleaserUtils.getReleaserUser( request, getLocale( ) )==null)
-        {
-            return redirect( request, JSP_MANAGE_CLUSTERS );
-        }
+       
         
         
         SiteService.buildComments( _site, getLocale( ) );
         Map<String, Object> model = getModel( );
         model.put( MARK_SITE, _site );
+        model.put( MARK_OPEN_SITE_VERSION, request.getParameter( PARAMETER_OPEN_SITE_VERSION ) );
         HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_PREPARE_SITE_RELEASE, getLocale( ), model );
         return template.getHtml( );
     }
@@ -193,6 +205,26 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         return JsonUtil.buildJsonResponse( jsonResponse );
         
      }
+    
+    
+    
+    @Action( ACTION_DOWNGRADE_COMPONENT )
+    public String doDowngradeComponent( HttpServletRequest request )
+    {
+        String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
+        SiteService.downgradeComponent( _site, strArtifactId );
+
+        return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
+    }
+    
+    @Action( ACTION_CANCEL_DOWNGRADE_COMPONENT )
+    public String doCancelDowngradeComponent( HttpServletRequest request )
+    {
+        String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
+        SiteService.cancelDowngradeComponent( _site, strArtifactId );
+
+        return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
+    }
     
     
   
@@ -283,8 +315,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     public String doChangeSiteNextReleaseVersion( HttpServletRequest request )
     {
         SiteService.changeNextReleaseVersion( _site );
-
-        return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
+        
+        return redirect( request,JSP_MANAGE_RELEASE_SITE, PARAMETER_OPEN_SITE_VERSION, 1 );
     }
 
     

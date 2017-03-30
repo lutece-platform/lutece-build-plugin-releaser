@@ -35,6 +35,8 @@
 
 package fr.paris.lutece.plugins.releaser.util.svn;
 
+import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
+import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.util.httpaccess.HttpAccess;
@@ -43,6 +45,9 @@ import fr.paris.lutece.util.signrequest.BasicAuthorizationAuthenticator;
 import fr.paris.lutece.util.signrequest.RequestAuthenticator;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * SvnSiteService
@@ -59,11 +64,11 @@ public class SvnSiteService
      *            The POM URL
      * @return The POM content
      */
-    public static String fetchPom( String strPomUrl )
+    public static String fetchPom( String strPomUrl,HttpServletRequest request,Locale locale )
     {
         try
         {
-            RequestAuthenticator authenticator = getSiteAuthenticator( );
+            RequestAuthenticator authenticator = getSiteAuthenticator( request,locale);
             HttpAccess httpAccess = new HttpAccess( );
             return httpAccess.doGet( strPomUrl, authenticator, null );
         }
@@ -80,7 +85,7 @@ public class SvnSiteService
      * @param strTrunkUrl The trunk URL
      * @return The version if found otherwise null
      */
-    public static String getLastRelease( String strSiteArtifactId , String strTrunkUrl )
+    public static String getLastRelease( String strSiteArtifactId , String strTrunkUrl,HttpServletRequest request,Locale locale )
     {
         String strTagsUrl = strTrunkUrl.replace( "trunk", "tags" );
 
@@ -88,7 +93,7 @@ public class SvnSiteService
 
         try
         {
-            RequestAuthenticator authenticator = getSiteAuthenticator( );
+            RequestAuthenticator authenticator = getSiteAuthenticator(request,locale );
             HttpAccess httpAccess = new HttpAccess( );
             String strHtml = httpAccess.doGet( strTagsUrl , authenticator , null );
             list = getAnchorsList( strHtml , strSiteArtifactId );
@@ -139,11 +144,17 @@ public class SvnSiteService
      * 
      * @return The authenticator
      */
-    private static RequestAuthenticator getSiteAuthenticator( )
+    private static RequestAuthenticator getSiteAuthenticator( HttpServletRequest request,Locale locale)
     {
-        String strLogin = AppPropertiesService.getProperty( PROPERTY_SITE_REPOSITORY_LOGIN );
-        String strPassword = AppPropertiesService.getProperty( PROPERTY_SITE_REPOSITORY_PASSWORD );
-
+        ReleaserUser user=ReleaserUtils.getReleaserUser( request, locale );
+        String strLogin=null;
+        String strPassword=null;
+        
+        if(user!=null)
+        {
+             strLogin=user.getSvnSiteAccountLogin( );
+            strPassword=user.getSvnSiteAccountPassword( );
+        }
         return new BasicAuthorizationAuthenticator( strLogin, strPassword );
     }
     

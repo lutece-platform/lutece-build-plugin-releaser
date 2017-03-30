@@ -213,6 +213,7 @@ public class ClusterJspBean extends ManageSitesJspBean
             
         }
         populate( user, request );
+        
 
         // Check constraints
         if ( !validateBean( user, VALIDATION_ATTRIBUTES_USER_PREFIX ) )
@@ -220,7 +221,10 @@ public class ClusterJspBean extends ManageSitesJspBean
             
             redirectView( request, VIEW_MANAGE_CLUSTERS );
         }
-
+        //Init Svn component acount with svn site account
+        user.setSvnComponentAccountLogin( user.getSvnSiteAccountLogin( ) );
+        user.setSvnComponentAccountPassword( user.getSvnSiteAccountPassword( ) );
+       
         ReleaserUtils.setReleaserUser( request, user );
         
         return redirect( request, JSP_MANAGE_SITE_RELEASE+"?id_site="+strIdSite );

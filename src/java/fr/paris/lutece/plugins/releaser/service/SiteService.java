@@ -80,24 +80,24 @@ public class SiteService
      *            The site id
      * @return A site object
      */
-    public static Site getSite( int nSiteId )
+    public static Site getSite( int nSiteId ,HttpServletRequest request,Locale locale )
     {
         Site site = SiteHome.findByPrimaryKey( nSiteId );
-        String strPom = SvnSiteService.fetchPom( site.getScmUrl( ) + "/pom.xml" );
+        String strPom = SvnSiteService.fetchPom( site.getScmUrl( ) + "/pom.xml" ,request,locale);
         if ( strPom != null )
         {
             PomParser parser = new PomParser( );
             parser.parse( site, strPom );
-            initSite( site );
+            initSite( site,request,locale );
         }
         return site;
     }
 
     
-    private static void initSite( Site site )
+    private static void initSite( Site site,HttpServletRequest request,Locale locale )
     {
         // Find last release in the repository
-        String strLastReleaseVersion = SvnSiteService.getLastRelease( site.getArtifactId() , site.getScmUrl() );
+        String strLastReleaseVersion = SvnSiteService.getLastRelease( site.getArtifactId() , site.getScmUrl(),request,locale );
         site.setLastReleaseVersion( strLastReleaseVersion );
         
         // To find next releases
@@ -146,7 +146,7 @@ public class SiteService
         for ( Dependency dependency : site.getCurrentDependencies( ) )
         {
             Component component = new Component( );
-
+            
             component.setIsProject( isProjectComponent( site, dependency.getArtifactId( ) ) );
             component.setArtifactId( dependency.getArtifactId( ) );
             component.setGroupId( dependency.getGroupId( ) );
@@ -155,6 +155,15 @@ public class SiteService
             defineNextSnapshotVersion( component );
             checkForNewVersion( component );
             ComponentService.getService( ).getJiraInfos( component,component.isProject( )?false:true );
+            
+            if(  component.isSnapshotVersion( ) && !component.isDowngrade( )&&(component.getTargetVersion( )!=null && !component.getTargetVersion( ).equals( component.getLastAvailableVersion( ) )))
+            {
+                 component.setShouldBeReleased( true );    
+            }
+            else
+            {
+                component.setShouldBeReleased( false );
+            }
             site.addComponent( component );
         }
     }
@@ -266,7 +275,7 @@ public class SiteService
      */
     private static void buildReleaseComments( Component component, Locale locale )
     {
-        component.setShouldBeReleased( false );
+        
         if ( !component.isProject( ) )
         {
             if ( Version.isSnapshot( component.getTargetVersion( ) ) )
@@ -281,7 +290,7 @@ public class SiteService
             }
         }
 
-        if ( component.getLastAvailableVersion( ) != null && !component.getLastAvailableVersion( ).equals( component.getTargetVersion( ) ) )
+        if (  !component.isProject( )&&component.getLastAvailableVersion( ) != null && !component.getLastAvailableVersion( ).equals( component.getTargetVersion( ) ) )
         {
             String [ ] arguments = {
                 component.getLastAvailableVersion( )
@@ -292,26 +301,25 @@ public class SiteService
 
         if ( component.isProject( ) )
         {
-            if(  component.isSnapshotVersion( ) )
+            if(  component.isSnapshotVersion( ) && !component.shouldBeReleased( ) && !component.isDowngrade( ) )
             {
-                if ( component.getLastAvailableVersion( ) != null  )
-                {
+                
                     String [ ] arguments = {
                         component.getLastAvailableVersion( )
                     };
                     String strComment = I18nService.getLocalizedString( MESSAGE_AN_RELEASE_VERSION_ALREADY_EXIST, arguments, locale );
                     component.addReleaseComment( strComment );
-                }
-                else
-                {
+            }
+            else
+            {
+            
+                String strComment = I18nService.getLocalizedString( MESSAGE_TO_BE_RELEASED, locale );
+                component.addReleaseComment( strComment );
                 
-                    String strComment = I18nService.getLocalizedString( MESSAGE_TO_BE_RELEASED, locale );
-                    component.addReleaseComment( strComment );
-                    component.setShouldBeReleased( true );
-                    
-                }
                 
             }
+            
+            
         }
     }
 
@@ -340,10 +348,9 @@ public class SiteService
             {
                 String strLastestVersion = ComponentService.getService( ).getLatestVersion( component.getArtifactId( ),false );
 
-                if ( strLastestVersion.equals( component.getTargetVersion( ) ) )
-                {
+                
                     component.setLastAvailableVersion( strLastestVersion );
-                }
+                
             }
             catch( HttpAccessException | IOException ex )
             {
@@ -365,6 +372,31 @@ public class SiteService
             if ( component.getArtifactId( ).equals( strArtifactId ) )
             {
                 component.setTargetVersion( component.getLastAvailableVersion( ) );
+            }
+        }
+    }
+    public static void downgradeComponent( Site site, String strArtifactId )
+    {
+        for ( Component component : site.getComponents( ) )
+        {
+            if ( component.getArtifactId( ).equals( strArtifactId ) && component.isSnapshotVersion( ))
+            {
+                component.setTargetVersion( component.getLastAvailableVersion( ) );
+                component.setShouldBeReleased( false );
+                component.setDowngrade( true );
+            }
+        }
+    }
+    
+    public static void cancelDowngradeComponent( Site site, String strArtifactId )
+    {
+        for ( Component component : site.getComponents( ) )
+        {
+            if ( component.getArtifactId( ).equals( strArtifactId ) && component.isSnapshotVersion( ))
+            {
+                component.setShouldBeReleased( true );
+                component.setDowngrade( false );
+                defineTargetVersion( component );
             }
         }
     }

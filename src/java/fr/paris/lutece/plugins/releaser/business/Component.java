@@ -62,6 +62,8 @@ public class Component
     private List<String> _listTargetVersions;
     private int _nTargetVersionIndex;
     private boolean _bShouldBeReleased;
+    private boolean _bDowngrade;
+    
     private String _strScmDeveloperConnection;
    
     
@@ -436,6 +438,16 @@ public class Component
     public boolean isSnapshotVersion()
     {
          return  Version.isSnapshot(getCurrentVersion( ));
+    }
+
+    public boolean isDowngrade( )
+    {
+        return _bDowngrade;
+    }
+
+    public void setDowngrade( boolean _bDowngrade )
+    {
+        this._bDowngrade = _bDowngrade;
     }
 
  
