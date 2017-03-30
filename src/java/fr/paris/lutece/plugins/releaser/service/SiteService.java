@@ -310,7 +310,7 @@ public class SiteService
                     String strComment = I18nService.getLocalizedString( MESSAGE_AN_RELEASE_VERSION_ALREADY_EXIST, arguments, locale );
                     component.addReleaseComment( strComment );
             }
-            else
+            else if(component.shouldBeReleased( ))
             {
             
                 String strComment = I18nService.getLocalizedString( MESSAGE_TO_BE_RELEASED, locale );
