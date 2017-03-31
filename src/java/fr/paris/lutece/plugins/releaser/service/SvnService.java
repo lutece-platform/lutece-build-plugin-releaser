@@ -218,7 +218,7 @@ public class SvnService implements ISvnService
                     }
                 } );
 
-            sbLog.append( "Preparing tag\n" );
+            sbLog.append( "Preparing release site\n" );
             sbLog.append( "Updating pom version to " + site.getNextReleaseVersion( ) + "...\n" );
             sbLog.append( "Updating dependency version ...\n" );
             PomUpdater.updateSiteBeforeTag( site );

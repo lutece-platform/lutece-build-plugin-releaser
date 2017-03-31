@@ -55,7 +55,7 @@ public class ConstanteUtils
     public static final String PROPERTY_TWITTER_OAUTH_ACCESSTOKEN_URL="releaser.accessTokenURL";
     public static final String PROPERTY_THREAD_RELEASE_POOL_MAX_SIZE="releaser.threadReleasePoolMaxSize";
     public static final String I18_TWITTER_MESSAGE="releaser.message.twitterMessage";
-    public static final String PROPERTY_GROUP_ID_THEMES="releaser.groupIdThemes";
+    public static final String CONSTANTE_TYPE_LUTECE_SITE="lutece-site";
    
     
     

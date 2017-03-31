@@ -445,12 +445,12 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     {
         CommandResult commandResult = context.getCommandResult( );
 
-        ReleaserUtils.logStartAction( context, " tag Site" );
+        ReleaserUtils.logStartAction( context, " Release Site" );
 
-        context.getCommandResult( ).getLog( ).append( "Starting Action Tag  Site...\n" );
+        context.getCommandResult( ).getLog( ).append( "Starting Action Release Site...\n" );
         SvnService.getService( ).doReleaseSite( context.getSite( ), context.getReleaserUser( ).getSvnSiteAccountLogin( ), context.getReleaserUser( ).getSvnSiteAccountPassword( ), context.getCommandResult( ) );
 
-        ReleaserUtils.logEndAction( context, " tag SIte" );
+        ReleaserUtils.logEndAction( context, " Release Site" );
 
     }
 

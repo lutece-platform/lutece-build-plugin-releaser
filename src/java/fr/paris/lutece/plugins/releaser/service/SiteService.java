@@ -428,7 +428,7 @@ public class SiteService
         //Release all snapshot comonent
         for ( Component component : site.getComponents( ) )
         {
-            if ( component.shouldBeReleased( ))
+            if ( component.shouldBeReleased( )&& !component.isTheme( ))
             {
                 //Get Scm Infos 
                 ComponentService.getService( ).getScmInfos( component,true,component.getType( ) ) ;

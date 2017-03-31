@@ -37,6 +37,7 @@ import java.util.List;
 
 import com.sun.jna.platform.win32.OaIdl.CURRENCY._CURRENCY;
 
+import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
 
 /**
@@ -63,6 +64,7 @@ public class Component
     private int _nTargetVersionIndex;
     private boolean _bShouldBeReleased;
     private boolean _bDowngrade;
+    
     
     private String _strScmDeveloperConnection;
    
@@ -451,7 +453,10 @@ public class Component
     }
 
  
-   
+    public boolean isTheme( )
+    {
+        return getType( )!=null && ConstanteUtils.CONSTANTE_TYPE_LUTECE_SITE.equals( getType( ) );
+    }
 
             
 }

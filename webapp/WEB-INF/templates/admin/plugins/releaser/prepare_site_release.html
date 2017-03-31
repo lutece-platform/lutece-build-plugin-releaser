@@ -3,7 +3,7 @@
 <section class="content-header">
     <h1>
         <a href="jsp/admin/plugins/releaser/ManageClusters.jsp" title="Release de sites et de clusters">Release de sites et de clusters</a>
-        <small class="hidden-xs hidden-sm">Pr&eacute;paration de la release du site</small>
+        <small class="hidden-xs hidden-sm">Pr&eacute;paration de la release du <#if !site.theme>Site<#else>Theme</#if></small>
     </h1>
     <ol class="breadcrumb applications">
     </ol>
@@ -25,7 +25,7 @@
         </div>
         <div class="col-xs-4 col-sm-2">
           <button type="button" class="btn btn-success btn-lg btn-block" data-toggle="modal" data-target="#modalRelease">
-            <span class="fa fa-cogs"></span>  Releaser le site
+            <span class="fa fa-cogs"></span>  Releaser le <#if !site.theme>Site<#else>Theme</#if>
           </button>
         </div>
         </div>
@@ -61,7 +61,7 @@
                 </span>
                 <span id="release-result-${component.artifactId!}">
                 <#if component.releaseComment! !=''><i class="fa fa-info-circle text-info"></i> ${component.releaseComment!''}</#if>
-                <#if component.shouldBeReleased()>
+                <#if component.shouldBeReleased() && !component.theme>
                   <a class="button transition border-orange small btn-release" data-artifactid="${component.artifactId!}" title="Modifier la version pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=versionComponent&artifact_id=${component.artifactId}' >
                     <i class="fa fa-cog fa-fw"></i> Releaser le composant
                   </a>
@@ -213,7 +213,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h4 class="modal-title" id="modalReleaseLabel">Release - Informations de version du site </h4>
+          <h4 class="modal-title" id="modalReleaseLabel">Release - Informations de version du <#if !site.theme>Site<#else>Theme</#if> </h4>
         </div>
         <div class="modal-body">
           <div class="form-group">
