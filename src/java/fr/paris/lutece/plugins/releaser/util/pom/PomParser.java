@@ -94,6 +94,7 @@ public class PomParser
     private void filledSite( Site site, Model model )
     {
         site.setArtifactId(model.getArtifactId( ) );
+        site.setGroupId( model.getGroupId( ) );
         site.setVersion( model.getVersion( ) );
     }
 

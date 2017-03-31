@@ -52,7 +52,7 @@ public class Site implements Serializable
     @NotEmpty( message = "#i18n{releaser.validation.site.ArtifactId.notEmpty}" )
     @Size( max = 50, message = "#i18n{releaser.validation.site.ArtifactId.size}" )
     private String _strArtifactId;
-
+   
     private int _nIdCluster;
     @URL( message = "#i18n{portal.validation.message.url}" )
     @NotEmpty( message = "#i18n{releaser.validation.site.ScmUrl.notEmpty}" )
@@ -83,6 +83,9 @@ public class Site implements Serializable
     private List<String> _listTargetVersions;
     private int _nTargetVersionIndex;
     private String _strNextSnapshotVersion;
+    private String _strGroupId;
+    private boolean _bTheme;
+
 
     /**
      * Returns the Id
@@ -401,6 +404,29 @@ public class Site implements Serializable
     {
         this._strTagInformation = _strTagInfotmation;
     }
+
+    public String getGroupId( )
+    {
+        return _strGroupId;
+    }
+
+    public void setGroupId( String _strGroupId )
+    {
+        this._strGroupId = _strGroupId;
+    }
+
+    public boolean isTheme( )
+    {
+        return _bTheme;
+    }
+
+    public void setTheme( boolean _bTheme )
+    {
+        this._bTheme = _bTheme;
+    }
+    
+    
+
     
     
 }

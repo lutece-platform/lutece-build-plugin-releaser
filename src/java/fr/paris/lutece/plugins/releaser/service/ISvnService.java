@@ -46,7 +46,7 @@ public interface ISvnService
   
     String doSvnCheckoutSite( Site site, String strSvnLogin,String strSvnPassword, CommandResult commandResult);
     
-    String doSvnTagSite( Site site, String strSvnLogin,String strSvnPassword, CommandResult commandResult);
+    String doReleaseSite( Site site, String strSvnLogin,String strSvnPassword, CommandResult commandResult);
     
     
     String doSvnCheckoutComponent( Component component, String strSvnLogin,String strSvnPassword, CommandResult commandResult);

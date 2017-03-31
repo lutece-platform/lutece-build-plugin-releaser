@@ -48,14 +48,14 @@ public final class SiteDAO implements ISiteDAO
 {
     // Constants
     private static final String SQL_QUERY_NEW_PK = "SELECT max( id_site ) FROM releaser_site";
-    private static final String SQL_QUERY_SELECT = "SELECT a.id_site, a.name, a.description, a.artifact_id, a.id_cluster, b.name, a.scm_url, a.jira_key "
+    private static final String SQL_QUERY_SELECT = "SELECT a.id_site, a.name, a.description, a.artifact_id, a.id_cluster, b.name, a.scm_url, a.jira_key,a.is_theme "
             + " FROM releaser_site a , releaser_cluster b  WHERE a.id_site = ? AND a.id_cluster = b.id_cluster";
-    private static final String SQL_QUERY_INSERT = "INSERT INTO releaser_site ( id_site, artifact_id, id_cluster, scm_url, name, description, jira_key ) VALUES ( ?, ?, ?, ?, ?, ?, ? ) ";
+    private static final String SQL_QUERY_INSERT = "INSERT INTO releaser_site ( id_site, artifact_id, id_cluster, scm_url, name, description, jira_key,is_theme ) VALUES ( ?, ?, ?, ?, ?, ?, ? , ?) ";
     private static final String SQL_QUERY_DELETE = "DELETE FROM releaser_site WHERE id_site = ? ";
-    private static final String SQL_QUERY_UPDATE = "UPDATE releaser_site SET id_site = ?, artifact_id = ?, id_cluster = ?, scm_url = ?, name = ?, description = ?, jira_key = ? WHERE id_site = ?";
-    private static final String SQL_QUERY_SELECTALL = "SELECT a.id_site, a.name, a.description, a.artifact_id, a.id_cluster, b.name, a.scm_url, a.jira_key "
+    private static final String SQL_QUERY_UPDATE = "UPDATE releaser_site SET id_site = ?, artifact_id = ?, id_cluster = ?, scm_url = ?, name = ?, description = ?, jira_key = ?,is_theme= ?  WHERE id_site = ?";
+    private static final String SQL_QUERY_SELECTALL = "SELECT a.id_site, a.name, a.description, a.artifact_id, a.id_cluster, b.name, a.scm_url, a.jira_key,a.is_theme "
             + " FROM releaser_site a , releaser_cluster b  WHERE a.id_cluster = b.id_cluster";
-    private static final String SQL_QUERY_SELECT_BY_CLUSTER = "SELECT a.id_site, a.name, a.description, a.artifact_id, a.id_cluster, b.name, a.scm_url, a.jira_key "
+    private static final String SQL_QUERY_SELECT_BY_CLUSTER = "SELECT a.id_site, a.name, a.description, a.artifact_id, a.id_cluster, b.name, a.scm_url, a.jira_key,a.is_theme "
             + " FROM releaser_site a , releaser_cluster b  WHERE a.id_cluster = b.id_cluster AND a.id_cluster = ?";
     private static final String SQL_QUERY_SELECTALL_ID = "SELECT id_site FROM releaser_site";
 
@@ -98,6 +98,7 @@ public final class SiteDAO implements ISiteDAO
         daoUtil.setString( nIndex++, site.getName( ) );
         daoUtil.setString( nIndex++, site.getDescription( ) );
         daoUtil.setString( nIndex++, site.getJiraKey( ) );
+        daoUtil.setBoolean( nIndex++, site.isTheme( ) );
 
         daoUtil.executeUpdate( );
         daoUtil.free( );
@@ -127,6 +128,7 @@ public final class SiteDAO implements ISiteDAO
             site.setCluster( daoUtil.getString( nIndex++ ) );
             site.setScmUrl( daoUtil.getString( nIndex++ ) );
             site.setJiraKey( daoUtil.getString( nIndex++ ) );
+            site.setTheme( daoUtil.getBoolean( nIndex++  ) );
         }
 
         daoUtil.free( );
@@ -162,6 +164,8 @@ public final class SiteDAO implements ISiteDAO
         daoUtil.setString( nIndex++, site.getName( ) );
         daoUtil.setString( nIndex++, site.getDescription( ) );
         daoUtil.setString( nIndex++, site.getJiraKey( ) );
+        daoUtil.setBoolean( nIndex++, site.isTheme( ) );
+        
         daoUtil.setInt( nIndex, site.getId( ) );
 
         daoUtil.executeUpdate( );
@@ -191,6 +195,7 @@ public final class SiteDAO implements ISiteDAO
             site.setCluster( daoUtil.getString( nIndex++ ) );
             site.setScmUrl( daoUtil.getString( nIndex++ ) );
             site.setJiraKey( daoUtil.getString( nIndex++ ) );
+            site.setTheme( daoUtil.getBoolean( nIndex++  ) );
 
             siteList.add( site );
         }
@@ -261,6 +266,7 @@ public final class SiteDAO implements ISiteDAO
             site.setCluster( daoUtil.getString( nIndex++ ) );
             site.setScmUrl( daoUtil.getString( nIndex++ ) );
             site.setJiraKey( daoUtil.getString( nIndex++ ) );
+            site.setTheme( daoUtil.getBoolean( nIndex++  ) );
 
             siteList.add( site );
         }

@@ -48,7 +48,7 @@ public interface IWorkflowReleaseContextService
     void checkoutSite( WorkflowReleaseContext context, Locale locale );
     
     
-    void tagSite( WorkflowReleaseContext context, Locale locale );
+    void releaseSite( WorkflowReleaseContext context, Locale locale );
     
     void checkoutComponent( WorkflowReleaseContext context, Locale locale );
     

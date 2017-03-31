@@ -183,7 +183,7 @@ public class SvnService implements ISvnService
     /* (non-Javadoc)
          * @see fr.paris.lutece.plugins.deployment.service.ISvnService#doSvnTagSite(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, fr.paris.lutece.plugins.deployment.business.User)
          */
-    public String doSvnTagSite( Site site, String strSvnLogin,String strSvnPassword, CommandResult commandResult )
+    public String doReleaseSite( Site site, String strSvnLogin,String strSvnPassword, CommandResult commandResult )
     {
          
         String strSitePomLocalBasePath = ReleaserUtils.getLocalSitePomPath( site.getArtifactId( ) );
@@ -231,31 +231,46 @@ public class SvnService implements ISvnService
            // sbLog.append( ReleaserUtils.updateReleaseVersion( strSiteLocalBasePath, strVersion,
             //        "[site-release] Prepare tag for " + strSiteName, commitClient ) );
             sbLog.append( "Pom updated\n" );
-
-            sbLog.append( "Tagging site to " + site.getNextReleaseVersion( ) + "...\n" );
             
-            
-            String strErrorDuringTag=SvnUtils.doTagSite( site.getArtifactId( ), site.getArtifactId( )+"-"+site.getNextReleaseVersion( ), strSrcURL, strDstURL, copyClient );
-           
-            // PROGRESS 80%
-            commandResult.setProgressValue( commandResult.getProgressValue( ) + 20 );
-
-            
-            if(StringUtils.isEmpty(strErrorDuringTag))
+            if(!site.isTheme( ) )
             {
-	            sbLog.append( "Tag done\n" );
-	
-	            sbLog.append( "Updating pom to next development " + site.getNextSnapshotVersion( ) + "\n" );
-	            
-	            PomUpdater.updateSiteAfterTag( site );
-	            
-	            SvnUtils.doCommit( strSitePomLocalBasePath, "[site-release] update Updating pom to next development ", commitClient );
 
-	            sbLog.append( "Pom updated\n" );
+                sbLog.append( "Tagging site to " + site.getNextReleaseVersion( ) + "...\n" );
+            
+                String strErrorDuringTag=SvnUtils.doTagSite( site.getArtifactId( ), site.getArtifactId( )+"-"+site.getNextReleaseVersion( ), strSrcURL, strDstURL, copyClient );
+           
+                // PROGRESS 80%
+                commandResult.setProgressValue( commandResult.getProgressValue( ) + 20 );
+
+            
+                if(StringUtils.isEmpty(strErrorDuringTag))
+                {
+    	            sbLog.append( "Tag done\n" );
+    	
+    	            sbLog.append( "Updating pom to next development " + site.getNextSnapshotVersion( ) + "\n" );
+    	            
+    	            PomUpdater.updateSiteAfterTag( site );
+    	            
+    	            SvnUtils.doCommit( strSitePomLocalBasePath, "[site-release] update Updating pom to next development ", commitClient );
+    
+    	            sbLog.append( "Pom updated\n" );
+                }
+                else
+                {
+                    ReleaserUtils.addTechnicalError(commandResult, strErrorDuringTag);
+                }
             }
             else
             {
-                ReleaserUtils.addTechnicalError(commandResult, strErrorDuringTag);
+                sbLog.append( "Release prepare theme " + site.getNextReleaseVersion( ) + "...\n" );
+                
+                MavenService.getService( ).mvnReleasePrepare( strSitePomLocalBasePath, site.getNextReleaseVersion( ),  site.getArtifactId( )+"-"+site.getNextReleaseVersion( ),
+                        site.getNextSnapshotVersion( ), strSvnLogin, strSvnPassword, commandResult );
+                sbLog.append( "End Release prepare theme " + site.getNextReleaseVersion( ) + "...\n" );
+                sbLog.append( "Release perform theme " + site.getNextReleaseVersion( ) + "...\n" );
+                MavenService.getService( ).mvnReleasePerform( strSitePomLocalBasePath, strSvnLogin, strSvnPassword, commandResult );
+                sbLog.append( "End Release perform theme " + site.getNextReleaseVersion( ) + "...\n" );
+                
             }
             
         }

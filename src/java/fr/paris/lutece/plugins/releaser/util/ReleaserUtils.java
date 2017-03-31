@@ -7,7 +7,10 @@ import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang.StringUtils;
+
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
+import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.portal.service.security.LuteceUser;
 import fr.paris.lutece.portal.service.util.AppException;
@@ -18,21 +21,20 @@ public class ReleaserUtils
 {
 
     public static final String REGEX_ID = "^[\\d]+$";
-    public static String getWorklowContextDataKey(String strArtifactId,int nContextId)
+
+    public static String getWorklowContextDataKey( String strArtifactId, int nContextId )
     {
-         return ConstanteUtils.CONSTANTE_RELEASE_CONTEXT_PREFIX+strArtifactId+"_"+nContextId;
+        return ConstanteUtils.CONSTANTE_RELEASE_CONTEXT_PREFIX + strArtifactId + "_" + nContextId;
     }
 
-    
-   
     public static String getLocalSitePath( String strSiteName )
     {
         String strCheckoutBasePath = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_LOCAL_SITE_BASE_PAH );
 
         return strCheckoutBasePath + File.separator + strSiteName;
     }
-    
-    public static String getLocalSitePomPath( String strSiteName  )
+
+    public static String getLocalSitePomPath( String strSiteName )
     {
         return getLocalSitePath( strSiteName ) + File.separator + ConstanteUtils.CONSTANTE_POM_XML;
     }
@@ -78,7 +80,7 @@ public class ReleaserUtils
             commandResult.setStatus( CommandResult.STATUS_ERROR );
             commandResult.setRunning( false );
             commandResult.setErrorType( CommandResult.ERROR_TYPE_STOP );
-            commandResult.setDateEnd( new Date( ));
+            commandResult.setDateEnd( new Date( ) );
         }
         if ( e != null )
         {
@@ -98,7 +100,7 @@ public class ReleaserUtils
     public static void startCommandResult( WorkflowReleaseContext context )
     {
         CommandResult commandResult = new CommandResult( );
-        commandResult.setDateBegin( new Date( ));
+        commandResult.setDateBegin( new Date( ) );
         commandResult.setLog( new StringBuffer( ) );
         commandResult.setRunning( true );
         commandResult.setStatus( CommandResult.STATUS_OK );
@@ -106,27 +108,26 @@ public class ReleaserUtils
         context.setCommandResult( commandResult );
 
     }
-    
-    public static void logStartAction( WorkflowReleaseContext context,String strActionName )
+
+    public static void logStartAction( WorkflowReleaseContext context, String strActionName )
     {
-       
-        context.getCommandResult( ).getLog( ).append( "******************Start Action: \""+strActionName +"\" *******************\n\r" );
-   
+
+        context.getCommandResult( ).getLog( ).append( "******************Start Action: \"" + strActionName + "\" *******************\n\r" );
+
     }
 
-    public static void logEndAction( WorkflowReleaseContext context,String strActionName )
+    public static void logEndAction( WorkflowReleaseContext context, String strActionName )
     {
-        context.getCommandResult( ).getLog( ).append( "******************End Action:\"" +strActionName +"\" *******************\n\r" );
-   
+        context.getCommandResult( ).getLog( ).append( "******************End Action:\"" + strActionName + "\" *******************\n\r" );
+
     }
 
     public static void stopCommandResult( WorkflowReleaseContext context )
     {
         context.getCommandResult( ).setRunning( false );
-        context.getCommandResult( ).setDateEnd( new Date( ));
+        context.getCommandResult( ).setDateEnd( new Date( ) );
         context.getCommandResult( ).setProgressValue( 100 );
     }
-    
 
     /**
      * convert a string to int
@@ -153,59 +154,57 @@ public class ReleaserUtils
 
         return nIdParameter;
     }
-    
-    
-    public static ReleaserUser getReleaserUser(HttpServletRequest request, Locale locale )
-    {
-        
-            ReleaserUser releaserUser = null;
-       
-            
-            if( isApplicationAccountEnable( ))
-            {
-                
-                releaserUser=new ReleaserUser( );
-                releaserUser.setGithubComponentAccountLogin( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_LOGIN ) );
-                releaserUser.setGithubComponentAccountPassword( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_PASSWORD ) );
-                releaserUser.setSvnComponentAccountLogin( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_LOGIN ) );
-                releaserUser.setSvnComponentAccountPassword( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_PASSWORD ) );
-                releaserUser.setSvnSiteAccountLogin( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SITE_REPOSITORY_LOGIN) );
-                releaserUser.setSvnSiteAccountPassword( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SITE_REPOSITORY_PASSWORD ) );     
-            }
-            else
-            {
-                
-                HttpSession session = ( request != null ) ? request.getSession( true ) : null;
 
-                if ( session != null )
-                {
-                    return (ReleaserUser) session.getAttribute( ConstanteUtils.ATTRIBUTE_RELEASER_USER );
-                }
-
-            }
-            
-        return releaserUser;
-    }
-    
-    public static void setReleaserUser(HttpServletRequest request,ReleaserUser releaserUser )
+    public static ReleaserUser getReleaserUser( HttpServletRequest request, Locale locale )
     {
-     
-            
+
+        ReleaserUser releaserUser = null;
+
+        if ( isApplicationAccountEnable( ) )
+        {
+
+            releaserUser = new ReleaserUser( );
+            releaserUser.setGithubComponentAccountLogin( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_LOGIN ) );
+            releaserUser
+                    .setGithubComponentAccountPassword( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_PASSWORD ) );
+            releaserUser.setSvnComponentAccountLogin( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_LOGIN ) );
+            releaserUser.setSvnComponentAccountPassword( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_PASSWORD ) );
+            releaserUser.setSvnSiteAccountLogin( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SITE_REPOSITORY_LOGIN ) );
+            releaserUser.setSvnSiteAccountPassword( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SITE_REPOSITORY_PASSWORD ) );
+        }
+        else
+        {
+
             HttpSession session = ( request != null ) ? request.getSession( true ) : null;
 
             if ( session != null )
             {
-                 session.setAttribute( ConstanteUtils.ATTRIBUTE_RELEASER_USER,releaserUser );
+                return (ReleaserUser) session.getAttribute( ConstanteUtils.ATTRIBUTE_RELEASER_USER );
             }
 
-      }
-    
-    
-    public static boolean isApplicationAccountEnable()
-    {
-        
-       return  AppPropertiesService.getPropertyBoolean( ConstanteUtils.PROPERTY_APPLICATION_ACCOUNT_ENABLE,false);
-        
+        }
+
+        return releaserUser;
     }
 
+    public static void setReleaserUser( HttpServletRequest request, ReleaserUser releaserUser )
+    {
+
+        HttpSession session = ( request != null ) ? request.getSession( true ) : null;
+
+        if ( session != null )
+        {
+            session.setAttribute( ConstanteUtils.ATTRIBUTE_RELEASER_USER, releaserUser );
+        }
+
+    }
+
+    public static boolean isApplicationAccountEnable( )
+    {
+
+        return AppPropertiesService.getPropertyBoolean( ConstanteUtils.PROPERTY_APPLICATION_ACCOUNT_ENABLE, false );
+
+    }
+
+   
 }

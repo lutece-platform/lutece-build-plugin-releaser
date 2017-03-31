@@ -32,6 +32,9 @@
             <@formGroup labelKey='#i18n{releaser.create_site.labelJiraKey}' helpKey='#i18n{releaser.create_site.labelJiraKey.help}' >
                     <@input type='text' name='jira_key' value='${site.jiraKey!\'\'}' />
             </@formGroup>
+             <@formGroup labelKey='#i18n{releaser.create_site.labelIsTheme}' helpKey='#i18n{releaser.create_site.labelIsTheme.help}' >
+                        <@checkBox  name='theme' id='theme' labelKey='' labelFor='theme' orientation='vertical' value='true'  name='theme'  checked=site.theme />
+             </@formGroup>
 
             <@actionButtons button1Name="action_createSite" button2Name="view_manageSite"/>
     </@tform>

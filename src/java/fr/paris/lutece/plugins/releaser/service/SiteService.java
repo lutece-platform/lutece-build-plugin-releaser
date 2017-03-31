@@ -150,11 +150,12 @@ public class SiteService
             component.setIsProject( isProjectComponent( site, dependency.getArtifactId( ) ) );
             component.setArtifactId( dependency.getArtifactId( ) );
             component.setGroupId( dependency.getGroupId( ) );
+            component.setType( dependency.getType( ) );
             component.setCurrentVersion( dependency.getVersion( ) );
             defineTargetVersion( component );
             defineNextSnapshotVersion( component );
             checkForNewVersion( component );
-            ComponentService.getService( ).getJiraInfos( component,component.isProject( )?false:true );
+            ComponentService.getService( ).getJiraInfos( component,component.isProject( )?false:true ,component.getType( ));
             
             if(  component.isSnapshotVersion( ) && !component.isDowngrade( )&&(component.getTargetVersion( )!=null && !component.getTargetVersion( ).equals( component.getLastAvailableVersion( ) )))
             {
@@ -329,7 +330,7 @@ public class SiteService
         {
             try
             {
-                String strLastestVersion = ComponentService.getService( ).getLatestVersion( component.getArtifactId( ),true );
+                String strLastestVersion = ComponentService.getService( ).getLatestVersion( component.getArtifactId( ),true,component.getType( ) );
 
                 if ( !strLastestVersion.equals( component.getTargetVersion( ) ) )
                 {
@@ -346,7 +347,7 @@ public class SiteService
         {
             try
             {
-                String strLastestVersion = ComponentService.getService( ).getLatestVersion( component.getArtifactId( ),false );
+                String strLastestVersion = ComponentService.getService( ).getLatestVersion( component.getArtifactId( ),false,component.getType( ) );
 
                 
                     component.setLastAvailableVersion( strLastestVersion );
@@ -408,7 +409,7 @@ public class SiteService
             if ( component.getArtifactId( ).equals( strArtifactId )  && component.shouldBeReleased( ))
             {
                 //Get Scm Infos 
-                ComponentService.getService( ).getScmInfos( component,true ) ;
+                ComponentService.getService( ).getScmInfos( component,true,component.getType( ) ) ;
                 //Release component
                return  ComponentService.getService( ).release( component, locale,user,request );
                 
@@ -430,7 +431,7 @@ public class SiteService
             if ( component.shouldBeReleased( ))
             {
                 //Get Scm Infos 
-                ComponentService.getService( ).getScmInfos( component,true ) ;
+                ComponentService.getService( ).getScmInfos( component,true,component.getType( ) ) ;
                 //Release component
                 nIdWfContext=ComponentService.getService( ).release( component, locale,user,request );
                 mapResultContext.put( component.getArtifactId( ), nIdWfContext );

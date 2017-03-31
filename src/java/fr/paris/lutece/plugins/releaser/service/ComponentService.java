@@ -97,24 +97,24 @@ public class ComponentService implements IComponentService
     }
     
 
-    public String getLatestVersion( String strArtifactId,boolean bCache) throws HttpAccessException, IOException
+    public String getLatestVersion( String strArtifactId,boolean bCache,String strComponentType) throws HttpAccessException, IOException
     {
         HttpAccess httpAccess = new HttpAccess( );
         String strInfosJSON;
-        String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, strArtifactId,bCache );
+        String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, strArtifactId,bCache,strComponentType  );
         strInfosJSON = httpAccess.doGet( strUrl );
         JsonNode nodeRoot = _mapper.readTree( strInfosJSON );
         JsonNode nodeComponent = nodeRoot.path( FIELD_COMPONENT );
         return nodeComponent.get( FIELD_VERSION ).asText( );
     }
 
-    public void getJiraInfos( Component component,boolean bCache)
+    public void getJiraInfos( Component component,boolean bCache,String strComponentType)
     {
         try
         {
             HttpAccess httpAccess = new HttpAccess( );
             String strInfosJSON;
-            String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, component.getArtifactId( ),bCache  );
+            String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, component.getArtifactId( ),bCache,strComponentType  );
             strInfosJSON = httpAccess.doGet( strUrl );
             JsonNode nodeRoot = _mapper.readTree( strInfosJSON );
             JsonNode nodeComponent = nodeRoot.path( FIELD_COMPONENT );
@@ -129,13 +129,13 @@ public class ComponentService implements IComponentService
         }
 
     }
-    public  void getScmInfos( Component component,boolean bCache )
+    public  void getScmInfos( Component component,boolean bCache,String strComponentType )
     {
         try
         {
             HttpAccess httpAccess = new HttpAccess( );
             String strInfosJSON;
-            String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, component.getArtifactId( ),bCache );
+            String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, component.getArtifactId( ),bCache,strComponentType );
             strInfosJSON = httpAccess.doGet( strUrl );
             JsonNode nodeRoot = _mapper.readTree( strInfosJSON );
             JsonNode nodeComponent = nodeRoot.path( FIELD_COMPONENT );
@@ -157,7 +157,7 @@ public class ComponentService implements IComponentService
         //Test if version already exist before release
         try
         {
-            component.setLastAvailableVersion( getLatestVersion( component.getArtifactId( ), false ) );
+            component.setLastAvailableVersion( getLatestVersion( component.getArtifactId( ), false,component.getType( ) ) );
             if(component.getTargetVersion( )!=null && component.getTargetVersion( ).equals( component.getLastAvailableVersion( ) ) )
             {
                 component.setShouldBeReleased( false );

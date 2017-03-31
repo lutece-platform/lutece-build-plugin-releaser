@@ -12,11 +12,11 @@ import fr.paris.lutece.util.httpaccess.HttpAccessException;
 public interface IComponentService
 {
 
-    String getLatestVersion( String strArtifactId ,boolean bCache) throws HttpAccessException, IOException;
+    String getLatestVersion( String strArtifactId ,boolean bCache,String strComponentType) throws HttpAccessException, IOException;
 
-    void getJiraInfos( Component component,boolean bCache );
+    void getJiraInfos( Component component,boolean bCache,String strComponentType );
 
-    void getScmInfos( Component component,boolean bCache );
+    void getScmInfos( Component component,boolean bCache,String strComponentType );
 
     int release( Component component, Locale locale, AdminUser user, HttpServletRequest request );
 
