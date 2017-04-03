@@ -9,6 +9,9 @@ public class ConstanteUtils
     public static final String CONSTANTE_EMPTY_STRING = "";
     public static final String CONSTANTE_MAX_RELEASE_CONTEXT_KEY = "max_release_context_key";
     public static final String CONSTANTE_RELEASE_CONTEXT_PREFIX = "release_context_";
+    public static final String CONSTANTE_LAST_RELEASE_VERSION_PREFIX = "last_release_version_";
+    public static final String CONSTANTE_LAST_RELEASE_NEXT_SNPASHOT_VERSION = "last_release_next_snapshot_version_";
+    
     public static final String CONSTANTE_COMPONENT_PROJECT_PREFIX = "component_project_prefix_";
     
     public static final String ATTRIBUTE_RELEASER_USER="releaser_user";

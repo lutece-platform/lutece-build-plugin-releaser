@@ -36,16 +36,7 @@ public class PomUpdater
 
             inputStream = new FileInputStream( strSiteLocalPomPath );
             Model model = unmarshal( Model.class, inputStream );
-            
-            if(!site.isTheme( ))
-            {
-                model.setVersion( site.getNextReleaseVersion( ) );
-            }
-            else
-            {
-                
-                model.setVersion(site.getNextReleaseVersion( )+"-SNAPSHOT");
-            }
+            model.setVersion( site.getNextReleaseVersion( ) );
             model.setDescription( site.getTagInformation( ) );
 
             fr.paris.lutece.plugins.releaser.business.jaxb.maven.Model.Dependencies dependencies = model.getDependencies( );
@@ -56,10 +47,10 @@ public class PomUpdater
                 {
                     for ( Component component : site.getComponents( ) )
                     {
-
+                        
                         if ( jaxDependency.getArtifactId( ).equals( component.getArtifactId( ) ) )
                         {
-
+                            
                             jaxDependency.setVersion( component.getTargetVersion( ) );
 
                         }
@@ -132,7 +123,7 @@ public class PomUpdater
                                 }
                                 else
                                 {
-                                    jaxDependency.setVersion( component.getCurrentVersion( ));
+                                    jaxDependency.setVersion( component.getLastAvailableSnapshotVersion( ) );
                                 }
                                 
                             }

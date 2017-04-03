@@ -286,9 +286,7 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         model.put( MARK_RELEASE_CTX_RESULT, _mapReleaseSiteContext );
         HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_RELEASE_SITE_RESULT, getLocale( ), model );
         String strTemplate=template.getHtml( );
-       //reinit site
-        _site=null;
-        _mapReleaseSiteContext=null;
+       
         return strTemplate;
     
     }

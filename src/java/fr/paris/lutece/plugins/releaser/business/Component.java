@@ -39,6 +39,7 @@ import com.sun.jna.platform.win32.OaIdl.CURRENCY._CURRENCY;
 
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
+import fr.paris.lutece.portal.service.i18n.I18nService;
 
 /**
  * This is the business class for the object Component
@@ -52,6 +53,7 @@ public class Component
     private String _strCurrentVersion;
     private String _strTargetVersion;
     private String _strLastAvailableVersion;
+    private String _strLastAvailableSnapshotVersion;
     private String _strNextSnapshotVersion;
     private String _strReleaseComment;
     private String _strDescription; 
@@ -62,7 +64,6 @@ public class Component
     private int _nJiraCurrentVersionOpenedIssues;   
     private List<String> _listTargetVersions;
     private int _nTargetVersionIndex;
-    private boolean _bShouldBeReleased;
     private boolean _bDowngrade;
     
     
@@ -402,18 +403,15 @@ public class Component
      */
     public boolean shouldBeReleased( )
     {
-        return _bShouldBeReleased;
-    }
 
-    /**
-     * Sets if the component should be released
-     * 
-     * @param bShouldBeReleased  the shouldbereleased flag
-     */
-    public void setShouldBeReleased( boolean bShouldBeReleased )
-    {
-        _bShouldBeReleased = bShouldBeReleased;
-    }
+        if(this.isSnapshotVersion( ) && !this.isTheme( ) && !this.isDowngrade( ) &&  this.getCurrentVersion( ).equals( this.getLastAvailableSnapshotVersion( ) ))
+        {
+             return true;   
+        }
+        return false;
+   }
+
+
 
     
     /**
@@ -456,6 +454,16 @@ public class Component
     public boolean isTheme( )
     {
         return getType( )!=null && ConstanteUtils.CONSTANTE_TYPE_LUTECE_SITE.equals( getType( ) );
+    }
+
+    public String getLastAvailableSnapshotVersion( )
+    {
+        return _strLastAvailableSnapshotVersion;
+    }
+
+    public void setLastAvailableSnapshotVersion( String _strLastAvailableSnapshotVersion )
+    {
+        this._strLastAvailableSnapshotVersion = _strLastAvailableSnapshotVersion;
     }
 
             

@@ -61,7 +61,7 @@
                 </span>
                 <span id="release-result-${component.artifactId!}">
                 <#if component.releaseComment! !=''><i class="fa fa-info-circle text-info"></i> ${component.releaseComment!''}</#if>
-                <#if component.shouldBeReleased() && !component.theme>
+                <#if component.shouldBeReleased()>
                   <a class="button transition border-orange small btn-release" data-artifactid="${component.artifactId!}" title="Modifier la version pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=versionComponent&artifact_id=${component.artifactId}' >
                     <i class="fa fa-cog fa-fw"></i> Releaser le composant
                   </a>

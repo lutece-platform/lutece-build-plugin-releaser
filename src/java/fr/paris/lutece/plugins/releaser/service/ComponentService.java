@@ -54,10 +54,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
+import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
+import fr.paris.lutece.plugins.releaser.util.version.Version;
+import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
 import fr.paris.lutece.plugins.workflowcore.business.action.Action;
 import fr.paris.lutece.plugins.workflowcore.business.state.State;
 import fr.paris.lutece.portal.business.user.AdminUser;
+import fr.paris.lutece.portal.service.datastore.DatastoreService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
@@ -77,6 +81,8 @@ public class ComponentService implements IComponentService
     private static final String URL_COMPONENT_WEBSERVICE = AppPropertiesService.getProperty( PROPERTY_COMPONENT_WEBSERVICE );
     private static final String FIELD_COMPONENT = "component";
     private static final String FIELD_VERSION = "version";
+    private static final String FIELD_SNAPSHOT_VERSION = "snapshot_version";
+    
     private static final String FIELD_JIRA_CODE = "jira_code";
     private static final String FIELD_ROADMAP_URL = "jira_roadmap_url";
     private static final String FIELD_CLOSED_ISSUES = "jira_current_version_closed_issues";
@@ -97,73 +103,102 @@ public class ComponentService implements IComponentService
     }
     
 
-    public String getLatestVersion( String strArtifactId,boolean bCache,String strComponentType) throws HttpAccessException, IOException
+    public void setRemoteInformations( Component component,boolean bCache) throws HttpAccessException, IOException
     {
-        HttpAccess httpAccess = new HttpAccess( );
-        String strInfosJSON;
-        String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, strArtifactId,bCache,strComponentType  );
-        strInfosJSON = httpAccess.doGet( strUrl );
-        JsonNode nodeRoot = _mapper.readTree( strInfosJSON );
-        JsonNode nodeComponent = nodeRoot.path( FIELD_COMPONENT );
-        return nodeComponent.get( FIELD_VERSION ).asText( );
-    }
-
-    public void getJiraInfos( Component component,boolean bCache,String strComponentType)
-    {
-        try
+       try
         {
             HttpAccess httpAccess = new HttpAccess( );
             String strInfosJSON;
-            String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, component.getArtifactId( ),bCache,strComponentType  );
+            String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, component.getArtifactId( ),bCache,component.getType( )  );
             strInfosJSON = httpAccess.doGet( strUrl );
             JsonNode nodeRoot = _mapper.readTree( strInfosJSON );
             JsonNode nodeComponent = nodeRoot.path( FIELD_COMPONENT );
+            component.setLastAvailableVersion( nodeComponent.get( FIELD_VERSION ).asText( ));
+            component.setLastAvailableSnapshotVersion( nodeComponent.get( FIELD_SNAPSHOT_VERSION ).asText( ));
             component.setJiraCode( nodeComponent.get( FIELD_JIRA_CODE ).asText( ) );
             component.setJiraRoadmapUrl( nodeComponent.get( FIELD_ROADMAP_URL ).asText( ) );
             component.setJiraCurrentVersionOpenedIssues( nodeComponent.get( FIELD_OPENED_ISSUES ).asInt( ) );
             component.setJiraCurrentVersionClosedIssues( nodeComponent.get( FIELD_CLOSED_ISSUES ).asInt( ) );
-        }
-        catch( HttpAccessException | IOException ex )
-        {
-            AppLogService.error( "Error getting JIRA infos : " + ex.getMessage( ), ex );
-        }
-
-    }
-    public  void getScmInfos( Component component,boolean bCache,String strComponentType )
-    {
-        try
-        {
-            HttpAccess httpAccess = new HttpAccess( );
-            String strInfosJSON;
-            String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, component.getArtifactId( ),bCache,strComponentType );
-            strInfosJSON = httpAccess.doGet( strUrl );
-            JsonNode nodeRoot = _mapper.readTree( strInfosJSON );
-            JsonNode nodeComponent = nodeRoot.path( FIELD_COMPONENT );
             component.setScmDeveloperConnection( nodeComponent.get( FIELD_SCM_DEVELOPER_CONNECTION ).asText( ) );
-         
-        }
+         }
         catch( HttpAccessException | IOException ex )
         {
-            AppLogService.error( "Error getting SCM infos : " + ex.getMessage( ), ex );
+            AppLogService.error( "Error getting Remote informations : " + ex.getMessage( ), ex );
         }
-
+        
     }
     
-    public int release( Component component ,Locale locale,AdminUser user,HttpServletRequest request)
+    
+    /**
+     * Returns the LastAvailableVersion
+     * 
+     * @return The LastAvailableVersion
+     */
+    public String getLastReleaseVersion( String strArtifactId)
     {
         
+           return  DatastoreService.getDataValue( ReleaserUtils.getLastReleaseVersionDataKey( strArtifactId ), null );
+      
+    }
+    
+    /**
+     * set  the LastAvailableVersion
+     * 
+     * set The LastAvailableVersion
+     */
+    public void setLastReleaseVersion( String strArtifactId,String strVersion)
+    {
         
+             DatastoreService.setDataValue( ReleaserUtils.getLastReleaseVersionDataKey( strArtifactId ), strVersion );
+      
+    }
+    
+    /**
+     * Returns the LastAvailableVersion
+     * 
+     * @return The LastAvailableVersion
+     */
+    public String getLastReleaseNextSnapshotVersion( String strArtifactId)
+    {
+        
+           return  DatastoreService.getDataValue( ReleaserUtils.getLastReleaseNextSnapshotVersionDataKey( strArtifactId ), null );
+      
+    }
+    
+
+    
+    /**
+     * set the LastAvailableVersion
+     * 
+     * set The LastAvailableVersion
+     */
+    public void setLastReleaseNextSnapshotVersion( String strArtifactId,String strVersion)
+    {
+        
+             DatastoreService.setDataValue( ReleaserUtils.getLastReleaseNextSnapshotVersionDataKey( strArtifactId ), strVersion );
+     }
+
+
+ 
+
+    
+
+    
+    
+
+   
+    public int release( Component component ,Locale locale,AdminUser user,HttpServletRequest request)
+    {
         
         //Test if version already exist before release
         try
         {
-            component.setLastAvailableVersion( getLatestVersion( component.getArtifactId( ), false,component.getType( ) ) );
-            if(component.getTargetVersion( )!=null && component.getTargetVersion( ).equals( component.getLastAvailableVersion( ) ) )
+            setRemoteInformations( component, false );
+            updateRemoteInformations( component );
+            if(!component.shouldBeReleased( ) )
             {
-                component.setShouldBeReleased( false );
-                 return -1;
-                
-            }
+                      return -1;
+             }
         }
         catch( HttpAccessException | IOException e )
         {
@@ -180,8 +215,7 @@ public class ComponentService implements IComponentService
         WorkflowReleaseContextService.getService( ).addWorkflowReleaseContext( context );
         
         //Compare Latest vesion of component before rekease 
-         
-            WorkflowReleaseContextService.getService( ).startWorkflowReleaseContext( context, nIdWorkflow, locale, request, user );
+         WorkflowReleaseContextService.getService( ).startWorkflowReleaseContext( context, nIdWorkflow, locale, request, user );
             
         
         
@@ -202,6 +236,67 @@ public class ComponentService implements IComponentService
         _executor= Executors.newFixedThreadPool(AppPropertiesService.getPropertyInt(ConstanteUtils.PROPERTY_THREAD_RELEASE_POOL_MAX_SIZE,10));
 
     }
+
+
+@Override
+public void updateRemoteInformations( Component component )
+{
+    String strLastReleaseVersion= ComponentService.getService( ).getLastReleaseVersion( component.getArtifactId( ) );
+    String strLastReleaseNextSnapshotVersion= ComponentService.getService( ).getLastReleaseNextSnapshotVersion( component.getArtifactId( )  );
+    if(component.getLastAvailableVersion( )==null)
+    {
+        component.setLastAvailableVersion( strLastReleaseVersion );
+    }
+    
+    if(component.getLastAvailableSnapshotVersion( )==null)
+    {
+        component.setLastAvailableVersion( strLastReleaseNextSnapshotVersion );
+    }
+    
+    if(component.getLastAvailableVersion( )!=null && strLastReleaseVersion!=null)
+    {
+        try
+        {
+            Version vLastReleaseVersion=Version.parse( strLastReleaseVersion );
+            Version vLastAvailableVersion=Version.parse( component.getLastAvailableVersion( ) );
+            if(vLastReleaseVersion.compareTo( vLastAvailableVersion )>0)
+            {
+                component.setLastAvailableVersion( strLastReleaseVersion );
+             }
+            
+        }
+        catch( VersionParsingException e )
+        {
+            AppLogService.error( e );
+        }
+    }
+    if(component.getLastAvailableSnapshotVersion( )!=null && strLastReleaseNextSnapshotVersion!=null)
+    {
+        try
+        {
+            Version vLastReleaseNextSnapshotVersionVersion=Version.parse( strLastReleaseNextSnapshotVersion );
+            Version vLastAvailableSnapshotVersion =Version.parse( component.getLastAvailableSnapshotVersion( ) );
+            if(vLastReleaseNextSnapshotVersionVersion.compareTo( vLastAvailableSnapshotVersion )>0)
+            {
+                component.setLastAvailableVersion( strLastReleaseNextSnapshotVersion );
+             }
+            
+        }
+        catch( VersionParsingException e )
+        {
+            AppLogService.error( e );
+        }
+    }
+  }
+
+
+
+    
+    
+    
+    
+    
+
     
     
 }

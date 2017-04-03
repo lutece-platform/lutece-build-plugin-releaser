@@ -152,19 +152,22 @@ public class SiteService
             component.setGroupId( dependency.getGroupId( ) );
             component.setType( dependency.getType( ) );
             component.setCurrentVersion( dependency.getVersion( ) );
+           
+            try
+            {
+                ComponentService.getService( ).setRemoteInformations( component, component.isProject( )?false:true  );
+                
+            }
+            catch( HttpAccessException | IOException e )
+            {
+                AppLogService.error("Error Getting remote informations for component "+component.getArtifactId( ), e );
+            }
+            ComponentService.getService( ).updateRemoteInformations( component );
+            
             defineTargetVersion( component );
             defineNextSnapshotVersion( component );
-            checkForNewVersion( component );
-            ComponentService.getService( ).getJiraInfos( component,component.isProject( )?false:true ,component.getType( ));
+           
             
-            if(  component.isSnapshotVersion( ) && !component.isDowngrade( )&&(component.getTargetVersion( )!=null && !component.getTargetVersion( ).equals( component.getLastAvailableVersion( ) )))
-            {
-                 component.setShouldBeReleased( true );    
-            }
-            else
-            {
-                component.setShouldBeReleased( false );
-            }
             site.addComponent( component );
         }
     }
@@ -183,9 +186,16 @@ public class SiteService
     {
         if ( component.isProject( ) && component.isSnapshotVersion( ) )
         {
-            component.setTargetVersions( Version.getNextReleaseVersions( component.getCurrentVersion() ));
-            String strTargetVersion = Version.getReleaseVersion( component.getCurrentVersion() );
-            component.setTargetVersion( strTargetVersion );
+            if(  !component.getCurrentVersion( ).equals( component.getLastAvailableSnapshotVersion( )) )
+            {
+                component.setTargetVersion( component.getLastAvailableVersion( ) );  
+            }
+            else
+            {
+                component.setTargetVersions( Version.getNextReleaseVersions( component.getCurrentVersion() ));
+                String strTargetVersion = Version.getReleaseVersion( component.getCurrentVersion() );
+                component.setTargetVersion( strTargetVersion );
+            }
         }
         else
         {
@@ -202,18 +212,25 @@ public class SiteService
     private static void defineNextSnapshotVersion( Component component )
     {
         String strNextSnapshotVersion = Version.NOT_AVAILABLE;
-        try
+        if(  !component.getCurrentVersion( ).equals( component.getLastAvailableSnapshotVersion( )) )
         {
-            Version version = Version.parse( component.getTargetVersion( ) );
-            boolean bSnapshot = true;
-            strNextSnapshotVersion = version.nextPatch( bSnapshot ).toString( );
+            component.setNextSnapshotVersion( component.getLastAvailableSnapshotVersion( ) ); 
         }
-        catch( VersionParsingException ex )
+        else
         {
-            AppLogService.error( "Error parsing version for component " + component.getArtifactId( ) + " : " + ex.getMessage( ), ex );
-
+            try
+            {
+                Version version = Version.parse( component.getTargetVersion( ) );
+                boolean bSnapshot = true;
+                strNextSnapshotVersion = version.nextPatch( bSnapshot ).toString( );
+            }
+            catch( VersionParsingException ex )
+            {
+                AppLogService.error( "Error parsing version for component " + component.getArtifactId( ) + " : " + ex.getMessage( ), ex );
+    
+            }
+            component.setNextSnapshotVersion( strNextSnapshotVersion );
         }
-        component.setNextSnapshotVersion( strNextSnapshotVersion );
 
     }
 
@@ -284,87 +301,59 @@ public class SiteService
                 String strComment = I18nService.getLocalizedString( MESSAGE_AVOID_SNAPSHOT, locale );
                 component.addReleaseComment( strComment );
             }
-            if ( !component.getTargetVersion( ).equals( component.getCurrentVersion( ) ) )
+            else if ( !component.getCurrentVersion( ).equals( component.getLastAvailableVersion( )) )
             {
-                String strComment = I18nService.getLocalizedString( MESSAGE_UPGRADE_SELECTED, locale );
+                String [ ] arguments = {
+                        component.getLastAvailableVersion( )
+                    };
+                 String strComment = I18nService.getLocalizedString( MESSAGE_MORE_RECENT_VERSION_AVAILABLE, arguments, locale );
+                  
                 component.addReleaseComment( strComment );
             }
         }
-
-        if (  !component.isProject( )&&component.getLastAvailableVersion( ) != null && !component.getLastAvailableVersion( ).equals( component.getTargetVersion( ) ) )
+        else
         {
-            String [ ] arguments = {
-                component.getLastAvailableVersion( )
-            };
-            String strComment = I18nService.getLocalizedString( MESSAGE_MORE_RECENT_VERSION_AVAILABLE, arguments, locale );
-            component.addReleaseComment( strComment );
-        }
-
-        if ( component.isProject( ) )
-        {
-            if(  component.isSnapshotVersion( ) && !component.shouldBeReleased( ) && !component.isDowngrade( ) )
+            if(component.isSnapshotVersion( ))
             {
-                
-                    String [ ] arguments = {
-                        component.getLastAvailableVersion( )
-                    };
-                    String strComment = I18nService.getLocalizedString( MESSAGE_AN_RELEASE_VERSION_ALREADY_EXIST, arguments, locale );
-                    component.addReleaseComment( strComment );
-            }
+                if(  !component.getCurrentVersion( ).equals( component.getLastAvailableSnapshotVersion( )) )
+                {
+                    
+                        String [ ] arguments = {
+                            component.getLastAvailableVersion( )
+                        };
+                        String strComment = I18nService.getLocalizedString( MESSAGE_UPGRADE_SELECTED, arguments, locale );
+                        component.addReleaseComment( strComment );
+                }
+                else if(  !component.shouldBeReleased( ) && !component.isDowngrade( ) )
+                {
+                    
+                        String [ ] arguments = {
+                            component.getLastAvailableVersion( )
+                        };
+                        String strComment = I18nService.getLocalizedString( MESSAGE_AN_RELEASE_VERSION_ALREADY_EXIST, arguments, locale );
+                        component.addReleaseComment( strComment );
+                }
+           
             else if(component.shouldBeReleased( ))
             {
             
                 String strComment = I18nService.getLocalizedString( MESSAGE_TO_BE_RELEASED, locale );
                 component.addReleaseComment( strComment );
-                
-                
+              }
             }
-            
-            
+            else if ( !component.getCurrentVersion( ).equals( component.getLastAvailableVersion( )) )
+            {
+                String [ ] arguments = {
+                        component.getLastAvailableVersion( )
+                    };
+                 String strComment = I18nService.getLocalizedString( MESSAGE_MORE_RECENT_VERSION_AVAILABLE, arguments, locale );
+                  
+                component.addReleaseComment( strComment );
+            }
         }
     }
 
-    private static void checkForNewVersion( Component component )
-    {
-        if ( !component.isSnapshotVersion( ) )
-        {
-            try
-            {
-                String strLastestVersion = ComponentService.getService( ).getLatestVersion( component.getArtifactId( ),true,component.getType( ) );
-
-                if ( !strLastestVersion.equals( component.getTargetVersion( ) ) )
-                {
-                    component.setLastAvailableVersion( strLastestVersion );
-                }
-            }
-            catch( HttpAccessException | IOException ex )
-            {
-                AppLogService.error(
-                        "Releaser unable to get the latest version for component : " + component.getArtifactId( ) + " error : " + ex.getMessage( ), ex );
-            }
-        }
-        else if(Version.isSnapshot(component.getCurrentVersion( )))
-        {
-            try
-            {
-                String strLastestVersion = ComponentService.getService( ).getLatestVersion( component.getArtifactId( ),false,component.getType( ) );
-
-                
-                    component.setLastAvailableVersion( strLastestVersion );
-                
-            }
-            catch( HttpAccessException | IOException ex )
-            {
-                AppLogService.error(
-                        "Releaser unable to get the latest version for component : " + component.getArtifactId( ) + " error : " + ex.getMessage( ), ex );
-            }
-     
-            
-        }
-        
-        
-
-    }
+   
 
     public static void upgradeComponent( Site site, String strArtifactId )
     {
@@ -383,7 +372,6 @@ public class SiteService
             if ( component.getArtifactId( ).equals( strArtifactId ) && component.isSnapshotVersion( ))
             {
                 component.setTargetVersion( component.getLastAvailableVersion( ) );
-                component.setShouldBeReleased( false );
                 component.setDowngrade( true );
             }
         }
@@ -395,7 +383,6 @@ public class SiteService
         {
             if ( component.getArtifactId( ).equals( strArtifactId ) && component.isSnapshotVersion( ))
             {
-                component.setShouldBeReleased( true );
                 component.setDowngrade( false );
                 defineTargetVersion( component );
             }
@@ -408,8 +395,6 @@ public class SiteService
         {
             if ( component.getArtifactId( ).equals( strArtifactId )  && component.shouldBeReleased( ))
             {
-                //Get Scm Infos 
-                ComponentService.getService( ).getScmInfos( component,true,component.getType( ) ) ;
                 //Release component
                return  ComponentService.getService( ).release( component, locale,user,request );
                 
@@ -425,14 +410,11 @@ public class SiteService
         
         
         Integer nIdWfContext;
-        //Release all snapshot comonent
+        //Release all snapshot compnent
         for ( Component component : site.getComponents( ) )
         {
             if ( component.shouldBeReleased( )&& !component.isTheme( ))
             {
-                //Get Scm Infos 
-                ComponentService.getService( ).getScmInfos( component,true,component.getType( ) ) ;
-                //Release component
                 nIdWfContext=ComponentService.getService( ).release( component, locale,user,request );
                 mapResultContext.put( component.getArtifactId( ), nIdWfContext );
             }

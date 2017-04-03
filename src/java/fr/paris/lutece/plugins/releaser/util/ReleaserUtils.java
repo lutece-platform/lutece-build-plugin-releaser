@@ -26,6 +26,17 @@ public class ReleaserUtils
     {
         return ConstanteUtils.CONSTANTE_RELEASE_CONTEXT_PREFIX + strArtifactId + "_" + nContextId;
     }
+    
+    public static String getLastReleaseVersionDataKey( String strArtifactId )
+    {
+        return ConstanteUtils.CONSTANTE_LAST_RELEASE_VERSION_PREFIX + strArtifactId ;
+    }
+    
+    public static String getLastReleaseNextSnapshotVersionDataKey( String strArtifactId )
+    {
+        return ConstanteUtils.CONSTANTE_LAST_RELEASE_NEXT_SNPASHOT_VERSION + strArtifactId ;
+    }
+
 
     public static String getLocalSitePath( String strSiteName )
     {
