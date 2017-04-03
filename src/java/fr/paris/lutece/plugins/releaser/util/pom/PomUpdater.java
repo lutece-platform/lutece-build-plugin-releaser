@@ -36,7 +36,11 @@ public class PomUpdater
 
             inputStream = new FileInputStream( strSiteLocalPomPath );
             Model model = unmarshal( Model.class, inputStream );
-            model.setVersion( site.getNextReleaseVersion( ) );
+            if(!site.isTheme( ))
+            {
+                model.setVersion( site.getNextReleaseVersion( ) );
+            }
+           
             model.setDescription( site.getTagInformation( ) );
 
             fr.paris.lutece.plugins.releaser.business.jaxb.maven.Model.Dependencies dependencies = model.getDependencies( );
