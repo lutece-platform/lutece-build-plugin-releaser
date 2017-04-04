@@ -40,7 +40,7 @@ public class PomUpdater
             {
                 model.setVersion( site.getNextReleaseVersion( ) );
             }
-           
+            
             model.setDescription( site.getTagInformation( ) );
 
             fr.paris.lutece.plugins.releaser.business.jaxb.maven.Model.Dependencies dependencies = model.getDependencies( );
