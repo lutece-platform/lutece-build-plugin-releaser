@@ -270,7 +270,14 @@ public class SvnService implements ISvnService
                 sbLog.append( "Release perform theme " + site.getNextReleaseVersion( ) + "...\n" );
                 MavenService.getService( ).mvnReleasePerform( strSitePomLocalBasePath, strSvnLogin, strSvnPassword, commandResult );
                 sbLog.append( "End Release perform theme " + site.getNextReleaseVersion( ) + "...\n" );
+                sbLog.append( "Updating pom to next development " + site.getNextSnapshotVersion( ) + "\n" );
                 
+                PomUpdater.updateSiteAfterTag( site );
+                
+                SvnUtils.doCommit( strSitePomLocalBasePath, "[site-release] update Updating pom to next development ", commitClient );
+
+                sbLog.append( "Pom updated\n" );
+            
             }
             
         }
