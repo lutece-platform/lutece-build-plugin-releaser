@@ -65,6 +65,8 @@ public class Component
     private List<String> _listTargetVersions;
     private int _nTargetVersionIndex;
     private boolean _bDowngrade;
+    private boolean _bErrorLastRelease;
+    
     
     
     private String _strScmDeveloperConnection;
@@ -464,6 +466,16 @@ public class Component
     public void setLastAvailableSnapshotVersion( String _strLastAvailableSnapshotVersion )
     {
         this._strLastAvailableSnapshotVersion = _strLastAvailableSnapshotVersion;
+    }
+
+    public boolean isErrorLastRelease( )
+    {
+        return _bErrorLastRelease;
+    }
+
+    public void setErrorLastRelease( boolean _bErrorLastRelease )
+    {
+        this._bErrorLastRelease = _bErrorLastRelease;
     }
 
             

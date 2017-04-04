@@ -372,6 +372,7 @@ public class SiteService
             if ( component.getArtifactId( ).equals( strArtifactId ) && component.isSnapshotVersion( ))
             {
                 component.setTargetVersion( component.getLastAvailableVersion( ) );
+                component.setNextSnapshotVersion( component.getLastAvailableSnapshotVersion( ) );
                 component.setDowngrade( true );
             }
         }
@@ -385,6 +386,7 @@ public class SiteService
             {
                 component.setDowngrade( false );
                 defineTargetVersion( component );
+                defineNextSnapshotVersion( component );
             }
         }
     }
@@ -415,8 +417,10 @@ public class SiteService
         {
             if ( component.shouldBeReleased( )&& !component.isTheme( ))
             {
+                component.setErrorLastRelease( false );
                 nIdWfContext=ComponentService.getService( ).release( component, locale,user,request );
                 mapResultContext.put( component.getArtifactId( ), nIdWfContext );
+               
             }
         }
         
