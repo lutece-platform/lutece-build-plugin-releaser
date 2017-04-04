@@ -34,7 +34,7 @@ public class ReleaserUtils
     
     public static String getLastReleaseNextSnapshotVersionDataKey( String strArtifactId )
     {
-        return ConstanteUtils.CONSTANTE_LAST_RELEASE_NEXT_SNPASHOT_VERSION + strArtifactId ;
+        return ConstanteUtils.CONSTANTE_LAST_RELEASE_NEXT_SNPASHOT_VERSION_PREFIX + strArtifactId ;
     }
 
 
