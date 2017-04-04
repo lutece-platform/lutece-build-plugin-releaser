@@ -37,10 +37,17 @@
             </div>
           </div>
         </div>
+          <#if release_history.commandResult.error??>
+            <div class="box-body alert-danger">
+              <h2 class="hidden"><strong>Infos</strong></h2>
+              <pre> ${release_history.commandResult.error}</pre>
+            </div>
+         </#if> 
         <div class="box-body">
           <h2 class="hidden"><strong>Infos</strong></h2>
           <pre> ${release_history.commandResult.log}</pre>
         </div>
+        
       </div>
     </#list>
   </section>

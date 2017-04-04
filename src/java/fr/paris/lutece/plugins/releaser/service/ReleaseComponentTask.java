@@ -77,7 +77,7 @@ public class ReleaseComponentTask implements Runnable {
                    
                     try
                     {
-                        this.wait( WAIT_TIME );
+                       Thread.sleep( WAIT_TIME );
                     }
                     catch( InterruptedException e )
                     {

@@ -27,7 +27,11 @@
           <button type="button" class="btn btn-success btn-lg btn-block" data-toggle="modal" data-target="#modalRelease">
             <span class="fa fa-cogs"></span>  Releaser le <#if !site.theme>Site<#else>Theme</#if>
           </button>
+           <a class="button transition border-blue small btn-release-history"  title="Visuliser l'historique des releases" href="jsp/admin/plugins/releaser/ManageSiteRelease.jsp?view=releaseComponentHistory&artifact_id=${site.artifactId !''}" target="_blank">
+                  <i class="fa fa-cog fa-fw"></i> Visualiser l'historique des releases du <#if !site.theme>Site<#else>Theme</#if>
+            </a>
         </div>
+        
         </div>
         <div class="pull-right hidden">
           <@aButton href='jsp/admin/plugins/releaser/ManageClusters.jsp#cluster${site.idCluster}' title='Retour au cluster' buttonIcon='cubes' showTitle=true />
