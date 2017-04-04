@@ -186,7 +186,7 @@ public class SiteService
     {
         if ( component.isProject( ) && component.isSnapshotVersion( ) )
         {
-            if(  !component.getCurrentVersion( ).equals( component.getLastAvailableSnapshotVersion( )) )
+            if(  !component.getCurrentVersion( ).equals( component.getLastAvailableSnapshotVersion( )) || component.isTheme( ) )
             {
                 component.setTargetVersion( component.getLastAvailableVersion( ) );  
             }
@@ -212,7 +212,7 @@ public class SiteService
     private static void defineNextSnapshotVersion( Component component )
     {
         String strNextSnapshotVersion = Version.NOT_AVAILABLE;
-        if(  !component.getCurrentVersion( ).equals( component.getLastAvailableSnapshotVersion( )) )
+        if(  !component.getCurrentVersion( ).equals( component.getLastAvailableSnapshotVersion( )) || component.isTheme( ))
         {
             component.setNextSnapshotVersion( component.getLastAvailableSnapshotVersion( ) ); 
         }
