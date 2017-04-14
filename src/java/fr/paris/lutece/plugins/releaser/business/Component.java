@@ -66,6 +66,10 @@ public class Component
     private int _nTargetVersionIndex;
     private boolean _bDowngrade;
     private boolean _bErrorLastRelease;
+    private String _strName;
+    private String _strCloneUrl;
+    private String _strFullName;
+    
     
     
     
@@ -476,6 +480,36 @@ public class Component
     public void setErrorLastRelease( boolean _bErrorLastRelease )
     {
         this._bErrorLastRelease = _bErrorLastRelease;
+    }
+
+    public String getName( )
+    {
+        return _strName;
+    }
+
+    public void setName( String _strName )
+    {
+        this._strName = _strName;
+    }
+
+    public String getCloneUrl( )
+    {
+        return _strCloneUrl;
+    }
+
+    public void setCloneUrl( String _strCloneUrl )
+    {
+        this._strCloneUrl = _strCloneUrl;
+    }
+
+    public String getFullName( )
+    {
+        return _strFullName;
+    }
+
+    public void setFullName( String strFullName )
+    {
+        this._strFullName = strFullName;
     }
 
             

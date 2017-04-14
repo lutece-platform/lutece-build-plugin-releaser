@@ -33,6 +33,10 @@
  */
 package fr.paris.lutece.plugins.releaser.util.pom;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +49,7 @@ import javax.xml.bind.Unmarshaller;
 import org.xml.sax.InputSource;
 
 import fr.paris.lutece.plugins.releaser.business.jaxb.maven.Model;
+import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.Dependency;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.portal.service.util.AppLogService;
@@ -89,6 +94,31 @@ public class PomParser
         {
            AppLogService.error( e );
         }
+    }
+    
+    public void parse( Component component , String strPOM )
+    {
+        
+        try
+        {
+            InputSource isPOM = new InputSource( new StringReader( strPOM ) );
+            Model model = unmarshal( Model.class, isPOM );
+            component.setArtifactId( model.getArtifactId( ) );
+            component.setGroupId( model.getGroupId( ) );
+            component.setCurrentVersion( model.getVersion( ) );
+            if(model.getScm() !=null)
+            {
+                component.setScmDeveloperConnection( model.getScm( ).getDeveloperConnection( ) );
+                
+            }
+        
+        }
+        catch ( JAXBException e )
+        {
+           AppLogService.error( e );
+        }
+    
+
     }
 
     private void filledSite( Site site, Model model )

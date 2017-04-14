@@ -90,6 +90,7 @@ public class ClusterJspBean extends ManageSitesJspBean
 
     private static final String JSP_MANAGE_CLUSTERS = "jsp/admin/plugins/releaser/ManageClusters.jsp";
     private static final String JSP_MANAGE_SITE_RELEASE = "ManageSiteRelease.jsp";
+     private static final String JSP_MANAGE_COMPONENT = "ManageComponent.jsp";
 
     // Properties
     private static final String MESSAGE_CONFIRM_REMOVE_CLUSTER = "releaser.message.confirmRemoveCluster";
@@ -111,6 +112,8 @@ public class ClusterJspBean extends ManageSitesJspBean
     // Actions
     private static final String ACTION_CREATE_CLUSTER = "createCluster";
     private static final String ACTION_RELEASE_SITE = "releaseSite";
+    private static final String ACTION_RELEASE_COMPONENT = "releaseComponent";
+    
     
     private static final String ACTION_MODIFY_CLUSTER = "modifyCluster";
     private static final String ACTION_REMOVE_CLUSTER = "removeCluster";
@@ -193,6 +196,37 @@ public class ClusterJspBean extends ManageSitesJspBean
         addInfo( INFO_CLUSTER_CREATED, getLocale( ) );
 
         return redirectView( request, VIEW_MANAGE_CLUSTERS );
+    }
+    
+    /**
+     * Process the data capture form of a new cluster
+     *
+     * @param request
+     *            The Http Request
+     * @return The Jsp URL of the process result
+     */
+    @Action( ACTION_RELEASE_COMPONENT )
+    public String doReleaseComponent( HttpServletRequest request )
+    {
+        ReleaserUser user=ReleaserUtils.getReleaserUser( request, getLocale( ) );
+         if(user==null)
+        {
+            user=new ReleaserUser( );
+            
+        }
+        populate( user, request );
+        
+
+        // Check constraints
+        if ( !validateBean( user, VALIDATION_ATTRIBUTES_USER_PREFIX ) )
+        {
+            
+            redirectView( request, VIEW_MANAGE_CLUSTERS );
+        }
+       
+        ReleaserUtils.setReleaserUser( request, user );
+        
+        return redirect( request, JSP_MANAGE_COMPONENT );
     }
 
     /**

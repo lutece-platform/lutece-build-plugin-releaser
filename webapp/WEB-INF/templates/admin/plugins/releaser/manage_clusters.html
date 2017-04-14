@@ -4,6 +4,17 @@
                 <i class="fa fa-plus"></i>
             </button>
         </@tform>
+        <#if !is_application_account>
+                  <button class="button border-green btn-release-site"  title="Releaser" data-toggle="modal" data-target="#modalReleaseComponent">
+                    <i class="fa fa-cog" aria-hidden="true"></i>
+                      <span class="hidden-xs">Releaser un composant</span>
+                  </button>
+            <#else>
+                 <a class="button border-blue" href="jsp/admin/plugins/releaser/ManageComponent}" title="Modifier">
+                    <i class="fa fa-cog" aria-hidden="true"></i>
+                    <span class="hidden-xs">Releaser un composant</span>
+                  </a>
+            </#if>
     <@messages infos=infos />
         <#list cluster_list as cluster>
     <a name="cluster${cluster.id}" ></a>
@@ -51,13 +62,7 @@
                             <i class="fa fa-plus fa-fw"></i>
                             <span class="sr-only">#i18n{releaser.manage_sites.buttonAdd}</span>
                     </button>
-                    <#if cluster.sites?size &gt; 0 >
-                        <a class="button transition fill-lightblue" href="jsp/admin/plugins/releaser/ManageClusters.jsp" title="Release cluster">
-                            <i class="fa fa-cogs fa-fw" aria-hidden="true"></i>
-                            <span class="hidden-xs hidden-sm">Release cluster</span>
-                        </a>
-                    </#if>
-            </@tform>
+                  </@tform>
         </div>
         <div class="hidden-xs col-sm-1">
             <#if cluster.sites?size &gt; 0 >
@@ -94,10 +99,10 @@
                                             <@aButton href='jsp/admin/plugins/releaser/ManageClusters.jsp?action=confirmRemoveSite&id=${site.id}' title='#i18n{portal.util.labelDelete}' buttonIcon='trash' color='btn-danger' showTitle=false />
                                             -->
                                             <#if !is_application_account>
-	                                            <button class="button border-green btn-release-site" data-id-site="${site.id}" title="Releaser" data-toggle="modal" data-target="#modalRelease">
-	                                              <i class="fa fa-cog" aria-hidden="true"></i>
-	                                                <span class="hidden-xs"><#if !site.theme>Releaser<#else>Releaser le theme</#if></span>
-	                                            </button>
+                                                <button class="button border-green btn-release-site" data-id-site="${site.id}" title="Releaser" data-toggle="modal" data-target="#modalRelease">
+                                                  <i class="fa fa-cog" aria-hidden="true"></i>
+                                                    <span class="hidden-xs"><#if !site.theme>Releaser<#else>Releaser le theme</#if></span>
+                                                </button>
                                             <#else>
                                                  <a class="button border-blue" href="jsp/admin/plugins/releaser/ManageSiteRelease.jsp?id_site=${site.id}" title="Modifier">
                                                     <i class="fa fa-cog" aria-hidden="true"></i>
@@ -160,7 +165,37 @@
     </div>
   </div>
 </div>
-  <@paginationAdmin paginator=paginator combo=1 />
+  <!-- Modal -->
+<div class="modal fade" id="modalReleaseComponent" tabindex="-1" role="dialog" aria-labelledby="modalReleaseLabel">
+  <div class="modal-dialog" role="document">
+  <div class="row">
+    <@tform name='release_site' class='form' action='jsp/admin/plugins/releaser/ManageClusters.jsp'>
+      <input type="hidden" name="id" id="release_id_site" value="" class="form-control">
+        <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="modalReleaseLabel">Information d'authentification </h4>
+        </div>
+        
+            <div class="form-group">
+            <label for="github_component_account_login!">Login  Github</label>
+            <input type="text" name="github_component_account_login" id="github_component_account_login" value="${(user.githubComponentAccountLogin)!}" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="github_component_account_password">Password Github</label>
+            <input type="password" name="github_component_account_password" id="github_component_account_password" value="${(user.githubComponentAccountPassword)!}" class="form-control" required>
+          </div>
+      
+        <div class="modal-footer">
+           <button type="submit" class="button transition small fill-blue" name="action_releaseComponent">Ok</button>
+           <button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Fermer</button>
+        </div>
+      </div> 
+    </@tform>
+    </div>
+  </div>
+</div>
+  <@paginationAdmin paginator=paginator combo=1  />
 <script>
     $(function() {
        $(".btn-release-site").click( function(e){

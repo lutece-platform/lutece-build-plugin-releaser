@@ -6,9 +6,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class ReleaserUser
 {
 
-    @NotEmpty( message = "#i18n{releaser.validation.releaseruser.SvnSiteAccountLogin.notEmpty}" )
     private String  _strSvnSiteAccountLogin;
-    @NotEmpty( message = "#i18n{releaser.validation.releaseruser.SvnSiteAccountPassword.notEmpty}" )
     private String  _strSvnSiteAccountPassword;
     private String  _strSvnComponentAccountLogin;
     private String  _strSvnComponentAccountPassword;

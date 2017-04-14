@@ -2,7 +2,7 @@
 <!-- TO REMOVE WHEN feature_frameset.html will be correctly added to this template -->
 <section class="content-header">
     <h1>
-        <a href="jsp/admin/plugins/releaser/ManageClusters.jsp" title="Release de sites et de clusters">Release de sites et de clusters</a>
+        <a href="jsp/admin/plugins/releaser/ManageClusters.jsp" title="#i18n{releaser.adminFeature.ManageReleaser.name}">#i18n{releaser.adminFeature.ManageReleaser.name}</a>
         <small class="hidden-xs hidden-sm">Pr&eacute;paration de la release du <#if !site.theme>Site<#else>Theme</#if></small>
     </h1>
     <ol class="breadcrumb applications">
@@ -297,7 +297,7 @@ var artifactIdInProgress;
 	      var progressId="#progress-wrapper-" + artifactId;
         $( progressId ).toggle();
 		     $.ajax({
-		            url: "jsp/admin/plugins/releaser/ReleaseComponentJson.jsp?action=releaseComponent&artifact_id="+$(this).attr("data-artifactid"),
+		            url: "jsp/admin/plugins/releaser/ReleaseComponentSiteJson.jsp?action=releaseComponent&artifact_id="+$(this).attr("data-artifactid"),
 		            type: "GET",
 		            dataType : "json",
 		            success: function( data ) {

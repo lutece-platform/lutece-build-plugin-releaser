@@ -2,9 +2,13 @@ package fr.paris.lutece.plugins.releaser.util.github;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.api.Git;
@@ -28,10 +32,17 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.tmatesoft.svn.core.auth.BasicAuthenticationManager;
 
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
+import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
+import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.portal.service.util.AppLogService;
+import fr.paris.lutece.portal.service.util.AppPropertiesService;
+import fr.paris.lutece.util.httpaccess.HttpAccess;
+import fr.paris.lutece.util.httpaccess.HttpAccessException;
+import fr.paris.lutece.util.signrequest.BasicAuthorizationAuthenticator;
 
 
 
@@ -282,6 +293,69 @@ public class GitUtils  {
         }
     
     
+    public  static GithubSearchResult searchRepo(String strSearch,String strOrganization,String strUserName, String strPassword)
+    {
+        HttpAccess httpAccess = new HttpAccess(  );
+        
+        GithubSearchResult searchResult=null;
+        
+        String strUrl = MessageFormat.format( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_SEARCH_REPO_API ), strSearch,strOrganization  );
+        
+      
+        String strResponse = "";
+        
+        try
+        {
+            
+            strResponse = httpAccess.doGet(strUrl,  new BasicAuthorizationAuthenticator(  strUserName, strPassword ),null);
+            
+            if(!StringUtils.isEmpty( strResponse ))
+            {
+                searchResult=MapperJsonUtil.parse( strResponse, GithubSearchResult.class );
+                
+            }
+            
+        }
+        catch ( HttpAccessException ex )
+        {
+            AppLogService.error( ex );
+        }
+        catch( IOException e )
+        {
+            AppLogService.error( e );
+        }
+
+        return searchResult;
+    }
+    
+    public  static String getFileContent(String strFullName,String strPathFile,String strBranch,String strUserName, String strPassword)
+    {
+        HttpAccess httpAccess = new HttpAccess(  );
+       String strUrl = "https://raw.githubusercontent.com/"+strFullName+"/"+strBranch+"/"+ strPathFile;
+       //Map<String,String> hashHeader=new HashMap<>( );  
+      //hashHeader.put( "accept", "application/vnd.github.VERSION.raw" );
+        String strResponse = "";
+        
+        try
+        {
+          
+
+            strResponse = httpAccess.doGet( strUrl, new BasicAuthorizationAuthenticator(  strUserName, strPassword ),null );
+            
+          
+
+            
+        }
+        catch ( HttpAccessException ex )
+        {
+            AppLogService.error( ex );
+        }
+      
+
+        return strResponse;
+    }
+    
+    
     private static Ref getTagLinkedToLastRelease(Git git) throws GitAPIException {
         final String TOKEN = "[maven-release-plugin] prepare release ";
         Ref res = null;
@@ -331,4 +405,9 @@ private static String getRepoUrl(String strRepoUrl)
 	
 	
 }
+
+
+
+
+
 }

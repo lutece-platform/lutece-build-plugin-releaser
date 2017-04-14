@@ -481,12 +481,7 @@ public class SiteService
         {
             if ( component.getArtifactId( ).equals( strArtifactId ) )
             {
-                List<String> listTargetVersions = component.getTargetVersions();
-                int nNewIndex = (component.getTargetVersionIndex() + 1) % listTargetVersions.size();
-                String strTargetVersion = listTargetVersions.get( nNewIndex );
-                component.setTargetVersion( strTargetVersion );
-                component.setTargetVersionIndex( nNewIndex );
-                component.setNextSnapshotVersion( Version.getNextSnapshotVersion( strTargetVersion ));
+                ComponentService.getService( ).changeNextReleaseVersion( component );
             }
         }
     }

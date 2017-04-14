@@ -1,19 +1,17 @@
 package fr.paris.lutece.plugins.releaser.service;
 
 import java.io.IOException;
-import java.text.MessageFormat;
+import java.util.List;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.fasterxml.jackson.databind.JsonNode;
+
 
 import fr.paris.lutece.plugins.releaser.business.Component;
-import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.portal.business.user.AdminUser;
-import fr.paris.lutece.portal.service.datastore.DatastoreService;
-import fr.paris.lutece.portal.service.util.AppLogService;
-import fr.paris.lutece.util.httpaccess.HttpAccess;
+import fr.paris.lutece.portal.web.util.LocalizedPaginator;
+import fr.paris.lutece.util.ReferenceList;
 import fr.paris.lutece.util.httpaccess.HttpAccessException;
 
 public interface IComponentService
@@ -56,6 +54,13 @@ public interface IComponentService
      * set The LastAvailableVersion
      */
      void setLastReleaseNextSnapshotVersion( String strArtifactId,String strVersion);
+     
+     
+     LocalizedPaginator<Component> getSearchComponent( String strSearch, HttpServletRequest request, Locale locale,String strPaginateUrl,String strCurrentPageIndex);
+    
+     Component loadComponent(Component component,String strPom, String stUser,String strPassword);
+     
+     void changeNextReleaseVersion(Component component );
 
     void init( );
 

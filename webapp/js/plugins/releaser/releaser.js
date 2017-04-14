@@ -17,7 +17,7 @@ $.notify.addStyle('releaser', {
 function callReleaseInfo( nIdReleaseContext,progressId,artifactId)
 {
     $.ajax({
-        url: "jsp/admin/plugins/releaser/ReleaseComponentJson.jsp?view=releaseInfoJson&id_context="+nIdReleaseContext,
+        url: "jsp/admin/plugins/releaser/ReleaseComponentSiteJson.jsp?view=releaseInfoJson&id_context="+nIdReleaseContext,
         type: "GET",
         dataType : "json",
         success: function( data ) {

@@ -43,7 +43,7 @@ public class ConstanteUtils
     public static final String PROPERTY_SITE_REPOSITORY_PASSWORD= "releaser.site.repository.password";
     public static final String PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_LOGIN= "releaser.githubReleaseComponetAccount.login";
     public static final String PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_PASSWORD="releaser.githubReleaseComponetAccount.password";
-    
+    public static final String PROPERTY_GITHUB_SEARCH_REPO_API = "releaser.githubSearchRepoApi";
     
     public static final String PROPERTY_MAVEN_LOCAL_REPOSITORY = "releaser.mavenLocalRepository";
     public static final String PROPERTY_MAVEN_HOME_PATH = "releaser.mavenHomePath";
@@ -57,9 +57,13 @@ public class ConstanteUtils
     public static final String PROPERTY_TWITTER_OAUTH_AUTHORIZATION_URL="releaser.authorizationURL";
     public static final String PROPERTY_TWITTER_OAUTH_ACCESSTOKEN_URL="releaser.accessTokenURL";
     public static final String PROPERTY_THREAD_RELEASE_POOL_MAX_SIZE="releaser.threadReleasePoolMaxSize";
+    
+    public static final String PROPERTY_NB_SEARCH_ITEM_PER_PAGE_LOAD="releaser.nbSearchItemPerPageLoad";
+    
     public static final String I18_TWITTER_MESSAGE="releaser.message.twitterMessage";
     public static final String CONSTANTE_TYPE_LUTECE_SITE="lutece-site";
-   
+    public static final String CONSTANTE_GITHUB_ORG_LUTECE_SECTEUR_PUBLIC="lutece-secteur-public";
+    public static final String CONSTANTE_GITHUB_ORG_LUTECE_PLATFORM="lutece-platform";
     
     
  

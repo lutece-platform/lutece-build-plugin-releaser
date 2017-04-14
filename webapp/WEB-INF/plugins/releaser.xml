@@ -30,6 +30,16 @@
             <feature-icon-url></feature-icon-url>
       </admin-feature>
     </admin-features>
+       <admin-features>
+        <admin-feature>
+            <feature-id>RELEASER_MANAGEMENT_COMPONENT</feature-id>
+            <feature-title>releaser.adminFeature.ManageReleaserComponent.name</feature-title>
+            <feature-description>releaser.adminFeature.ManageReleaserComponent.description</feature-description>
+            <feature-level>0</feature-level>
+            <feature-url>jsp/admin/plugins/releaser/ManageComponent.jsp</feature-url>
+            <feature-icon-url></feature-icon-url>
+      </admin-feature>
+    </admin-features>
     
     <!-- Admin css -->
      <admin-css-stylesheets>
