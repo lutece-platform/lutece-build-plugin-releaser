@@ -237,6 +237,13 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             GitUtils.checkoutRepoBranch( git, GitUtils.DEVELOP_BRANCH, commandResult );
             // PROGRESS 10%
             commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
+            
+        
+            if(ComponentService.getService( ).isErrorSnapshotComponentInformations( component,ReleaserUtils.getLocalSitePomPath( strComponentName ) ))
+            {
+                ReleaserUtils.addTechnicalError( commandResult,"The cloned component does not match the release informations");
+                
+            }
 
         }
       
@@ -436,6 +443,11 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                 context.getCommandResult( ) );
         // PROGRESS 10%
         commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
+        
+        if(ComponentService.getService( ).isErrorSnapshotComponentInformations( context.getComponent( ) ,ReleaserUtils.getLocalComponentPomPath( strComponentName )))
+        {
+            ReleaserUtils.addTechnicalError( commandResult,"The checkout component does not match the release informations");
+         }
 
         ReleaserUtils.logEndAction( context, "Checkout Svn Component " );
 

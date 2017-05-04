@@ -1,34 +1,32 @@
 <div class="app-wrapper">
-<!-- TO REMOVE WHEN feature_frameset.html will be correctly added to this template -->
-<section class="content-header">
-    <h1>
-       <a href="jsp/admin/plugins/releaser/ManageClusters.jsp" title="#i18n{releaser.adminFeature.ManageReleaser.name}">#i18n{releaser.adminFeature.ManageReleaser.name}</a>
-        <small class="hidden-xs hidden-sm">Release des composants</small>
-    </h1>
-      <form class="form-inline hidden-xs" action="jsp/admin/plugins/releaser/ManageComponent.jsp" method="POST" name="" id="search" >
-        <label for="search" class="sr-only">Rechercher un composant</label>
-        <input type="text" class="form-control" placeholder="Nom du composant" name="search" id="search" value="${search!}">
-         <span class="input-group-btn">
-              <button class="btn btn-default btn-flat" type="submit" title="rechercher"><i class="fa fa-search "></i> </button>
-         </span>
-    </form>
-</section>
-<section class="content ">
-<!-- EN TO REMOVE -->
-
-  <div class="row">
-    <div class="col-md-12 col-sm-12 col-xs-12">
-      <div class="info-box info-box-release components">
-        <span class="info-box-icon bg-yellow"><i class="fa fa-puzzle-piece"></i></span>
-        <div class="info-box-content">
-          <span class="info-box-text">Liste des composants</span>
-         </div>
-      </div>
-      <ul class="list-group list-components fa-padding">
-      <#if list_component??>
-          <#list list_component as component>
-        
-              <li class="list-group-item">
+    <section class="content-header">
+        <h1>
+            <a href="jsp/admin/plugins/releaser/ManageClusters.jsp" title="#i18n{releaser.adminFeature.ManageReleaser.name}">#i18n{releaser.adminFeature.ManageReleaser.name}</a>
+            <small class="hidden-xs hidden-sm">Release des composants</small>
+        </h1>
+    </section>
+    <section class="content">
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="info-box info-box-release components">
+                <span class="info-box-icon bg-yellow"><i class="fa fa-puzzle-piece"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text pull-left" style="margin-right:30px; padding-top: 10px">Liste des composants</span>  
+                    <form class="form-inline pull-left hidden-xs" style="padding-top: 5px" action="jsp/admin/plugins/releaser/ManageComponent.jsp" method="POST" name="" id="search" >
+                        <label for="search" class="sr-only">Rechercher un composant</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Nom du composant" name="search" id="search" value="${search!}">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default btn-flat" type="submit" title="rechercher"><i class="fa fa-search "></i> </button>
+                            </span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <ul class="list-group list-components fa-padding">
+            <#if list_component??>
+                <#list list_component as component>
+                <li class="list-group-item">
                 <div class="media">
                       <div class="media-left">
                       </div>
@@ -87,22 +85,17 @@
                       </div>
                      </div> 
                 </li>
-            </#list>
-        </#if>  
-      </ul>
-      
-     
+                </#list>
+            </#if>  
+        </ul>
         </div>
-       </div>
-      </section>
     </div>
-    <#if paginator??>
-        <@paginationAdmin paginator=paginator />
-     </#if>   
+    </section>
+</div>
+<#if paginator??>
+    <@paginationAdmin paginator=paginator />
+</#if>   
   
-
-
-
 <div class="modal fade" id="modalLogs" tabindex="-1" role="dialog" aria-labelledby="modalLogsLabel">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
@@ -121,7 +114,6 @@
 </div>
 <script src="js/plugins/releaser/notify.min.js" type="text/javascript"></script>
 <script src="js/plugins/releaser/releaser.js" type="text/javascript"></script>
-
 <script>
 var artifactIdInProgress;
     $(function() {
@@ -153,16 +145,10 @@ var artifactIdInProgress;
                       }
                      else if ( data.status == 'ERROR'  )
                      {
-
                     }
                    }
-
             });
-
             e.preventDefault();
-
-
     });
 });
-
 </script>

@@ -34,6 +34,8 @@
 
 package fr.paris.lutece.plugins.releaser.service;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -109,9 +111,9 @@ public class ComponentService implements IComponentService
             HttpAccess httpAccess = new HttpAccess( );
             String strInfosJSON;
             String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, component.getArtifactId( ), bCache, component.getType( ) );
-            if(component.getType( )==null)
+            if ( component.getType( ) == null )
             {
-              strUrl=strUrl.replace( "&type=null","" );
+                strUrl = strUrl.replace( "&type=null", "" );
             }
             strInfosJSON = httpAccess.doGet( strUrl );
             JsonNode nodeRoot = _mapper.readTree( strInfosJSON );
@@ -122,8 +124,8 @@ public class ComponentService implements IComponentService
             component.setJiraRoadmapUrl( nodeComponent.get( FIELD_ROADMAP_URL ).asText( ) );
             component.setJiraCurrentVersionOpenedIssues( nodeComponent.get( FIELD_OPENED_ISSUES ).asInt( ) );
             component.setJiraCurrentVersionClosedIssues( nodeComponent.get( FIELD_CLOSED_ISSUES ).asInt( ) );
-            String strScmDeveloperConnection=nodeComponent.get( FIELD_SCM_DEVELOPER_CONNECTION ).asText( );
-            if(!StringUtils.isEmpty(strScmDeveloperConnection) && !strScmDeveloperConnection.equals( "null" ))
+            String strScmDeveloperConnection = nodeComponent.get( FIELD_SCM_DEVELOPER_CONNECTION ).asText( );
+            if ( !StringUtils.isEmpty( strScmDeveloperConnection ) && !strScmDeveloperConnection.equals( "null" ) )
             {
                 component.setScmDeveloperConnection( strScmDeveloperConnection );
             }
@@ -186,11 +188,11 @@ public class ComponentService implements IComponentService
     {
 
         // Test if version already exist before release
-          
-            if ( !component.shouldBeReleased( ) )
-            {
-                return -1;
-            }
+
+        if ( !component.isProject( ) || !component.shouldBeReleased( ) )
+        {
+            return -1;
+        }
 
         WorkflowReleaseContext context = new WorkflowReleaseContext( );
         context.setComponent( component );
@@ -270,43 +272,47 @@ public class ComponentService implements IComponentService
         }
     }
 
-    public LocalizedPaginator<Component> getSearchComponent( String strSearch, HttpServletRequest request, Locale locale,String strPaginateUrl,String strCurrentPageIndex)
+    public LocalizedPaginator<Component> getSearchComponent( String strSearch, HttpServletRequest request, Locale locale, String strPaginateUrl,
+            String strCurrentPageIndex )
     {
-        
-        int nItemsPerPageLoad = AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_NB_SEARCH_ITEM_PER_PAGE_LOAD, 10);
+
+        int nItemsPerPageLoad = AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_NB_SEARCH_ITEM_PER_PAGE_LOAD, 10 );
         ReleaserUser user = ReleaserUtils.getReleaserUser( request, locale );
-        String strUserLogin=user.getGithubComponentAccountLogin( );
-        String strUserPassword=user.getGithubComponentAccountPassword( );
-        List<Component> listResult = getListComponent( GitUtils.searchRepo( strSearch, ConstanteUtils.CONSTANTE_GITHUB_ORG_LUTECE_PLATFORM,strUserLogin,strUserPassword), strUserLogin,strUserPassword );
-        listResult.addAll( getListComponent( GitUtils.searchRepo( strSearch, ConstanteUtils.CONSTANTE_GITHUB_ORG_LUTECE_SECTEUR_PUBLIC,strUserLogin,strUserPassword), strUserLogin,strUserPassword )  );
+        String strUserLogin = user.getGithubComponentAccountLogin( );
+        String strUserPassword = user.getGithubComponentAccountPassword( );
+        List<Component> listResult = getListComponent(
+                GitUtils.searchRepo( strSearch, ConstanteUtils.CONSTANTE_GITHUB_ORG_LUTECE_PLATFORM, strUserLogin, strUserPassword ), strUserLogin,
+                strUserPassword );
+        listResult.addAll( getListComponent(
+                GitUtils.searchRepo( strSearch, ConstanteUtils.CONSTANTE_GITHUB_ORG_LUTECE_SECTEUR_PUBLIC, strUserLogin, strUserPassword ), strUserLogin,
+                strUserPassword ) );
 
-        LocalizedPaginator<Component> paginator = new LocalizedPaginator<Component>( listResult, nItemsPerPageLoad, strPaginateUrl, LocalizedPaginator.PARAMETER_PAGE_INDEX, strCurrentPageIndex,locale );
+        LocalizedPaginator<Component> paginator = new LocalizedPaginator<Component>( listResult, nItemsPerPageLoad, strPaginateUrl,
+                LocalizedPaginator.PARAMETER_PAGE_INDEX, strCurrentPageIndex, locale );
 
-        for(Component component:paginator.getPageItems( ))
+        for ( Component component : paginator.getPageItems( ) )
         {
-            //Load only information on the current page
-            loadComponent(component,
-                    GitUtils.getFileContent( component.getFullName( ), "pom.xml", GitUtils.DEVELOP_BRANCH, strUserLogin,
-                            strUserPassword ), strUserLogin,
-                            strUserPassword );
+            // Load only information on the current page
+            loadComponent( component, GitUtils.getFileContent( component.getFullName( ), "pom.xml", GitUtils.DEVELOP_BRANCH, strUserLogin, strUserPassword ),
+                    strUserLogin, strUserPassword );
 
         }
-        
+
         return paginator;
     }
 
-    private List<Component> getListComponent( GithubSearchResult searchResult, String strUser,String strPassword )
+    private List<Component> getListComponent( GithubSearchResult searchResult, String strUser, String strPassword )
     {
 
         List<Component> listComponent = new ArrayList<>( );
         Component component = null;
-        
+
         if ( searchResult != null && searchResult.getListRepoItem( ) != null )
         {
             for ( GithubSearchRepoItem item : searchResult.getListRepoItem( ) )
             {
 
-                component=new Component( );
+                component = new Component( );
                 component.setFullName( item.getFullName( ) );
                 component.setName( item.getName( ) );
                 listComponent.add( component );
@@ -317,26 +323,25 @@ public class ComponentService implements IComponentService
 
     }
 
-    public Component loadComponent(Component component, String strPom, String stUser, String strPassword )
+    public Component loadComponent( Component component, String strPom, String stUser, String strPassword )
     {
 
-      
         PomParser parser = new PomParser( );
         parser.parse( component, strPom );
 
         try
         {
             ComponentService.getService( ).setRemoteInformations( component, true );
-          
+
         }
         catch( HttpAccessException | IOException e )
         {
             AppLogService.error( e );
         }
         ComponentService.getService( ).updateRemoteInformations( component );
-        component.setTargetVersions( Version.getNextReleaseVersions( component.getCurrentVersion() ));
+        component.setTargetVersions( Version.getNextReleaseVersions( component.getCurrentVersion( ) ) );
         component.setTargetVersion( Version.getReleaseVersion( component.getCurrentVersion( ) ) );
-     
+
         String strNextSnapshotVersion = null;
         try
         {
@@ -355,7 +360,40 @@ public class ComponentService implements IComponentService
         return component;
 
     }
-    
+
+    public boolean isErrorSnapshotComponentInformations( Component component ,String strComponentPomPath)
+    {
+
+        boolean bError = true;
+
+        ReleaserUtils.getLocalComponentPomPath( ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) ) );
+        PomParser parser = new PomParser( );
+        Component componentPom = new Component( );
+        
+        FileInputStream inputStream;
+        try
+        {
+            inputStream = new FileInputStream( strComponentPomPath );
+            parser.parse( componentPom, inputStream );
+
+            if ( component != null && componentPom != null && component.getArtifactId( ).equals( componentPom.getArtifactId( ) )
+                    && component.getLastAvailableSnapshotVersion( ).equals( componentPom.getCurrentVersion( ) ) )
+            {
+
+                bError = false;
+
+            }
+
+        }
+        catch( FileNotFoundException e )
+        {
+            AppLogService.error( e );
+
+        }
+
+        return bError;
+    }
+
     /**
      * Change the next release version
      * 
@@ -364,17 +402,16 @@ public class ComponentService implements IComponentService
      * @param strArtifactId
      *            The component artifact id
      */
-    public void changeNextReleaseVersion(Component component )
+    public void changeNextReleaseVersion( Component component )
     {
-         
-        List<String> listTargetVersions = component.getTargetVersions();
-        int nNewIndex = (component.getTargetVersionIndex() + 1) % listTargetVersions.size();
+
+        List<String> listTargetVersions = component.getTargetVersions( );
+        int nNewIndex = ( component.getTargetVersionIndex( ) + 1 ) % listTargetVersions.size( );
         String strTargetVersion = listTargetVersions.get( nNewIndex );
         component.setTargetVersion( strTargetVersion );
         component.setTargetVersionIndex( nNewIndex );
-        component.setNextSnapshotVersion( Version.getNextSnapshotVersion( strTargetVersion ));
-            
-       
+        component.setNextSnapshotVersion( Version.getNextSnapshotVersion( strTargetVersion ) );
+
     }
 
 }

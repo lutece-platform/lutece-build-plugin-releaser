@@ -301,7 +301,7 @@ public class SiteService
                 String strComment = I18nService.getLocalizedString( MESSAGE_AVOID_SNAPSHOT, locale );
                 component.addReleaseComment( strComment );
             }
-            else if ( !component.getCurrentVersion( ).equals( component.getLastAvailableVersion( )) )
+            else if ( !component.getTargetVersion( ).equals( component.getLastAvailableVersion( )) )
             {
                 String [ ] arguments = {
                         component.getLastAvailableVersion( )
@@ -415,7 +415,7 @@ public class SiteService
         //Release all snapshot compnent
         for ( Component component : site.getComponents( ) )
         {
-            if ( component.shouldBeReleased( )&& !component.isTheme( ))
+            if ( component.isProject( ) && component.shouldBeReleased( )&& !component.isTheme( ))
             {
                 component.setErrorLastRelease( false );
                 nIdWfContext=ComponentService.getService( ).release( component, locale,user,request );

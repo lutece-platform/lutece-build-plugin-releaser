@@ -61,7 +61,9 @@ public interface IComponentService
      Component loadComponent(Component component,String strPom, String stUser,String strPassword);
      
      void changeNextReleaseVersion(Component component );
+     
+     boolean isErrorSnapshotComponentInformations( Component component ,String strComponentPomPath);
 
-    void init( );
+     void init( );
 
 }

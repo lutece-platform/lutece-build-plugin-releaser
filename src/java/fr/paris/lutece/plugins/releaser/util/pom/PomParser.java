@@ -120,6 +120,41 @@ public class PomParser
     
 
     }
+    public void parse( Component component , InputStream inputStream )
+    {
+        
+        try
+        {
+             Model model = PomUpdater.unmarshal( Model.class, inputStream );
+            component.setArtifactId( model.getArtifactId( ) );
+            component.setGroupId( model.getGroupId( ) );
+            component.setCurrentVersion( model.getVersion( ) );
+            if(model.getScm() !=null)
+            {
+                component.setScmDeveloperConnection( model.getScm( ).getDeveloperConnection( ) );
+                
+            }
+        
+        }
+        catch ( JAXBException e )
+        {
+           AppLogService.error( e );
+        }
+        finally
+        {
+            
+            try
+            {
+                inputStream.close( );
+            }
+            catch( IOException e )
+            {
+               AppLogService.error( e );
+            }
+        }
+    
+
+    }
 
     private void filledSite( Site site, Model model )
     {

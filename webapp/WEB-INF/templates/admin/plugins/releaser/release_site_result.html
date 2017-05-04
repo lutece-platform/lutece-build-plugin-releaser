@@ -87,7 +87,7 @@
     </div>
     <ul class="list-group list-components fa-padding">
       <#list site.components as component>
-        <#if component.project >
+        <#if component.project && component.isSnapshotVersion() && !component.downgrade>
           <li class="list-group-item">
             <div class="media">
               <div class="media-left"></div>
@@ -103,19 +103,19 @@
                   </a>
                 </p>
                 <#if component.shouldBeReleased()>
-	                <div id="progress-wrapper-${component.artifactId!}" data-artifactid="${component.artifactId!}" data-context_release_id="${release_ctx_result[component.artifactId!]!}" class="progress-wrapper clearfix">
-	                  <div class="progress active pull-left ">
-	                    <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
-	                      <span class="sr-only">0% Complete</span>
-	                    </div>
-	                  </div>
-	                  <div class="pull-left">
-	                    <button href="#" data-toggle="modal"   data-artifactid="${component.artifactId!}" data-context_release_id="${release_ctx_result[component.artifactId!]!}" id="view_log_btn_${component.artifactId!}"  data-target="#modalLogs" data-context_release_id="" class="view_log_btn button transition small fill-whitish-black">
-	                      Voir les logs
-	                    </button>
-	                  </div>
-	                </div>
-	             </#if>   
+                    <div id="progress-wrapper-${component.artifactId!}" data-artifactid="${component.artifactId!}" data-context_release_id="${release_ctx_result[component.artifactId!]!}" class="progress-wrapper clearfix">
+                      <div class="progress active pull-left ">
+                        <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+                          <span class="sr-only">0% Complete</span>
+                        </div>
+                      </div>
+                      <div class="pull-left">
+                        <button href="#" data-toggle="modal"   data-artifactid="${component.artifactId!}" data-context_release_id="${release_ctx_result[component.artifactId!]!}" id="view_log_btn_${component.artifactId!}"  data-target="#modalLogs" data-context_release_id="" class="view_log_btn button transition small fill-whitish-black">
+                          Voir les logs
+                        </button>
+                      </div>
+                    </div>
+                 </#if>   
               </div>
             </div>
           </li>
@@ -148,18 +148,18 @@
 <script>
 var artifactIdInProgress;
 $(function() {
-	$( ".progress-wrapper" ).each(function( index ) {
+    $( ".progress-wrapper" ).each(function( index ) {
     callReleaseInfo( $(this).attr("data-context_release_id"),"#progress-wrapper-" + $(this).attr("data-artifactid"),$(this).attr("data-artifactid"))
   });
-	$(".view_log_btn").click( function(e){
-	    $("#console_wf_log").html(" ");
-	    var artifactId=$(this).attr("data-artifactid");
-	    var contextId=$(this).attr("data-context_release_id");
-	    artifactIdInProgress=artifactId;
-	    var progressId="#progress-wrapper-" + artifactId;
-	    callReleaseInfo( contextId,progressId,artifactId)
-	   }
-	);
+    $(".view_log_btn").click( function(e){
+        $("#console_wf_log").html(" ");
+        var artifactId=$(this).attr("data-artifactid");
+        var contextId=$(this).attr("data-context_release_id");
+        artifactIdInProgress=artifactId;
+        var progressId="#progress-wrapper-" + artifactId;
+        callReleaseInfo( contextId,progressId,artifactId)
+       }
+    );
 });
 </script>
 
