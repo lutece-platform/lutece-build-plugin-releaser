@@ -239,7 +239,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
             
         
-            if(ComponentService.getService( ).isErrorSnapshotComponentInformations( component,ReleaserUtils.getLocalSitePomPath( strComponentName ) ))
+            if(ComponentService.getService( ).isErrorSnapshotComponentInformations( component,ReleaserUtils.getLocalComponentPomPath( strComponentName ) ))
             {
                 ReleaserUtils.addTechnicalError( commandResult,"The cloned component does not match the release informations");
                 
