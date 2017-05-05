@@ -88,6 +88,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     private static final String ACTION_UPGRADE_COMPONENT = "upgradeComponent";
     private static final String ACTION_DOWNGRADE_COMPONENT = "downgradeComponent";
     private static final String ACTION_CANCEL_DOWNGRADE_COMPONENT = "cancelDowngradeComponent";
+    private static final String ACTION_CANCEL_UPGRADE_COMPONENT = "cancelUpgradeComponent";
+    
 
     private static final String ACTION_PROJECT_COMPONENT = "projectComponent";
     private static final String ACTION_CHANGE_COMPONENT_NEXT_RELEASE_VERSION = "versionComponent";
@@ -255,6 +257,15 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     {
         String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
         SiteService.upgradeComponent( _site, strArtifactId );
+
+        return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
+    }
+    
+    @Action( ACTION_CANCEL_UPGRADE_COMPONENT )
+    public String doCancelUpgradeComponent( HttpServletRequest request )
+    {
+        String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
+        SiteService.cancelUpgradeComponent( _site, strArtifactId );
 
         return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
     }

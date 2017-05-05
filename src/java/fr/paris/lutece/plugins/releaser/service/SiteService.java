@@ -186,7 +186,7 @@ public class SiteService
     {
         if ( component.isProject( ) && component.isSnapshotVersion( ) )
         {
-            if(  !component.getCurrentVersion( ).equals( component.getLastAvailableSnapshotVersion( )) || component.isTheme( ) )
+            if( component.getLastAvailableVersion( )!=null && !component.getCurrentVersion( ).equals( component.getLastAvailableSnapshotVersion( )) || component.isTheme( ) )
             {
                 component.setTargetVersion( component.getLastAvailableVersion( ) );  
             }
@@ -301,7 +301,7 @@ public class SiteService
                 String strComment = I18nService.getLocalizedString( MESSAGE_AVOID_SNAPSHOT, locale );
                 component.addReleaseComment( strComment );
             }
-            else if ( !component.getTargetVersion( ).equals( component.getLastAvailableVersion( )) )
+            else if (component.getLastAvailableVersion( )!=null && !component.getTargetVersion( ).equals( component.getLastAvailableVersion( )) )
             {
                 String [ ] arguments = {
                         component.getLastAvailableVersion( )
@@ -362,6 +362,20 @@ public class SiteService
             if ( component.getArtifactId( ).equals( strArtifactId ) )
             {
                 component.setTargetVersion( component.getLastAvailableVersion( ) );
+                component.setUpgrade( true );
+            }
+        }
+    }
+    
+    public static void cancelUpgradeComponent( Site site, String strArtifactId )
+    {
+        for ( Component component : site.getComponents( ) )
+        {
+            if ( component.getArtifactId( ).equals( strArtifactId ) )
+            {
+           
+                component.setTargetVersion(  component.getCurrentVersion( ) );
+                component.setUpgrade( false );
             }
         }
     }

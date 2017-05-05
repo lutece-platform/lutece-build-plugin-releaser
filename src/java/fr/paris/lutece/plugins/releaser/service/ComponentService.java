@@ -90,6 +90,8 @@ public class ComponentService implements IComponentService
     private static final String FIELD_CLOSED_ISSUES = "jira_current_version_closed_issues";
     private static final String FIELD_OPENED_ISSUES = "jira_current_version_opened_issues";
     private static final String FIELD_SCM_DEVELOPER_CONNECTION = "scm_developer_connection";
+    private static final String RELEASE_NOT_FOUND="Release not found";
+    
     private static IComponentService _instance;
 
     public static IComponentService getService( )
@@ -118,7 +120,12 @@ public class ComponentService implements IComponentService
             strInfosJSON = httpAccess.doGet( strUrl );
             JsonNode nodeRoot = _mapper.readTree( strInfosJSON );
             JsonNode nodeComponent = nodeRoot.path( FIELD_COMPONENT );
-            component.setLastAvailableVersion( nodeComponent.get( FIELD_VERSION ).asText( ) );
+            
+            String strVersion= nodeComponent.get( FIELD_VERSION ).asText( );
+            if(!RELEASE_NOT_FOUND.equals( strVersion ))
+            {
+                component.setLastAvailableVersion( nodeComponent.get( FIELD_VERSION ).asText( ) );
+            }
             component.setLastAvailableSnapshotVersion( nodeComponent.get( FIELD_SNAPSHOT_VERSION ).asText( ) );
             component.setJiraCode( nodeComponent.get( FIELD_JIRA_CODE ).asText( ) );
             component.setJiraRoadmapUrl( nodeComponent.get( FIELD_ROADMAP_URL ).asText( ) );
@@ -270,7 +277,7 @@ public class ComponentService implements IComponentService
                 Version vLastAvailableSnapshotVersion = Version.parse( component.getLastAvailableSnapshotVersion( ) );
                 if ( vLastReleaseNextSnapshotVersionVersion.compareTo( vLastAvailableSnapshotVersion ) > 0 )
                 {
-                    component.setLastAvailableVersion( strLastReleaseNextSnapshotVersion );
+                    component.setLastAvailableSnapshotVersion( strLastReleaseNextSnapshotVersion );
                 }
 
             }

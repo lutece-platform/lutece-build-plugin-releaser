@@ -65,6 +65,7 @@ public class Component
     private List<String> _listTargetVersions;
     private int _nTargetVersionIndex;
     private boolean _bDowngrade;
+    private boolean _bUpgrade;
     private boolean _bErrorLastRelease;
     private String _strName;
     private String _strCloneUrl;
@@ -444,6 +445,16 @@ public class Component
     public boolean isSnapshotVersion()
     {
          return  Version.isSnapshot(getCurrentVersion( ));
+    }
+    
+    public boolean isUpgrade( )
+    {
+        return _bUpgrade;
+    }
+
+    public void setUpgrade( boolean _bUpgrade )
+    {
+        this._bUpgrade = _bUpgrade;
     }
 
     public boolean isDowngrade( )
