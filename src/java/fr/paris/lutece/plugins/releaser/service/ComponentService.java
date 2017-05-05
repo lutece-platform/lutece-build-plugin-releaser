@@ -270,7 +270,7 @@ public class ComponentService implements IComponentService
                 Version vLastAvailableSnapshotVersion = Version.parse( component.getLastAvailableSnapshotVersion( ) );
                 if ( vLastReleaseNextSnapshotVersionVersion.compareTo( vLastAvailableSnapshotVersion ) > 0 )
                 {
-                    component.setLastAvailableVersion( strLastReleaseNextSnapshotVersion );
+                    component.setLastAvailableSnapshotVersion( strLastReleaseNextSnapshotVersion );
                 }
 
             }
