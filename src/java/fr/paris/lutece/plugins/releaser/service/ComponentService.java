@@ -183,13 +183,17 @@ public class ComponentService implements IComponentService
 
         DatastoreService.setDataValue( ReleaserUtils.getLastReleaseNextSnapshotVersionDataKey( strArtifactId ), strVersion );
     }
+    
+    
 
-    public int release( Component component, Locale locale, AdminUser user, HttpServletRequest request )
+    @Override
+    public int release( Component component, Locale locale, AdminUser user, HttpServletRequest request, boolean forceRelease )
     {
+        
 
         // Test if version already exist before release
 
-        if ( !component.isProject( ) || !component.shouldBeReleased( ) )
+        if ( !forceRelease &&( !component.isProject( ) || !component.shouldBeReleased( )) )
         {
             return -1;
         }
@@ -205,6 +209,11 @@ public class ComponentService implements IComponentService
         WorkflowReleaseContextService.getService( ).startWorkflowReleaseContext( context, nIdWorkflow, locale, request, user );
 
         return context.getId( );
+    }
+
+    public int release( Component component, Locale locale, AdminUser user, HttpServletRequest request )
+    {
+        return release( component, locale, user, request, false );
     }
 
     public boolean isGitComponent( Component component )
@@ -413,5 +422,6 @@ public class ComponentService implements IComponentService
         component.setNextSnapshotVersion( Version.getNextSnapshotVersion( strTargetVersion ) );
 
     }
+
 
 }

@@ -22,6 +22,8 @@ public interface IComponentService
    void updateRemoteInformations( Component component );
    
    
+   int release( Component component, Locale locale, AdminUser user, HttpServletRequest request,boolean forceRelease );
+
    int release( Component component, Locale locale, AdminUser user, HttpServletRequest request );
 
     boolean isGitComponent( Component component );

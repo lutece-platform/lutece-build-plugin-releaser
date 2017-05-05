@@ -161,7 +161,7 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
             {
                 if ( component.getArtifactId( ).equals( strArtifactId ) )
                 {
-                    nIdContext = ComponentService.getService( ).release( component, getLocale( ), getUser( ), request );
+                    nIdContext = ComponentService.getService( ).release( component, getLocale( ), getUser( ), request,true );
                     break;
                 }
             }
