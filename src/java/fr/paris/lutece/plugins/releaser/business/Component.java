@@ -447,6 +447,7 @@ public class Component
          return  Version.isSnapshot(getCurrentVersion( ));
     }
     
+    
     public boolean isUpgrade( )
     {
         return _bUpgrade;

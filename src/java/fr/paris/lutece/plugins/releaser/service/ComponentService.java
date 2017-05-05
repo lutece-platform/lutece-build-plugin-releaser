@@ -167,6 +167,7 @@ public class ComponentService implements IComponentService
         DatastoreService.setDataValue( ReleaserUtils.getLastReleaseVersionDataKey( strArtifactId ), strVersion );
 
     }
+    
 
     /**
      * Returns the LastAvailableVersion

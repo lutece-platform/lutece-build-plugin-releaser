@@ -264,6 +264,7 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     @Action( ACTION_CANCEL_UPGRADE_COMPONENT )
     public String doCancelUpgradeComponent( HttpServletRequest request )
     {
+        
         String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
         SiteService.cancelUpgradeComponent( _site, strArtifactId );
 

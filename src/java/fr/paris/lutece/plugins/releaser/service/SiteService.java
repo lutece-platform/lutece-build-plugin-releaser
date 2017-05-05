@@ -353,6 +353,7 @@ public class SiteService
         }
     }
 
+    
    
 
     public static void upgradeComponent( Site site, String strArtifactId )
@@ -366,6 +367,7 @@ public class SiteService
             }
         }
     }
+    
     
     public static void cancelUpgradeComponent( Site site, String strArtifactId )
     {

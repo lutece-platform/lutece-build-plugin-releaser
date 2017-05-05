@@ -89,6 +89,7 @@
                     </#if>
                 </#if>
                 <#if component.upgrade>
+                
                       <#if component.lastAvailableVersion?? && !component.isSnapshotVersion() >
                         <a class="button transition border-red small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=cancelUpgradeComponent&artifact_id=${component.artifactId}' >
                           <i class="fa fa-cog fa-fw"></i> Ne plus utiliser  la version stable ${component.lastAvailableVersion!} 
