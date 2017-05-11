@@ -9,6 +9,7 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.StringUtils;
 
+import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
@@ -72,6 +73,19 @@ public class ReleaserUtils
         }
         return null;
     }
+    
+    public static String getSiteTagName(Site site)
+    {
+
+        String strTagName="";
+        
+        if(site!=null)
+        {
+            strTagName= site.getArtifactId( )+"-"+site.getNextReleaseVersion( );
+         }
+        return strTagName;
+    }
+    
 
     public static void addTechnicalError( CommandResult commandResult, String strError, Exception e ) throws AppException
     {

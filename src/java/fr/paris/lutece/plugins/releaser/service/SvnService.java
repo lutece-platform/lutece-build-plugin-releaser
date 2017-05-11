@@ -192,7 +192,7 @@ public class SvnService implements ISvnService
                 strSvnPassword);
 
         String strSrcURL = site.getScmUrl( );
-        String strDstURL = SvnUtils.getSvnUrlTagSite( site.getScmUrl( ), site.getArtifactId( )+site.getNextReleaseVersion( ) );
+        String strDstURL = SvnUtils.getSvnUrlTagSite( site.getScmUrl( ), ReleaserUtils.getSiteTagName( site ) );
 
         ReleaseSvnCommitClient commitClient = new ReleaseSvnCommitClient( authManager,
                 SVNWCUtil.createDefaultOptions( false ) );

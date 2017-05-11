@@ -125,6 +125,7 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     @View( value = VIEW_MANAGE_SITE_RELEASE, defaultView = true )
     public String getPrepareSiteRelease( HttpServletRequest request )
     {
+        _modifValidated=null;
         String strSiteId = request.getParameter( PARAMETER_SITE_ID );
         if ( ReleaserUtils.getReleaserUser( request, getLocale( ) ) == null )
         {
