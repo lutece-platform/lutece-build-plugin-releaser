@@ -34,14 +34,27 @@
 
 package fr.paris.lutece.plugins.releaser.service;
 
-import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
-import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
-import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import javax.servlet.http.HttpServletRequest;
+
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.Dependency;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.SiteHome;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
+import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
+import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
+import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
 import fr.paris.lutece.plugins.releaser.util.svn.SvnSiteService;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
@@ -49,23 +62,13 @@ import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.datastore.DatastoreService;
 import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.util.AppLogService;
-import fr.paris.lutece.portal.service.util.AppPropertiesService;
-import fr.paris.lutece.util.httpaccess.HttpAccessException;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * SiteService
  */
 public class SiteService
 {
+    private static final int NB_POOL_REMOTE_INFORMATION = 20;
     private static final String MESSAGE_AVOID_SNAPSHOT = "releaser.message.avoidSnapshot";
     private static final String MESSAGE_UPGRADE_SELECTED = "releaser.message.upgradeSelected";
     private static final String MESSAGE_TO_BE_RELEASED = "releaser.message.toBeReleased";
@@ -152,24 +155,53 @@ public class SiteService
             component.setGroupId( dependency.getGroupId( ) );
             component.setType( dependency.getType( ) );
             component.setCurrentVersion( dependency.getVersion( ) );
-           
-            try
-            {
-                ComponentService.getService( ).setRemoteInformations( component, component.isProject( )?false:true  );
-                
-            }
-            catch( HttpAccessException | IOException e )
-            {
-                AppLogService.error("Error Getting remote informations for component "+component.getArtifactId( ), e );
-            }
-            ComponentService.getService( ).updateRemoteInformations( component );
-            
-            defineTargetVersion( component );
-            defineNextSnapshotVersion( component );
-           
-            
             site.addComponent( component );
         }
+        
+        ExecutorService executor = Executors.newFixedThreadPool(NB_POOL_REMOTE_INFORMATION);
+        
+        List<Future> futures = 
+                new ArrayList<Future>( site.getCurrentDependencies( ).size( ));
+              
+           
+        for ( Component component : site.getComponents( ) )
+        {
+            futures.add(executor.submit(new GetRemoteInformationsTask( component )));
+        }
+       
+        
+        //wait all futures stop before continue
+        for (Future future : futures) {
+            
+            try
+            {
+                future.get();
+            }
+            catch( InterruptedException e )
+            {
+              AppLogService.error( e );
+            }
+            catch( ExecutionException e )
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+              
+          }
+              
+        executor.shutdown();     
+            
+        for ( Component component : site.getComponents( ) )
+        {
+           
+            ComponentService.getService( ).updateRemoteInformations( component );
+            defineTargetVersion( component );
+            defineNextSnapshotVersion( component );
+        }
+           
+            
+          
+        
     }
     
     
