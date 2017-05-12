@@ -26,8 +26,8 @@
             <span class="fa fa-cogs"></span>  Retour au <#if !site.theme>Site<#else>Theme</#if>
           </a>
           <#if !site.theme>
-          <a type="button" class="button transition border-blue small btn-release-history"  href="jsp/admin/plugins/deployment/ManageApplication.jsp?search_name=${site.artifactId !''}">
-            <span class="fa fa-cogs"></span>  Déployer la version releasée Site
+          <a type="button" class="button transition border-blue small btn-release-history"  href="jsp/admin/plugins/deployment/ManageApplication.jsp?search_name=${site.scmUrl?replace("/trunk/","")?replace("/trunk","")!''}">
+            <span class="fa fa-cogs"></span>  D&eacute;ployer la version releas&eacute;e Site
           </a>
          </#if>
           
