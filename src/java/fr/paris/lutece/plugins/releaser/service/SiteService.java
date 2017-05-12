@@ -68,7 +68,7 @@ import fr.paris.lutece.portal.service.util.AppLogService;
  */
 public class SiteService
 {
-    private static final int NB_POOL_REMOTE_INFORMATION = 20;
+    private static final int NB_POOL_REMOTE_INFORMATION = 60;
     private static final String MESSAGE_AVOID_SNAPSHOT = "releaser.message.avoidSnapshot";
     private static final String MESSAGE_UPGRADE_SELECTED = "releaser.message.upgradeSelected";
     private static final String MESSAGE_TO_BE_RELEASED = "releaser.message.toBeReleased";
