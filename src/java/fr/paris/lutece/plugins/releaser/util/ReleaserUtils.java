@@ -65,25 +65,28 @@ public class ReleaserUtils
 
     public static String getComponentName( String strScmDeveloperConnection )
     {
-
-        if ( strScmDeveloperConnection.contains( "/" ) && strScmDeveloperConnection.contains( ".git" ) )
-        {
-            String [ ] tabDevConnection = strScmDeveloperConnection.split( "/" );
-            return tabDevConnection [tabDevConnection.length - 1].replace( ".git", "" );
-        }
-        else if( strScmDeveloperConnection.contains( "/" ) && strScmDeveloperConnection.contains( "/svn/" ))
-        {
-             String [ ] tabSVnPluginName = strScmDeveloperConnection.split( "/" );
-            if(!StringUtils.isEmpty(tabSVnPluginName[tabSVnPluginName.length - 1]))
+        if(!StringUtils.isEmpty( strScmDeveloperConnection) && strScmDeveloperConnection.contains( "/" ) )
+        {   
+            
+           if ( strScmDeveloperConnection.contains( ".git" ) )
             {
-                return tabSVnPluginName[tabSVnPluginName.length - 1];
-                
+                String [ ] tabDevConnection = strScmDeveloperConnection.split( "/" );
+                return tabDevConnection [tabDevConnection.length - 1].replace( ".git", "" );
             }
-            else
+            else if(  strScmDeveloperConnection.contains( "/svn/" ))
             {
-                return tabSVnPluginName[tabSVnPluginName.length - 2];
-                        
-             }
+                 String [ ] tabSVnPluginName = strScmDeveloperConnection.split( "/" );
+                if(!StringUtils.isEmpty(tabSVnPluginName[tabSVnPluginName.length - 1]))
+                {
+                    return tabSVnPluginName[tabSVnPluginName.length - 1];
+                    
+                }
+                else
+                {
+                    return tabSVnPluginName[tabSVnPluginName.length - 2];
+                            
+                 }
+            }
         }
         return null;
     }
