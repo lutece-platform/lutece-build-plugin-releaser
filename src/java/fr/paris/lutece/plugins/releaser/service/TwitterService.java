@@ -42,7 +42,7 @@ public class TwitterService implements ITwitterService
     {
         if(_instance==null)
         {
-            _instance=SpringContextService.getBean(ConstanteUtils.BEAN_MAVEN_SERVICE );
+            _instance=SpringContextService.getBean(ConstanteUtils.BEAN_TWITTER_SERVICE );
             _instance.init( );
         }
             
