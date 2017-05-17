@@ -1,193 +1,1 @@
-<div class="app-wrapper">
-<!-- TO REMOVE WHEN feature_frameset.html will be correctly added to this template -->
-<section class="content-header">
-    <h1>
-        <a href="jsp/admin/plugins/releaser/ManageClusters.jsp" title="#i18n{releaser.adminFeature.ManageReleaser.name}">#i18n{releaser.adminFeature.ManageReleaser.name}</a>
-        <small class="hidden-xs hidden-sm">Pr&eacute;paration de la release du <#if !site.theme>Site<#else>Theme</#if></small>
-    </h1>
-    <ol class="breadcrumb applications">
-    </ol>
-</section>
-<section class="content ">
-<!-- EN TO REMOVE -->
-<div class="row">
-   <@messages errors=errors />
-   
-  <div class="col-xs-12 col-sm-12">
-    <div class="info-box info-box-release">
-      <span class="info-box-icon bg-aqua"><i class="fa fa-cube"></i></span>
-      <div class="info-box-content">
-        <div class="col-xs-7 col-sm-7">
-          <span class="info-box-text">
-            ${site.name} [${site.artifactId !''}-${site.version!''}]
-            - <i class="fa fa-cubes text-green"></i>  Cluster <strong>${site.cluster !''}</strong>
-            - <i class="fa fa-puzzle-piece text-yellow"></i> Nombre de plugins <strong>${site.components?size}</strong>
-          </span>
-          <span class="info-box-number">${site.description}</span>
-        </div>
-
-        </div>
-        
-        </div>
-        <div class="pull-right hidden">
-          <@aButton href='jsp/admin/plugins/releaser/ManageClusters.jsp#cluster${site.idCluster}' title='Retour au cluster' buttonIcon='cubes' showTitle=true />
-        </div>
-      </div>
-    </div>
-    <div class="row">
-        <div class="col-xs-12 col-sm-12">
- 
-        <div class="col-xs-5 col-sm-5">
-              <div class="modal-body">
-              <div class="form-group">
-                <p class="form-control-static">
-                  Version courante du site : <strong>${site.version!}</strong>
-                </p>
-              </div>
-              <div class="form-group">
-                <p class="form-control-static">
-                  Version de la release : <strong>${site.nextReleaseVersion!}</strong>
-                </p>
-              </div>
-              <div class="form-group">
-                <p class="form-control-static">
-                  Version de la prochaine de travail : <strong>${site.nextSnapshotVersion!}</strong>
-                </p>
-              </div>
-              <div class="form-group">
-               <p class="form-control-static">
-                 #i18n{releaser.prepare_site_release.labelTagInformation} : <strong>${site.tagInformation!}</strong>
-                </p>
-              </div>
-            </div>
-            
-         </div>
-        </div>
-     </div>
-  
-  
-   <@tform name='release_site' class='form' action='jsp/admin/plugins/releaser/ManageSiteRelease.jsp'>
-          
-         
-  <div class="row">
-    <div class="col-md-12 col-sm-12 col-xs-12">
-      <div class="info-box info-box-release components">
-        <span class="info-box-icon bg-yellow"><i class="fa fa-puzzle-piece"></i></span>
-        <div class="info-box-content">
-          <span class="info-box-text">Liste des composants</span>
-          <span class="info-box-number">Composants projet</span>
-        </div>
-      </div>
-      <ul class="list-group list-components fa-padding">
-      <#list site.components as component>
-        <#if component.project>
-          <li class="list-group-item">
-            <div class="media">
-              <div class="media-left">
-                  <@formGroup labelKey='' helpKey='' >
-                        <@checkBox  name='valid_release_modif_${component.artifactId!}' id='valid_release_modif_${component.artifactId!}' labelKey='' labelFor='valid_release_modif_${component.artifactId!}' orientation='vertical' value='true'  checked=modif_validated[component.artifactId]??&& modif_validated[component.artifactId] />
-                  </@formGroup>
-                
-                  
-                    
-              </div>
-              <div class="media-body">
-              <p>
-                <span class="artifact up">
-                  ${component.artifactId!}
-                 </span>
-                
-                <#if component.shouldBeReleased()>
-                    <i class="fa fa-cog fa-fw"></i> 
-                     A releaser
-                   </#if>
-                   <div class="row">
-                      <div class="col-xs-12 col-sm-4">
-                        Version actuelle <strong class="button transition fill-lightblue small">${component.currentVersion}</strong>
-                         <i class="fa fa-arrow-right"></i> Version cible<strong class="button transition fill-lightblue small"> ${component.targetVersion}</strong>
-                      </div>
-                      <div class="col-xs-12 col-sm-7">
-                       <i class="fa fa-arrow-right"></i>  Prochaine version
-                        <span class="button transition fill-lightblue small">
-                            <#if component.isSnapshotVersion()>
-                               ${component.nextSnapshotVersion}
-                            <#else>
-                                ${component.targetVersion}
-                            </#if>
-                        </span>
-                        
-                        <#assign defaultTweetMessage="${component.name} ${component.targetVersion} released #LuteceCMS #LutecePortal"/>
-                            <#if component.shouldBeReleased()>
-                                <#if component.tweetMessage?has_content>
-                                    <@input type='textarea' name="tweet_message_${component.artifactId!}"  min=2 max=140 >${component.tweetMessage}</@input>
-                               <#else>
-                                 <@input type='textarea' name="tweet_message_${component.artifactId!}"  min=2 max=140 >${defaultTweetMessage}</@input>
-                               </#if>
-                          </#if>
-                                         
-                      </div>
-                    </div>
-                
-                 </p>          
-              </div>
-            </li>
-          </#if>
-        </#list>
-      </ul>
-      <div class="info-box info-box-release components">
-        <span class="info-box-icon bg-yellow"><i class="fa fa-puzzle-piece"></i></span>
-          <div class="info-box-content">
-            <span class="info-box-text">Liste des composants</span>
-            <span class="info-box-number">Composants externes</span>
-          </div>
-        </div>
-        <ul class="list-group list-components">
-          <#list site.components as component>
-            <#if ! component.project>
-                      <li class="list-group-item">
-            <div class="media">
-              <div class="media-left">
-                  <@formGroup labelKey='' helpKey='' >
-                        <@checkBox  name='valid_release_modif_${component.artifactId!}' id='valid_release_modif_${component.artifactId!}' labelKey='' labelFor='valid_release_modif_${component.artifactId!}' orientation='vertical' value='true'  checked=modif_validated[component.artifactId]??&& modif_validated[component.artifactId]  />
-                  </@formGroup>
-                
-                  
-                    
-              </div>
-              <div class="media-body">
-              <p>
-                <span class="artifact up">
-                  ${component.artifactId!}
-                 </span>
-                
-                <#if component.shouldBeReleased()>
-                    <i class="fa fa-cog fa-fw"></i> 
-                     A releaser
-                  </#if>
-                   <div class="row">
-                      <div class="col-xs-12 col-sm-4">
-                        Version actuelle <strong class="button transition fill-lightblue small">${component.currentVersion}</strong>
-                         <i class="fa fa-arrow-right"></i> Version cible<strong class="button transition fill-lightblue small"> ${component.targetVersion}</strong>
-                      </div>
-                      <div class="col-xs-12 col-sm-7">
-                       <i class="fa fa-arrow-right"></i>  Prochaine version
-                        <span class="button transition fill-lightblue small">
-                            ${component.targetVersion}
-                        </span>
-                   
-                      </div>
-                    </div>
-                
-                 </p>          
-              </div>
-                </li>
-              </#if>
-            </#list>
-          </ul>
-        </div>
-       </div>
-               <button type="submit" class="button transition small fill-blue" name="action_doConfirmReleaseSite">Valider les choix et releaser</button>
-       </@tform>
-      </section>
-    </div>
-  </div>
+<!-- TO REMOVE WHEN feature_frameset.html will be correctly added to this template --><section class="content-header">    <h1>        <a href="jsp/admin/plugins/releaser/ManageClusters.jsp" title="#i18n{releaser.adminFeature.ManageReleaser.name}">#i18n{releaser.adminFeature.ManageReleaser.name}</a>        <small class="hidden-xs hidden-sm">Pr&eacute;paration de la release du <#if !site.theme>Site<#else>Theme</#if></small>    </h1>    <ol class="breadcrumb applications"></ol></section><section class="content">	<div class="app-wrapper app-cluster">	<!-- EN TO REMOVE -->	<@tform name='release_site' class='form' action='jsp/admin/plugins/releaser/ManageSiteRelease.jsp'>		<button type="submit" class="floating-button btn-release-history-bg" name="action_doConfirmReleaseSite" title="Valider les choix et releaser">			<i class="fa fa-check"></i>		</button>		<div class="col-md-12 col-sm-12 col-xs-12">			<div class="box box-info box-solid">				<div class="box-header">					<h3 class="box-title">						<i class="fa fa-puzzle-piece"></i> Composants du projet <strong>${site.name} [${site.artifactId !''}-${site.version!''}]</strong>					</h3>					<div class="box-tools">						<i class="fa fa-cubes text-green"></i>  Cluster <strong>${site.cluster !''}</strong>						- <i class="fa fa-puzzle-piece text-yellow"></i> Nombre de plugins <strong>${site.components?size}</strong>						 					</div>				</div>				<!-- /.box-header -->				<div class="box-body table-responsive no-padding">					<div class="callout callout-info info-margin">						<i class="fa fa-info-circle"></i> Version courante du site : <strong>${site.version!}</strong> - Version de la release : <strong>${site.nextReleaseVersion!}</strong>						Version de la prochaine de travail : <strong>${site.nextSnapshotVersion!}</strong> - #i18n{releaser.prepare_site_release.labelTagInformation} : <strong>${site.tagInformation!}</strong>					</div>				<table class="table table-hover">				<thead>						<tr>					  <th>Artifact</th>					  <th>Infos Release</th>					  <th>Version</th>					  <th>Version cible</th>					  <th>Prochaine version</th>					  <th><i class="fa fa-twitter"></i> Tweet</th>					  <th>Actions</th>					</tr>				</thead>					<tbody>	      				<#list site.components as component>					<#if component.project>					<tr <#if component.shouldBeReleased()>class="bg-danger"</#if>>						<td>							<strong>${component.artifactId!}</strong>						</td>						<td>							<#if component.shouldBeReleased()><span class="label label-danger"> <i class="fa fa-warning fa-fw"></i> A releaser</span></#if>						</td>						<td>							<strong class="button transition fill-lightblue small">${component.currentVersion}</strong>						</td>						<td>							<strong class="button transition fill-lightblue small"> ${component.targetVersion!}</strong>						</td>						<td>							<span class="button transition fill-lightblue small">								<#if component.isSnapshotVersion()>								   ${component.nextSnapshotVersion!}								<#else>									${component.targetVersion!}								</#if>							</span>						</td>						<td>							<#assign defaultTweetMessage="${component.name} ${component.targetVersion} released #LuteceCMS #LutecePortal"/>                            <#if component.shouldBeReleased()>                                <#if component.tweetMessage?has_content>                                    <@input type='textarea' name="tweet_message_${component.artifactId!}"  min=2 max=140 >${component.tweetMessage}</@input>                               <#else>                                 <@input type='textarea' name="tweet_message_${component.artifactId!}"  min=2 max=140 >${defaultTweetMessage}</@input>                               </#if>							</#if>						</td>						<td>							<@formGroup labelKey='' helpKey='' >								<@checkBox name='valid_release_modif_${component.artifactId!}' id='valid_release_modif_${component.artifactId!}' labelKey='' labelFor='valid_release_modif_${component.artifactId!}' orientation='vertical' value='true'  checked=modif_validated[component.artifactId]??&& modif_validated[component.artifactId] />							</@formGroup>						</td>					</tr>					</#if>				</#list>				</tbody>			</table>        </div>        <!-- /.box-body -->		</div>		<div class="box box-warning box-solid">			<div class="box-header">				<h3 class="box-title"><i class="fa fa-puzzle-piece"></i> Composants externes</h3>            </div>            <!-- /.box-header -->            <div class="box-body table-responsive no-padding">				<table class="table table-hover">				<thead>						<tr>					  <th>Artifact</th>					  <th>Infos Release</th>					  <th>Version</th>					  <th>Version cible</th>					  <th>Prochaine version</th>					  <th>Actions</th>					</tr>				</thead>					<tbody>					<#list site.components as component>					<#if ! component.project>						<tr>							<td>${component.artifactId!}</td>							<td><#if component.shouldBeReleased()> <i class="fa fa-cog fa-fw"></i> A releaser </#if></td>							<td>								<strong class="button transition fill-lightblue small">${component.currentVersion!}</strong>							</td>							<td>							   <#if component.currentVersion != component.targetVersion>									<strong class="button transition fill-lightblue small">${component.targetVersion!}</strong>								<#else>									<strong class="button transition fill-lightblue small">${component.targetVersion}</strong>								</#if>							</td>							<td>								<span class="button transition fill-lightblue small">									${component.targetVersion}								</span>							</td>							<td>								<@formGroup labelKey='' helpKey='' >									<@checkBox  name='valid_release_modif_${component.artifactId!}' id='valid_release_modif_${component.artifactId!}' labelKey='' labelFor='valid_release_modif_${component.artifactId!}' orientation='vertical' value='true'  checked=modif_validated[component.artifactId]??&& modif_validated[component.artifactId]  />								</@formGroup>							</td>						</tr>					  </#if>					</#list>				  </ul>				</div>			   </div>               		</@tform>		</tbody>		</table>	</div></div></section><script>$(function() {	$(".btn").tooltip();	$(".button").tooltip();	$(".floating-button").tooltip();}	</script>		
