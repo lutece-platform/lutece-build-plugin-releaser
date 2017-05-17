@@ -38,7 +38,9 @@ import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.service.SiteService;
 import fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService;
+import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
+import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.template.AppTemplateService;
 import fr.paris.lutece.portal.util.mvc.admin.MVCAdminJspBean;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
@@ -69,7 +71,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     private static final String PARAMETER_ID_CONTEXT = "id_context";
     private static final String PARAMETER_TAG_INFORMATION = "tag_information";
     private static final String PARAMETER_OPEN_SITE_VERSION = "open_site_version";
-    private static final String VALID_RELEASE_MODIF = "valid_release_modif_";
+    private static final String PARAMETER_TWEET_MESSAGE = "tweet_message_";
+    private static final String PARAMETER_VALID_RELEASE_MODIF = "valid_release_modif_";
 
     // Views
     private static final String VIEW_MANAGE_SITE_RELEASE = "siteRelease";
@@ -174,6 +177,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         }
 
         Map<String, Object> model = getModel( );
+        
+
         model.put( MARK_SITE, _site );
         model.put( MARK_MODIF_VALIDATED, _modifValidated );
         
@@ -297,6 +302,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         }
 
         String strCheckedReleaseInfo = null;
+        String strTweetMessage = null;
+        
         if ( _site != null && _site.getComponents( ) != null )
         {
             
@@ -308,8 +315,9 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
                 for ( Component component : _site.getComponents( ) )
                 {
 
-                    strCheckedReleaseInfo = request.getParameter( VALID_RELEASE_MODIF + component.getArtifactId( ) );
-                    
+                    strCheckedReleaseInfo = request.getParameter( PARAMETER_VALID_RELEASE_MODIF + component.getArtifactId( ) );
+                    strTweetMessage= request.getParameter( PARAMETER_TWEET_MESSAGE + component.getArtifactId( ) );
+                    component.setTweetMessage( strTweetMessage );
                     _modifValidated.put( component.getArtifactId( ), strCheckedReleaseInfo != null && strCheckedReleaseInfo.equals( Boolean.TRUE.toString( ) )  );
                     
                 }

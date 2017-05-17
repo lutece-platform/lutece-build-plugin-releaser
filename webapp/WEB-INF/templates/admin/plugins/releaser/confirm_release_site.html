@@ -115,7 +115,16 @@
                                 ${component.targetVersion}
                             </#if>
                         </span>
-                   
+                        
+                        <#assign defaultTweetMessage="${component.name} ${component.targetVersion} released #LuteceCMS #LutecePortal"/>
+                            <#if component.shouldBeReleased()>
+                                <#if component.tweetMessage?has_content>
+                                    <@input type='textarea' name="tweet_message_${component.artifactId!}"  min=2 max=140 >${component.tweetMessage}</@input>
+                               <#else>
+                                 <@input type='textarea' name="tweet_message_${component.artifactId!}"  min=2 max=140 >${defaultTweetMessage}</@input>
+                               </#if>
+                          </#if>
+                                         
                       </div>
                     </div>
                 
@@ -182,5 +191,3 @@
       </section>
     </div>
   </div>
-
-

@@ -383,7 +383,7 @@ public class ComponentService implements IComponentService
 
         boolean bError = true;
 
-        ReleaserUtils.getLocalComponentPomPath( ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) ) );
+        ReleaserUtils.getLocalComponentPomPath( component.getName( ) );
         PomParser parser = new PomParser( );
         Component componentPom = new Component( );
         

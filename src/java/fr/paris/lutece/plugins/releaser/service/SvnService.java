@@ -156,7 +156,7 @@ public class SvnService implements ISvnService
         ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager( strSvnLogin,
                 strSvnPassword );
        
-        String strLocalBasePath = ReleaserUtils.getLocalComponentPath(component.getArtifactId( ) );
+        String strLocalBasePath = ReleaserUtils.getLocalComponentPath(component.getName( ) );
 
         if ( StringUtils.isNotBlank( strLocalBasePath ) && ( strSvnLogin != null ) )
         {

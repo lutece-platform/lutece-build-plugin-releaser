@@ -197,6 +197,7 @@ public class SiteService
             ComponentService.getService( ).updateRemoteInformations( component );
             defineTargetVersion( component );
             defineNextSnapshotVersion( component );
+            component.setName( ReleaserUtils.getComponentName( component.getScmDeveloperConnection( ) ) );
         }
            
             

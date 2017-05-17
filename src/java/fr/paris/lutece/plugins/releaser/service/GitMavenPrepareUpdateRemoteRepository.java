@@ -36,7 +36,7 @@ public class GitMavenPrepareUpdateRemoteRepository implements IMavenPrepareUpdat
         Git git = null;
         CommandResult commandResult = context.getCommandResult( );
         Component component = context.getComponent( );
-        String strComponentName = ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) );
+        String strComponentName = component.getName( ) ;
         String strLocalComponentPath = ReleaserUtils.getLocalComponentPath( strComponentName );
      
        
@@ -101,7 +101,7 @@ public class GitMavenPrepareUpdateRemoteRepository implements IMavenPrepareUpdat
         Git git = null;
         CommandResult commandResult = context.getCommandResult( );
         Component component = context.getComponent( );
-        String strComponentName = ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) );
+        String strComponentName = component.getName( ) ;
         String strLocalComponentPath = ReleaserUtils.getLocalComponentPath( strComponentName );
      
        
@@ -167,7 +167,7 @@ public class GitMavenPrepareUpdateRemoteRepository implements IMavenPrepareUpdat
         Git git = null;
         CommandResult commandResult = context.getCommandResult( );
         Component component = context.getComponent( );
-        String strComponentName = ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) );
+        String strComponentName = component.getName( ) ;
         String strLocalComponentPath = ReleaserUtils.getLocalComponentPath( strComponentName );
         
         try

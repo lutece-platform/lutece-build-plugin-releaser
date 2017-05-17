@@ -195,7 +195,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         CommandResult commandResult = context.getCommandResult( );
         ReleaserUtils.logStartAction( context, " Clone Repository" );
         Component component = context.getComponent( );
-        String strComponentName = ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) );
+        String strComponentName = component.getName( );
         String strLocalComponentPath = ReleaserUtils.getLocalComponentPath( strComponentName );
 
         File file = new File( strLocalComponentPath );
@@ -270,7 +270,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         CommandResult commandResult = context.getCommandResult( );
         Component component = context.getComponent( );
         ReleaserUtils.logStartAction( context, " Merge DEVELOP/MASTER" );
-        String strComponentName = ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) );
+        String strComponentName = component.getName( );
         String strLocalComponentPath = ReleaserUtils.getLocalComponentPath( strComponentName );
         Git git = null;
         try
@@ -359,14 +359,14 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     public void rollBackReleasePrepareGit( WorkflowReleaseContext context, Locale locale )
     {
        
-        String strComponentName = ReleaserUtils.getGitComponentName( context.getComponent( ).getScmDeveloperConnection( ) );
+        String strComponentName = context.getComponent().getName( );
         _gitMavenPrepareUpadteRepo.rollbackRelease( ReleaserUtils.getLocalComponentPath( strComponentName) , context, locale );
             
     }
     
     public void releasePrepareGit( WorkflowReleaseContext context, Locale locale )
     {
-        String strComponentName = ReleaserUtils.getGitComponentName( context.getComponent( ).getScmDeveloperConnection( ) );
+        String strComponentName = context.getComponent().getName( );
         
         try
         {
@@ -389,7 +389,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
         ReleaserUtils.logStartAction( context, " Release Perform" );
 
-        String strComponentName = ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) );
+        String strComponentName =context.getComponent( ).getName( );
         String strLocalComponentPomPath = ReleaserUtils.getLocalComponentPomPath( strComponentName );
 
         // PROGRESS 75%
@@ -419,7 +419,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         CommandResult commandResult = context.getCommandResult( );
 
         ReleaserUtils.logStartAction( context, " Checkout Svn Component " );
-        String strComponentName = context.getComponent( ).getArtifactId( );
+        String strComponentName = context.getComponent( ).getName( );
         String strLocalComponentPath = ReleaserUtils.getLocalComponentPath( strComponentName );
 
         File file = new File( strLocalComponentPath );
@@ -468,7 +468,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
     public void releasePrepareSvn( WorkflowReleaseContext context, Locale locale )
     {
-        String strComponentName = context.getComponent( ).getArtifactId( );
+        String strComponentName = context.getComponent( ).getName();
         
         
      realeasePrepare(strComponentName,context.getReleaserUser( ).getSvnComponentAccountLogin( ),context.getReleaserUser( ).getSvnComponentAccountPassword( ), _svnMavenPrepareUpadteRepo,
@@ -482,7 +482,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
        
         ReleaserUtils.logStartAction( context, " Release Perform" );
 
-        String strComponentName = context.getComponent( ).getArtifactId( );
+        String strComponentName = context.getComponent( ).getName();
         String strLocalComponentPomPath = ReleaserUtils.getLocalComponentPomPath( strComponentName );
 
 
@@ -498,20 +498,11 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     {
 
         CommandResult commandResult = context.getCommandResult( );
-        Component component = context.getComponent( );
-
+       
+        
         ReleaserUtils.logStartAction( context, " send Tweet" );
 
-        String strComponentName = ReleaserUtils.getGitComponentName( component.getScmDeveloperConnection( ) );
-        String strComponentReleaseVersion = component.getTargetVersion( );
-
-        Object [ ] messageAgrs = {
-                strComponentName, strComponentReleaseVersion
-        };
-
-        String strTweetMessage = I18nService.getLocalizedString( ConstanteUtils.I18_TWITTER_MESSAGE, messageAgrs, locale );
-
-        TwitterService.getService( ).sendTweet( strTweetMessage, commandResult );
+        TwitterService.getService( ).sendTweet( context.getComponent( ).getTweetMessage( ), commandResult );
 
         ReleaserUtils.logEndAction( context, " send Tweet" );
 

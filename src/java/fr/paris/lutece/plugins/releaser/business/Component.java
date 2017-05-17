@@ -70,10 +70,7 @@ public class Component
     private String _strName;
     private String _strCloneUrl;
     private String _strFullName;
-    
-    
-    
-    
+    private String _strTweetMessage;
     private String _strScmDeveloperConnection;
    
     
@@ -522,6 +519,16 @@ public class Component
     public void setFullName( String strFullName )
     {
         this._strFullName = strFullName;
+    }
+
+    public String getTweetMessage( )
+    {
+        return _strTweetMessage;
+    }
+
+    public void setTweetMessage( String _strTweetMessage )
+    {
+        this._strTweetMessage = _strTweetMessage;
     }
 
             

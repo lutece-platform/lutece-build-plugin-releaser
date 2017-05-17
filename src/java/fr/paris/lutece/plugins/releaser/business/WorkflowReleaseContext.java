@@ -22,6 +22,7 @@ public class WorkflowReleaseContext implements Serializable
     private String _strRefBranchRelease;
     private String _strRefBranchDev;
     
+    
  
     public int getId( )
     {
@@ -103,7 +104,8 @@ public class WorkflowReleaseContext implements Serializable
     {
         this._strRefBranchDev = _strRefBranchDev;
     }
-    
+
+  
     
     
 }

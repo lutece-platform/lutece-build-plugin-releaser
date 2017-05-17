@@ -39,6 +39,7 @@ function callReleaseInfo( nIdReleaseContext,progressId,artifactId)
                 {
                  $('#release-result-'+artifactId).html('<strong class="text-success"><i class="fa fa-check"></i> Version releasée ! </strong>');
                  $( '#histo-'+artifactId ).notify("Release ok", { position:"right", style:"releaser" } );
+                 $( '#deploy_site_release-'+artifactId).show();
                }
                else
                {
