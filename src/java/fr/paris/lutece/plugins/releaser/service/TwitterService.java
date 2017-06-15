@@ -69,16 +69,12 @@ public class TwitterService implements ITwitterService
                 Status status = _twitter.updateStatus( strTweet );
                 commandResult.getLog( ).append("Le Tweet " + status.getText(  ) + " a été envoyé depuis " + status.getUser(  ).getScreenName(  ) + "\n");
             }
-            else
-            {
-                ReleaserUtils.addTechnicalError( commandResult, "Le tweet n'a pas été envoyé car il est vide ");
-            }
             
         }
         catch ( TwitterException e )
         {
         
-                ReleaserUtils.addTechnicalError( commandResult, "Une erreur est surnvenue lors de l'envoi du tweet:"+strTweet, e );
+                ReleaserUtils.addInfoError( commandResult, "Une erreur est surnvenue lors de l'envoi du tweet:"+strTweet, e );
          }
         
     }

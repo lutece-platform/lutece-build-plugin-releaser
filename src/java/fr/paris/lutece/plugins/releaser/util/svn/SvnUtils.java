@@ -37,13 +37,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Collections;
 
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.log4j.Logger;
 import org.tmatesoft.svn.core.ISVNDirEntryHandler;
 import org.tmatesoft.svn.core.SVNAuthenticationException;
 import org.tmatesoft.svn.core.SVNCancelException;
 import org.tmatesoft.svn.core.SVNCommitInfo;
+import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNNodeKind;
@@ -51,6 +52,7 @@ import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
+import org.tmatesoft.svn.core.internal.wc.DefaultSVNOptions;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import org.tmatesoft.svn.core.wc.ISVNEventHandler;
@@ -58,18 +60,18 @@ import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNCommitPacket;
 import org.tmatesoft.svn.core.wc.SVNCopyClient;
 import org.tmatesoft.svn.core.wc.SVNCopySource;
+import org.tmatesoft.svn.core.wc.SVNDiffClient;
 import org.tmatesoft.svn.core.wc.SVNEvent;
 import org.tmatesoft.svn.core.wc.SVNEventAction;
 import org.tmatesoft.svn.core.wc.SVNRevision;
+import org.tmatesoft.svn.core.wc.SVNRevisionRange;
 
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.plugins.releaser.util.file.FileUtils;
-import fr.paris.lutece.util.ReferenceItem;
+import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.util.ReferenceList;
-
-
 
 public final class SvnUtils
 {
@@ -80,7 +82,7 @@ public final class SvnUtils
     /**
      * Constructeur vide
      */
-    private SvnUtils(  )
+    private SvnUtils( )
     {
         // nothing
     }
@@ -88,37 +90,39 @@ public final class SvnUtils
     /**
      * Initialise les diff�rentes factory pour le svn
      */
-    public static void init(  )
+    public static void init( )
     {
         /*
-        * For using over http:// and https:
-        */
-        DAVRepositoryFactory.setup(  );
+         * For using over http:// and https:
+         */
+        DAVRepositoryFactory.setup( );
         /*
          * For using over svn:// and svn+xxx:
          */
-        SVNRepositoryFactoryImpl.setup(  );
+        SVNRepositoryFactoryImpl.setup( );
 
         /*
          * For using over file:/
          */
-        FSRepositoryFactory.setup(  );
+        FSRepositoryFactory.setup( );
     }
-    
 
-    
     /**
      * Commit
-     * @param strSiteName le nom du site
-     * @param strTagName le nom du tag
-     * @param copyClient le client svn permettant la copie
+     * 
+     * @param strSiteName
+     *            le nom du site
+     * @param strTagName
+     *            le nom du tag
+     * @param copyClient
+     *            le client svn permettant la copie
      * @throws SVNException
      */
-    public static void  doCommit(  String strPathFile,String strCommitMessage,
-            ReleaseSvnCommitClient commitClient  ) throws SVNException
+    public static void doCommit( String strPathFile, String strCommitMessage, ReleaseSvnCommitClient commitClient ) throws SVNException
     {
-        SVNCommitPacket commitPacket = commitClient.doCollectCommitItems( new File[] { new File( strPathFile ) },
-                false, false, false );
+        SVNCommitPacket commitPacket = commitClient.doCollectCommitItems( new File [ ] {
+            new File( strPathFile )
+        }, false, false, false );
 
         if ( !SVNCommitPacket.EMPTY.equals( commitPacket ) )
         {
@@ -126,195 +130,230 @@ public final class SvnUtils
         }
     }
 
-
     /**
      * Tag un site
-     * @param strSiteName le nom du site
-     * @param strTagName le nom du tag
-     * @param copyClient le client svn permettant la copie
+     * 
+     * @param strSiteName
+     *            le nom du site
+     * @param strTagName
+     *            le nom du tag
+     * @param copyClient
+     *            le client svn permettant la copie
      * @throws SVNException
      */
-    public static String doTagSite( String strSiteName, String strTagName, String strSrcURL, String strDstURL,
-        SVNCopyClient copyClient ) throws SVNException
+    public static String doTagSite( String strSiteName, String strTagName, String strSrcURL, String strDstURL, SVNCopyClient copyClient ) throws SVNException
     {
         // COPY from trunk to tags/tagName
         SVNURL srcURL = SVNURL.parseURIEncoded( strSrcURL );
         SVNURL dstURL = SVNURL.parseURIEncoded( strDstURL );
         SVNCopySource svnCopySource = new SVNCopySource( SVNRevision.HEAD, SVNRevision.HEAD, srcURL );
-        SVNCopySource[] tabSVNCopy = new SVNCopySource[1];
-        tabSVNCopy[0] = svnCopySource;
+        SVNCopySource [ ] tabSVNCopy = new SVNCopySource [ 1];
+        tabSVNCopy [0] = svnCopySource;
 
-        SVNCommitInfo info = copyClient.doCopy( tabSVNCopy, dstURL, false, false, false,
-                "[site-release] Tag site " + strSiteName + " to " + strTagName, null );
+        SVNCommitInfo info = copyClient.doCopy( tabSVNCopy, dstURL, false, false, false, "[site-release] Tag site " + strSiteName + " to " + strTagName, null );
 
-        if ( info.getErrorMessage(  ) != null )
+        if ( info.getErrorMessage( ) != null )
         {
-        	
-            return info.getErrorMessage(  ).getMessage(  );
+
+            return info.getErrorMessage( ).getMessage( );
         }
 
         return null;
     }
 
-    public static String doSvnCheckout( String strUrl, String strCheckoutBaseSitePath,
-        ReleaseSvnCheckoutClient updateClient, CommandResult result )
-        throws SVNException
+    public static Long doSvnCheckout( String strUrl, String strCheckoutBaseSitePath, ReleaseSvnCheckoutClient updateClient, CommandResult result )
+            throws SVNException
     {
+        Long nLastCommitId = null;
         SVNURL url = SVNURL.parseURIEncoded( strUrl );
         File file = new File( strCheckoutBaseSitePath );
 
-        if ( file.exists(  ) )
+        if ( file.exists( ) )
         {
-            if ( !FileUtils.delete( file, result.getLog(  ) ) )
+            if ( !FileUtils.delete( file, result.getLog( ) ) )
             {
-                result.setError( result.getLog(  ).toString(  ) );
+                result.setError( result.getLog( ).toString( ) );
+                ReleaserUtils.addTechnicalError( result, "Fail to delete file" );
 
-                return result.getLog(  ).toString(  );
             }
         }
 
         SVNRepository repository = SVNRepositoryFactory.create( url, null );
-        final StringBuffer logBuffer = result.getLog(  );
+        final StringBuffer logBuffer = result.getLog( );
 
         try
         {
-            updateClient.setEventHandler( new ISVNEventHandler(  )
+            updateClient.setEventHandler( new ISVNEventHandler( )
+            {
+                public void checkCancelled( ) throws SVNCancelException
                 {
-                    public void checkCancelled(  ) throws SVNCancelException
-                    {
-                        // Do nothing
-                    }
+                    // Do nothing
+                }
 
-                    public void handleEvent( SVNEvent event, double progress )
-                        throws SVNException
-                    {
-                        logBuffer.append( ( ( event.getAction(  ) == SVNEventAction.UPDATE_ADD ) ? "ADDED "
-                                                                                                 : event.getAction(  ) ) +
-                            " " + event.getFile(  ) + "\n" );
-                    }
-                } );
+                public void handleEvent( SVNEvent event, double progress ) throws SVNException
+                {
+                    logBuffer.append( ( ( event.getAction( ) == SVNEventAction.UPDATE_ADD ) ? "ADDED " : event.getAction( ) ) + " " + event.getFile( ) + "\n" );
+                }
+            } );
 
             // SVNDepth.INFINITY + dernier param�tre � FALSE pour la version 1.3.2
-            updateClient.doCheckout( repository.getLocation(  ), file, SVNRevision.HEAD, SVNRevision.HEAD, true );
+            nLastCommitId = updateClient.doCheckout( repository.getLocation( ), file, SVNRevision.HEAD, SVNRevision.HEAD, true );
         }
-        catch ( SVNAuthenticationException e )
+        catch( SVNAuthenticationException e )
         {
-            //            _result.getLog(  ).append( CONSTANTE_NO_LOGIN_PASSWORD );
-            //            _result.setStatus( ICommandThread.STATUS_EXCEPTION );
-            //            _result.setRunning( false );
+            // _result.getLog( ).append( CONSTANTE_NO_LOGIN_PASSWORD );
+            // _result.setStatus( ICommandThread.STATUS_EXCEPTION );
+            // _result.setRunning( false );
 
+            ReleaserUtils.addTechnicalError( result, "Une erreur est survenue lors de la tentative d'authentification avec le svn" + e, e );
 
-        	ReleaserUtils.addTechnicalError(result,"Une erreur est survenue lors de la tentative d'authentification avec le svn"+e,e);
-		      
-            StringWriter sw = new StringWriter(  );
+            StringWriter sw = new StringWriter( );
             PrintWriter pw = new PrintWriter( sw );
             e.printStackTrace( pw );
 
-            String errorLog = sw.toString(  );
-            pw.flush(  );
-            pw.close(  );
+            String errorLog = sw.toString( );
+            pw.flush( );
+            pw.close( );
 
             try
             {
-                sw.flush(  );
-                sw.close(  );
+                sw.flush( );
+                sw.close( );
             }
-            catch ( IOException e1 )
+            catch( IOException e1 )
             {
                 // do nothing
-                //  _logger.error( e1 );
+                // _logger.error( e1 );
             }
 
-            //            _result.setLog( _result.getLog(  ).append( errorLog ) );
-            //            _logger.error( e );
+            // _result.setLog( _result.getLog( ).append( errorLog ) );
+            // _logger.error( e );
 
-            //_result.setIdError( ReleaseLogger.logError( _result.getLog(  ).toString(  ), e ) );
+            // _result.setIdError( ReleaseLogger.logError( _result.getLog( ).toString( ), e ) );
         }
-        catch ( Exception e )
+        catch( Exception e )
         {
-            //            _result.setStatus( ICommandThread.STATUS_EXCEPTION );
-            //            _result.setRunning( false );
-            StringWriter sw = new StringWriter(  );
+            // _result.setStatus( ICommandThread.STATUS_EXCEPTION );
+            // _result.setRunning( false );
+            StringWriter sw = new StringWriter( );
             PrintWriter pw = new PrintWriter( sw );
             e.printStackTrace( pw );
 
-            String errorLog = sw.toString(  );
-            pw.flush(  );
-            pw.close(  );
+            String errorLog = sw.toString( );
+            pw.flush( );
+            pw.close( );
 
             try
             {
-                sw.flush(  );
-                sw.close(  );
+                sw.flush( );
+                sw.close( );
             }
-            catch ( IOException e1 )
+            catch( IOException e1 )
             {
                 // do nothing
-                //                _logger.error( e1 );
+                // _logger.error( e1 );
             }
 
-        	ReleaserUtils.addTechnicalError(result,"Une erreur svn est survenue:"+e,e);
-   		 
+            ReleaserUtils.addTechnicalError( result, "Une erreur svn est survenue:" + e, e );
+
         }
 
-        return null;
+        return nLastCommitId;
     }
 
-    public static ReferenceList getSvnSites( String strUrlSite, SVNClientManager clientManager )
-        throws SVNException
+    public static ReferenceList getSvnSites( String strUrlSite, SVNClientManager clientManager ) throws SVNException
     {
-        final ReferenceList listSites = new ReferenceList(  );
+        final ReferenceList listSites = new ReferenceList( );
         final SVNURL url;
 
         url = SVNURL.parseURIEncoded( strUrlSite );
 
         SVNRepository repository = SVNRepositoryFactory.create( url, null );
 
-        clientManager.getLogClient(  ).doList( repository.getLocation(  ), SVNRevision.HEAD, SVNRevision.HEAD, false,
-            false,
-            new ISVNDirEntryHandler(  )
+        clientManager.getLogClient( ).doList( repository.getLocation( ), SVNRevision.HEAD, SVNRevision.HEAD, false, false, new ISVNDirEntryHandler( )
+        {
+            public void handleDirEntry( SVNDirEntry entry ) throws SVNException
             {
-                public void handleDirEntry( SVNDirEntry entry )
-                    throws SVNException
+
+                if ( !url.equals( entry.getURL( ) ) )
                 {
-                  
-                    if ( !url.equals( entry.getURL(  ) ) )
+                    if ( entry.getKind( ) == SVNNodeKind.DIR )
                     {
-                        if ( entry.getKind(  ) == SVNNodeKind.DIR )
-                        {
-                            listSites.addItem( entry.getName(  ), entry.getName(  ) );
-                        }
+                        listSites.addItem( entry.getName( ), entry.getName( ) );
                     }
                 }
-            } );
+            }
+        } );
 
         return listSites;
     }
 
- 
-    public static String getSvnUrlTagSite( String strScmUrl, String strTagName )
+    public static Long getLastRevision(  String strRepoPath,String strUserName,String strPassword)
     {
-        
-        String strUrl=strScmUrl.contains( ConstanteUtils.CONSTANTE_TRUNK )?strScmUrl.replace( ConstanteUtils.CONSTANTE_TRUNK, ConstanteUtils.CONSTANTE_TAGS ):strScmUrl;
-        return strUrl+ConstanteUtils.CONSTANTE_SEPARATOR_SLASH + strTagName;
+        Long lRevision= null;
+         SVNClientManager clientManager = SVNClientManager.newInstance( new DefaultSVNOptions( ), strUserName, strPassword );
+        SVNRevision revision;
+        try
+        {
+            revision = clientManager.getStatusClient( ).doStatus( new File(strRepoPath ), true ).getCommittedRevision( );
+            if(revision!=null)
+            {
+                return revision.getNumber( );
+            }
+        }
+        catch( SVNException e )
+        {
+           AppLogService.error( e );
+        }
+    
+    return lRevision;
     }
     
-    
-    public static String getRepoUrl(String strRepoUrl)
+    public static void  revert(  String strRepoPath, String strCmUrl,String strUserName,String strPassword,Long revHeadCommit,Long lRevertCommit)
     {
+       
+        SVNClientManager clientManager = SVNClientManager.newInstance( new DefaultSVNOptions( ), strUserName, strPassword );
         
-        if(strRepoUrl!=null && strRepoUrl.startsWith( "scm:svn:" ))
-         {
-            strRepoUrl=strRepoUrl.substring( 8 );
+             SVNDiffClient diffClient = clientManager.getDiffClient();
+             SVNRevision sRevertCommit= SVNRevision.create( lRevertCommit );
+             SVNRevision sLastCommit= SVNRevision.create( revHeadCommit );
+             
+             
+               SVNRevisionRange rangeToMerge = new SVNRevisionRange(sLastCommit, sRevertCommit);
+               
+               try
+            {
+                diffClient.doMerge(SVNURL.parseURIEncoded( strCmUrl), sLastCommit, Collections.singleton(rangeToMerge), 
+                           new File(strRepoPath), SVNDepth.INFINITY, true, false, false, false);
+            }
+            catch( SVNException e )
+            {
+               AppLogService.error( e );
+            }
+                 
                    
-                   
-              }
-        
-        return strRepoUrl;
-        
-        
     }
     
 
-   
+    public static String getSvnUrlTagSite( String strScmUrl, String strTagName )
+    {
+
+        String strUrl = strScmUrl.contains( ConstanteUtils.CONSTANTE_TRUNK ) ? strScmUrl
+                .replace( ConstanteUtils.CONSTANTE_TRUNK, ConstanteUtils.CONSTANTE_TAGS ) : strScmUrl;
+        return strUrl + ConstanteUtils.CONSTANTE_SEPARATOR_SLASH + strTagName;
+    }
+
+    public static String getRepoUrl( String strRepoUrl )
+    {
+
+        if ( strRepoUrl != null && strRepoUrl.startsWith( "scm:svn:" ) )
+        {
+            strRepoUrl = strRepoUrl.substring( 8 );
+
+        }
+
+        return strRepoUrl;
+
+    }
+
 }

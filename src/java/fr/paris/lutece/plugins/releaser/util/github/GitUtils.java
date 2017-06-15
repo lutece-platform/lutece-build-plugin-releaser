@@ -2,6 +2,8 @@ package fr.paris.lutece.plugins.releaser.util.github;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -9,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.api.Git;
@@ -299,7 +302,15 @@ public class GitUtils  {
         
         GithubSearchResult searchResult=null;
         
-        String strUrl = MessageFormat.format( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_SEARCH_REPO_API ), strSearch,strOrganization  );
+        String strUrl=null;
+        try
+        {
+            strUrl = MessageFormat.format( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_SEARCH_REPO_API ), URLEncoder.encode( strSearch,"UTF-8"),strOrganization  );
+        }
+        catch( UnsupportedEncodingException e1 )
+        {
+            AppLogService.error(e1);
+        }
         
       
         String strResponse = "";

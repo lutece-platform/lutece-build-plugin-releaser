@@ -33,9 +33,7 @@ public interface IWorkflowReleaseContextService
     
     
     void releasePrepareGit( WorkflowReleaseContext context, Locale locale );
-    
-    void rollBackReleasePrepareGit( WorkflowReleaseContext context, Locale locale );
-    
+         
     void releasePrepareSvn( WorkflowReleaseContext context, Locale locale );
     
     void releasePerformGit( WorkflowReleaseContext context, Locale locale );
@@ -52,6 +50,7 @@ public interface IWorkflowReleaseContextService
     
     void checkoutComponent( WorkflowReleaseContext context, Locale locale );
     
+    void updateJiraVersions( WorkflowReleaseContext context, Locale locale );
     
     void init();
 

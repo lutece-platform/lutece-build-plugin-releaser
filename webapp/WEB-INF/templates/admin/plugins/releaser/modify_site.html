@@ -1,44 +1,44 @@
-<div class="app-wrapper">
-<div class="cards">
-  <section class="row">
-    <div class="col-xs-12 col-sm-3 col-md-2 cards-info">
-				<h1>
-      		<i class="fa fa-cube fa-5x"></i>
-				</h1>
-    </div>
-		<div class="xs-12 col-sm-9 col-md-10">
-			<div class="row">
-				<div class="col-xs-12 col-sm-offset-2 col-sm-6 col-md-offset-2 col-md-6 col-lg-offset-2 col-lg-6">
-      		<h3>#i18n{releaser.modify_site.title}</h3>
-				</div>
-			</div>
-    	<@tform class="form-horizontal" method="post" name="modify_site" action="jsp/admin/plugins/releaser/ManageClusters.jsp">
-        <@messages errors=errors />
-        <input type="hidden" id="id" name="id" value="${site.id}"/>
-
-                <@formGroup labelKey='#i18n{releaser.modify_site.labelName}' helpKey='#i18n{releaser.modify_site.labelName.help}' mandatory=true>
-                        <@input type='text' name='name' value='${site.name}' />
-                </@formGroup>
-                <@formGroup labelKey='#i18n{releaser.modify_site.labelDescription}' helpKey='#i18n{releaser.modify_site.labelDescription.help}' mandatory=true>
-                        <@input type='text' name='description' value='${site.description}' />
-                </@formGroup>
-                <@formGroup labelKey='#i18n{releaser.modify_site.labelArtifactId}' helpKey='#i18n{releaser.modify_site.labelArtifactId.help}' mandatory=true>
-                        <@input type='text' name='artifact_id' value='${site.artifactId}' />
-                </@formGroup>
-                <@formGroup labelKey='#i18n{releaser.modify_site.labelCluster}' helpKey='#i18n{releaser.modify_site.labelCluster.help}' mandatory=true>
-                        <@select name='id_cluster' items=clusters_list default_value='${site.idCluster!\'\'}' />
-                </@formGroup>
-                <@formGroup labelKey='#i18n{releaser.modify_site.labelScmUrl}' helpKey='#i18n{releaser.modify_site.labelScmUrl.help}' mandatory=true>
-                        <@input type='text' name='scm_url' value='${site.scmUrl}' />
-                </@formGroup>
-                <@formGroup labelKey='#i18n{releaser.modify_site.labelJiraKey}' helpKey='#i18n{releaser.modify_site.labelJiraKey.help}' >
-                        <@input type='text' name='jira_key' value='${site.jiraKey}' />
-                </@formGroup>
-                  <@formGroup labelKey='#i18n{releaser.modify_site.labelIsTheme}' helpKey='#i18n{releaser.modify_site.labelIsTheme.help}' >
-                        <@checkBox  name='theme' id='theme' labelKey='' labelFor='theme' orientation='vertical' value='true'  name='theme'  checked=site.theme />
-                   </@formGroup>
-                
-        <@actionButtons button1Name="action_modifySite" button2Name="view_manageSite"/>
-    </@tform>
-	</div>
-</div>
+<div class="app-wrapper">
+<div class="cards">
+  <section class="row">
+    <div class="col-xs-12 col-sm-3 col-md-2 cards-info">
+				<h1>
+      		<i class="fa fa-cube fa-5x"></i>
+				</h1>
+    </div>
+		<div class="xs-12 col-sm-9 col-md-10">
+			<div class="row">
+				<div class="col-xs-12 col-sm-offset-2 col-sm-6 col-md-offset-2 col-md-6 col-lg-offset-2 col-lg-6">
+      		<h3>#i18n{releaser.modify_site.title}</h3>
+				</div>
+			</div>
+    	<@tform class="form-horizontal" method="post" name="modify_site" action="jsp/admin/plugins/releaser/ManageClusters.jsp">
+        <@messages errors=errors />
+        <input type="hidden" id="id" name="id" value="${site.id}"/>
+
+                <@formGroup labelKey='#i18n{releaser.modify_site.labelName}' helpKey='#i18n{releaser.modify_site.labelName.help}' mandatory=true>
+                        <@input type='text' name='name' value='${site.name}' />
+                </@formGroup>
+                <@formGroup labelKey='#i18n{releaser.modify_site.labelDescription}' helpKey='#i18n{releaser.modify_site.labelDescription.help}' mandatory=true>
+                        <@input type='text' name='description' value='${site.description}' />
+                </@formGroup>
+                <@formGroup labelKey='#i18n{releaser.modify_site.labelArtifactId}' helpKey='#i18n{releaser.modify_site.labelArtifactId.help}' mandatory=true>
+                        <@input type='text' name='artifact_id' value='${site.artifactId}' />
+                </@formGroup>
+                <@formGroup labelKey='#i18n{releaser.modify_site.labelCluster}' helpKey='#i18n{releaser.modify_site.labelCluster.help}' mandatory=true>
+                        <@select name='id_cluster' items=clusters_list default_value='${site.idCluster!\'\'}' />
+                </@formGroup>
+                <@formGroup labelKey='#i18n{releaser.modify_site.labelScmUrl}' helpKey='#i18n{releaser.modify_site.labelScmUrl.help}' mandatory=true>
+                        <@input type='text' name='scm_url' value='${site.scmUrl}' />
+                </@formGroup>
+                <@formGroup labelKey='#i18n{releaser.modify_site.labelJiraKey}' helpKey='#i18n{releaser.modify_site.labelJiraKey.help}' >
+                        <@input type='text' name='jira_key' value='${site.jiraKey}' />
+                </@formGroup>
+                  <@formGroup labelKey='#i18n{releaser.modify_site.labelIsTheme}' helpKey='#i18n{releaser.modify_site.labelIsTheme.help}' >
+                        <@checkBox  name='theme' id='theme' labelKey='' labelFor='theme' orientation='vertical' value='true'  name='theme'  checked=site.theme />
+                   </@formGroup>
+                
+        <@actionButtons button1Name="action_modifySite" button2Name="view_manageSite"/>
+    </@tform>
+	</div>
+</div>

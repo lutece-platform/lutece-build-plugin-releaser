@@ -21,6 +21,7 @@ public class ConstanteUtils
     public static final String BEAN_WORKFLOW_RELEASE_CONTEXT_SERVICE= "releaser.workflowReleaseContextService";
     public static final String BEAN_MAVEN_SERVICE= "releaser.mavenService";
     public static final String BEAN_SVN_SERVICE= "releaser.svnService";
+    public static final String BEAN_JIRA_SERVICE= "releaser.jiraComponentService";
     public static final String BEAN_GIT_MAVEN_PREPARE_UPDATE_REMOTE_REPOSITORY= "releaser.gitMavenPrepareUpdateRemoteRepository";
     public static final String BEAN_SVN_MAVEN_PREPARE_UPDATE_REMOTE_REPOSITORY= "releaser.svnMavenPrepareUpdateRemoteRepository";
    
@@ -57,8 +58,9 @@ public class ConstanteUtils
     public static final String PROPERTY_TWITTER_OAUTH_AUTHORIZATION_URL="releaser.authorizationURL";
     public static final String PROPERTY_TWITTER_OAUTH_ACCESSTOKEN_URL="releaser.accessTokenURL";
     public static final String PROPERTY_THREAD_RELEASE_POOL_MAX_SIZE="releaser.threadReleasePoolMaxSize";
-    
     public static final String PROPERTY_NB_SEARCH_ITEM_PER_PAGE_LOAD="releaser.nbSearchItemPerPageLoad";
+    
+    public static final String PROPERTY_URL_JIRA_SERVICE="releaser.urlJiraService";
     
     public static final String I18_TWITTER_MESSAGE="releaser.message.twitterMessage";
     public static final String CONSTANTE_TYPE_LUTECE_SITE="lutece-site";

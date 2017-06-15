@@ -103,7 +103,19 @@ public class SvnSiteService
             AppLogService.error( "SvnSiteService : Error retrieving release version : " + e.getMessage( ), e );
         }
 
-        return ( !list.isEmpty() ) ? list.get( list.size() - 1 ) : null;
+          String strLastRelease= ( !list.isEmpty() ) ? list.get( list.size() - 1 ) : null;
+          
+          if(strLastRelease!=null && strLastRelease.contains( "-" ))
+          {
+             
+              String[] tabRelease=strLastRelease.split( "-" );
+               strLastRelease=tabRelease[tabRelease.length-1];
+          }
+          else
+          {
+              strLastRelease="";
+          }
+          return strLastRelease;
         
     }
     

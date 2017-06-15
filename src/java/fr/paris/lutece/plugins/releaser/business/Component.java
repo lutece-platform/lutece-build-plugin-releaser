@@ -408,7 +408,7 @@ public class Component
     public boolean shouldBeReleased( )
     {
 
-        if(this.isProject( ) && this.isSnapshotVersion( ) && !this.isTheme( ) && !this.isDowngrade( ) &&  this.getCurrentVersion( ).equals( this.getLastAvailableSnapshotVersion( ) ))
+        if(this.isProject( ) && this.isSnapshotVersion( ) && this.getTargetVersion( )!=null && !Version.isSnapshot( this.getTargetVersion( ))&& !this.isTheme( ) && !this.isDowngrade( ) &&  this.getCurrentVersion( ).equals( this.getLastAvailableSnapshotVersion( ) )  )
         {
              return true;   
         }

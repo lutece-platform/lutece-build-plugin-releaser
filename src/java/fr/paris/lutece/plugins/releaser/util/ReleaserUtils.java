@@ -103,6 +103,28 @@ public class ReleaserUtils
         return strTagName;
     }
     
+    
+    
+    public static void addInfoError( CommandResult commandResult, String strError, Exception e )
+    {
+
+        if ( e != null )
+        {
+            AppLogService.error( strError, e );
+        }
+        else
+        {
+            AppLogService.error( strError );
+        }
+
+        if ( commandResult != null )
+        {
+            commandResult.setError( strError );
+            commandResult.setStatus( CommandResult.STATUS_ERROR );
+            commandResult.setErrorType( CommandResult.ERROR_TYPE_INFO );
+         }
+        
+    }
 
     public static void addTechnicalError( CommandResult commandResult, String strError, Exception e ) throws AppException
     {

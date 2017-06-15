@@ -99,12 +99,18 @@ public class ReleaseComponentTask implements Runnable {
                 WorkflowService.getInstance(  ).doProcessAction( _wfContext.getId( ), WorkflowReleaseContext.WORKFLOW_RESOURCE_TYPE, action.getId( ), -1, _request, _locale, true ); 
                 if(_wfContext.getComponent( )!=null)
                 {
-                    //Save in database the release and the next snapshot version
+                    
+                   //Save in database the release and the next snapshot version
                     ComponentService.getService( ).setLastReleaseVersion(_wfContext.getComponent( ).getArtifactId( ) ,_wfContext.getComponent( ).getTargetVersion( ));
                     _wfContext.getComponent( ).setLastAvailableVersion( _wfContext.getComponent( ).getTargetVersion( ) );
                     ComponentService.getService( ).setLastReleaseNextSnapshotVersion(_wfContext.getComponent( ).getArtifactId( ) ,_wfContext.getComponent( ).getNextSnapshotVersion( ));
                     _wfContext.getComponent( ).setLastAvailableSnapshotVersion( _wfContext.getComponent( ).getNextSnapshotVersion( ) );
+                    
+                    
+                
                 }
+                
+                break;
             }
             
             

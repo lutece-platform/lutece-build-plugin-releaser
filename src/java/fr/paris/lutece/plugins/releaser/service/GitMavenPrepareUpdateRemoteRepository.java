@@ -48,7 +48,7 @@ public class GitMavenPrepareUpdateRemoteRepository implements IMavenPrepareUpdat
             git = new Git( fLocalRepo );
             git.checkout( ).setName( GitUtils.DEVELOP_BRANCH ).call( );
             git.add( ).addFilepattern( "." ).setUpdate( true ).call( );
-            git.commit( ).setMessage( strMessage).call( );
+            git.commit( ).setCommitter(context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountLogin( )).setMessage( strMessage).call( );
             git.push( )
                     .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ) ) )
                     .call( );
@@ -160,9 +160,10 @@ public class GitMavenPrepareUpdateRemoteRepository implements IMavenPrepareUpdat
     
     
     @Override
-    public void rollbackRelease(String strLocalBasePath, WorkflowReleaseContext context, Locale locale)
+    public void rollbackRelease(String strLocalBasePath,String strScmUrl, WorkflowReleaseContext context, Locale locale)
     {
         
+        ReleaserUtils.logStartAction( context, " Rollback Release prepare" );
         FileRepository fLocalRepo = null;
         Git git = null;
         CommandResult commandResult = context.getCommandResult( );
@@ -237,6 +238,68 @@ public class GitMavenPrepareUpdateRemoteRepository implements IMavenPrepareUpdat
             }
     
             }
+        }
+        catch( InvalidRemoteException e )
+        {
+
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+
+        }
+        catch( TransportException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+
+        }
+        catch( IOException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+        }
+        catch( GitAPIException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+        }
+
+        finally
+        {
+
+            if ( fLocalRepo != null )
+            {
+
+                fLocalRepo.close( );
+
+            }
+            if ( git != null )
+            {
+
+                git.close( );
+
+            }
+
+        }
+        ReleaserUtils.logEndAction( context, " Rollback Release prepare" );
+        
+    }
+
+    @Override
+    public void checkoutDevelopBranchBeforePrepare( WorkflowReleaseContext context, Locale locale)
+    {
+        FileRepository fLocalRepo = null;
+        Git git = null;
+        CommandResult commandResult = context.getCommandResult( );
+        Component component = context.getComponent( );
+        String strComponentName = component.getName( ) ;
+        String strLocalComponentPath = ReleaserUtils.getLocalComponentPath( strComponentName );
+     
+       
+        try
+        {
+     
+            fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
+    
+            git = new Git( fLocalRepo );
+            git.checkout( ).setName( GitUtils.DEVELOP_BRANCH ).call( );
+        
+        
         }
         catch( InvalidRemoteException e )
         {

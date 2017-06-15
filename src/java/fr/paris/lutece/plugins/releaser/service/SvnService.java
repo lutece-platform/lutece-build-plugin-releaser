@@ -134,11 +134,9 @@ public class SvnService implements ISvnService
             ReleaseSvnCheckoutClient updateClient = new ReleaseSvnCheckoutClient( authManager,
                     SVNWCUtil.createDefaultOptions( false ) );
 
-            String strError = null;
-
             try
             {
-                strError = SvnUtils.doSvnCheckout(  site.getScmUrl( ), strSiteLocalBasePath, updateClient,
+               SvnUtils.doSvnCheckout(  site.getScmUrl( ), strSiteLocalBasePath, updateClient,
                         commandResult );
             }
             catch ( Exception e )
@@ -151,8 +149,10 @@ public class SvnService implements ISvnService
         return ConstanteUtils.CONSTANTE_EMPTY_STRING;
     }
     
-    public String doSvnCheckoutComponent(  Component component, String strSvnLogin,String strSvnPassword, CommandResult commandResult)
+    public Long doSvnCheckoutComponent(  Component component, String strSvnLogin,String strSvnPassword, CommandResult commandResult)
     {
+       
+        Long lReturn=null;
         ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager( strSvnLogin,
                 strSvnPassword );
        
@@ -167,7 +167,7 @@ public class SvnService implements ISvnService
 
             try
             {
-                strError = SvnUtils.doSvnCheckout( SvnUtils.getRepoUrl( component.getScmDeveloperConnection( )), strLocalBasePath, updateClient,
+                lReturn = SvnUtils.doSvnCheckout( SvnUtils.getRepoUrl( component.getScmDeveloperConnection( )), strLocalBasePath, updateClient,
                         commandResult );
             }
             catch ( Exception e )
@@ -177,7 +177,7 @@ public class SvnService implements ISvnService
         }
         
 
-        return ConstanteUtils.CONSTANTE_EMPTY_STRING;
+        return lReturn;
     }
 
     /* (non-Javadoc)

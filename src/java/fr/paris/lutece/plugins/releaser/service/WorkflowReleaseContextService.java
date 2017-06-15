@@ -356,13 +356,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         }
     }
 
-    public void rollBackReleasePrepareGit( WorkflowReleaseContext context, Locale locale )
-    {
-       
-        String strComponentName = context.getComponent().getName( );
-        _gitMavenPrepareUpadteRepo.rollbackRelease( ReleaserUtils.getLocalComponentPath( strComponentName) , context, locale );
-            
-    }
+
     
     public void releasePrepareGit( WorkflowReleaseContext context, Locale locale )
     {
@@ -375,8 +369,9 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         
         }catch(AppException ex)
         {
-            _gitMavenPrepareUpadteRepo.rollbackRelease( ReleaserUtils.getLocalComponentPath( strComponentName) , context, locale );
             
+            _gitMavenPrepareUpadteRepo.rollbackRelease( ReleaserUtils.getLocalComponentPath( strComponentName) ,context.getComponent().getScmDeveloperConnection( ), context, locale );
+            throw ex;
         }
 
     }
@@ -395,8 +390,18 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         // PROGRESS 75%
         commandResult.setProgressValue( commandResult.getProgressValue( ) + 10 );
 
-        MavenService.getService( ).mvnReleasePerform( strLocalComponentPomPath, context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ), commandResult );
+       
+        try
+        {
+         
+            MavenService.getService( ).mvnReleasePerform( strLocalComponentPomPath, context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ), commandResult );
 
+        }catch(AppException ex)
+        {
+            
+            _gitMavenPrepareUpadteRepo.rollbackRelease( ReleaserUtils.getLocalComponentPath( strComponentName) ,context.getComponent().getScmDeveloperConnection( ), context, locale );
+            throw ex;
+        }
         ReleaserUtils.logEndAction( context, " Release Perform" );
     }
 
@@ -439,8 +444,13 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
 
         commandResult.getLog( ).append( "Checkout SVN Component ...\n" );
-        SvnService.getService( ).doSvnCheckoutComponent( context.getComponent( ), context.getReleaserUser( ).getSvnComponentAccountLogin( ), context.getReleaserUser( ).getSvnComponentAccountPassword( ),
+        Long nLastCommitId=SvnService.getService( ).doSvnCheckoutComponent( context.getComponent( ), context.getReleaserUser( ).getSvnComponentAccountLogin( ), context.getReleaserUser( ).getSvnComponentAccountPassword( ),
                 context.getCommandResult( ) );
+        
+        if(nLastCommitId!=null)
+        {
+            context.setRefBranchDev( nLastCommitId.toString( ) );
+        }
         // PROGRESS 10%
         commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
         
@@ -448,6 +458,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         {
             ReleaserUtils.addTechnicalError( commandResult,"The checkout component does not match the release informations");
          }
+        
 
         ReleaserUtils.logEndAction( context, "Checkout Svn Component " );
 
@@ -469,10 +480,18 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     public void releasePrepareSvn( WorkflowReleaseContext context, Locale locale )
     {
         String strComponentName = context.getComponent( ).getName();
+        try
+        {
+            realeasePrepare(strComponentName,context.getReleaserUser( ).getSvnComponentAccountLogin( ),context.getReleaserUser( ).getSvnComponentAccountPassword( ), _svnMavenPrepareUpadteRepo,
+                    context, locale );
         
+        }catch(AppException ex)
+        {
+            _svnMavenPrepareUpadteRepo.rollbackRelease( ReleaserUtils.getLocalComponentPath( strComponentName) , context.getComponent().getScmDeveloperConnection( ),context, locale );
+            throw ex;
+        }
         
-     realeasePrepare(strComponentName,context.getReleaserUser( ).getSvnComponentAccountLogin( ),context.getReleaserUser( ).getSvnComponentAccountPassword( ), _svnMavenPrepareUpadteRepo,
-                context, locale );
+    
 
     }
 
@@ -489,8 +508,17 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         // PROGRESS 75%
         commandResult.setProgressValue( commandResult.getProgressValue( ) + 10 );
 
-        MavenService.getService( ).mvnReleasePerform( strLocalComponentPomPath, context.getReleaserUser( ).getSvnComponentAccountLogin( ), context.getReleaserUser( ).getSvnComponentAccountPassword( ), commandResult );
+      try
+        {
+            MavenService.getService( ).mvnReleasePerform( strLocalComponentPomPath, context.getReleaserUser( ).getSvnComponentAccountLogin( ), context.getReleaserUser( ).getSvnComponentAccountPassword( ), commandResult );
 
+        
+        }catch(AppException ex)
+        {
+            _svnMavenPrepareUpadteRepo.rollbackRelease( ReleaserUtils.getLocalComponentPath( strComponentName) , context.getComponent().getScmDeveloperConnection( ),context, locale );
+            throw ex;
+        }
+        
         ReleaserUtils.logEndAction( context, " Release Perform" );
     }
 
@@ -507,6 +535,19 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         ReleaserUtils.logEndAction( context, " send Tweet" );
 
     }
+    
+    public void updateJiraVersions( WorkflowReleaseContext context, Locale locale )
+    {
+
+        CommandResult commandResult = context.getCommandResult( );
+       
+        ReleaserUtils.logStartAction( context, " Update Jira Versions" );
+
+        JiraComponentService.getService( ).updateComponentVersions( context.getComponent( ), commandResult );
+
+        ReleaserUtils.logEndAction( context, " Update Jira Versions" );
+
+    }
 
     public void startWorkflowReleaseContext( WorkflowReleaseContext context, int nIdWorkflow, Locale locale, HttpServletRequest request, AdminUser user )
     {
@@ -516,7 +557,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     public void init( )
     {
 
-        _executor = Executors.newFixedThreadPool( AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_THREAD_RELEASE_POOL_MAX_SIZE, 10 ) );
+        _executor = Executors.newFixedThreadPool( AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_THREAD_RELEASE_POOL_MAX_SIZE, 5 ) );
         _svnMavenPrepareUpadteRepo =SpringContextService.getBean( ConstanteUtils.BEAN_SVN_MAVEN_PREPARE_UPDATE_REMOTE_REPOSITORY );
          _gitMavenPrepareUpadteRepo =SpringContextService.getBean( ConstanteUtils.BEAN_GIT_MAVEN_PREPARE_UPDATE_REMOTE_REPOSITORY );
         
@@ -593,7 +634,9 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
        
        
-        
+        // Checkout Developp
+        mavenPrepareUpdateRepo.checkoutDevelopBranchBeforePrepare(  context, locale );
+       
         MavenService.getService( ).mvnReleasePrepare( strLocalComponentPomPath, strComponentReleaseVersion, strComponentReleaseTagName,
                 strComponentReleaseNewDeveloppmentVersion, strUserLogin, strUserPassword, commandResult );
         // Merge Master

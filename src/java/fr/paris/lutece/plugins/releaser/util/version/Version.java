@@ -218,7 +218,11 @@ public class Version implements Comparable
 
         try
         {
-            String strCurrent = strSource.trim( );
+          
+            
+            
+            
+            String strCurrent = strSource!=null?strSource.trim( ):"";
 
             // Search for qualifier
             int nPos = strCurrent.indexOf( '-' );

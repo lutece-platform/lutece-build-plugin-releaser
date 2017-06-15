@@ -49,5 +49,5 @@ public interface ISvnService
     String doReleaseSite( Site site, String strSvnLogin,String strSvnPassword, CommandResult commandResult);
     
     
-    String doSvnCheckoutComponent( Component component, String strSvnLogin,String strSvnPassword, CommandResult commandResult);
+    Long doSvnCheckoutComponent( Component component, String strSvnLogin,String strSvnPassword, CommandResult commandResult);
 }

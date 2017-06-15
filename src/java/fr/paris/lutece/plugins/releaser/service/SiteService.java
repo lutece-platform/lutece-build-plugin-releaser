@@ -184,7 +184,7 @@ public class SiteService
             catch( ExecutionException e )
             {
                 // TODO Auto-generated catch block
-                e.printStackTrace();
+              AppLogService.error( e );
             }
               
           }

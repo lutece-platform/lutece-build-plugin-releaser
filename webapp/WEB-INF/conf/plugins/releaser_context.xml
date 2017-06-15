@@ -15,5 +15,7 @@
     <bean id="releaser.gitMavenPrepareUpdateRemoteRepository" class="fr.paris.lutece.plugins.releaser.service.GitMavenPrepareUpdateRemoteRepository" />
     <bean id="releaser.svnMavenPrepareUpdateRemoteRepository" class="fr.paris.lutece.plugins.releaser.service.SvnMavenPrepareUpdateRemoteRepository" />
     <bean id="releaser.twitterService" class="fr.paris.lutece.plugins.releaser.service.TwitterService" />
+    <bean id="releaser.jiraComponentService" class="fr.paris.lutece.plugins.releaser.service.JiraComponentService" />
+    
 
 </beans>

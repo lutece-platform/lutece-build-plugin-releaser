@@ -1,361 +1,1 @@
-<div class="app-wrapper">
-<!-- TO REMOVE WHEN feature_frameset.html will be correctly added to this template -->
-<section class="content-header">
-    <h1>
-        <a href="jsp/admin/plugins/releaser/ManageClusters.jsp" title="#i18n{releaser.adminFeature.ManageReleaser.name}">#i18n{releaser.adminFeature.ManageReleaser.name}</a>
-        <small class="hidden-xs hidden-sm">Pr&eacute;paration de la release du <#if !site.theme>Site<#else>Theme</#if></small>
-    </h1>
-    <ol class="breadcrumb applications">
-    </ol>
-</section>
-<section class="content ">
-<!-- EN TO REMOVE -->
-<div class="row">
-  <div class="col-xs-12 col-sm-12">
-    <div class="info-box info-box-release">
-      <span class="info-box-icon bg-aqua"><i class="fa fa-cube"></i></span>
-      <div class="info-box-content">
-        <div class="col-xs-7 col-sm-7">
-          <span class="info-box-text">
-            ${site.name} [${site.artifactId !''}-${site.version!''}]
-            - <i class="fa fa-cubes text-green"></i>  Cluster <strong>${site.cluster !''}</strong>
-            - <i class="fa fa-puzzle-piece text-yellow"></i> Nombre de plugins <strong>${site.components?size}</strong>
-          </span>
-          <span class="info-box-number">${site.description}</span>
-        </div>
-        <div class="col-xs-5 col-sm-5">
-           <a class="btn btn-info btn-lg btn-release-history" title="Visuliser l'historique des releases" href="jsp/admin/plugins/releaser/ManageSiteRelease.jsp?view=releaseComponentHistory&artifact_id=${site.artifactId !''}" target="_blank">
-                  <i class="fa fa-cog fa-fw"></i> Visualiser l'historique des releases du <#if !site.theme>Site<#else>Theme</#if>
-            </a>
-          <button type="button" class="btn btn-success btn-lg" data-toggle="modal" data-target="#modalRelease">
-            <span class="fa fa-cogs"></span>  Releaser le <#if !site.theme>Site<#else>Theme</#if>
-          </button>
-        </div>
-        
-        </div>
-        <div class="pull-right hidden">
-          <@aButton href='jsp/admin/plugins/releaser/ManageClusters.jsp#cluster${site.idCluster}' title='Retour au cluster' buttonIcon='cubes' showTitle=true />
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-md-12 col-sm-12 col-xs-12">
-      <div class="info-box info-box-release components">
-        <span class="info-box-icon bg-yellow"><i class="fa fa-puzzle-piece"></i></span>
-        <div class="info-box-content">
-          <span class="info-box-text">Liste des composants</span>
-          <span class="info-box-number">Composants projet</span>
-        </div>
-      </div>
-      <ul class="list-group list-components fa-padding">
-      <#list site.components as component>
-        <#if component.project>
-          <li class="list-group-item">
-            <div class="media">
-              <div class="media-left">
-              </div>
-              <div class="media-body">
-              <p>
-                <span class="artifact up">
-                  ${component.artifactId!}
-                  <a class="text-danger" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=projectComponent&artifact_id=${component.artifactId}' title='Supprimer des composants projet'>
-                    <i class="fa fa-remove"></i>
-                  </a>
-                </span>
-                <span id="release-result-${component.artifactId!}">
-                <#if component.shouldBeReleased()>
-                  <a class="button transition border-orange small btn-release" data-artifactid="${component.artifactId!}" title="Modifier la version pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=versionComponent&artifact_id=${component.artifactId}' >
-                    <i class="fa fa-cog fa-fw"></i> Releaser le composant
-                  </a>
-                    <#if component.lastAvailableVersion?? >
-                      <a class="button transition border-blue small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=downgradeComponent&artifact_id=${component.artifactId}' >
-                        <i class="fa fa-cog fa-fw"></i> Utiliser la version ${component.lastAvailableVersion} pour la release
-                      </a>
-                    </#if>
-                  <#else>
-                        <#if !component.isSnapshotVersion()&& component.lastAvailableVersion?? && component.lastAvailableVersion != component.targetVersion >
-                         <a class="button transition border-blue small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=upgradeComponent&artifact_id=${component.artifactId}' >
-                           <i class="fa fa-cog fa-fw"></i> Utiliser la version ${component.lastAvailableVersion!} 
-                         </a>
-                    </#if>
-                    
-                  </#if>
-                <#if component.downgrade>
-                    <#if component.lastAvailableVersion?? >
-                      <a class="button transition border-red small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=cancelDowngradeComponent&artifact_id=${component.artifactId}' >
-                        <i class="fa fa-cog fa-fw"></i> Ne plus utiliser  la version ${component.lastAvailableVersion} pour la release
-                      </a>
-                    </#if>
-                </#if>
-                <#if component.upgrade>
-                
-                      <#if component.lastAvailableVersion?? && !component.isSnapshotVersion() >
-                        <a class="button transition border-red small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=cancelUpgradeComponent&artifact_id=${component.artifactId}' >
-                          <i class="fa fa-cog fa-fw"></i> Ne plus utiliser  la version stable ${component.lastAvailableVersion!} 
-                        </a>
-                      </#if>
-                   </#if>
-               
-               </span>
-                <a id="histo-${component.artifactId!}" class="button transition border-blue small btn-release-history"  title="Visuliser l'historique des releases" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?view=releaseComponentHistory&artifact_id=${component.artifactId}' target="_blank">
-                  <i class="fa fa-cog fa-fw"></i> Visualiser l'historique des releases
-                </a>
-                  <span class="number pull-right">
-                    JIRA
-                    <a href="${component.jiraRoadmapUrl!}">
-                      <span class="label label-success">${component.jiraCurrentVersionClosedIssues}</span>
-                      <#if component.jiraCurrentVersionOpenedIssues = 0 >
-                        <span class="label label-success">${component.jiraCurrentVersionOpenedIssues}</span>
-                      <#else>
-                        <span class="label label-danger">${component.jiraCurrentVersionOpenedIssues}</span>
-                      </#if>
-                    </a>
-                  </span>
-                  
-                </p>
-                <p>
-                      <#if component.releaseComment! !=''>
-                        <i class="fa fa-info-circle text-info"></i> ${component.releaseComment!''}
-                      </#if>
-                    </p>
-                <div id="progress-wrapper-${component.artifactId!}" class="progress-wrapper clearfix">
-                  <div class="progress active pull-left ">
-                    <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
-                      <span class="sr-only">0% Complete</span>
-                    </div>
-                  </div>
-                  <div class="pull-left">
-                    <button href="#" data-toggle="modal"   data-artifactid="${component.artifactId!}" id="view_log_btn_${component.artifactId!}"  data-target="#modalLogs" data-context_release_id="" class="view_log_btn button transition small fill-whitish-black">
-                      Voir les logs
-                    </button>
-                  </div>
-                </div>
-                
-                
-                    <div class="row">
-                      <div class="col-xs-12 col-sm-4">
-                        Version actuelle <strong class="button transition fill-lightblue small">${component.currentVersion}</strong>
-                         <i class="fa fa-arrow-right"></i> Version cible<strong class="button transition fill-lightblue small"> ${component.targetVersion!}</strong>
-                      </div>
-                      <div class="col-xs-12 col-sm-7">
-                       <i class="fa fa-arrow-right"></i>  Prochaine version
-                        <span class="button transition fill-lightblue small">
-                            <#if component.isSnapshotVersion()>
-                               ${component.nextSnapshotVersion!}
-                            <#else>
-                                ${component.targetVersion!}
-                            </#if>
-                        </span>
-                         <#if component.shouldBeReleased()>
-                            <a class="button transition border-lightblue small" title="Modifier la version pour la release" id="btn-upgrade-version-${component.artifactId}" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=versionComponent&artifact_id=${component.artifactId}'>
-                                 <i class="fa fa-level-up fa-fw"></i> Modifier la version pour la release
-                            </a>
-                         
-                          </#if> 
-                      </div>
-                    </div>
-                 </div>
-            </li>
-          </#if>
-        </#list>
-      </ul>
-      <div class="info-box info-box-release components">
-        <span class="info-box-icon bg-yellow"><i class="fa fa-puzzle-piece"></i></span>
-          <div class="info-box-content">
-            <span class="info-box-text">Liste des composants</span>
-            <span class="info-box-number">Composants externes</span>
-          </div>
-        </div>
-        <ul class="list-group list-components">
-          <#list site.components as component>
-            <#if ! component.project>
-              <li class="list-group-item" data-toggle="modal" data-target="#issue">
-                <div class="media">
-                  <div class="media-left">
-                  </div>
-                  <div class="media-body">
-                    <p>
-                      <span class="artifact up">
-                        ${component.artifactId!}
-                        <a class="text-success" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=projectComponent&artifact_id=${component.artifactId}' title='Ajouter des composants projet'>
-                          <i class="fa fa-check fa-fw"></i>
-                        </a>
-                        <#if component.downgrade>
-                            <#if component.lastAvailableVersion?? && component.isSnapshotVersion() >
-                              <a class="button transition border-red small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=cancelDowngradeComponent&artifact_id=${component.artifactId}' >
-                                <i class="fa fa-cog fa-fw"></i> Ne plus utiliser  la version stable ${component.lastAvailableVersion!} 
-                              </a>
-                            </#if>
-                         </#if>
-                         <#if component.lastAvailableVersion?? && component.isSnapshotVersion() && !component.downgrade>
-                              <a class="button transition border-blue small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=downgradeComponent&artifact_id=${component.artifactId}' >
-                                <i class="fa fa-cog fa-fw"></i> Utiliser la version ${component.lastAvailableVersion!} 
-                              </a>
-                         </#if>
-                         <#if !component.isSnapshotVersion()&& component.lastAvailableVersion?? && component.lastAvailableVersion != component.targetVersion >
-                              <a class="button transition border-blue small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=upgradeComponent&artifact_id=${component.artifactId}' >
-                                <i class="fa fa-cog fa-fw"></i> Utiliser la version ${component.lastAvailableVersion!} 
-                              </a>
-                         </#if>
-                          <#if component.upgrade>
-                            <#if component.lastAvailableVersion?? && !component.isSnapshotVersion() >
-                              <a class="button transition border-red small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=cancelUpgradeComponent&artifact_id=${component.artifactId}' >
-                                <i class="fa fa-cog fa-fw"></i> Ne plus utiliser  la version stable ${component.lastAvailableVersion!} 
-                              </a>
-                            </#if>
-                         </#if>
-                      </span>
-                      <span class="number pull-right">
-                        JIRA
-                        <a href="${component.jiraRoadmapUrl!}">
-                          <span class="label label-success">${component.jiraCurrentVersionClosedIssues!}</span>
-                          <#if component.jiraCurrentVersionOpenedIssues = 0 >
-                            <span class="label label-success">${component.jiraCurrentVersionOpenedIssues!}</span>
-                          <#else>
-                            <span class="label label-danger">${component.jiraCurrentVersionOpenedIssues!}</span>
-                          </#if>
-                         </a>
-                      </span>
-                    </p>
-                    <p>
-                      <#if component.releaseComment! !=''>
-                        <i class="fa fa-info-circle text-info"></i> ${component.releaseComment!''}
-                      </#if>
-                    </p>
-                   <p class="info">
-                    Version actuelle <strong class="button transition fill-lightblue small">${component.currentVersion!}</strong>
-                    <i class="fa fa-arrow-right"></i> Version cible
-                    <#if component.currentVersion != component.targetVersion>
-                     <strong class="button transition fill-lightblue small">${component.targetVersion!}</strong>
-                    <#else>
-                      <strong>${component.targetVersion}</strong>
-                    </#if>
-                    <i class="fa fa-arrow-right"></i>  Prochaine version
-                        <span class="button transition fill-lightblue small">
-                             ${component.targetVersion}
-                        </span>
-                    
-                   </p>
-                  </div>
-                </div>
-               </li>
-              </#if>
-            </#list>
-          </ul>
-        </div>
-       </div>
-      </section>
-    </div>
-  </div>
-<!-- Modal -->
-<div class="modal fade" id="modalRelease" tabindex="-1" role="dialog" aria-labelledby="modalReleaseLabel">
-  <div class="modal-dialog" role="document">
-    <@tform name='release_site' class='form' action='jsp/admin/plugins/releaser/ManageSiteRelease.jsp'>
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h4 class="modal-title" id="modalReleaseLabel">Release - Informations de version du <#if !site.theme>Site<#else>Theme</#if> </h4>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <p class="form-control-static">
-              Derni&egrave;re version releas&eacute;e : <strong>${site.lastReleaseVersion!'n/a'}</strong>
-            </p>
-          </div>
-          <div class="form-group">
-            <p class="form-control-static">
-              Version courante du site : <strong>${site.version!}</strong>
-            </p>
-          </div>
-          <div class="form-group">
-            <p class="form-control-static">
-              Version de la release : <strong>${site.nextReleaseVersion!}</strong>
-            </p>
-          </div>
-          <div class="form-group">
-            <p class="form-control-static">
-              Version de la prochaine de travail : <strong>${site.nextSnapshotVersion!}</strong>
-            </p>
-          </div>
-          <div class="form-group">
-            <label for="tag_information">#i18n{releaser.prepare_site_release.labelTagInformation}</label>
-            <input type="text" name="tag_information" id="tag_information" value="${site.tagInformation!}" class="form-control">
-          </div>
-          <div class="form-group">
-            <@aButton href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=versionSite' title='Modifier la version &agrave; releaser' buttonIcon='level-up' color='button transition border-lightblue small' showTitle=true />
-          </div>
-        </div>
-        <div class="modal-footer">
-           <button type="submit" class="button transition small fill-blue" name="action_releaseSite">Ok</button>
-           <button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Fermer</button>
-        </div>
-      </div>
-    </@tform>
-  </div>
-</div>
-<div class="modal fade" id="modalLogs" tabindex="-1" role="dialog" aria-labelledby="modalLogsLabel">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="modalLogsLabel">Release - Logs</h4>
-      </div>
-      <div class="modal-body">
-        <pre id="console_wf_log"></pre>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Fermer</button>
-      </div>
-    </div>
-  </div>
-</div>
-<script src="js/plugins/releaser/notify.min.js" type="text/javascript"></script>
-<script src="js/plugins/releaser/releaser.js" type="text/javascript"></script>
-<script>
-var artifactIdInProgress;
-    $(function() {
-        $(".progress-wrapper").toggle();
-        $(".view_log_btn").click( function(e){
-            $("#console_wf_log").html(" ");
-            var artifactId=$(this).attr("data-artifactid");
-            var contextId=$(this).attr("context_release_id");
-            artifactIdInProgress=artifactId;
-            var progressId="#progress-wrapper-" + artifactId;
-            callReleaseInfo( contextId,progressId,artifactId)
-           }
-        );
-        $(".btn-release").click( function(e){
-             $("#console_wf_log").html(" ");
-             var artifactId=$(this).attr("data-artifactid");
-             
-             $("#btn-upgrade-version-"+artifactId).hide();
-          var progressId="#progress-wrapper-" + artifactId;
-        $( progressId ).toggle();
-             $.ajax({
-                    url: "jsp/admin/plugins/releaser/ReleaseComponentSiteJson.jsp?action=releaseComponent&artifact_id="+$(this).attr("data-artifactid"),
-                    type: "GET",
-                    dataType : "json",
-                    success: function( data ) {
-                     if (data.status == 'OK') {
-                       callReleaseInfo(data.result,progressId,artifactId);
-                       $( "#view_log_btn_"+artifactId).attr("data-context_release_id",data.result);
-                      }
-                     else if ( data.status == 'ERROR'  )
-                     {
-                    }
-                   }
-            });
-            e.preventDefault();
-    });
-});
-</script>
-<#if open_site_version?? && open_site_version=="1" >
-    <script>
-        $(function() {
-        
-            $('#modalRelease').modal();
-         
-        });
-    </script>
-</#if>
+<!-- TO REMOVE WHEN feature_frameset.html will be correctly added to this template --><section class="content-header">    <h1>        <a href="jsp/admin/plugins/releaser/ManageClusters.jsp" title="#i18n{releaser.adminFeature.ManageReleaser.name}">#i18n{releaser.adminFeature.ManageReleaser.name}</a>        <small class="hidden-xs hidden-sm">Pr&eacute;paration de la release du <#if !site.theme>Site<#else>Theme</#if></small>    </h1>    <ol class="breadcrumb applications"></ol></section><section class="content">	<div class="app-wrapper app-cluster">	<a class="floating-button btn-release-history-bg" title="Visuliser l'historique des releases du <#if !site.theme>Site<#else>Theme</#if>" href="jsp/admin/plugins/releaser/ManageSiteRelease.jsp?view=releaseComponentHistory&artifact_id=${site.artifactId !''}" target="_blank">		<i class="fa fa-history fa-fw"></i> 	</a>	<button type="button" class="floating-button btn-release-site-bg" data-toggle="modal" data-target="#modalRelease" title="Releaser le <#if !site.theme>Site<#else>Theme</#if>">		<span class="fa fa-cogs"></span>  	</button><!-- EN TO REMOVE -->	<div class="row">		<div class="col-xs-12 col-sm-12">			<div class="info-box info-box-release hidden">				<span class="info-box-icon bg-aqua"><i class="fa fa-cube"></i></span>				<div class="info-box-content row">					<div class="col-xs-12 col-sm-6 col-md-7 col-lg-9">					  <span class="info-box-text">						${site.name} [${site.artifactId !''}-${site.version!''}]						- <i class="fa fa-cubes text-green"></i>  Cluster <strong>${site.cluster !''}</strong>						- <i class="fa fa-puzzle-piece text-yellow"></i> Nombre de plugins <strong>${site.components?size}</strong>					  </span>					  <span class="info-box-number">${site.description}</span>					</div>					<div class="col-xs-12 col-sm-6 col-md-5 col-lg-3">						<a class="btn btn-info btn-release-history" title="Visuliser l'historique des releases du <#if !site.theme>Site<#else>Theme</#if>" href="jsp/admin/plugins/releaser/ManageSiteRelease.jsp?view=releaseComponentHistory&artifact_id=${site.artifactId !''}" target="_blank">							<i class="fa fa-history fa-fw"></i> Historique des releases						</a>						<button type="button" class="btn btn-success" data-toggle="modal" data-target="#modalRelease">							<span class="fa fa-cogs"></span>  Releaser le <#if !site.theme>Site<#else>Theme</#if>						</button>					</div>				</div>				<div class="pull-right hidden">					<@aButton href='jsp/admin/plugins/releaser/ManageClusters.jsp#cluster${site.idCluster}' title='Retour au cluster' buttonIcon='cubes' showTitle=true />				</div>			</div>		</div>	</div>	<div class="row">		<div class="col-md-12 col-sm-12 col-xs-12">			<div class="box box-info box-solid">				<div class="box-header">					<h3 class="box-title">						<i class="fa fa-puzzle-piece"></i> Composants du projet <strong><span class="hidden-xs">${site.name}</span> [${site.artifactId !''}-${site.version!''}]</strong>					</h3>					<div class="box-tools hidden-xs hidden-sm">						<i class="fa fa-cubes text-green"></i>  Cluster <strong>${site.cluster !''}</strong>						- <i class="fa fa-puzzle-piece text-yellow"></i> Nombre de plugins <strong>${site.components?size}</strong>					</div>				</div>				<!-- /.box-header -->				<div class="box-body table-responsive no-padding">				<table class="table table-hover">				<thead>						<tr>					  <th>Artifact</th>					  <th>Infos Release</th>					  <th><i class="fa fa-bug"></i> JIRA</th>					  <th>Version</th>					  <th>Version cible</th>					  <th>Prochaine version</th>					  <th>Actions</th>					</tr>				</thead>					<tbody>	                <#list site.components as component>				<#if component.project>				<tr>					<td>						<strong id="name-${component.artifactId!}">${component.artifactId!}</strong>					</td>					<td id="info-${component.artifactId!}">						<#if component.releaseComment! !=''>							<i class="fa fa-info-circle text-info"></i> ${component.releaseComment!''}						</#if>						<div id="progress-wrapper-${component.artifactId!}" class="progress-wrapper clearfix">							<div class="progress progress-xs progress-striped active">								<div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width: 0%">									<span class="sr-only">0% Complete</span>								</div>							</div>							<button href="#" data-toggle="modal" data-artifactid="${component.artifactId!}" id="view_log_btn_${component.artifactId!}"  data-target="#modalLogs" data-context_release_id="" class="view_log_btn btn btn-xs btn-info">								<i class="fa fa-list-ol"></i> Voir les logs							</button>						</div>                    </td>					<td>						<a href="${component.jiraRoadmapUrl!}">							<span class="label label-success">${component.jiraCurrentVersionClosedIssues}</span>							<#if component.jiraCurrentVersionOpenedIssues = 0 >								<span class="label label-success">${component.jiraCurrentVersionOpenedIssues}</span>							<#else>								<span class="label label-danger">${component.jiraCurrentVersionOpenedIssues}</span>							</#if>						</a>                    </td>					<td>                        <strong class="button transition fill-lightblue small">${component.currentVersion}</strong>					</td>					<td>                        <strong class="button transition fill-lightblue small"> ${component.targetVersion!}</strong>					</td>					<td>						<span class="button transition fill-lightblue small"><#if component.isSnapshotVersion()>${component.nextSnapshotVersion!}<#else>${component.targetVersion!}</#if></span>					 </td>					<td>						<span id="release-result-${component.artifactId!}">						<#if component.shouldBeReleased()>							<#if component.lastAvailableVersion?? >								<a class="button transition border-blue small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=downgradeComponent&artifact_id=${component.artifactId}' >									<i class="fa fa-level-up fa-fw"></i> Utiliser la version ${component.lastAvailableVersion}								</a>							</#if>							<a class="button transition border-lightblue small" title="Modifier la version pour la release" id="btn-upgrade-version-${component.artifactId}" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=versionComponent&artifact_id=${component.artifactId}'>								<i class="fa fa-code-fork fa-fw"></i> Modifier la version							</a>							<a class="button transition border-orange small btn-release" data-artifactid="${component.artifactId!}" title="Modifier la version pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=versionComponent&artifact_id=${component.artifactId}' >								<i class="fa fa-cogs fa-fw"></i> Releaser							</a>						<#else>							<#if !component.isSnapshotVersion()&& component.lastAvailableVersion?? && component.lastAvailableVersion != component.targetVersion >								<a class="button transition border-blue small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=upgradeComponent&artifact_id=${component.artifactId}' >									<i class="fa fa-level-up fa-fw"></i> Utiliser la version ${component.lastAvailableVersion!} 								</a>							</#if>						</#if>						<#if component.downgrade>							<#if component.lastAvailableVersion?? >							  <a class="button transition border-red small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=cancelDowngradeComponent&artifact_id=${component.artifactId}' >								<i class="fa fa-minus-circle fa-fw"></i> Ne plus utiliser la version ${component.lastAvailableVersion} pour la release							  </a>							</#if>						</#if>						<#if component.upgrade>                		  <#if component.lastAvailableVersion?? && !component.isSnapshotVersion() >							<a class="button transition border-red small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=cancelUpgradeComponent&artifact_id=${component.artifactId}' >							  <i class="fa fa-minus-circle fa-fw"></i> Ne plus utiliser la version stable ${component.lastAvailableVersion!} 							</a>						  </#if>						</#if>						</span>						<a id="histo-${component.artifactId!}" class="button transition border-blue small btn-release-history"  title="Visuliser l'historique des releases" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?view=releaseComponentHistory&artifact_id=${component.artifactId}' target="_blank">							<i class="fa fa-history fa-fw"></i> Historique						</a>						<a class="button transition border-red small" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=projectComponent&artifact_id=${component.artifactId}' title='Supprimer des composants projet'>							<i class="fa fa-minus-circle"></i> Enlever						</a>					</td>					</#if>				</#list>			</tbody>			</table>        </div>        <!-- /.box-body -->		</div>		<div class="box box-warning box-solid">			<div class="box-header">              <h3 class="box-title"><i class="fa fa-puzzle-piece"></i> Composants externes</h3>            </div>            <!-- /.box-header -->            <div class="box-body table-responsive no-padding">				<table class="table table-hover">				<thead>						<tr>					  <th>Artifact</th>					  <th>Infos Release</th>					  <th><i class="fa fa-bug"></i> JIRA</th>					  <th>Version</th>					  <th>Version cible</th>					  <th>Prochaine version</th>					  <th>Actions</th>					</tr>				</thead>					<tbody>					<#list site.components as component>					<tr>					<#if ! component.project>						<td>						  <strong>${component.artifactId!}</strong>						</td> 						<td>						  <#if component.releaseComment! !=''>							<i class="fa fa-info-circle text-info"></i> ${component.releaseComment!''}						  </#if>						</td> 						<td>							JIRA							<a href="${component.jiraRoadmapUrl!}">							  <span class="label label-success">${component.jiraCurrentVersionClosedIssues!}</span>							  <#if component.jiraCurrentVersionOpenedIssues = 0 >								<span class="label label-success">${component.jiraCurrentVersionOpenedIssues!}</span>							  <#else>								<span class="label label-danger">${component.jiraCurrentVersionOpenedIssues!}</span>							  </#if>							 </a>						</td>						<td>							<strong class="button transition fill-lightblue small">${component.currentVersion!}</strong>						</td>						<td>						   <#if component.currentVersion != component.targetVersion>								<strong class="button transition fill-lightblue small">${component.targetVersion!}</strong>							<#else>								<strong class="button transition fill-lightblue small">${component.targetVersion}</strong>							</#if>						</td>						<td>							<span class="button transition fill-lightblue small">								${component.targetVersion}							</span>						</td>						<td>							<a class="button transition border-green small" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=projectComponent&artifact_id=${component.artifactId}' title='Ajouter des composants projet'>							  <i class="fa fa-plus-circle fa-fw"></i> Ajouter le composant au projet							</a>							<#if component.downgrade>								<#if component.lastAvailableVersion?? && component.isSnapshotVersion() >								  <a class="button transition border-red small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=cancelDowngradeComponent&artifact_id=${component.artifactId}' >									<i class="fa fa-minus-circle fa-fw"></i> Ne plus utiliser la version stable ${component.lastAvailableVersion!} 								  </a>								</#if>							 </#if>							 <#if component.lastAvailableVersion?? && component.isSnapshotVersion() && !component.downgrade>								  <a class="button transition border-blue small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=downgradeComponent&artifact_id=${component.artifactId}' >									<i class="fa fa-minus-circle fa-fw"></i> Utiliser la version ${component.lastAvailableVersion!} 								  </a>							 </#if>							 <#if !component.isSnapshotVersion()&& component.lastAvailableVersion?? && component.lastAvailableVersion != component.targetVersion >								  <a class="button transition border-blue small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=upgradeComponent&artifact_id=${component.artifactId}' >									<i class="fa fa-check-circle-o fa-fw"></i> Utiliser la version ${component.lastAvailableVersion!} 								  </a>							 </#if>							  <#if component.upgrade>								<#if component.lastAvailableVersion?? && !component.isSnapshotVersion() >								  <a class="button transition border-red small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=cancelUpgradeComponent&artifact_id=${component.artifactId}' >									<i class="fa fa-minus-circle fa-fw"></i> Ne plus utiliser la version stable ${component.lastAvailableVersion!} 								  </a>								</#if>							 </#if>						</td>						</#if>					</tr>					</#list>				</tbody>				</table>				</div>			</div> 		</div>	</div></div></section><!-- Modal --><div class="modal fade" id="modalRelease" tabindex="-1" role="dialog" aria-labelledby="modalReleaseLabel">  <div class="modal-dialog" role="document">      <div class="modal-content">		<@tform name='release_site' class='form' action='jsp/admin/plugins/releaser/ManageSiteRelease.jsp'>        <div class="modal-header">          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>          <h4 class="modal-title" id="modalReleaseLabel">Release - Informations de version du <#if !site.theme>Site<#else>Theme</#if> </h4>        </div>        <div class="modal-body">			<div class="row">                <div class="col-xs-8 col-sm-8">Derni&egrave;re version releas&eacute;e</div>                <div class="col-xs-4 col-sm-4">					<strong>						${site.lastReleaseVersion!'n/a'}					</strong>				</div>			</div>			<div class="row">                <div class="col-xs-8 col-sm-8">Version courante du site </div>                <div class="col-xs-4 col-sm-4">					<strong>${site.version!}</strong>				</div>			</div>			<div class="row">                <div class="col-xs-8 col-sm-8">Version de la release</div>				<div class="col-xs-4 col-sm-4">					<strong>${site.nextReleaseVersion!}</strong>				</div>			</div>			<div class="row">                <div class="col-xs-8 col-sm-8">Version de la prochaine de travail</div>				<div class="col-xs-4 col-sm-4">					<strong>${site.nextSnapshotVersion!}</strong>				</div>			</div>			<hr>			<div class="form-group">				<label for="tag_information">#i18n{releaser.prepare_site_release.labelTagInformation}</label>				<input type="text" name="tag_information" id="tag_information" value="${site.tagInformation!}" class="form-control">			</div>			<div class="form-group text-center">				<@aButton href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=versionSite' title='Modifier la version &agrave; releaser' buttonIcon='level-up' color='button transition border-lightblue small' showTitle=true />			</div>        </div>        <div class="modal-footer">           <button type="submit" class="button transition small fill-blue" name="action_releaseSite">Ok</button>           <button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Fermer</button>        </div>		</@tform>      </div>  </div></div><div class="modal fade" id="modalLogs" tabindex="-1" role="dialog" aria-labelledby="modalLogsLabel">  <div class="modal-dialog modal-lg" role="document">    <div class="modal-content">      <div class="modal-header">        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>        <h4 class="modal-title" id="modalLogsLabel">Release - Logs</h4>      </div>      <div class="modal-body">        <pre id="console_wf_log"></pre>      </div>      <div class="modal-footer">        <button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Fermer</button>      </div>    </div>  </div></div><link href="js/jquery/plugins/toastr/toastr.min.css" rel="stylesheet"><script src="js/jquery/plugins/toastr/toastr.min.js"></script>       <script src="js/plugins/releaser/releaser.js" type="text/javascript"></script><script>var artifactIdInProgress;    $(function() {			$(".btn").tooltip();		$(".button").tooltip();		$(".floating-button").tooltip();	        $(".progress-wrapper").toggle();        $(".view_log_btn").click( function(e){            $("#console_wf_log").html(" ");            var artifactId=$(this).attr("data-artifactid");            var contextId=$(this).attr("context_release_id");            artifactIdInProgress=artifactId;            var progressId="#progress-wrapper-" + artifactId;            callReleaseInfo( contextId,progressId,artifactId)           }        );		        $(".btn-release").click( function(e){             $("#console_wf_log").html(" ");             var artifactId=$(this).attr("data-artifactid");                          $("#btn-upgrade-version-"+artifactId).hide();			var progressId="#progress-wrapper-" + artifactId;				$( progressId ).toggle();					$.ajax({						url: "jsp/admin/plugins/releaser/ReleaseComponentSiteJson.jsp?action=releaseComponent&artifact_id="+$(this).attr("data-artifactid"),						type: "GET",						dataType : "json",						success: function( data ) {							if (data.status == 'OK') {								callReleaseInfo(data.result,progressId,artifactId);								$( "#view_log_btn_"+artifactId).attr("data-context_release_id",data.result);							} else if ( data.status == 'ERROR'  ) {							}						}					});            e.preventDefault();		});				<#if open_site_version?? && open_site_version=="1" >			$('#modalRelease').modal();		</#if>	});</script>

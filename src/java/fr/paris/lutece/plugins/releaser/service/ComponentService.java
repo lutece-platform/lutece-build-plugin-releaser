@@ -46,6 +46,7 @@ import java.util.concurrent.Executors;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -423,12 +424,14 @@ public class ComponentService implements IComponentService
     {
 
         List<String> listTargetVersions = component.getTargetVersions( );
-        int nNewIndex = ( component.getTargetVersionIndex( ) + 1 ) % listTargetVersions.size( );
-        String strTargetVersion = listTargetVersions.get( nNewIndex );
-        component.setTargetVersion( strTargetVersion );
-        component.setTargetVersionIndex( nNewIndex );
-        component.setNextSnapshotVersion( Version.getNextSnapshotVersion( strTargetVersion ) );
-
+        if(!CollectionUtils.isEmpty( listTargetVersions))
+        {
+            int nNewIndex = ( component.getTargetVersionIndex( ) + 1 ) % listTargetVersions.size( );
+            String strTargetVersion = listTargetVersions.get( nNewIndex );
+            component.setTargetVersion( strTargetVersion );
+            component.setTargetVersionIndex( nNewIndex );
+            component.setNextSnapshotVersion( Version.getNextSnapshotVersion( strTargetVersion ) );
+        }
     }
 
 

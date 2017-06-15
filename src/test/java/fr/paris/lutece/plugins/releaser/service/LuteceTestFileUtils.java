@@ -24,7 +24,7 @@ public class LuteceTestFileUtils
      */
     public static Properties getTestProperties( )
     {
-        Properties properties = null;
+      Properties properties = null;
         try
         {
             URL url = Thread.currentThread( ).getContextClassLoader( ).getResource( "releaser-test.properties" );
