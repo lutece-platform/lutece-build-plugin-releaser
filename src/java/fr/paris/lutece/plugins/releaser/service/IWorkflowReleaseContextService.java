@@ -52,6 +52,12 @@ public interface IWorkflowReleaseContextService
     
     void updateJiraVersions( WorkflowReleaseContext context, Locale locale );
     
+    void startReleaseInProgress(String strArtifactId);
+   
+    void stopReleaseInProgress(String strArtifactId);
+    
+    boolean isReleaseInProgress(String strArtifactId);
+    
     void init();
 
 }

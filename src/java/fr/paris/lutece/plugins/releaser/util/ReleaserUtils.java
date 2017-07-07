@@ -13,6 +13,7 @@ import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
+import fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService;
 import fr.paris.lutece.portal.service.security.LuteceUser;
 import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
@@ -170,6 +171,8 @@ public class ReleaserUtils
         commandResult.setStatus( CommandResult.STATUS_OK );
         commandResult.setProgressValue( 0 );
         context.setCommandResult( commandResult );
+        WorkflowReleaseContextService.getService( ).startReleaseInProgress( context.getComponent( )!=null ?context.getComponent( ).getArtifactId( ) :context.getSite().getArtifactId( ) );
+        
 
     }
 
@@ -191,6 +194,8 @@ public class ReleaserUtils
         context.getCommandResult( ).setRunning( false );
         context.getCommandResult( ).setDateEnd( new Date( ) );
         context.getCommandResult( ).setProgressValue( 100 );
+        WorkflowReleaseContextService.getService( ).stopReleaseInProgress( context.getComponent( )!=null ?context.getComponent( ).getArtifactId( ) :context.getSite().getArtifactId( ) );
+        
     }
 
     /**

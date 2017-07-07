@@ -200,9 +200,8 @@ public class ComponentService implements IComponentService
     {
         
 
-        // Test if version already exist before release
-
-        if ( !forceRelease &&( !component.isProject( ) || !component.shouldBeReleased( )) )
+        // Test if version in progression before release
+        if (  WorkflowReleaseContextService.getService( ).isReleaseInProgress( component.getArtifactId( ) ) || (!forceRelease &&( !component.isProject( ) || !component.shouldBeReleased( ))) )
         {
             return -1;
         }

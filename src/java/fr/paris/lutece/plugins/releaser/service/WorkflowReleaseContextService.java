@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -50,7 +51,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     private ExecutorService _executor;
     private  IMavenPrepareUpdateRemoteRepository  _svnMavenPrepareUpadteRepo ;
     private  IMavenPrepareUpdateRemoteRepository  _gitMavenPrepareUpadteRepo;
-    
+    private HashSet<String> _releaseInProgress = new HashSet<String>( );
 
     /*
      * (non-Javadoc)
@@ -697,5 +698,25 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         ReleaserUtils.logEndAction( context, " Release Prepare" );
 
     }
+    
+    public void startReleaseInProgress(String strArtifactId)
+    {
+        
+        _releaseInProgress.add( strArtifactId );
+    }
+    
+    public void stopReleaseInProgress(String strArtifactId)
+    {
+        
+        _releaseInProgress.remove( strArtifactId );
+    }
+    
+    public boolean isReleaseInProgress(String strArtifactId)
+    {
+        
+        return _releaseInProgress.contains( strArtifactId );
+    }
+    
+    
 
 }

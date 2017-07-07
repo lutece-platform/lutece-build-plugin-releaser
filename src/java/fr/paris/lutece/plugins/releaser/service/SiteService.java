@@ -35,6 +35,7 @@
 package fr.paris.lutece.plugins.releaser.service;
 
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,6 +63,7 @@ import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.datastore.DatastoreService;
 import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.util.AppLogService;
+import fr.paris.lutece.util.httpaccess.HttpAccessException;
 
 /**
  * SiteService
@@ -512,6 +514,23 @@ public class SiteService
             {
                 component.setIsProject( !component.isProject( ) );
                 updateComponentAsProjectStatus( site, strArtifactId, component.isProject( ) );
+                
+                if(component.isProject( ))
+                {
+                    try
+                    {
+                        ComponentService.getService( ).setRemoteInformations( component, false  );
+                    }
+                    catch( HttpAccessException | IOException e )
+                    {
+                      AppLogService.error( e );
+                    }
+                    ComponentService.getService( ).updateRemoteInformations( component );
+                    defineTargetVersion( component );
+                    defineNextSnapshotVersion( component );
+                    component.setName( ReleaserUtils.getComponentName( component.getScmDeveloperConnection( ) ) );
+                }
+                
             }
         }
     }

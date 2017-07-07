@@ -141,7 +141,7 @@ public class MavenService implements IMavenService
      *            svn bin path (ex: /home/svn/apps/subversion/bin)
      */
    
-    private InvocationResult mvnExecute( String strPathPom, List<String> goals, CommandResult commandResult )
+    private synchronized InvocationResult mvnExecute( String strPathPom, List<String> goals, CommandResult commandResult )
     {
         InvocationRequest request = new DefaultInvocationRequest( );
         request.setPomFile( new File( strPathPom ) );

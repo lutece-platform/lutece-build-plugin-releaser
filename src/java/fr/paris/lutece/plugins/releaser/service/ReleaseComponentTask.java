@@ -59,11 +59,7 @@ public class ReleaseComponentTask implements Runnable {
                         WorkflowReleaseContext.WORKFLOW_RESOURCE_TYPE, _nIdWorkflow,
                         ConstanteUtils.CONSTANTE_ID_NULL );
         ReleaserUtils.startCommandResult( _wfContext );
-       
-        
-        
-            
-        
+      
         
         
         try
