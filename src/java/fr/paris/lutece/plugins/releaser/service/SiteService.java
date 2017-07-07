@@ -199,7 +199,7 @@ public class SiteService
             ComponentService.getService( ).updateRemoteInformations( component );
             defineTargetVersion( component );
             defineNextSnapshotVersion( component );
-            component.setName( ReleaserUtils.getComponentName( component.getScmDeveloperConnection( ) ) );
+            component.setName( ReleaserUtils.getComponentName( component.getScmDeveloperConnection( ),component.getArtifactId( ) ) );
         }
            
             
@@ -528,7 +528,7 @@ public class SiteService
                     ComponentService.getService( ).updateRemoteInformations( component );
                     defineTargetVersion( component );
                     defineNextSnapshotVersion( component );
-                    component.setName( ReleaserUtils.getComponentName( component.getScmDeveloperConnection( ) ) );
+                    component.setName( ReleaserUtils.getComponentName( component.getScmDeveloperConnection( ) ,component.getArtifactId( )) );
                 }
                 
             }

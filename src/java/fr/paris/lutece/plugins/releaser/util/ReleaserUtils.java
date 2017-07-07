@@ -64,32 +64,17 @@ public class ReleaserUtils
         return getLocalComponentPath( strComponentName ) + File.separator + ConstanteUtils.CONSTANTE_POM_XML;
     }
 
-    public static String getComponentName( String strScmDeveloperConnection )
+    public static String getComponentName( String strScmDeveloperConnection,String strArtifactId )
     {
-        if(!StringUtils.isEmpty( strScmDeveloperConnection) && strScmDeveloperConnection.contains( "/" ) )
+        
+        String strComponentName=strArtifactId;
+        if(!StringUtils.isEmpty( strScmDeveloperConnection) && strScmDeveloperConnection.contains( "/" ) && strScmDeveloperConnection.contains( ".git" ) )
         {   
-            
-           if ( strScmDeveloperConnection.contains( ".git" ) )
-            {
-                String [ ] tabDevConnection = strScmDeveloperConnection.split( "/" );
-                return tabDevConnection [tabDevConnection.length - 1].replace( ".git", "" );
-            }
-            else if(  strScmDeveloperConnection.contains( "/svn/" ))
-            {
-                 String [ ] tabSVnPluginName = strScmDeveloperConnection.split( "/" );
-                if(!StringUtils.isEmpty(tabSVnPluginName[tabSVnPluginName.length - 1]))
-                {
-                    return tabSVnPluginName[tabSVnPluginName.length - 1];
-                    
-                }
-                else
-                {
-                    return tabSVnPluginName[tabSVnPluginName.length - 2];
-                            
-                 }
-            }
-        }
-        return null;
+            String [ ] tabDevConnection = strScmDeveloperConnection.split( "/" );
+            strComponentName= tabDevConnection [tabDevConnection.length - 1].replace( ".git", "" );
+        
+         }
+        return strComponentName;
     }
     
     public static String getSiteTagName(Site site)
