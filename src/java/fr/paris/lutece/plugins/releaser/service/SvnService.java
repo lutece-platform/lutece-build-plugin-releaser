@@ -162,13 +162,15 @@ public class SvnService implements ISvnService
         {
             ReleaseSvnCheckoutClient updateClient = new ReleaseSvnCheckoutClient( authManager,
                     SVNWCUtil.createDefaultOptions( false ) );
-
+           
             String strError = null;
 
             try
             {
-                lReturn = SvnUtils.doSvnCheckout( SvnUtils.getRepoUrl( component.getScmDeveloperConnection( )), strLocalBasePath, updateClient,
+                lReturn =SvnUtils.doSvnCheckout( SvnUtils.getRepoUrl( component.getScmDeveloperConnection( )), strLocalBasePath, updateClient,
                         commandResult );
+                
+               SvnUtils.getLastRevision( strLocalBasePath, strSvnLogin, strSvnPassword );
             }
             catch ( Exception e )
             {

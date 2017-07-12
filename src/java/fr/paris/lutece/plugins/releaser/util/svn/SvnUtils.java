@@ -122,11 +122,11 @@ public final class SvnUtils
     {
         SVNCommitPacket commitPacket = commitClient.doCollectCommitItems( new File [ ] {
             new File( strPathFile )
-        }, false, false, false );
+        }, false, false, true );
 
         if ( !SVNCommitPacket.EMPTY.equals( commitPacket ) )
         {
-            commitClient.doCommit( commitPacket, false, strCommitMessage );
+             commitClient.doCommit( commitPacket, false, strCommitMessage );
         }
     }
 
@@ -198,6 +198,9 @@ public final class SvnUtils
 
             // SVNDepth.INFINITY + dernier param�tre � FALSE pour la version 1.3.2
             nLastCommitId = updateClient.doCheckout( repository.getLocation( ), file, SVNRevision.HEAD, SVNRevision.HEAD, true );
+            
+            
+            
         }
         catch( SVNAuthenticationException e )
         {
@@ -291,11 +294,12 @@ public final class SvnUtils
     public static Long getLastRevision(  String strRepoPath,String strUserName,String strPassword)
     {
         Long lRevision= null;
-         SVNClientManager clientManager = SVNClientManager.newInstance( new DefaultSVNOptions( ), strUserName, strPassword );
+        SVNClientManager clientManager = SVNClientManager.newInstance( new DefaultSVNOptions( ), strUserName, strPassword );
         SVNRevision revision;
         try
         {
-            revision = clientManager.getStatusClient( ).doStatus( new File(strRepoPath ), true ).getCommittedRevision( );
+            File fStrRepo=new File(strRepoPath );
+            revision = clientManager.getStatusClient( ).doStatus( fStrRepo, true ).getCommittedRevision( );
             if(revision!=null)
             {
                 return revision.getNumber( );
@@ -309,27 +313,50 @@ public final class SvnUtils
     return lRevision;
     }
     
-    public static void  revert(  String strRepoPath, String strCmUrl,String strUserName,String strPassword,Long revHeadCommit,Long lRevertCommit)
+    
+    public static void update(  String strRepoPath,String strUserName,String strPassword)
+    {
+        SVNClientManager clientManager = SVNClientManager.newInstance( new DefaultSVNOptions( ), strUserName, strPassword );
+      
+        try
+        {
+            File fStrRepo=new File(strRepoPath );
+            clientManager.getUpdateClient( ).doUpdate(fStrRepo , SVNRevision.HEAD, true );
+            
+          
+        }
+        catch( SVNException e )
+        {
+           AppLogService.error( e );
+        }
+    
+    }
+    
+    public static void  revert(  String strRepoPath, String strCmUrl,String strUserName,String strPassword,Long revCurrentCommit,Long lRevertCommit)
     {
        
         SVNClientManager clientManager = SVNClientManager.newInstance( new DefaultSVNOptions( ), strUserName, strPassword );
         
              SVNDiffClient diffClient = clientManager.getDiffClient();
              SVNRevision sRevertCommit= SVNRevision.create( lRevertCommit );
-             SVNRevision sLastCommit= SVNRevision.create( revHeadCommit );
+             SVNRevision sLastCommit= SVNRevision.create( revCurrentCommit );
              
              
-               SVNRevisionRange rangeToMerge = new SVNRevisionRange(sLastCommit, sRevertCommit);
-               
-               try
-            {
-                diffClient.doMerge(SVNURL.parseURIEncoded( strCmUrl), sLastCommit, Collections.singleton(rangeToMerge), 
-                           new File(strRepoPath), SVNDepth.INFINITY, true, false, false, false);
-            }
-            catch( SVNException e )
-            {
-               AppLogService.error( e );
-            }
+             if(revCurrentCommit>lRevertCommit)
+             {
+             
+                   SVNRevisionRange rangeToMerge = new SVNRevisionRange(sLastCommit, sRevertCommit);
+                   
+                   try
+                {
+                    diffClient.doMerge(SVNURL.parseURIEncoded( strCmUrl), sLastCommit, Collections.singleton(rangeToMerge), 
+                               new File(strRepoPath), SVNDepth.INFINITY, true, false, false, false);
+                }
+                catch( SVNException e )
+                {
+                   AppLogService.error( e );
+                }
+             }
                  
                    
     }

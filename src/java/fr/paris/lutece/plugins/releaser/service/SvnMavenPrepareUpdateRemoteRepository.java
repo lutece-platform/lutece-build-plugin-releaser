@@ -3,6 +3,7 @@ package fr.paris.lutece.plugins.releaser.service;
 import java.util.Locale;
 
 import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
+import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
@@ -54,6 +55,8 @@ public class SvnMavenPrepareUpdateRemoteRepository implements IMavenPrepareUpdat
     
         
        ReleaserUtils.logStartAction( context, " Rollback Release prepare" );
+       
+       SvnUtils.update( strLocalBasePath, context.getReleaserUser( ).getSvnComponentAccountLogin( ), context.getReleaserUser( ).getSvnComponentAccountPassword( ) );
        Long lastRevision= SvnUtils.getLastRevision( strLocalBasePath,context.getReleaserUser( ).getSvnComponentAccountLogin( ),
                 context.getReleaserUser( ).getSvnComponentAccountPassword( ) );
        
@@ -65,11 +68,16 @@ public class SvnMavenPrepareUpdateRemoteRepository implements IMavenPrepareUpdat
            SvnUtils.revert( strLocalBasePath, SvnUtils.getRepoUrl(strScmUrl),context.getReleaserUser( ).getSvnComponentAccountLogin( ),
                 context.getReleaserUser( ).getSvnComponentAccountPassword( ), lastRevision, lastCommitBeforeRelease);
       
+           
            ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(context.getReleaserUser( ).getSvnComponentAccountLogin( ),
                    context.getReleaserUser( ).getSvnComponentAccountPassword( ));
 
+           
+           
+           
            ReleaseSvnCommitClient commitClient = new ReleaseSvnCommitClient( authManager,
                    SVNWCUtil.createDefaultOptions( false ) );
+           
            
            try
            {

@@ -58,6 +58,8 @@ public interface IWorkflowReleaseContextService
     
     boolean isReleaseInProgress(String strArtifactId);
     
+
+    
     void init();
 
 }

@@ -33,21 +33,17 @@
  */
 package fr.paris.lutece.plugins.releaser.service;
 
+import java.io.IOException;
+
+import org.junit.Test;
+
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
-import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.test.LuteceTestCase;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
-
-import org.junit.Test;
-import static junit.framework.TestCase.*;
 
 /**
  * SiteServiceTest
