@@ -146,6 +146,7 @@ public class MavenService implements IMavenService
         InvocationRequest request = new DefaultInvocationRequest( );
         request.setPomFile( new File( strPathPom ) );
         request.setGoals( goals );
+        request.setShellEnvironmentInherited(true);
         String strProxyHost=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_PROXY_HOST );
         String strProxyPort=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_PROXY_PORT );
          
@@ -157,7 +158,7 @@ public class MavenService implements IMavenService
         try
         {
             final StringBuffer sbLog = commandResult.getLog( );
-
+            
             // logger
             _invoker.setOutputHandler( new InvocationOutputHandler( )
             {
