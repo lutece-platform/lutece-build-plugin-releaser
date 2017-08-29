@@ -35,6 +35,8 @@ package fr.paris.lutece.plugins.releaser.service;
 
 import fr.paris.lutece.plugins.releaser.util.version.Version;
 import java.util.List;
+
+import org.junit.Ignore;
 import org.junit.Test;
 import static junit.framework.TestCase.*;
 
@@ -43,7 +45,7 @@ import static junit.framework.TestCase.*;
  */
 public class SiteServiceTest
 {
-
+	@Ignore 
     @Test
     public void testGetOriginVersion()
     {
@@ -75,7 +77,7 @@ public class SiteServiceTest
         
         
     }
-    
+	 @Ignore 
     private void printNextReleases( String strLastRelease, String strCurrent, String strOrigin )
     {
         System.out.print( "Last release:" + strLastRelease + "   Current: " + strCurrent + "   Origin:" + strOrigin );

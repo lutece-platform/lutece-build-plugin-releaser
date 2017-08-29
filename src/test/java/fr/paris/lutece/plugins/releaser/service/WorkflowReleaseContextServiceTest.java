@@ -3,6 +3,7 @@ package fr.paris.lutece.plugins.releaser.service;
 import java.io.IOException;
 import java.util.Locale;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
@@ -15,7 +16,7 @@ import fr.paris.lutece.test.LuteceTestCase;
 public class WorkflowReleaseContextServiceTest extends LuteceTestCase
 {
 
-    
+   @Ignore 
    @Test
    public void testReleaseComponentGit() throws IOException
    {
@@ -35,7 +36,7 @@ public class WorkflowReleaseContextServiceTest extends LuteceTestCase
    }
    
    
-    
+   @Ignore  
    @Test
     public void testGitCloneRepository() throws IOException
     {
@@ -49,7 +50,7 @@ public class WorkflowReleaseContextServiceTest extends LuteceTestCase
        ReleaserUtils.stopCommandResult( context ) ;   
         
     }
-   
+   @Ignore 
    @Test
    public void testPrepareSvn() throws IOException
    {
