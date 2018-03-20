@@ -219,7 +219,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
             // PROGRESS 5%
             commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
-            git = GitUtils.cloneRepo( strLocalComponentPath, component.getScmDeveloperConnection( ), commandResult, context.getReleaserUser( ).getGithubComponentAccountLogin( ) );
+            git = GitUtils.cloneRepo( strLocalComponentPath, component.getScmDeveloperConnection( ), commandResult, context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ) );
             // fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
             // git = new Git( fLocalRepo );
             GitUtils.createLocalBranch( git, GitUtils.DEVELOP_BRANCH, commandResult );

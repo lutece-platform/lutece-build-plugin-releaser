@@ -57,7 +57,7 @@ public class GitUtils  {
     public static final String DEVELOP_BRANCH = "develop";
     
 
-	public static  Git cloneRepo(String sClonePath, String sRepoURL, CommandResult commandResult,String strGitHubUserLogin) 
+	public static  Git cloneRepo(String sClonePath, String sRepoURL, CommandResult commandResult,String strGitHubUserLogin, String strUserName, String strPassword) 
 	{
 	    Git git=null;
 	    Repository repository=null;
@@ -66,7 +66,7 @@ public class GitUtils  {
 	    FileRepositoryBuilder builder = new FileRepositoryBuilder();
 		File fGitDir = new File(sClonePath);
 		
-		CloneCommand clone = Git.cloneRepository().setBare(false).setCloneAllBranches(true).setDirectory(fGitDir).setURI(getRepoUrl( sRepoURL ));
+		CloneCommand clone = Git.cloneRepository().setCredentialsProvider(new UsernamePasswordCredentialsProvider(strUserName, strPassword)).setBare(false).setCloneAllBranches(true).setDirectory(fGitDir).setURI(getRepoUrl( sRepoURL ));
 		
 		git=clone.call( );
 		

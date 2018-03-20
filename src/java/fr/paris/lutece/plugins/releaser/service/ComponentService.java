@@ -250,7 +250,7 @@ public class ComponentService implements IComponentService
 
         if ( component.getLastAvailableSnapshotVersion( ) == null )
         {
-            component.setLastAvailableVersion( strLastReleaseNextSnapshotVersion );
+            component.setLastAvailableSnapshotVersion( strLastReleaseNextSnapshotVersion );
         }
 
         if ( component.getLastAvailableVersion( ) != null && strLastReleaseVersion != null )
