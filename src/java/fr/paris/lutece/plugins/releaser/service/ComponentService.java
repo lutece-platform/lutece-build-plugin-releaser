@@ -120,22 +120,27 @@ public class ComponentService implements IComponentService
             }
             strInfosJSON = httpAccess.doGet( strUrl );
             JsonNode nodeRoot = _mapper.readTree( strInfosJSON );
-            JsonNode nodeComponent = nodeRoot.path( FIELD_COMPONENT );
-            
-            String strVersion= nodeComponent.get( FIELD_VERSION ).asText( );
-            if(!RELEASE_NOT_FOUND.equals( strVersion ))
+            if(nodeRoot!=null)
             {
-                component.setLastAvailableVersion( nodeComponent.get( FIELD_VERSION ).asText( ) );
-            }
-            component.setLastAvailableSnapshotVersion( nodeComponent.get( FIELD_SNAPSHOT_VERSION ).asText( ) );
-            component.setJiraCode( nodeComponent.get( FIELD_JIRA_CODE ).asText( ) );
-            component.setJiraRoadmapUrl( nodeComponent.get( FIELD_ROADMAP_URL ).asText( ) );
-            component.setJiraCurrentVersionOpenedIssues( nodeComponent.get( FIELD_OPENED_ISSUES ).asInt( ) );
-            component.setJiraCurrentVersionClosedIssues( nodeComponent.get( FIELD_CLOSED_ISSUES ).asInt( ) );
-            String strScmDeveloperConnection = nodeComponent.get( FIELD_SCM_DEVELOPER_CONNECTION ).asText( );
-            if ( !StringUtils.isEmpty( strScmDeveloperConnection ) && !strScmDeveloperConnection.equals( "null" ) )
-            {
-                component.setScmDeveloperConnection( strScmDeveloperConnection );
+                JsonNode nodeComponent = nodeRoot.path( FIELD_COMPONENT );
+                if(nodeComponent!=null)
+                {
+                    String strVersion= nodeComponent.get( FIELD_VERSION ).asText( );
+                    if(!RELEASE_NOT_FOUND.equals( strVersion ))
+                    {
+                        component.setLastAvailableVersion( nodeComponent.get( FIELD_VERSION ).asText( ) );
+                    }
+                    component.setLastAvailableSnapshotVersion( nodeComponent.get( FIELD_SNAPSHOT_VERSION ).asText( ) );
+                    component.setJiraCode( nodeComponent.get( FIELD_JIRA_CODE ).asText( ) );
+                    component.setJiraRoadmapUrl( nodeComponent.get( FIELD_ROADMAP_URL ).asText( ) );
+                    component.setJiraCurrentVersionOpenedIssues( nodeComponent.get( FIELD_OPENED_ISSUES ).asInt( ) );
+                    component.setJiraCurrentVersionClosedIssues( nodeComponent.get( FIELD_CLOSED_ISSUES ).asInt( ) );
+                    String strScmDeveloperConnection = nodeComponent.get( FIELD_SCM_DEVELOPER_CONNECTION ).asText( );
+                    if ( !StringUtils.isEmpty( strScmDeveloperConnection ) && !strScmDeveloperConnection.equals( "null" ) )
+                    {
+                        component.setScmDeveloperConnection( strScmDeveloperConnection );
+                    }
+                }
             }
         }
         catch( HttpAccessException | IOException ex )
@@ -348,7 +353,7 @@ public class ComponentService implements IComponentService
 
         try
         {
-            ComponentService.getService( ).setRemoteInformations( component, true );
+            ComponentService.getService( ).setRemoteInformations( component, false );
 
         }
         catch( HttpAccessException | IOException e )
