@@ -85,10 +85,11 @@ public class PluginUtils
         return filesName;
     }
 
-    public static String getAppInfoFile( String strBasePath, String strPluginName )
+    public static String getAppInfoFile( String strBasePath)
     {
-        String strAppInfo = strBasePath + ( strBasePath.endsWith( File.separator ) ? "" : File.separator ) + strPluginName
-                + ( strPluginName.endsWith( File.separator ) ? "" : File.separator ) + File.separator + CONSTANTE_CORE_APP_INFO;
+        String strAppInfo = strBasePath + File.separator + CONSTANTE_CORE_APP_INFO;
+        
+        
         File fileAppInfo = new File( strAppInfo );
         if ( !fileAppInfo.exists( ) )
         {

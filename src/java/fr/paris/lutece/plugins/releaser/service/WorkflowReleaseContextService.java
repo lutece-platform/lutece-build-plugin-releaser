@@ -592,7 +592,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                 commandResult.getLog( ).append( "Updating Core XML " + strComponentName + " to " + strComponentReleaseVersion + "\n" );
 
                 
-                PluginUtils.updatePluginXMLVersion( strLocalComponentPath, strComponentReleaseVersion, commandResult );
+                PluginUtils.updatePluginXMLVersion( strCoreXMLPath, strComponentReleaseVersion, commandResult );
                 // Commit Plugin xml modification version
                 mavenPrepareUpdateRepo.updateDevelopBranch( strLocalComponentPath,context, locale, "[site-release] Update core version to " + strComponentReleaseVersion );
                 commandResult.getLog( ).append( "Core XML updated to " + strComponentReleaseVersion + "\n" );
@@ -602,11 +602,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             }
 
             // update appinfo.java
-            String strAppInfoFilePath = PluginUtils.getAppInfoFile( strLocalComponentPath, PluginUtils.CORE_PLUGIN_NAME1 );
-            if ( StringUtils.isBlank( strAppInfoFilePath ) )
-            {
-                strAppInfoFilePath = PluginUtils.getAppInfoFile( strLocalComponentPath, PluginUtils.CORE_PLUGIN_NAME2 );
-            }
+            String strAppInfoFilePath = PluginUtils.getAppInfoFile( strLocalComponentPath );
+           
             if ( StringUtils.isNotBlank( strAppInfoFilePath ) )
             {
                 PluginUtils.updateAppInfoFile( strAppInfoFilePath, strComponentReleaseVersion, commandResult );
@@ -658,22 +655,20 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             {
                 commandResult.getLog( ).append( "Updating Core XML " + strComponentName + " to " + strComponentReleaseNewDeveloppmentVersion + "\n" );
 
-                PluginUtils.updatePluginXMLVersion( strLocalComponentPath, strComponentReleaseNewDeveloppmentVersion, commandResult );
+                PluginUtils.updatePluginXMLVersion( strCoreXMLPath, strComponentReleaseNewDeveloppmentVersion, commandResult );
+                
                 // Commit Plugin xml modification version
                 mavenPrepareUpdateRepo.updateDevelopBranch(strLocalComponentPath,  context, locale, "[site-release] Update core version to "
                         + strComponentReleaseNewDeveloppmentVersion );
             }
 
             // update appinfo.java
-            String strAppInfoFilePath = PluginUtils.getAppInfoFile( strLocalComponentPath, PluginUtils.CORE_PLUGIN_NAME1 );
-            if ( StringUtils.isBlank( strAppInfoFilePath ) )
-            {
-                strAppInfoFilePath = PluginUtils.getAppInfoFile( strLocalComponentPath, PluginUtils.CORE_PLUGIN_NAME2 );
-            }
+            String strAppInfoFilePath = PluginUtils.getAppInfoFile( strLocalComponentPath);
+           
             if ( StringUtils.isNotBlank( strAppInfoFilePath ) )
             {
-                mavenPrepareUpdateRepo.updateDevelopBranch(strAppInfoFilePath, context, locale, "[site-release] Update AppInfo.java version" );
-
+                PluginUtils.updateAppInfoFile( strAppInfoFilePath, strComponentReleaseNewDeveloppmentVersion, commandResult );
+                mavenPrepareUpdateRepo.updateDevelopBranch( strAppInfoFilePath,context, locale, "[site-release] Update AppInfo.java version" );
             }
             else
             {
