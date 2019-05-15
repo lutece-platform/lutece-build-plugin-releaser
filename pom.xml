@@ -30,20 +30,11 @@
              <id>jgit-repository</id>
              <url>https://repo.eclipse.org/content/groups/releases/</url>
         </repository>
-       <repository>
-            <id>atlassian-public</id>
-            <url>https://m2proxy.atlassian.com/repository/public</url>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>daily</updatePolicy>
-                <checksumPolicy>warn</checksumPolicy>
-            </snapshots>
-            <releases>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-            </releases>
-        </repository> 
-    </repositories>
+        <repository>
+                <id>atlassian-public-repository2</id>
+                <url>https://packages.atlassian.com/repository/public/</url>
+        </repository>
+   </repositories>
     <dependencies>
         <dependency>
             <groupId>fr.paris.lutece</groupId>
