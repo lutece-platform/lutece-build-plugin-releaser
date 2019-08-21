@@ -38,12 +38,14 @@ public class ConstanteUtils
     public static final String PROPERTY_LOCAL_COMPONENT_BASE_PAH = "releaser.localComponentBasePath";
     
     public static final String PROPERTY_APPLICATION_ACCOUNT_ENABLE="releaser.applicationAccountEnable";
-    public static final String PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_LOGIN= "releaser.svnReleaseComponetAccount.login";
-    public static final String PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_PASSWORD="releaser.svnReleaseComponetAccount.password";
-    public static final String PROPERTY_SITE_REPOSITORY_LOGIN= "releaser.site.repository.login";
-    public static final String PROPERTY_SITE_REPOSITORY_PASSWORD= "releaser.site.repository.password";
-    public static final String PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_LOGIN= "releaser.githubReleaseComponetAccount.login";
-    public static final String PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_PASSWORD="releaser.githubReleaseComponetAccount.password";
+    public static final String PROPERTY_SVN_RELEASE_ACCOUNT_LOGIN= "releaser.svnReleaseAccount.login";
+    public static final String PROPERTY_SVN_RELEASE_ACCOUNT_PASSWORD="releaser.svnReleaseAccount.password";
+    public static final String PROPERTY_GITHUB_RELEASE_ACCOUNT_LOGIN= "releaser.githubReleaseAccount.login";
+    public static final String PROPERTY_GITHUB_RELEASE_ACCOUNT_PASSWORD="releaser.githubReleaseAccount.password";
+    public static final String PROPERTY_GITLAB_RELEASE_ACCOUNT_LOGIN= "releaser.gitlabReleaseAccount.login";
+    public static final String PROPERTY_GITLAB_RELEASE_ACCOUNT_PASSWORD="releaser.gitlabReleaseAccount.password";
+    
+    
     public static final String PROPERTY_GITHUB_SEARCH_REPO_API = "releaser.githubSearchRepoApi";
     
     public static final String PROPERTY_MAVEN_LOCAL_REPOSITORY = "releaser.mavenLocalRepository";
