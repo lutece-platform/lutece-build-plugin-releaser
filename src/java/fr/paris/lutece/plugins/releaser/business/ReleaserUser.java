@@ -1,85 +1,56 @@
 package fr.paris.lutece.plugins.releaser.business;
 
+import java.io.Serializable;
+import java.util.HashMap;
+
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 
-public class ReleaserUser
+/**
+ * 
+ * Credentials used by releaser
+ *
+ */
+public class ReleaserUser implements Serializable 
 {
 
-    private String  _strSvnSiteAccountLogin;
-    private String  _strSvnSiteAccountPassword;
-    private String  _strSvnComponentAccountLogin;
-    private String  _strSvnComponentAccountPassword;
-    @NotEmpty( message = "#i18n{releaser.validation.releaseruser.GithubComponentAccountLogin.notEmpty}" )
-    private String  _strGithubComponentAccountLogin;
-    @NotEmpty( message = "#i18n{releaser.validation.releaseruser.GithubComponentAccountPassword.notEmpty}" )
-    private String  _strGithubComponentAccountPassword;
-   
     
-    
-    public String getSvnSiteAccountLogin( )
+	private static final long serialVersionUID = -5957364434700297424L;
+	public static enum CREDENTIAL_TYPE {GITHUB,GITLAB,SVN};
+    private HashMap<CREDENTIAL_TYPE, Credential> _mapCredential;
+    public ReleaserUser( ) {
+		
+		this._mapCredential = new HashMap<>();
+	}
+    public void addCredential(CREDENTIAL_TYPE type,Credential credential)
     {
-        return _strSvnSiteAccountLogin;
-    }
-
-    public void setSvnSiteAccountLogin( String _strSvnSiteAccountLogin )
-    {
-        this._strSvnSiteAccountLogin = _strSvnSiteAccountLogin;
-    }
-    @JsonIgnore
-    public String getSvnSiteAccountPassword( )
-    {
-        return _strSvnSiteAccountPassword;
-    }
-    @JsonIgnore
-    public void setSvnSiteAccountPassword( String _strSvnSiteAccountPassword )
-    {
-        this._strSvnSiteAccountPassword = _strSvnSiteAccountPassword;
-    }
-
-    public String getSvnComponentAccountLogin( )
-    {
-        return _strSvnComponentAccountLogin;
-    }
-
-    public void setSvnComponentAccountLogin( String _strSvnComponentAccountLogin )
-    {
-        this._strSvnComponentAccountLogin = _strSvnComponentAccountLogin;
-    }
-
-    @JsonIgnore
-    public String getSvnComponentAccountPassword( )
-    {
-        return _strSvnComponentAccountPassword;
-    }
-    @JsonIgnore
-    public void setSvnComponentAccountPassword( String _strSvnComponentAccountPassword )
-    {
-        this._strSvnComponentAccountPassword = _strSvnComponentAccountPassword;
-    }
-
-    public String getGithubComponentAccountLogin( )
-    {
-        return _strGithubComponentAccountLogin;
-    }
-
-    public void setGithubComponentAccountLogin( String _strGithubComponentAccountLogin )
-    {
-        this._strGithubComponentAccountLogin = _strGithubComponentAccountLogin;
+       	
+    	_mapCredential.put(type, credential);
     }
     
-    @JsonIgnore
-    public String getGithubComponentAccountPassword( )
+    public Credential getCredential(CREDENTIAL_TYPE type)
     {
-        return _strGithubComponentAccountPassword;
-    }
-    @JsonIgnore
-    public void setGithubComponentAccountPassword( String _strGithubComponentAccountPassword )
-    {
-        this._strGithubComponentAccountPassword = _strGithubComponentAccountPassword;
+       return	_mapCredential.get(type);
     }
     
+    public class Credential
+    {
+    	public Credential(String strLogin, String strPassword) {
+			super();
+			this._strLogin = strLogin;
+			this._strPassword = strPassword;
+		}
+		private String _strLogin;
+    	private String _strPassword;
+		
+    	public String getLogin() {
+			return _strLogin;
+		}
+		public String getPassword() {
+			return _strPassword;
+		}
+		
+	}
     
-     
 
 }

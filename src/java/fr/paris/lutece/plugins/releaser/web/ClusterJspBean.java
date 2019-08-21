@@ -246,19 +246,16 @@ public class ClusterJspBean extends ManageSitesJspBean
             user=new ReleaserUser( );
             
         }
-        populate( user, request );
+        ReleaserUtils.populateReleaserUser(request, user);
         
 
-        // Check constraints
-        if ( !validateBean( user, VALIDATION_ATTRIBUTES_USER_PREFIX ) )
+        //  Check Authentication
+        if ( user ==null )
         {
             
             redirectView( request, VIEW_MANAGE_CLUSTERS );
         }
-        //Init Svn component acount with svn site account
-        user.setSvnComponentAccountLogin( user.getSvnSiteAccountLogin( ) );
-        user.setSvnComponentAccountPassword( user.getSvnSiteAccountPassword( ) );
-       
+        
         ReleaserUtils.setReleaserUser( request, user );
         
         return redirect( request, JSP_MANAGE_SITE_RELEASE+"?id_site="+strIdSite );

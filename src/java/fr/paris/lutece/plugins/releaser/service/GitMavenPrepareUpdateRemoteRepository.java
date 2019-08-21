@@ -19,6 +19,7 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
+import fr.paris.lutece.plugins.releaser.business.ReleaserUser.CREDENTIAL_TYPE;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
@@ -48,9 +49,9 @@ public class GitMavenPrepareUpdateRemoteRepository implements IMavenPrepareUpdat
             git = new Git( fLocalRepo );
             git.checkout( ).setName( GitUtils.DEVELOP_BRANCH ).call( );
             git.add( ).addFilepattern( "." ).setUpdate( true ).call( );
-            git.commit( ).setCommitter(context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountLogin( )).setMessage( strMessage).call( );
+            git.commit( ).setCommitter(context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getLogin(), context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getLogin()).setMessage( strMessage).call( );
             git.push( )
-                    .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ) ) )
+                    .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getLogin(), context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getPassword() ) )
                     .call( );
         }
         catch( InvalidRemoteException e )
@@ -112,7 +113,7 @@ public class GitMavenPrepareUpdateRemoteRepository implements IMavenPrepareUpdat
     
             git = new Git( fLocalRepo );
             git.checkout( ).setName( GitUtils.DEVELOP_BRANCH ).call( );
-            GitUtils.mergeBack( git, context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ), commandResult );
+            GitUtils.mergeBack( git, context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getLogin(), context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getPassword(), commandResult );
             
     
         
@@ -186,7 +187,7 @@ public class GitMavenPrepareUpdateRemoteRepository implements IMavenPrepareUpdat
                 git.checkout().setName( GitUtils.DEVELOP_BRANCH ).call();
                 git.reset().setRef( context.getRefBranchDev( ) ).setMode( ResetType.HARD ).call( );
                 git.push( ).setForce( true )
-                .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ) ) )
+                .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getLogin(), context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getPassword() ) )
                 .call( );
                 
            }
@@ -197,7 +198,7 @@ public class GitMavenPrepareUpdateRemoteRepository implements IMavenPrepareUpdat
                 git.checkout().setName( GitUtils.MASTER_BRANCH).call();
                 git.reset().setRef( context.getRefBranchRelease( ) ).setMode( ResetType.HARD ).call( );
                 git.push( ).setForce( true )
-                .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ) ) )
+                .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getLogin(), context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getPassword() ) )
                 .call( );       
              }
             //Delete Tag if exist
@@ -227,7 +228,7 @@ public class GitMavenPrepareUpdateRemoteRepository implements IMavenPrepareUpdat
                             RefSpec refSpec = new RefSpec()
                                     .setSource(null)
                                     .setDestination(refTag.getName( ));
-                            git.push().setRefSpecs(refSpec).setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ) ) ).
+                            git.push().setRefSpecs(refSpec).setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getLogin(), context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getPassword() ) ).
                             setRemote("origin").call();
                         }
                         

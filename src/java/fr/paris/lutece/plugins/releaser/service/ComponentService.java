@@ -54,6 +54,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
+import fr.paris.lutece.plugins.releaser.business.ReleaserUser.CREDENTIAL_TYPE;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
@@ -300,8 +301,8 @@ public class ComponentService implements IComponentService
 
         int nItemsPerPageLoad = AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_NB_SEARCH_ITEM_PER_PAGE_LOAD, 10 );
         ReleaserUser user = ReleaserUtils.getReleaserUser( request, locale );
-        String strUserLogin = user.getGithubComponentAccountLogin( );
-        String strUserPassword = user.getGithubComponentAccountPassword( );
+        String strUserLogin = user.getCredential(CREDENTIAL_TYPE.GITHUB).getLogin();
+        String strUserPassword = user.getCredential(CREDENTIAL_TYPE.GITHUB).getPassword();
         List<Component> listResult = getListComponent(
                 GitUtils.searchRepo( strSearch, ConstanteUtils.CONSTANTE_GITHUB_ORG_LUTECE_PLATFORM, strUserLogin, strUserPassword ), strUserLogin,
                 strUserPassword );

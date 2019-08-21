@@ -9,12 +9,12 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.StringUtils;
 
-import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
+import fr.paris.lutece.plugins.releaser.business.ReleaserUser.CREDENTIAL_TYPE;
+import fr.paris.lutece.plugins.releaser.business.ReleaserUser.Credential;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService;
-import fr.paris.lutece.portal.service.security.LuteceUser;
 import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
@@ -218,14 +218,11 @@ public class ReleaserUtils
         {
 
             releaserUser = new ReleaserUser( );
-            releaserUser.setGithubComponentAccountLogin( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_LOGIN ) );
-            releaserUser
-                    .setGithubComponentAccountPassword( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_PASSWORD ) );
-            releaserUser.setSvnComponentAccountLogin( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_LOGIN ) );
-            releaserUser.setSvnComponentAccountPassword( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SVN_RELEASE_COMPONET_ACCOUNT_PASSWORD ) );
-            releaserUser.setSvnSiteAccountLogin( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SITE_REPOSITORY_LOGIN ) );
-            releaserUser.setSvnSiteAccountPassword( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SITE_REPOSITORY_PASSWORD ) );
-        }
+            releaserUser.addCredential(CREDENTIAL_TYPE.GITHUB, releaserUser.new Credential(AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_ACCOUNT_LOGIN ), ConstanteUtils.PROPERTY_GITHUB_RELEASE_ACCOUNT_PASSWORD ));
+            releaserUser.addCredential(CREDENTIAL_TYPE.GITLAB, releaserUser.new Credential(AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITLAB_RELEASE_ACCOUNT_LOGIN ), ConstanteUtils.PROPERTY_GITLAB_RELEASE_ACCOUNT_PASSWORD ));
+            releaserUser.addCredential(CREDENTIAL_TYPE.SVN, releaserUser.new Credential(AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SVN_RELEASE_ACCOUNT_LOGIN ), ConstanteUtils.PROPERTY_GITLAB_RELEASE_ACCOUNT_PASSWORD ));
+               
+         }
         else
         {
 
@@ -240,6 +237,22 @@ public class ReleaserUtils
 
         return releaserUser;
     }
+    
+    public static void populateReleaserUser( HttpServletRequest request, ReleaserUser user )
+    {
+
+    	CREDENTIAL_TYPE[] tabCredentialType= CREDENTIAL_TYPE.values();
+    	for (int i = 0; i < tabCredentialType.length; i++) {
+    	
+		if(request.getParameter(tabCredentialType[i]+"_account_login")!=null)
+            {
+            	 user.addCredential(tabCredentialType[i], user.new Credential(request.getParameter(tabCredentialType[i]+"_account_login"), request.getParameter(tabCredentialType[i]+"_account_password")));
+                  	
+           }
+               
+    	}
+    }
+
 
     public static void setReleaserUser( HttpServletRequest request, ReleaserUser releaserUser )
     {

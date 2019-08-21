@@ -26,6 +26,7 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
+import fr.paris.lutece.plugins.releaser.business.ReleaserUser.CREDENTIAL_TYPE;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
@@ -219,7 +220,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
             // PROGRESS 5%
             commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
-            git = GitUtils.cloneRepo( strLocalComponentPath, component.getScmDeveloperConnection( ), commandResult, context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ) );
+            git = GitUtils.cloneRepo( strLocalComponentPath, component.getScmDeveloperConnection( ), commandResult, context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getLogin(), context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getLogin(), context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getPassword() );
             // fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
             // git = new Git( fLocalRepo );
             GitUtils.createLocalBranch( git, GitUtils.DEVELOP_BRANCH, commandResult );
@@ -231,7 +232,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             //String ref = git.getRepository( ).findRef( GitUtils.MASTER_BRANCH ).getName( ); 
 //            git.reset( ).setRef( ref  ).setMode( ResetType.HARD ).call( );
 //            git.push( )
-//            .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ) ) ).setRe
+//            .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getLogin(), context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getPassword() ) ).setRe
 //            .call( );
             commandResult.getLog( ).append( "the repository has been successfully cloned.\n" );
             commandResult.getLog( ).append( "Checkout branch \"" + GitUtils.DEVELOP_BRANCH + "\" ...\n" );
@@ -308,7 +309,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                 else
                 {
                     git.push( )
-                            .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ) ) )
+                            .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getLogin(), context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getPassword() ) )
                             .call( );
                     commandResult.getLog( ).append( mergeResult.getMergeStatus( ) );
                 }
@@ -365,7 +366,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         
         try
         {
-        realeasePrepare(strComponentName, context.getReleaserUser( ).getGithubComponentAccountLogin( ),context.getReleaserUser( ).getGithubComponentAccountPassword( ),_gitMavenPrepareUpadteRepo,
+        realeasePrepare(strComponentName, context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getLogin(),context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getPassword(),_gitMavenPrepareUpadteRepo,
                 context, locale );
         
         }catch(AppException ex)
@@ -395,7 +396,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         try
         {
          
-            MavenService.getService( ).mvnReleasePerform( strLocalComponentPomPath, context.getReleaserUser( ).getGithubComponentAccountLogin( ), context.getReleaserUser( ).getGithubComponentAccountPassword( ), commandResult );
+            MavenService.getService( ).mvnReleasePerform( strLocalComponentPomPath, context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getLogin(), context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.GITHUB).getPassword(), commandResult );
 
         }catch(AppException ex)
         {
@@ -412,7 +413,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
         ReleaserUtils.logStartAction( context, " checkout Site" );
 
-        SvnService.getService( ).doSvnCheckoutSite( context.getSite( ), context.getReleaserUser( ).getSvnSiteAccountLogin( ), context.getReleaserUser( ).getSvnSiteAccountPassword( ), context.getCommandResult( ) );
+        SvnService.getService( ).doSvnCheckoutSite( context.getSite( ), context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.SVN).getLogin(), context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.SVN).getPassword(), context.getCommandResult( ) );
         // PROGRESS 30%
         commandResult.setProgressValue( commandResult.getProgressValue( ) + 30 );
 
@@ -445,7 +446,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
 
         commandResult.getLog( ).append( "Checkout SVN Component ...\n" );
-        Long nLastCommitId=SvnService.getService( ).doSvnCheckoutComponent( context.getComponent( ), context.getReleaserUser( ).getSvnComponentAccountLogin( ), context.getReleaserUser( ).getSvnComponentAccountPassword( ),
+        Long nLastCommitId=SvnService.getService( ).doSvnCheckoutComponent( context.getComponent( ), context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.SVN).getLogin(), context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.SVN).getPassword(),
                 context.getCommandResult( ) );
         
         if(nLastCommitId!=null)
@@ -472,7 +473,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         ReleaserUtils.logStartAction( context, " Release Site" );
 
         context.getCommandResult( ).getLog( ).append( "Starting Action Release Site...\n" );
-        SvnService.getService( ).doReleaseSite( context.getSite( ), context.getReleaserUser( ).getSvnSiteAccountLogin( ), context.getReleaserUser( ).getSvnSiteAccountPassword( ), context.getCommandResult( ) );
+        SvnService.getService( ).doReleaseSite( context.getSite( ), context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.SVN).getLogin(), context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.SVN).getPassword(), context.getCommandResult( ) );
 
         ReleaserUtils.logEndAction( context, " Release Site" );
 
@@ -483,7 +484,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         String strComponentName = context.getComponent( ).getName();
         try
         {
-            realeasePrepare(strComponentName,context.getReleaserUser( ).getSvnComponentAccountLogin( ),context.getReleaserUser( ).getSvnComponentAccountPassword( ), _svnMavenPrepareUpadteRepo,
+            realeasePrepare(strComponentName,context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.SVN).getLogin(),context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.SVN).getPassword(), _svnMavenPrepareUpadteRepo,
                     context, locale );
         
         }catch(AppException ex)
@@ -514,7 +515,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
       try
         {
-            MavenService.getService( ).mvnReleasePerform( strLocalComponentPomPath, context.getReleaserUser( ).getSvnComponentAccountLogin( ), context.getReleaserUser( ).getSvnComponentAccountPassword( ), commandResult );
+            MavenService.getService( ).mvnReleasePerform( strLocalComponentPomPath, context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.SVN).getLogin(), context.getReleaserUser( ).getCredential(CREDENTIAL_TYPE.SVN).getPassword(), commandResult );
 
         
         }catch(AppException ex)

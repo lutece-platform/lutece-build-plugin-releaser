@@ -36,6 +36,7 @@
 package fr.paris.lutece.plugins.releaser.util.svn;
 
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
+import fr.paris.lutece.plugins.releaser.business.ReleaserUser.CREDENTIAL_TYPE;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
@@ -164,8 +165,8 @@ public class SvnSiteService
         
         if(user!=null)
         {
-             strLogin=user.getSvnSiteAccountLogin( );
-            strPassword=user.getSvnSiteAccountPassword( );
+            strLogin=user.getCredential(CREDENTIAL_TYPE.SVN).getLogin();
+            strPassword=user.getCredential(CREDENTIAL_TYPE.SVN).getPassword();
         }
         return new BasicAuthorizationAuthenticator( strLogin, strPassword );
     }
