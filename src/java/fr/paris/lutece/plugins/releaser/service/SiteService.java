@@ -50,13 +50,15 @@ import javax.servlet.http.HttpServletRequest;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.Dependency;
+import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
+import fr.paris.lutece.plugins.releaser.business.ReleaserUser.Credential;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.SiteHome;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
+import fr.paris.lutece.plugins.releaser.util.CVSFactoryService;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
-import fr.paris.lutece.plugins.releaser.util.svn.SvnSiteService;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
 import fr.paris.lutece.portal.business.user.AdminUser;
@@ -88,7 +90,12 @@ public class SiteService
     public static Site getSite( int nSiteId ,HttpServletRequest request,Locale locale )
     {
         Site site = SiteHome.findByPrimaryKey( nSiteId );
-        String strPom = SvnSiteService.fetchPom( site.getScmUrl( ) + "/pom.xml" ,request,locale);
+        String strPom=null;
+        ReleaserUser user=ReleaserUtils.getReleaserUser( request, locale );
+        Credential credential=user.getCredential( site.getRepoType( ) );  
+        strPom = CVSFactoryService.getService( site.getRepoType( ) ).fetchPom( site ,credential.getLogin( ),credential.getPassword( ));
+                  
+        
         if ( strPom != null )
         {
             PomParser parser = new PomParser( );
@@ -101,8 +108,12 @@ public class SiteService
     
     private static void initSite( Site site,HttpServletRequest request,Locale locale )
     {
+        
+        ReleaserUser user=ReleaserUtils.getReleaserUser( request, locale );
+        Credential credential=user.getCredential( site.getRepoType( ) );  
+      
         // Find last release in the repository
-        String strLastReleaseVersion = SvnSiteService.getLastRelease( site.getArtifactId() , site.getScmUrl(),request,locale );
+        String strLastReleaseVersion = CVSFactoryService.getService( site.getRepoType( ) ).getLastRelease( site,credential.getLogin( ),credential.getPassword( ));
         site.setLastReleaseVersion( strLastReleaseVersion );
         
         // To find next releases

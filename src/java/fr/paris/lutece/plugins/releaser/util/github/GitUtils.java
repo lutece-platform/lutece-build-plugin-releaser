@@ -5,13 +5,12 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.MessageFormat;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.client.utils.URLEncodedUtils;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.api.Git;
@@ -35,7 +34,6 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-import org.tmatesoft.svn.core.auth.BasicAuthenticationManager;
 
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
@@ -55,6 +53,7 @@ public class GitUtils  {
 	
     public static final String MASTER_BRANCH = "master";
     public static final String DEVELOP_BRANCH = "develop";
+    private static final String CONSTANTE_REF_TAG = "refs/tags/";
     
 
 	public static  Git cloneRepo(String sClonePath, String sRepoURL, CommandResult commandResult,String strGitHubUserLogin, String strUserName, String strPassword) 
@@ -205,9 +204,14 @@ public class GitUtils  {
     
 	}
 	
-	public static PullResult pullRepoBranch(Git git, String sRepoURL, String sBranchName) throws IOException, WrongRepositoryStateException, InvalidConfigurationException, DetachedHeadException, InvalidRemoteException, CanceledException, RefNotFoundException, NoHeadException, TransportException, GitAPIException
+	public static PullResult pullRepoBranch(Git git,  String sBranchName,String strUserName, String strPassword) throws IOException, WrongRepositoryStateException, InvalidConfigurationException, DetachedHeadException, InvalidRemoteException, CanceledException, RefNotFoundException, NoHeadException, TransportException, GitAPIException
 	{
-		PullResult pPullResult = git.pull().call();		
+		PullResult pPullResult = git.pull()
+		        .setCredentialsProvider(new UsernamePasswordCredentialsProvider(strUserName, strPassword))
+		        .setRemote("origin")
+		        .setRemoteBranchName(sBranchName)
+		        .call();
+		
 		return pPullResult;	
 	}
 	
@@ -378,6 +382,7 @@ public class GitUtils  {
         while (i.hasNext())
         {
             RevCommit revCommit = (RevCommit) i.next();
+            
             sCommitMessages = revCommit.getFullMessage();
             int index = sCommitMessages.indexOf(TOKEN);
             if (index >= 0) {
@@ -391,7 +396,7 @@ public class GitUtils  {
             for (int j=0; j<tags.size(); j++) {
                 Ref tag = tags.get(tags.size() - 1 - j);
                 String tagName = tag.getName();
-                if (tagName.equals("refs/tags/" + sTagName)) {
+                if (("refs/tags/" + sTagName).startsWith( tag.getName( ) )) {
                     res = tag;
                     break;
                 }
@@ -399,6 +404,22 @@ public class GitUtils  {
         }
         
         return res;
+    }
+    
+    public static List<String> getTagNameList( Git git )
+    {
+        List<String> listTagName = null;
+        if ( git != null )
+        {
+            listTagName = new ArrayList<>( );
+            Collection<Ref> colTags = git.getRepository( ).getTags( ).values( );
+            for ( Ref ref : colTags )
+            {
+                listTagName.add( ref.getName( ).replace( CONSTANTE_REF_TAG, "" ) );
+            }
+        }
+
+        return listTagName;
     }
 	
 	
@@ -415,6 +436,35 @@ private static String getRepoUrl(String strRepoUrl)
     return strRepoUrl;
 	
 	
+}
+
+public static Git getGit( String strClonePath )
+{
+    Git git = null;
+    Repository repository = null;
+   
+
+    File fGitDir = new File( strClonePath + "/.git" );
+
+    if ( !fGitDir.exists( ) )
+    {
+        return null;
+    }
+
+    try
+    {
+        FileRepositoryBuilder builder = new FileRepositoryBuilder( );
+        repository = builder.setGitDir( fGitDir ).readEnvironment( ).findGitDir( ).build( );
+
+        git = new Git( repository);
+    }
+    catch( IOException e )
+    {
+      AppLogService.error( e.getMessage( ), e );
+    }
+   
+
+    return git;
 }
 
 

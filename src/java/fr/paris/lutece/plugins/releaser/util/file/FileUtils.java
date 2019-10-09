@@ -34,12 +34,11 @@
 package fr.paris.lutece.plugins.releaser.util.file;
 
 import java.io.File;
-import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.disk.DiskFileItem;
+import fr.paris.lutece.portal.service.util.AppLogService;
 
 
 public class FileUtils
@@ -71,6 +70,24 @@ public class FileUtils
 
         return STATUS_OK;
     }
+    
+    public static String readFile(String strFilePath)
+    {
+        File file = new File( strFilePath );
+        String strFile=null;
+        try
+        {
+             strFile = org.apache.commons.io.FileUtils.readFileToString(file, "UTF-8");
+        }
+        catch( IOException e )
+        {
+
+            AppLogService.error( e );
+        }
+        return strFile;
+        
+    }
+    
 
     public static List<String> list( String strDirPath, String strFileExtension )
     {

@@ -49,6 +49,7 @@ import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNNodeKind;
 import org.tmatesoft.svn.core.SVNURL;
+import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
 import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
@@ -65,6 +66,7 @@ import org.tmatesoft.svn.core.wc.SVNEvent;
 import org.tmatesoft.svn.core.wc.SVNEventAction;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNRevisionRange;
+import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
@@ -380,6 +382,26 @@ public final class SvnUtils
         }
 
         return strRepoUrl;
+
+    }
+    
+    public static boolean checkAuthentication( String strUrl,String strUserName,String strPassword )
+    {
+        try
+        {
+            ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager( strUserName, strPassword );
+                
+            
+            SVNURL url = SVNURL.parseURIEncoded( strUrl );
+            SVNRepository repository = SVNRepositoryFactory.create( url, null );
+            repository.setAuthenticationManager( authManager );
+            repository.testConnection( );
+        }
+        catch( SVNException e )
+        {
+            return false;
+        }
+        return true;
 
     }
 

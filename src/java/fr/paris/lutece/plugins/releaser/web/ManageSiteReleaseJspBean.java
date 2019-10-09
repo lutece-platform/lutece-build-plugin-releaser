@@ -130,10 +130,7 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     {
         _modifValidated=null;
         String strSiteId = request.getParameter( PARAMETER_SITE_ID );
-        if ( ReleaserUtils.getReleaserUser( request, getLocale( ) ) == null )
-        {
-            return redirect( request, JSP_MANAGE_CLUSTERS );
-        }
+       
         if ( ( _site == null ) || ( strSiteId != null ) )
         {
             try
@@ -148,6 +145,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
             }
         }
 
+        
+        
         SiteService.buildComments( _site, getLocale( ) );
         Map<String, Object> model = getModel( );
         model.put( MARK_SITE, _site );
@@ -166,14 +165,16 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
             _modifValidated=new HashMap<String, Boolean>();
             
         }
-        if ( ReleaserUtils.getReleaserUser( request, getLocale( ) ) == null )
-        {
-            return redirect( request, JSP_MANAGE_CLUSTERS );
-        }
+      
         if ( _site == null )
         {
             return redirect( request, JSP_MANAGE_CLUSTERS );
 
+        }
+        
+        if ( ReleaserUtils.getReleaserUser( request, getLocale( ) )==null || ReleaserUtils.getReleaserUser( request, getLocale( ) ) .getCredential( _site.getRepoType( ) )==null )
+        {
+            return redirect( request, JSP_MANAGE_CLUSTERS );
         }
 
         Map<String, Object> model = getModel( );

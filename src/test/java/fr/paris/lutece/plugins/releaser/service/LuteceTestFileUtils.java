@@ -10,6 +10,7 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.Properties;
 
+import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 
 public class LuteceTestFileUtils
@@ -67,5 +68,11 @@ public class LuteceTestFileUtils
             props.store( os, "saved for junit " + strClassName );
         }
         AppPropertiesService.reloadAll( );
+    }
+    
+    public static String getProperty(String strProperty,RepositoryType type)
+    {
+        return AppPropertiesService.getProperty("releaser.test."+type.name( ).toLowerCase( )+"."+strProperty);
+        
     }
 }

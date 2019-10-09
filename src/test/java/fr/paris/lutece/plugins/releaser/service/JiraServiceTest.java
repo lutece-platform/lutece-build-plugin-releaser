@@ -40,6 +40,8 @@ import org.junit.Test;
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
+import fr.paris.lutece.plugins.releaser.business.ReleaserUser.Credential;
+import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
@@ -81,8 +83,8 @@ public class JiraServiceTest extends LuteceTestCase
          LuteceTestFileUtils.injectTestProperties( strRessourceDir, strClassName);
          String strArtifactId=AppPropertiesService.getProperty( "releaser.componentTest.artifactId" );
          String strScmDevelopperConnection=AppPropertiesService.getProperty( "releaser.componentTest.scmDeveloperConnection" );
-         String strGitHubUserLogin=AppPropertiesService.getProperty(ConstanteUtils.PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_LOGIN );
-         String strGitHubUserPassword=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_COMPONET_ACCOUNT_PASSWORD);
+         String strGitHubUserLogin=AppPropertiesService.getProperty(ConstanteUtils.PROPERTY_GITHUB_RELEASE_ACCOUNT_LOGIN );
+         String strGitHubUserPassword=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_ACCOUNT_PASSWORD);
          String strJiraKey=AppPropertiesService.getProperty( "releaser.componentTest.jiraKey" );
          String strCurrentVersion=AppPropertiesService.getProperty( "releaser.componentTest.currentVersion" );
          String strReleaserVersion=AppPropertiesService.getProperty( "releaser.componentTest.releaseVersion" );
@@ -102,8 +104,8 @@ public class JiraServiceTest extends LuteceTestCase
          component.setCurrentVersion( strCurrentVersion );
          component.setJiraCode( strJiraKey );
          ReleaserUser user=new ReleaserUser( );
-         user.setGithubComponentAccountLogin( strGitHubUserLogin );
-         user.setGithubComponentAccountPassword( strGitHubUserPassword );
+         user.addCredential( RepositoryType.GITHUB, user.new Credential(strGitHubUserLogin, strGitHubUserPassword));
+         
          context.setReleaserUser( user );
          context.setComponent(component );
          return context;

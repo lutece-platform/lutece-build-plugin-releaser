@@ -22,9 +22,15 @@ public class ConstanteUtils
     public static final String BEAN_MAVEN_SERVICE= "releaser.mavenService";
     public static final String BEAN_SVN_SERVICE= "releaser.svnService";
     public static final String BEAN_JIRA_SERVICE= "releaser.jiraComponentService";
-    public static final String BEAN_GIT_MAVEN_PREPARE_UPDATE_REMOTE_REPOSITORY= "releaser.gitMavenPrepareUpdateRemoteRepository";
-    public static final String BEAN_SVN_MAVEN_PREPARE_UPDATE_REMOTE_REPOSITORY= "releaser.svnMavenPrepareUpdateRemoteRepository";
    
+    public static final String BEAN_SVN_RESOURCE_SERVICE= "releaser.cvs.svnResourceService";
+    public static final String BEAN_GITHUB_RESOURCE_SERVICE= "releaser.cvs.githubResourceService";
+    public static final String BEAN_GITLAB_RESOURCE_SERVICE= "releaser.cvs.gitlabResourceService";
+    
+    
+    
+    
+    
     public static final String BEAN_COMPONENT_SERVICE= "releaser.componentService";
     
     public static final String BEAN_TWITTER_SERVICE= "releaser.twitterService";

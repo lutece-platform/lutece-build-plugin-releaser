@@ -27,29 +27,22 @@ public interface IWorkflowReleaseContextService
     int getIdWorkflow(WorkflowReleaseContext context);
     
     
-    void gitCloneRepository( WorkflowReleaseContext context, Locale locale );
+    void checkoutRepository( WorkflowReleaseContext context, Locale locale );
     
     void gitMerge( WorkflowReleaseContext context, Locale locale );
     
     
-    void releasePrepareGit( WorkflowReleaseContext context, Locale locale );
+    void releasePrepareComponent( WorkflowReleaseContext context, Locale locale );
          
-    void releasePrepareSvn( WorkflowReleaseContext context, Locale locale );
+    void releasePrepareSite( WorkflowReleaseContext context, Locale locale );
     
-    void releasePerformGit( WorkflowReleaseContext context, Locale locale );
+    void releasePerformComponent( WorkflowReleaseContext context, Locale locale );
     
-    void releasePerformSvn( WorkflowReleaseContext context, Locale locale );
+    void releasePerformSite( WorkflowReleaseContext context, Locale locale );
     
     void sendTweet( WorkflowReleaseContext context, Locale locale );
     
-    
-    void checkoutSite( WorkflowReleaseContext context, Locale locale );
-    
-    
-    void releaseSite( WorkflowReleaseContext context, Locale locale );
-    
-    void checkoutComponent( WorkflowReleaseContext context, Locale locale );
-    
+   
     void updateJiraVersions( WorkflowReleaseContext context, Locale locale );
     
     void startReleaseInProgress(String strArtifactId);

@@ -10,8 +10,7 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.lang.StringUtils;
 
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
-import fr.paris.lutece.plugins.releaser.business.ReleaserUser.CREDENTIAL_TYPE;
-import fr.paris.lutece.plugins.releaser.business.ReleaserUser.Credential;
+import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService;
@@ -39,30 +38,56 @@ public class ReleaserUtils
         return ConstanteUtils.CONSTANTE_LAST_RELEASE_NEXT_SNPASHOT_VERSION_PREFIX + strArtifactId ;
     }
 
+    
+   public static String getLocalPath(WorkflowReleaseContext context)
+   {
+       String strPath=null;
+       if(context.getSite( )!=null)
+       {
+           strPath = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_LOCAL_SITE_BASE_PAH )+ File.separator + context.getSite( ).getArtifactId( );
 
-    public static String getLocalSitePath( String strSiteName )
-    {
-        String strCheckoutBasePath = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_LOCAL_SITE_BASE_PAH );
+       }
+       else
+       {
+           
+            strPath = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_LOCAL_COMPONENT_BASE_PAH )+File.separator + context.getComponent( ).getName( );
 
-        return strCheckoutBasePath + File.separator + strSiteName;
+       }
+       
+       return strPath;
+           
     }
+    
+   public static String getLocalPomPath(WorkflowReleaseContext context)
+   {
+     
+       return getLocalPath( context ) + File.separator + ConstanteUtils.CONSTANTE_POM_XML;
+   
+   }
 
-    public static String getLocalSitePomPath( String strSiteName )
-    {
-        return getLocalSitePath( strSiteName ) + File.separator + ConstanteUtils.CONSTANTE_POM_XML;
-    }
-
-    public static String getLocalComponentPath( String strComponentName )
-    {
-        String strLocaleComponentBasePath = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_LOCAL_COMPONENT_BASE_PAH );
-
-        return strLocaleComponentBasePath + File.separator + strComponentName;
-    }
-
-    public static String getLocalComponentPomPath( String strComponentName )
-    {
-        return getLocalComponentPath( strComponentName ) + File.separator + ConstanteUtils.CONSTANTE_POM_XML;
-    }
+//    public static String getLocalSitePath( Site site )
+//    {
+//        String strCheckoutBasePath = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_LOCAL_SITE_BASE_PAH );
+//
+//        return strCheckoutBasePath + File.separator + site.getArtifactId( );
+//    }
+//
+//    public static String getLocalSitePomPath( Site site )
+//    {
+//        return getLocalSitePath( site ) + File.separator + ConstanteUtils.CONSTANTE_POM_XML;
+//    }
+//
+//    public static String getLocalComponentPath( String strComponentName )
+//    {
+//        String strLocaleComponentBasePath = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_LOCAL_COMPONENT_BASE_PAH );
+//
+//        return strLocaleComponentBasePath + File.separator + strComponentName;
+//    }
+//
+//    public static String getLocalComponentPomPath( String strComponentName )
+//    {
+//        return getLocalComponentPath( strComponentName ) + File.separator + ConstanteUtils.CONSTANTE_POM_XML;
+//    }
 
     public static String getComponentName( String strScmDeveloperConnection,String strArtifactId )
     {
@@ -218,9 +243,9 @@ public class ReleaserUtils
         {
 
             releaserUser = new ReleaserUser( );
-            releaserUser.addCredential(CREDENTIAL_TYPE.GITHUB, releaserUser.new Credential(AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_ACCOUNT_LOGIN ), ConstanteUtils.PROPERTY_GITHUB_RELEASE_ACCOUNT_PASSWORD ));
-            releaserUser.addCredential(CREDENTIAL_TYPE.GITLAB, releaserUser.new Credential(AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITLAB_RELEASE_ACCOUNT_LOGIN ), ConstanteUtils.PROPERTY_GITLAB_RELEASE_ACCOUNT_PASSWORD ));
-            releaserUser.addCredential(CREDENTIAL_TYPE.SVN, releaserUser.new Credential(AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SVN_RELEASE_ACCOUNT_LOGIN ), ConstanteUtils.PROPERTY_GITLAB_RELEASE_ACCOUNT_PASSWORD ));
+            releaserUser.addCredential(RepositoryType.GITHUB, releaserUser.new Credential(AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_ACCOUNT_LOGIN ), ConstanteUtils.PROPERTY_GITHUB_RELEASE_ACCOUNT_PASSWORD ));
+            releaserUser.addCredential(RepositoryType.GITLAB, releaserUser.new Credential(AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITLAB_RELEASE_ACCOUNT_LOGIN ), ConstanteUtils.PROPERTY_GITLAB_RELEASE_ACCOUNT_PASSWORD ));
+            releaserUser.addCredential(RepositoryType.SVN, releaserUser.new Credential(AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SVN_RELEASE_ACCOUNT_LOGIN ), ConstanteUtils.PROPERTY_GITLAB_RELEASE_ACCOUNT_PASSWORD ));
                
          }
         else
@@ -241,7 +266,7 @@ public class ReleaserUtils
     public static void populateReleaserUser( HttpServletRequest request, ReleaserUser user )
     {
 
-    	CREDENTIAL_TYPE[] tabCredentialType= CREDENTIAL_TYPE.values();
+        RepositoryType[] tabCredentialType= RepositoryType.values();
     	for (int i = 0; i < tabCredentialType.length; i++) {
     	
 		if(request.getParameter(tabCredentialType[i]+"_account_login")!=null)

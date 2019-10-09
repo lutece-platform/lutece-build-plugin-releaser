@@ -36,6 +36,7 @@ package fr.paris.lutece.plugins.releaser.web;
 import fr.paris.lutece.plugins.releaser.business.Cluster;
 import fr.paris.lutece.plugins.releaser.business.ClusterHome;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
+import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.SiteHome;
 import fr.paris.lutece.plugins.releaser.service.SiteService;
@@ -85,6 +86,11 @@ public class ClusterJspBean extends ManageSitesJspBean
     private static final String MARK_SITE = "site";
     private static final String MARK_USER = "user";
     private static final String MARK_IS_APPLICATION_ACCOUNT = "is_application_account";
+    private static final String MARK_REPO_TYPE_GITHUB = "repo_type_github";
+    private static final String MARK_REPO_TYPE_GITLAB = "repo_type_gitlab";
+    private static final String MARK_REPO_TYPE_SVN = "repo_type_svn";
+    
+    
     
     
 
@@ -151,6 +157,10 @@ public class ClusterJspBean extends ManageSitesJspBean
         Map<String, Object> model = getPaginatedListModel( request, MARK_CLUSTER_LIST, listClusters, JSP_MANAGE_CLUSTERS );
         model.put( MARK_USER, ReleaserUtils.getReleaserUser( request, getLocale( ) ));
         model.put( MARK_IS_APPLICATION_ACCOUNT, ReleaserUtils.isApplicationAccountEnable( ));
+        model.put( MARK_REPO_TYPE_GITHUB,RepositoryType.GITHUB );
+        model.put( MARK_REPO_TYPE_GITLAB,RepositoryType.GITLAB );
+        model.put( MARK_REPO_TYPE_SVN,RepositoryType.SVN );
+        
         
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_CLUSTERS, TEMPLATE_MANAGE_CLUSTERS, model );
     }

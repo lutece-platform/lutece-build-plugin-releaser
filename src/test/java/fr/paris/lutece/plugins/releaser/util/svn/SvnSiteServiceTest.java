@@ -33,8 +33,9 @@
  */
 package fr.paris.lutece.plugins.releaser.util.svn;
 
-import fr.paris.lutece.test.LuteceTestCase;
 import org.junit.Test;
+
+import fr.paris.lutece.test.LuteceTestCase;
 
 /**
  *
@@ -50,11 +51,6 @@ public class SvnSiteServiceTest extends LuteceTestCase
     @Test
     public void testGetLastRelease()
     {
-        System.out.println( "getLastRelease" );
-        String strSiteArtifactId = "moncompte";
-        String strTrunkUrl = "http://dev.lutece.paris.fr/svn/sites/gru/multi-sites/moncompte/trunk/";
-        String result = SvnSiteService.getLastRelease( strSiteArtifactId, strTrunkUrl,null,null );
-        System.out.println( result ); 
     }
     
 }

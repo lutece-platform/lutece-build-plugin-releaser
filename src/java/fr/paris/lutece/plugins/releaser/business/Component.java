@@ -44,7 +44,7 @@ import fr.paris.lutece.portal.service.i18n.I18nService;
 /**
  * This is the business class for the object Component
  */
-public class Component
+public class Component implements IReleaserResource
 {
     // Variables declarations
     private String _strArtifactId;
@@ -529,6 +529,13 @@ public class Component
     public void setTweetMessage( String _strTweetMessage )
     {
         this._strTweetMessage = _strTweetMessage;
+    }
+
+    @Override
+    public String getScmUrl( )
+    {
+        // TODO Auto-generated method stub
+        return getScmDeveloperConnection( );
     }
 
             

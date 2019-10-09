@@ -24,22 +24,17 @@ import fr.paris.lutece.portal.service.util.AppLogService;
 public class PomUpdater
 {
 
-    public static String updateSiteBeforeTag( Site site ) throws JAXBException
+    public static String updateSiteBeforeTag( Site site,String strSiteLocalPomPath ) throws JAXBException
     {
 
         InputStream inputStream = null;
         OutputStream outputStream = null;
-        String strSiteLocalPomPath = ReleaserUtils.getLocalSitePomPath( site.getArtifactId( ) );
-
+      
         try
         {
 
             inputStream = new FileInputStream( strSiteLocalPomPath );
             Model model = unmarshal( Model.class, inputStream );
-            if(!site.isTheme( ))
-            {
-                model.setVersion( site.getNextReleaseVersion( ) );
-            }
             
             model.setDescription( site.getTagInformation( ) );
 
@@ -91,12 +86,12 @@ public class PomUpdater
         return "";
     }
 
-    public static String updateSiteAfterTag( Site site ) throws JAXBException
+    public static String updateSiteAfterTag( Site site ,String strSiteLocalPomPath) throws JAXBException
     {
 
         InputStream inputStream = null;
         OutputStream outputStream = null;
-        String strSiteLocalPomPath = ReleaserUtils.getLocalSitePomPath( site.getArtifactId( ) );
+    
 
         try
         {

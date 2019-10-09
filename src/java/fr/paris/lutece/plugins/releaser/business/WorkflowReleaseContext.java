@@ -106,6 +106,15 @@ public class WorkflowReleaseContext implements Serializable
     }
 
   
-    
+   public  IReleaserResource getReleaserResource()
+   {
+       
+       if(this.getSite()!=null)
+       {
+           return this.getSite();
+           
+       }
+        return this.getComponent( );
+   }
     
 }

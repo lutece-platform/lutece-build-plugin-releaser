@@ -34,6 +34,8 @@
 package fr.paris.lutece.plugins.releaser.business;
 
 import javax.validation.constraints.*;
+
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.*;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -42,7 +44,7 @@ import java.util.List;
 /**
  * This is the business class for the object Site
  */
-public class Site implements Serializable
+public class Site implements Serializable,IReleaserResource
 {
     private static final long serialVersionUID = 1L;
 
@@ -424,6 +426,17 @@ public class Site implements Serializable
     {
         this._bTheme = _bTheme;
     }
+
+    @Override
+    public String getTargetVersion( )
+    {
+        // TODO Auto-generated method stub
+        return getNextReleaseVersion( );
+    }
+    
+    
+    
+ 
     
     
 

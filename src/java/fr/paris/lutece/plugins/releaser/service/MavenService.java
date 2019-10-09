@@ -99,7 +99,7 @@ public class MavenService implements IMavenService
      */
     public void mvnSiteAssembly( String strSiteName, String strTagName, String strMavenProfile, SvnUser user, CommandResult commandResult )
     {
-        String strSiteLocalBasePath = ReleaserUtils.getLocalSitePath( strSiteName );
+        //String strSiteLocalBasePath = ReleaserUtils.getLocalSitePath( strSiteName );
 
         List<String> listGoals = MavenGoals.LUTECE_SITE_ASSEMBLY.asList( );
         List<String> listGoalsProfile = new ArrayList<String>( );

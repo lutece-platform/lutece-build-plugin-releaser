@@ -16,19 +16,18 @@ public class ReleaserUser implements Serializable
 
     
 	private static final long serialVersionUID = -5957364434700297424L;
-	public static enum CREDENTIAL_TYPE {GITHUB,GITLAB,SVN};
-    private HashMap<CREDENTIAL_TYPE, Credential> _mapCredential;
+	private HashMap<RepositoryType, Credential> _mapCredential;
     public ReleaserUser( ) {
 		
 		this._mapCredential = new HashMap<>();
 	}
-    public void addCredential(CREDENTIAL_TYPE type,Credential credential)
+    public void addCredential(RepositoryType type,Credential credential)
     {
        	
     	_mapCredential.put(type, credential);
     }
     
-    public Credential getCredential(CREDENTIAL_TYPE type)
+    public Credential getCredential(RepositoryType type)
     {
        return	_mapCredential.get(type);
     }

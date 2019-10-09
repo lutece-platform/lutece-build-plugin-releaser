@@ -11,11 +11,11 @@
     <bean id="releaser.workflowReleaseContextService" class="fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService" />
     <bean id="releaser.mavenService" class="fr.paris.lutece.plugins.releaser.service.MavenService" />
     <bean id="releaser.componentService" class="fr.paris.lutece.plugins.releaser.service.ComponentService" />
-    <bean id="releaser.svnService" class="fr.paris.lutece.plugins.releaser.service.SvnService" />
-    <bean id="releaser.gitMavenPrepareUpdateRemoteRepository" class="fr.paris.lutece.plugins.releaser.service.GitMavenPrepareUpdateRemoteRepository" />
-    <bean id="releaser.svnMavenPrepareUpdateRemoteRepository" class="fr.paris.lutece.plugins.releaser.service.SvnMavenPrepareUpdateRemoteRepository" />
     <bean id="releaser.twitterService" class="fr.paris.lutece.plugins.releaser.service.TwitterService" />
     <bean id="releaser.jiraComponentService" class="fr.paris.lutece.plugins.releaser.service.JiraComponentService" />
-    
+    <bean id="releaser.cvs.svnResourceService" class="fr.paris.lutece.plugins.releaser.service.svn.SvnResourceService" />
+    <bean id="releaser.cvs.githubResourceService" class="fr.paris.lutece.plugins.releaser.service.github.GithubResourceService" />
+    <bean id="releaser.cvs.gitlabResourceService" class="fr.paris.lutece.plugins.releaser.service.gitlab.GitlabResourceService" />
+   
 
 </beans>
