@@ -269,7 +269,7 @@ public class ReleaserUtils
         RepositoryType[] tabCredentialType= RepositoryType.values();
     	for (int i = 0; i < tabCredentialType.length; i++) {
     	
-		if(request.getParameter(tabCredentialType[i]+"_account_login")!=null)
+		if(!StringUtils.isEmpty( request.getParameter(tabCredentialType[i]+"_account_login")))
             {
             	 user.addCredential(tabCredentialType[i], user.new Credential(request.getParameter(tabCredentialType[i]+"_account_login"), request.getParameter(tabCredentialType[i]+"_account_password")));
                   	

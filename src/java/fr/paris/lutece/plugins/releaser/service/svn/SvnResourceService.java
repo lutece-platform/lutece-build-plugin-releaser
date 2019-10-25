@@ -58,7 +58,7 @@ import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.service.ComponentService;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
-import fr.paris.lutece.plugins.releaser.util.IVCSSiteService;
+import fr.paris.lutece.plugins.releaser.util.IVCSResourceService;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.plugins.releaser.util.file.FileUtils;
 import fr.paris.lutece.plugins.releaser.util.svn.ReleaseSvnCheckoutClient;
@@ -74,7 +74,7 @@ import fr.paris.lutece.util.signrequest.RequestAuthenticator;
 /**
  * SvnSiteService
  */
-public class SvnResourceService implements IVCSSiteService
+public class SvnResourceService implements IVCSResourceService
 {
 
     /**

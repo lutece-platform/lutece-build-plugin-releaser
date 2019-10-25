@@ -59,7 +59,7 @@ import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.service.ComponentService;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
-import fr.paris.lutece.plugins.releaser.util.IVCSSiteService;
+import fr.paris.lutece.plugins.releaser.util.IVCSResourceService;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.plugins.releaser.util.file.FileUtils;
 import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
@@ -69,7 +69,7 @@ import fr.paris.lutece.portal.service.util.AppLogService;
 /**
  * SvnSiteService
  */
-public class GitResourceService implements IVCSSiteService
+public class GitResourceService implements IVCSResourceService
 {
 
     /**
@@ -86,20 +86,11 @@ public class GitResourceService implements IVCSSiteService
         CommandResult commandResult = new CommandResult( );
         WorkflowReleaseContext context=new WorkflowReleaseContext( );
         commandResult.setLog( new StringBuffer( ) );
+        context.setCommandResult( commandResult );
         context.setSite( site );
+        doCheckoutRepository( context, strGitLogin, strGitPwd );
+         strPom = FileUtils.readFile( ReleaserUtils.getLocalPomPath( context) );
 
-        
-        try
-        {
-
-            doCheckoutRepository( context, strGitLogin, strGitPwd );
-            strPom = FileUtils.readFile( ReleaserUtils.getLocalPomPath( context) );
-
-        }
-        catch( AppException e )
-        {
-            AppLogService.error( "Error fetching pom " + commandResult.getLog( ).toString( ), e );
-        }
         return strPom;
     }
 
@@ -200,6 +191,18 @@ public class GitResourceService implements IVCSSiteService
             }
 
         }
+        catch(AppException e)
+        {
+            
+    
+            if(  e.getCause( ) !=null && e.getCause( ) instanceof TransportException )
+            {
+                
+                ReleaserUtils.addTechnicalError( commandResult,ConstanteUtils.ERROR_TYPE_AUTHENTICATION_ERROR , e );
+            }
+            
+        }
+        
       
         finally
         {

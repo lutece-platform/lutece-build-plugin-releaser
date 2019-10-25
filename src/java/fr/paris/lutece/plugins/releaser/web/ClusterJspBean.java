@@ -40,6 +40,7 @@ import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.SiteHome;
 import fr.paris.lutece.plugins.releaser.service.SiteService;
+import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.portal.service.message.AdminMessage;
 import fr.paris.lutece.portal.service.message.AdminMessageService;
@@ -51,6 +52,8 @@ import fr.paris.lutece.util.url.UrlItem;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.StringUtils;
 
 /**
  * This class provides the user interface to manage Cluster features ( manage, create, modify, remove )
@@ -68,6 +71,8 @@ public class ClusterJspBean extends ManageSitesJspBean
     // Parameters
     private static final String PARAMETER_ID_CLUSTER = "id";
     private static final String PARAMETER_ID_SITE = "id";
+    private static final String PARAMETER_ERROR = "error";
+    
 
     // Properties for page titles
     private static final String PROPERTY_PAGE_TITLE_MANAGE_CLUSTERS = "releaser.manage_clusters.pageTitle";
@@ -84,11 +89,8 @@ public class ClusterJspBean extends ManageSitesJspBean
     private static final String MARK_CLUSTER = "cluster";
     private static final String MARK_CLUSTERS_LIST = "clusters_list";
     private static final String MARK_SITE = "site";
-    private static final String MARK_USER = "user";
+   
     private static final String MARK_IS_APPLICATION_ACCOUNT = "is_application_account";
-    private static final String MARK_REPO_TYPE_GITHUB = "repo_type_github";
-    private static final String MARK_REPO_TYPE_GITLAB = "repo_type_gitlab";
-    private static final String MARK_REPO_TYPE_SVN = "repo_type_svn";
     
     
     
@@ -155,11 +157,11 @@ public class ClusterJspBean extends ManageSitesJspBean
         _site = null;
         List<Cluster> listClusters = ClusterHome.getClustersList( );
         Map<String, Object> model = getPaginatedListModel( request, MARK_CLUSTER_LIST, listClusters, JSP_MANAGE_CLUSTERS );
-        model.put( MARK_USER, ReleaserUtils.getReleaserUser( request, getLocale( ) ));
+        model.put( ConstanteUtils.MARK_USER, ReleaserUtils.getReleaserUser( request, getLocale( ) ));
         model.put( MARK_IS_APPLICATION_ACCOUNT, ReleaserUtils.isApplicationAccountEnable( ));
-        model.put( MARK_REPO_TYPE_GITHUB,RepositoryType.GITHUB );
-        model.put( MARK_REPO_TYPE_GITLAB,RepositoryType.GITLAB );
-        model.put( MARK_REPO_TYPE_SVN,RepositoryType.SVN );
+        model.put( ConstanteUtils.MARK_REPO_TYPE_GITHUB,RepositoryType.GITHUB );
+        model.put( ConstanteUtils.MARK_REPO_TYPE_GITLAB,RepositoryType.GITLAB );
+        model.put( ConstanteUtils.MARK_REPO_TYPE_SVN,RepositoryType.SVN );
         
         
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_CLUSTERS, TEMPLATE_MANAGE_CLUSTERS, model );
@@ -225,7 +227,7 @@ public class ClusterJspBean extends ManageSitesJspBean
             
         }
         populate( user, request );
-        
+        ReleaserUtils.setReleaserUser( request, user );
 
         // Check constraints
         if ( !validateBean( user, VALIDATION_ATTRIBUTES_USER_PREFIX ) )
@@ -234,7 +236,7 @@ public class ClusterJspBean extends ManageSitesJspBean
             redirectView( request, VIEW_MANAGE_CLUSTERS );
         }
        
-        ReleaserUtils.setReleaserUser( request, user );
+        
         
         return redirect( request, JSP_MANAGE_COMPONENT );
     }
@@ -251,24 +253,25 @@ public class ClusterJspBean extends ManageSitesJspBean
     {
         ReleaserUser user=ReleaserUtils.getReleaserUser( request, getLocale( ) );
         String strIdSite=request.getParameter( PARAMETER_ID_SITE );
+        String strError=request.getParameter( PARAMETER_ERROR );
         if(user==null)
         {
             user=new ReleaserUser( );
             
         }
         ReleaserUtils.populateReleaserUser(request, user);
+        ReleaserUtils.setReleaserUser( request, user );
         
-
+        
         //  Check Authentication
-        if ( user ==null )
+        if ( user ==null || !StringUtils.isEmpty( strError ))
         {
-            
+            addError( strError );
             redirectView( request, VIEW_MANAGE_CLUSTERS );
         }
         
-        ReleaserUtils.setReleaserUser( request, user );
         
-        return redirect( request, JSP_MANAGE_SITE_RELEASE+"?id_site="+strIdSite );
+        return redirect( request, JSP_MANAGE_SITE_RELEASE+"?"+PARAMETER_ID_SITE+"="+strIdSite );
     }
 
     /**

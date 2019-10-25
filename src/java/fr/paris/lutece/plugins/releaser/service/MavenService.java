@@ -188,7 +188,7 @@ public class MavenService implements IMavenService
     {
         InvocationResult invocationResult = mvnExecute( strPathPom, MavenGoals.RELEASE_PERFORM.asList( ), commandResult );
         int nStatus = invocationResult.getExitCode( );
-
+       System.out.println( commandResult.getLog( ).toString( ) );
         if ( nStatus != 0 )
         {
             ReleaserUtils.addTechnicalError( commandResult, "Error during Release Perform exit code is: " + nStatus );

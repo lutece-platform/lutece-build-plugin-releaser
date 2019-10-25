@@ -44,7 +44,7 @@ import java.util.List;
 /**
  * This is the business class for the object Site
  */
-public class Site implements Serializable,IReleaserResource
+public class Site extends AbstractReleaserResource implements Serializable
 {
     private static final long serialVersionUID = 1L;
 

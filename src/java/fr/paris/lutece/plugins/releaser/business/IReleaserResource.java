@@ -10,36 +10,7 @@ public interface IReleaserResource
   
    String getTargetVersion();
     
-   default RepositoryType getRepoType()
-   {
-       
-       RepositoryType repositoryType=null;
-       if(!StringUtils.isEmpty( getScmUrl() ))
-       {
-           if(getScmUrl( ).endsWith( ".git"))
-           {
-               
-              if(getScmUrl().startsWith("https://github." ))
-              {
-                  repositoryType= RepositoryType.GITHUB;
-                  
-              }
-              else
-              {
-                  repositoryType= RepositoryType.GITLAB; 
-              }
-               
-           }
-           else
-           {
-               repositoryType= RepositoryType.SVN; 
-               
-           }
-           
-       }
-       return repositoryType;
-       
-   }
-
+   RepositoryType getRepoType();
+  
 
 }

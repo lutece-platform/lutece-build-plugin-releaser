@@ -1,6 +1,8 @@
 package fr.paris.lutece.plugins.releaser.business;
 
-public enum RepositoryType
+import java.io.Serializable;
+
+public enum RepositoryType implements Serializable
 {
     GITHUB, GITLAB, SVN
 }

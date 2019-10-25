@@ -3,14 +3,15 @@ package fr.paris.lutece.plugins.releaser.business;
 import java.io.Serializable;
 import java.util.HashMap;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.hibernate.validator.constraints.NotEmpty;
+import org.codehaus.jackson.annotate.JsonAutoDetect;
+import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 /**
  * 
  * Credentials used by releaser
  *
  */
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
 public class ReleaserUser implements Serializable 
 {
 

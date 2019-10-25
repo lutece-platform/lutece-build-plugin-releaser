@@ -5,7 +5,7 @@ import java.util.Locale;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 
-public interface IVCSSiteService
+public interface IVCSResourceService
 {
 
     

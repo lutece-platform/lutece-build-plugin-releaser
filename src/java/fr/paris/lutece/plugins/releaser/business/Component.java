@@ -44,7 +44,7 @@ import fr.paris.lutece.portal.service.i18n.I18nService;
 /**
  * This is the business class for the object Component
  */
-public class Component implements IReleaserResource
+public class Component extends AbstractReleaserResource
 {
     // Variables declarations
     private String _strArtifactId;

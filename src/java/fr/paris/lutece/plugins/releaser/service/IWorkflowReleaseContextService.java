@@ -29,7 +29,7 @@ public interface IWorkflowReleaseContextService
     
     void checkoutRepository( WorkflowReleaseContext context, Locale locale );
     
-    void gitMerge( WorkflowReleaseContext context, Locale locale );
+    void mergeDevelopMaster( WorkflowReleaseContext context, Locale locale );
     
     
     void releasePrepareComponent( WorkflowReleaseContext context, Locale locale );

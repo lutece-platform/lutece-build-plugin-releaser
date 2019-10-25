@@ -34,6 +34,8 @@
 package fr.paris.lutece.plugins.releaser.web;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
+import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
+import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.service.SiteService;
@@ -42,6 +44,7 @@ import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.template.AppTemplateService;
+import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.util.mvc.admin.MVCAdminJspBean;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
@@ -66,8 +69,8 @@ import org.apache.commons.lang.StringUtils;
 public class ManageSiteReleaseJspBean extends MVCAdminJspBean
 {
     // Parameters
-    private static final String PARAMETER_SITE_ID = "id_site";
-    private static final String PARAMETER_ARTIFACT_ID = "artifact_id";
+    private static final String PARAMETER_SITE_ID = "id";
+    private static final String PARAMETER_ARTIFACT_ID = "id";
     private static final String PARAMETER_ID_CONTEXT = "id_context";
     private static final String PARAMETER_TAG_INFORMATION = "tag_information";
     private static final String PARAMETER_OPEN_SITE_VERSION = "open_site_version";
@@ -87,6 +90,7 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     private static final String ACTION_RELEASE_SITE = "releaseSite";
     private static final String ACTION_DO_CONFIRM_RELEASE_SITE = "doConfirmReleaseSite";
 
+    
     private static final String ACTION_RELEASE_COMPONENT = "releaseComponent";
     private static final String ACTION_UPGRADE_COMPONENT = "upgradeComponent";
     private static final String ACTION_DOWNGRADE_COMPONENT = "downgradeComponent";
@@ -138,19 +142,32 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
                 int nSiteId = 0;
                 nSiteId = Integer.parseInt( strSiteId );
                 _site = SiteService.getSite( nSiteId, request, getLocale( ) );
+                SiteService.buildComments( _site, getLocale( ) );
             }
             catch( NumberFormatException e )
             {
                 return redirect( request, JSP_MANAGE_CLUSTERS );
             }
+            catch (AppException e) {
+              
+                  return redirect( request, JSP_MANAGE_CLUSTERS+"?action=releaseSite&error="+e.getMessage( )  );
+               
+            }
         }
-
+      
         
         
-        SiteService.buildComments( _site, getLocale( ) );
+        
+       
         Map<String, Object> model = getModel( );
         model.put( MARK_SITE, _site );
         model.put( MARK_OPEN_SITE_VERSION, request.getParameter( PARAMETER_OPEN_SITE_VERSION ) );
+        model.put( ConstanteUtils.MARK_REPO_TYPE_GITHUB,RepositoryType.GITHUB );
+        model.put( ConstanteUtils.MARK_REPO_TYPE_GITLAB,RepositoryType.GITLAB );
+        model.put( ConstanteUtils.MARK_REPO_TYPE_SVN,RepositoryType.SVN );
+        model.put( ConstanteUtils.MARK_USER, ReleaserUtils.getReleaserUser( request, getLocale( ) ));
+        
+        
         HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_PREPARE_SITE_RELEASE, getLocale( ), model );
         return template.getHtml( );
     }
@@ -179,10 +196,23 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
 
         Map<String, Object> model = getModel( );
         
-
+        if( _site.getRepoType( ).equals( RepositoryType.GITHUB  ) ||  _site.getComponents( ).stream( ).anyMatch( x -> x.shouldBeReleased( ) && x.getRepoType( ).equals( RepositoryType.GITHUB ) ))
+        {  
+             model.put( ConstanteUtils.MARK_REPO_TYPE_GITHUB,RepositoryType.GITHUB );
+        }
+        if(_site.getRepoType( ).equals( RepositoryType.GITLAB  ) ||_site.getComponents( ).stream( ).anyMatch( x -> x.shouldBeReleased( ) && x.getRepoType( ).equals( RepositoryType.GITLAB ) ))
+        {  
+             model.put( ConstanteUtils.MARK_REPO_TYPE_GITLAB,RepositoryType.GITLAB );
+        }
+        if( _site.getRepoType( ).equals( RepositoryType.SVN  ) || _site.getComponents( ).stream( ).anyMatch( x -> x.shouldBeReleased( ) && x.getRepoType( ).equals( RepositoryType.SVN ) ))
+        {  
+             model.put( ConstanteUtils.MARK_REPO_TYPE_SVN,RepositoryType.SVN );
+        }
+        
+       
         model.put( MARK_SITE, _site );
         model.put( MARK_MODIF_VALIDATED, _modifValidated );
-        
+        model.put( ConstanteUtils.MARK_USER, ReleaserUtils.getReleaserUser( request, getLocale( ) ));
       
         HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_CONFIRM_RELEASE_SITE, getLocale( ), model );
 
@@ -283,6 +313,14 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     {
         String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
         AbstractJsonResponse jsonResponse = null;
+        ReleaserUser user=ReleaserUtils.getReleaserUser( request, getLocale( ) );
+        if(user==null)
+        {
+            user=new ReleaserUser( );
+           
+        }
+        ReleaserUtils.populateReleaserUser(request, user);
+        ReleaserUtils.setReleaserUser( request, user );
         Integer nidContext = SiteService.releaseComponent( _site, strArtifactId, getLocale( ), getUser( ), request );
         jsonResponse = new JsonResponse( nidContext );
         if ( ReleaserUtils.getReleaserUser( request, getLocale( ) ) == null )
@@ -297,10 +335,14 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     public String doConfirmReleaseSite( HttpServletRequest request )
     {
 
-        if ( ReleaserUtils.getReleaserUser( request, getLocale( ) ) == null )
+        ReleaserUser user=ReleaserUtils.getReleaserUser( request, getLocale( ) );
+        if(user==null)
         {
-            return redirect( request, JSP_MANAGE_CLUSTERS );
+            user=new ReleaserUser( );
+           
         }
+        ReleaserUtils.populateReleaserUser(request, user);
+        ReleaserUtils.setReleaserUser( request, user );
 
         String strCheckedReleaseInfo = null;
         String strTweetMessage = null;

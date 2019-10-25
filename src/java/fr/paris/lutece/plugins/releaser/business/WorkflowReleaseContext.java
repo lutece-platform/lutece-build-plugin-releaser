@@ -1,13 +1,12 @@
 package fr.paris.lutece.plugins.releaser.business;
 
 import java.io.Serializable;
-import java.util.Date;
 
-import fr.paris.lutece.plugins.releaser.business.Component;
-import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
-import fr.paris.lutece.plugins.releaser.business.Site;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
-
+@JsonIgnoreProperties({"releaserUser"})
 public class WorkflowReleaseContext implements Serializable
 {
 
@@ -18,6 +17,7 @@ public class WorkflowReleaseContext implements Serializable
     private Component _component;
     private Site _site;
     private CommandResult _commandResult;
+    @JsonIgnore
     private ReleaserUser _releaserUser;
     private String _strRefBranchRelease;
     private String _strRefBranchDev;
@@ -74,12 +74,13 @@ public class WorkflowReleaseContext implements Serializable
     {
         return _component==null && _site!=null;
     }
-
+    
+    @JsonIgnore
     public ReleaserUser getReleaserUser( )
     {
         return _releaserUser;
     }
-
+    @JsonIgnore
     public void setReleaserUser( ReleaserUser _releaserUser )
     {
         this._releaserUser = _releaserUser;

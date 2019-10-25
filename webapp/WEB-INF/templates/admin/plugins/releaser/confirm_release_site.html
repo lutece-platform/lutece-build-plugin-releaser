@@ -1,4 +1,5 @@
 <!-- TO REMOVE WHEN feature_frameset.html will be correctly added to this template -->
+<#include "releaser_util.html" />
 <section class="content-header">
     <h1>
         <a href="jsp/admin/plugins/releaser/ManageClusters.jsp" title="#i18n{releaser.adminFeature.ManageReleaser.name}">#i18n{releaser.adminFeature.ManageReleaser.name}</a>
@@ -10,8 +11,23 @@
 	<div class="row app-wrapper app-cluster">
 	<@messages errors=errors />
 	<!-- EN TO REMOVE -->
-	<@tform name='release_site' class='form' action='jsp/admin/plugins/releaser/ManageSiteRelease.jsp'>
-		<button type="submit" class="floating-button btn-release-site-bg" name="action_doConfirmReleaseSite" title="Valider les choix et releaser">
+	<@tform name='release_site' class='form' action='jsp/admin/plugins/releaser/ManageSiteRelease.jsp' id='release_site'>
+	
+	<input type="hidden" name="action" value="doConfirmReleaseSite">
+		
+	<input type="hidden" name="GITLAB_account_login"  id="releaseSite_GITLAB_account_login" value="">
+	<input type="hidden" name="GITLAB_account_password" id="releaseSite_GITLAB_account_password"  value="">
+	<input type="hidden" name="GITHUB_account_login"  id="releaseSite_GITHUB_account_login" value="">
+	<input type="hidden" name="GITHUB_account_password" id="releaseSite_GITHUB_account_password"  value="">
+	<input type="hidden" name="SVN_account_login"  id="releaseSite_SVN_account_login" value="">
+	<input type="hidden" name="SVN_account_password" id="releaseSite_SVN_account_password"  value="">
+		
+		
+		
+		
+		
+		
+		<button id="submit_release_site" type="submit" class="floating-button btn-release-site-bg" name="action_doConfirmReleaseSite" title="Valider les choix et releaser">
 			<i class="fa fa-check"></i>
 		</button>
 		<div class="col-md-12 col-sm-12 col-xs-12">
@@ -146,6 +162,8 @@
 	</div>
 </div>
 </section>
+<@modalAuthMulti modId="modalReleaseSiteAuth" typeGithub=repo_type_github!'' typeGitlab=repo_type_gitlab!'' typeSvn=repo_type_svn!'' formActionUrl="jsp/admin/plugins/releaser/ManageSiteRelease.jsp" formSubmitName="action_doConfirmReleaseSite" modClass="confirmReleaseSite"   />
+
 <link href="js/jquery/plugins/toastr/toastr.min.css" rel="stylesheet">
 <script src="js/jquery/plugins/toastr/toastr.min.js"></script>
 <script src="js/plugins/releaser/releaser.js" type="text/javascript"></script>       
@@ -158,5 +176,37 @@ $(function() {
 		$("#messages_errors_div").toggle();
 		toastr["error"]("<strong>Toutes les informations de release n'ont pas &eacute;t&eacute; valid&eacute;es</strong>", "Erreur");
 	}
+	$("#submit_release_site").click(function( e )
+	 {  
+	    e.preventDefault();
+		$("#modalReleaseSiteAuth").modal();  
+	  });
+	
+	
+	
+	
+	 $( ".confirmReleaseSite form" ).submit(function( e )
+		{	
+	     
+	     e.preventDefault();
+		  
+	     $("#GITLAB_account_login").length?$("#releaseSite_GITLAB_account_login").val($("#GITLAB_account_login").val()):$("#releaseSite_GITLAB_account_login").val("");
+	     $("#GITLAB_account_password").length?$("#releaseSite_GITLAB_account_password").val($("#GITLAB_account_password").val()):$("#releaseSite_GITLAB_account_password").val("");
+	     $("#GITHUB_account_login").length?$("#releaseSite_GITHUB_account_login").val($("#GITHUB_account_login").val()):$("#releaseSite_GITHUB_account_login").val("");
+	     $("#GITHUB_account_password").length?$("#releaseSite_GITHUB_account_password").val($("#GITHUB_account_password").val()):$("#releaseSite_GITHUB_account_password").val("");
+	     $("#SVN_account_login").length?$("#releaseSite_SVN_account_login").val($("#SVN_account_login").val()):$("#releaseSite_SVN_account_login").val("");
+	     $("#SVN_account_password").length?$("#releaseSite_SVN_account_password").val($("#SVN_account_password").val()):$("#releaseSite_SVN_account_password").val("");
+	     
+	     $("#release_site").submit();	     	 
+	    
+	    	}
+	    
+		        );
+	
+	
+	   
+	
+ 
+	
 });	
 </script>		

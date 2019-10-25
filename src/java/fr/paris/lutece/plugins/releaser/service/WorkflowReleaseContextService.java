@@ -24,11 +24,12 @@ import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
+import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.util.CVSFactoryService;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
-import fr.paris.lutece.plugins.releaser.util.IVCSSiteService;
+import fr.paris.lutece.plugins.releaser.util.IVCSResourceService;
 import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
 import fr.paris.lutece.plugins.releaser.util.PluginUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
@@ -162,15 +163,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         else
         {
 
-            if ( ComponentService.getService( ).isGitComponent( context.getComponent( ) ) )
-            {
-                nIdWorkflow = AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_ID_WORKFLOW_GIT_COMPONENT, ConstanteUtils.CONSTANTE_ID_NULL );
-            }
-            else
-            {
-                nIdWorkflow = AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_ID_WORKFLOW_SVN_COMPONENT, ConstanteUtils.CONSTANTE_ID_NULL );
-            }
-        }
+                nIdWorkflow = AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_ID_WORKFLOW_COMPONENT, ConstanteUtils.CONSTANTE_ID_NULL );
+         }
 
         return nIdWorkflow;
     }
@@ -187,96 +181,100 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         return _singleton;
     }
 
-    public void gitMerge( WorkflowReleaseContext context, Locale locale )
+    public void mergeDevelopMaster( WorkflowReleaseContext context, Locale locale )
     {
 
-        FileRepository fLocalRepo = null;
-        CommandResult commandResult = context.getCommandResult( );
-        String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
-        String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
-
-        ReleaserUtils.logStartAction( context, " Merge DEVELOP/MASTER" );
-
-        String strLocalComponentPath = ReleaserUtils.getLocalPath( context );
-        Git git = null;
-        try
+        
+        if(!context.getReleaserResource( ).getRepoType( ).equals( RepositoryType.SVN ))
         {
-
-            fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
-            git = new Git( fLocalRepo );
-            commandResult.getLog( ).append( "Checking if local repository " + strLocalComponentPath + " exist\n" );
-            if ( !fLocalRepo.getDirectory( ).exists( ) )
+            FileRepository fLocalRepo = null;
+            CommandResult commandResult = context.getCommandResult( );
+            String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
+            String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
+    
+            ReleaserUtils.logStartAction( context, " Merge DEVELOP/MASTER" );
+    
+            String strLocalComponentPath = ReleaserUtils.getLocalPath( context );
+            Git git = null;
+            try
             {
-
-                ReleaserUtils.addTechnicalError( commandResult, "the local repository does not exist" );
-
-            }
-            else
-            {
-                commandResult.getLog( ).append( "Checkout branch \"" + GitUtils.MASTER_BRANCH + "\" ...\n" );
-                GitUtils.checkoutRepoBranch( git, GitUtils.MASTER_BRANCH, commandResult );
-                commandResult.getLog( ).append( "Checkout successfull\n" );
-                // PROGRESS 15%
-                commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
-
-                commandResult.getLog( ).append( "Going to merge '" + GitUtils.DEVELOP_BRANCH + "' branch on 'master' branch...\n" );
-                MergeResult mergeResult = GitUtils.mergeRepoBranch( git, GitUtils.DEVELOP_BRANCH );
-                if ( mergeResult.getMergeStatus( ).equals( MergeResult.MergeStatus.CHECKOUT_CONFLICT )
-                        || mergeResult.getMergeStatus( ).equals( MergeResult.MergeStatus.CONFLICTING )
-                        || mergeResult.getMergeStatus( ).equals( MergeResult.MergeStatus.FAILED )
-                        || mergeResult.getMergeStatus( ).equals( MergeResult.MergeStatus.NOT_SUPPORTED ) )
+    
+                fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
+                git = new Git( fLocalRepo );
+                commandResult.getLog( ).append( "Checking if local repository " + strLocalComponentPath + " exist\n" );
+                if ( !fLocalRepo.getDirectory( ).exists( ) )
                 {
-                    ReleaserUtils.addTechnicalError( commandResult, "An error appear during merge operation, the status of merge result is: "
-                            + mergeResult.getMergeStatus( ).toString( ) + "\nPlease merge manually before releasing." );
-
+    
+                    ReleaserUtils.addTechnicalError( commandResult, "the local repository does not exist" );
+    
                 }
                 else
                 {
-                    git.push( ).setCredentialsProvider( new UsernamePasswordCredentialsProvider( strLogin, strPassword ) ).call( );
-                    commandResult.getLog( ).append( mergeResult.getMergeStatus( ) );
+                    commandResult.getLog( ).append( "Checkout branch \"" + GitUtils.MASTER_BRANCH + "\" ...\n" );
+                    GitUtils.checkoutRepoBranch( git, GitUtils.MASTER_BRANCH, commandResult );
+                    commandResult.getLog( ).append( "Checkout successfull\n" );
+                    // PROGRESS 15%
+                    commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
+    
+                    commandResult.getLog( ).append( "Going to merge '" + GitUtils.DEVELOP_BRANCH + "' branch on 'master' branch...\n" );
+                    MergeResult mergeResult = GitUtils.mergeRepoBranch( git, GitUtils.DEVELOP_BRANCH );
+                    if ( mergeResult.getMergeStatus( ).equals( MergeResult.MergeStatus.CHECKOUT_CONFLICT )
+                            || mergeResult.getMergeStatus( ).equals( MergeResult.MergeStatus.CONFLICTING )
+                            || mergeResult.getMergeStatus( ).equals( MergeResult.MergeStatus.FAILED )
+                            || mergeResult.getMergeStatus( ).equals( MergeResult.MergeStatus.NOT_SUPPORTED ) )
+                    {
+                        ReleaserUtils.addTechnicalError( commandResult, "An error appear during merge operation, the status of merge result is: "
+                                + mergeResult.getMergeStatus( ).toString( ) + "\nPlease merge manually before releasing." );
+    
+                    }
+                    else
+                    {
+                        git.push( ).setCredentialsProvider( new UsernamePasswordCredentialsProvider( strLogin, strPassword ) ).call( );
+                        commandResult.getLog( ).append( mergeResult.getMergeStatus( ) );
+                    }
+                    ReleaserUtils.logEndAction( context, " Merge DEVELOP/MASTER" );
+                    // PROGRESS 25%
+                    commandResult.setProgressValue( commandResult.getProgressValue( ) + 10 );
+    
                 }
-                ReleaserUtils.logEndAction( context, " Merge DEVELOP/MASTER" );
-                // PROGRESS 25%
-                commandResult.setProgressValue( commandResult.getProgressValue( ) + 10 );
-
+    
             }
-
-        }
-        catch( InvalidRemoteException e )
-        {
-
-            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
-
-        }
-        catch( TransportException e )
-        {
-            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
-
-        }
-        catch( IOException e )
-        {
-            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
-        }
-        catch( GitAPIException e )
-        {
-            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
-        }
-        finally
-        {
-
-            if ( fLocalRepo != null )
+            catch( InvalidRemoteException e )
             {
-
-                fLocalRepo.close( );
-
+    
+                ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+    
             }
-            if ( git != null )
+            catch( TransportException e )
             {
-
-                git.close( );
-
+                ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+    
             }
-
+            catch( IOException e )
+            {
+                ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+            }
+            catch( GitAPIException e )
+            {
+                ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+            }
+            finally
+            {
+    
+                if ( fLocalRepo != null )
+                {
+    
+                    fLocalRepo.close( );
+    
+                }
+                if ( git != null )
+                {
+    
+                    git.close( );
+    
+                }
+    
+            }
         }
     }
 
@@ -285,7 +283,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         String strComponentName = context.getComponent( ).getName( );
         String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
         String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
-        IVCSSiteService cvsService = CVSFactoryService.getService( context.getComponent( ).getRepoType( ) );
+        IVCSResourceService cvsService = CVSFactoryService.getService( context.getComponent( ).getRepoType( ) );
 
         try
         {
@@ -426,7 +424,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         CommandResult commandResult = context.getCommandResult( );
         String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
         String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
-        IVCSSiteService cvsService = CVSFactoryService.getService( context.getComponent( ).getRepoType( ) );
+        IVCSResourceService cvsService = CVSFactoryService.getService( context.getComponent( ).getRepoType( ) );
 
         ReleaserUtils.logStartAction( context, " Release Perform" );
 
@@ -438,7 +436,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         try
         {
 
-            MavenService.getService( ).mvnReleasePerform( strLocalComponentPath, strLogin, strPassword, commandResult );
+            
+           MavenService.getService( ).mvnReleasePerform( strLocalComponentPath, strLogin, strPassword, commandResult );
 
         }
         catch( AppException ex )
@@ -467,7 +466,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     public void releasePrepareSite( WorkflowReleaseContext context, Locale locale )
     {
 
-        IVCSSiteService cvsService = CVSFactoryService.getService( context.getSite( ).getRepoType( ) );
+        IVCSResourceService cvsService = CVSFactoryService.getService( context.getSite( ).getRepoType( ) );
         String strLogin = context.getReleaserUser( ).getCredential( context.getSite( ).getRepoType( ) ).getLogin( );
         String strPassword = context.getReleaserUser( ).getCredential( context.getSite( ).getRepoType( ) ).getPassword( );
         String strSitePomLocalBasePath = ReleaserUtils.getLocalPomPath( context );
@@ -593,7 +592,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         CommandResult commandResult = context.getCommandResult( );
         String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
         String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
-        IVCSSiteService cvsService = CVSFactoryService.getService( context.getComponent( ).getRepoType( ) );
+        IVCSResourceService cvsService = CVSFactoryService.getService( context.getComponent( ).getRepoType( ) );
 
         if ( context.getSite( ).isTheme( ) )
         {

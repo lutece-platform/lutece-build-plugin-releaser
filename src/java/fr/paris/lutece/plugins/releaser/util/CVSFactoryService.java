@@ -5,9 +5,9 @@ import fr.paris.lutece.portal.service.spring.SpringContextService;
 
 public class CVSFactoryService
 {
-   private static IVCSSiteService _svnService;
-   private  static IVCSSiteService _gitlabService;
-   private  static IVCSSiteService _githubService;
+   private static IVCSResourceService _svnService;
+   private  static IVCSResourceService _gitlabService;
+   private  static IVCSResourceService _githubService;
    
    
    
@@ -28,7 +28,7 @@ public class CVSFactoryService
    }
    
    
-  public static IVCSSiteService getService(RepositoryType repositoryType)
+  public static IVCSResourceService getService(RepositoryType repositoryType)
    {
        
        if(_svnService ==null || _gitlabService==null || _githubService==null)

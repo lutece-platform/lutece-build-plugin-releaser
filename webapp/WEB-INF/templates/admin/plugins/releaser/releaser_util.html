@@ -1,0 +1,74 @@
+<#macro modalAuth  modId  type formActionUrl formSubmitName modClass='' > 
+	<div class="modal fade ${modClass}" id="${modId}" tabindex="-1" role="dialog" aria-labelledby="modalReleaseLabel">
+    <div class="modal-dialog vlogin" role="document">
+        <@tform name='release' class='form' action='${formActionUrl}'>
+        <input type="hidden" name="id" value="" class="form-control release-id">
+        <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="modalReleaseLabel"><i class="fa fa-address-card-o"></i> Information d'authentification </h4>
+        </div>
+        <div class="modal-body">
+            <@formAuthCredential type=type />
+        </div>
+        <div class="modal-footer">
+           <button type="submit" class="button transition small fill-blue" name="${formSubmitName}">Ok</button>
+           <button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Fermer</button>
+        </div>
+        </div>
+    </@tform>
+    </div>
+</div>
+
+</#macro>
+
+
+<#macro modalAuthMulti  modId  typeGithub  typeGitlab typeSvn  formActionUrl formSubmitName modClass='' > 
+	<div class="modal fade ${modClass}" id="${modId}" tabindex="-1" role="dialog" aria-labelledby="modalReleaseLabel">
+    <div class="modal-dialog vlogin" role="document">
+        <@tform name='release' class='form' action='${formActionUrl}'>
+        <input type="hidden" name="id" value="" class="form-control release-id">
+        <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="modalReleaseLabel"><i class="fa fa-address-card-o"></i> Information d'authentification </h4>
+        </div>
+          <div class="modal-body">
+	           <#if typeGithub?has_content>
+	    			<@formAuthCredential type=typeGithub />
+	           </#if>
+	            <#if typeGitlab?has_content>
+	    			<@formAuthCredential type=typeGitlab />
+	           </#if>  
+	          <#if typeSvn?has_content>
+	    			<@formAuthCredential type=typeSvn />
+	           </#if>  
+	       </div>
+	        
+	   
+        <div class="modal-footer">
+           <button type="submit" class="button transition small fill-blue" name="${formSubmitName}">Ok</button>
+           <button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Fermer</button>
+        </div>
+        </div>
+    </@tform>
+    </div>
+</div>
+</#macro>
+
+
+<#macro formAuthCredential type >
+	 <fieldset>
+                <legend><i class="fa fa-handshake-o"></i> #i18n{releaser.manage_clusters.modalAuthLegend${type.name()}}</legend>
+                <blockquote>
+                <div class="form-group">
+                    <label for="${type.name()}_account_login">#i18n{releaser.manage_clusters.modalAuthLoginTitle${type.name()}}</label>
+                    <input type="text" name="${type.name()}_account_login" id="${type.name()}_account_login" value="${(user.getCredential(type).login)!}" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="${type.name()}_account_password">#i18n{releaser.manage_clusters.modalAuthPasswordTitle${type.name()}}</label>
+                    <input type="password" name="${type.name()}_account_password" id="${type.name()}_account_password" value="${(user.getCredential(type).password)!}" class="form-control" required>
+                </div>
+                </blockquote>
+	 </fieldset>
+</#macro>

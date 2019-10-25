@@ -2,7 +2,11 @@ package fr.paris.lutece.plugins.releaser.util;
 
 public class ConstanteUtils
 {
+    
+    
     public static final int CONSTANTE_ID_NULL = -1;
+    public static final String ERROR_TYPE_AUTHENTICATION_ERROR = "AUTHENTICATION_ERROR";
+    
     public static final String CONSTANTE_SEPARATOR_SLASH = "/";
     public static final String CONSTANTE_TAGS = "tags";
     public static final String CONSTANTE_TRUNK = "trunk";
@@ -36,8 +40,7 @@ public class ConstanteUtils
     public static final String BEAN_TWITTER_SERVICE= "releaser.twitterService";
     
     
-    public static final String PROPERTY_ID_WORKFLOW_GIT_COMPONENT="releaser.idWorkflowGitComponent";
-    public static final String PROPERTY_ID_WORKFLOW_SVN_COMPONENT="releaser.idWorkflowSvnComponent";
+    public static final String PROPERTY_ID_WORKFLOW_COMPONENT="releaser.idWorkflowComponent";
     public static final String PROPERTY_ID_WORKFLOW_LUTECE_SITE="releaser.idWorkflowLuteceSite";
     
     public static final String PROPERTY_LOCAL_SITE_BASE_PAH = "releaser.localSiteBasePath";
@@ -75,7 +78,14 @@ public class ConstanteUtils
     public static final String CONSTANTE_GITHUB_ORG_LUTECE_SECTEUR_PUBLIC="lutece-secteur-public";
     public static final String CONSTANTE_GITHUB_ORG_LUTECE_PLATFORM="lutece-platform";
     
+    public static final String MARK_REPO_TYPE_GITHUB = "repo_type_github";
+    public static final String MARK_REPO_TYPE_GITLAB = "repo_type_gitlab";
+    public static final String MARK_REPO_TYPE_SVN = "repo_type_svn";
+    public static final String MARK_USER = "user";
+   
+    public static final String PARAMETER_ACTION = "action";
     
+   
  
     
     

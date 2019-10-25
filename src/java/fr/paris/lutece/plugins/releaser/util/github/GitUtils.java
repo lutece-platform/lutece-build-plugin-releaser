@@ -67,6 +67,7 @@ public class GitUtils  {
 		
 		CloneCommand clone = Git.cloneRepository().setCredentialsProvider(new UsernamePasswordCredentialsProvider(strUserName, strPassword)).setBare(false).setCloneAllBranches(true).setDirectory(fGitDir).setURI(getRepoUrl( sRepoURL ));
 		
+		
 		git=clone.call( );
 		
 		repository = builder.setGitDir(fGitDir).readEnvironment().findGitDir().build();
@@ -92,14 +93,16 @@ public class GitUtils  {
             ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
         }
         catch( GitAPIException e )
-        {
-            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+	    {
+            
+          ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
         }
         finally
         {
-           
-            repository.close();
-            
+           if(repository!=null)
+           {
+               repository.close();
+           }
          }
 		return git;
 		

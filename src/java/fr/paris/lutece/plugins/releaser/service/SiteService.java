@@ -92,15 +92,20 @@ public class SiteService
         Site site = SiteHome.findByPrimaryKey( nSiteId );
         String strPom=null;
         ReleaserUser user=ReleaserUtils.getReleaserUser( request, locale );
-        Credential credential=user.getCredential( site.getRepoType( ) );  
-        strPom = CVSFactoryService.getService( site.getRepoType( ) ).fetchPom( site ,credential.getLogin( ),credential.getPassword( ));
+        
+        if(user!=null)
+        {
+            Credential credential=user.getCredential( site.getRepoType( ) );  
+        
+            strPom = CVSFactoryService.getService( site.getRepoType( ) ).fetchPom( site ,credential.getLogin( ),credential.getPassword( ));
                   
         
-        if ( strPom != null )
-        {
-            PomParser parser = new PomParser( );
-            parser.parse( site, strPom );
-            initSite( site,request,locale );
+            if ( strPom != null )
+            {
+                PomParser parser = new PomParser( );
+                parser.parse( site, strPom );
+                initSite( site,request,locale );
+            }
         }
         return site;
     }
