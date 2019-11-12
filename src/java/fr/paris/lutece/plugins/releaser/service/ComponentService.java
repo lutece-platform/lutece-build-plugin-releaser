@@ -84,13 +84,15 @@ public class ComponentService implements IComponentService
     private static final String URL_COMPONENT_WEBSERVICE = AppPropertiesService.getProperty( PROPERTY_COMPONENT_WEBSERVICE );
     private static final String FIELD_COMPONENT = "component";
     private static final String FIELD_VERSION = "version";
-    private static final String FIELD_SNAPSHOT_VERSION = "snapshot_version";
+    private static final String FIELD_SNAPSHOT_VERSION = "snapshotVersion";
+    private static final String FIELD_ATTRIBUTES = "attributes";
+    
 
-    private static final String FIELD_JIRA_CODE = "jira_code";
-    private static final String FIELD_ROADMAP_URL = "jira_roadmap_url";
-    private static final String FIELD_CLOSED_ISSUES = "jira_current_version_closed_issues";
-    private static final String FIELD_OPENED_ISSUES = "jira_current_version_opened_issues";
-    private static final String FIELD_SCM_DEVELOPER_CONNECTION = "scm_developer_connection";
+    private static final String FIELD_JIRA_CODE = "jiraKey";
+    private static final String FIELD_ROADMAP_URL = "jiraRoadmapUrl";
+    private static final String FIELD_CLOSED_ISSUES = "jiraFixedIssuesCount";
+    private static final String FIELD_OPENED_ISSUES = "jiraUnresolvedIssuesCount";
+    private static final String FIELD_SCM_DEVELOPER_CONNECTION = "scmDeveloperConnection";
     private static final String RELEASE_NOT_FOUND="Release not found";
     
     private static IComponentService _instance;
@@ -130,15 +132,23 @@ public class ComponentService implements IComponentService
                     {
                         component.setLastAvailableVersion( nodeComponent.get( FIELD_VERSION ).asText( ) );
                     }
-                    component.setLastAvailableSnapshotVersion( nodeComponent.get( FIELD_SNAPSHOT_VERSION ).asText( ) );
-                    component.setJiraCode( nodeComponent.get( FIELD_JIRA_CODE ).asText( ) );
-                    component.setJiraRoadmapUrl( nodeComponent.get( FIELD_ROADMAP_URL ).asText( ) );
-                    component.setJiraCurrentVersionOpenedIssues( nodeComponent.get( FIELD_OPENED_ISSUES ).asInt( ) );
-                    component.setJiraCurrentVersionClosedIssues( nodeComponent.get( FIELD_CLOSED_ISSUES ).asInt( ) );
-                    String strScmDeveloperConnection = nodeComponent.get( FIELD_SCM_DEVELOPER_CONNECTION ).asText( );
-                    if ( !StringUtils.isEmpty( strScmDeveloperConnection ) && !strScmDeveloperConnection.equals( "null" ) )
+                    
+                    JsonNode jnSnapshoteVersion=nodeComponent.get(FIELD_ATTRIBUTES).get( FIELD_SNAPSHOT_VERSION );
+                    JsonNode jnJiraCode=nodeComponent.get(FIELD_ATTRIBUTES).get( FIELD_JIRA_CODE );
+                    JsonNode jnJiraRoadMap=nodeComponent.get(FIELD_ATTRIBUTES).get( FIELD_ROADMAP_URL );
+                    JsonNode jnJiraCurrentVersionOpenedIssues=nodeComponent.get(FIELD_ATTRIBUTES).get( FIELD_OPENED_ISSUES );
+                    JsonNode jnJiraCurrentVersionClosedIssues=nodeComponent.get(FIELD_ATTRIBUTES).get( FIELD_CLOSED_ISSUES );
+                    JsonNode jnScmDeveloperConnection=nodeComponent.get(FIELD_ATTRIBUTES).get( FIELD_SCM_DEVELOPER_CONNECTION );
+                    
+                    component.setLastAvailableSnapshotVersion( jnSnapshoteVersion!=null?jnSnapshoteVersion.asText( ):null );
+                    component.setJiraCode( jnJiraCode!=null?jnJiraCode.asText( ):null );
+                    component.setJiraRoadmapUrl(jnJiraRoadMap!=null?jnJiraRoadMap.asText( ):null );
+                    component.setJiraCurrentVersionOpenedIssues( jnJiraCurrentVersionOpenedIssues!=null?jnJiraCurrentVersionOpenedIssues.asInt( ):null );
+                    component.setJiraCurrentVersionClosedIssues( jnJiraCurrentVersionClosedIssues!=null?jnJiraCurrentVersionClosedIssues.asInt( ):null);
+                    
+                    if ( jnScmDeveloperConnection !=null && !StringUtils.isEmpty( jnScmDeveloperConnection.asText( ) ) && !jnScmDeveloperConnection.asText( ).equals( "null" ) )
                     {
-                        component.setScmDeveloperConnection( strScmDeveloperConnection );
+                        component.setScmDeveloperConnection( jnScmDeveloperConnection.asText( ) );
                     }
                 }
             }
