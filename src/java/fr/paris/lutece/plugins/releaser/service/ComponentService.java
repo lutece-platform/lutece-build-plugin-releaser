@@ -143,8 +143,8 @@ public class ComponentService implements IComponentService
                     component.setLastAvailableSnapshotVersion( jnSnapshoteVersion!=null?jnSnapshoteVersion.asText( ):null );
                     component.setJiraCode( jnJiraCode!=null?jnJiraCode.asText( ):null );
                     component.setJiraRoadmapUrl(jnJiraRoadMap!=null?jnJiraRoadMap.asText( ):null );
-                    component.setJiraCurrentVersionOpenedIssues( jnJiraCurrentVersionOpenedIssues!=null?jnJiraCurrentVersionOpenedIssues.asInt( ):null );
-                    component.setJiraCurrentVersionClosedIssues( jnJiraCurrentVersionClosedIssues!=null?jnJiraCurrentVersionClosedIssues.asInt( ):null);
+                    component.setJiraCurrentVersionOpenedIssues( jnJiraCurrentVersionOpenedIssues!=null?jnJiraCurrentVersionOpenedIssues.asInt( ):0 );
+                    component.setJiraCurrentVersionClosedIssues( jnJiraCurrentVersionClosedIssues!=null?jnJiraCurrentVersionClosedIssues.asInt( ):0);
                     
                     if ( jnScmDeveloperConnection !=null && !StringUtils.isEmpty( jnScmDeveloperConnection.asText( ) ) && !jnScmDeveloperConnection.asText( ).equals( "null" ) )
                     {
