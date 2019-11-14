@@ -96,15 +96,21 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
     @View( value = VIEW_MANAGE_COMPONENT, defaultView = true )
     public String getManageComponent( HttpServletRequest request )
     {
-
+        ReleaserUser user=ReleaserUtils.getReleaserUser( request, getLocale( ) );
+        if(user==null)
+        {
+            user=new ReleaserUser( );
+           
+        }
+        ReleaserUtils.populateReleaserUser(request, user);
+        ReleaserUtils.setReleaserUser( request, user );
+        
+        
         _strSearch = request.getParameter( PARAMETER_SEARCH )!=null?request.getParameter( PARAMETER_SEARCH ):_strSearch;
         String stCurrentPageIndexOld = _strCurrentPageIndex;
         _strCurrentPageIndex = Paginator.getPageIndex( request, Paginator.PARAMETER_PAGE_INDEX, _strCurrentPageIndex );
 
-        if ( ReleaserUtils.getReleaserUser( request, getLocale( ) ) == null )
-        {
-            return redirect( request, JSP_MANAGE_CLUSTERS );
-        }
+        
 
         if (  !StringUtils.isEmpty( request.getParameter( PARAMETER_SEARCH )) || (_strCurrentPageIndex!=null && !_strCurrentPageIndex.equals( stCurrentPageIndexOld )) )
         {
