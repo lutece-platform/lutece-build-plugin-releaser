@@ -592,7 +592,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         CommandResult commandResult = context.getCommandResult( );
         String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
         String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
-        IVCSResourceService cvsService = CVSFactoryService.getService( context.getComponent( ).getRepoType( ) );
+        IVCSResourceService cvsService = CVSFactoryService.getService( context.getReleaserResource( ).getRepoType( ) );
 
         if ( context.getSite( ).isTheme( ) )
         {
