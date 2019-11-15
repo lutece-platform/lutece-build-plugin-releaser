@@ -33,6 +33,7 @@ public class PomUpdater
         try
         {
 
+           
             inputStream = new FileInputStream( strSiteLocalPomPath );
             Model model = unmarshal( Model.class, inputStream );
             
@@ -49,9 +50,8 @@ public class PomUpdater
                         
                         if ( jaxDependency.getArtifactId( ).equals( component.getArtifactId( ) ) )
                         {
-                            
-                            jaxDependency.setVersion( component.getTargetVersion( ) );
-
+                          
+                            jaxDependency.setVersion( "["+component.getTargetVersion( )+"]" );
                         }
                     }
 
