@@ -65,6 +65,7 @@ import fr.paris.lutece.plugins.releaser.util.svn.ReleaseSvnCheckoutClient;
 import fr.paris.lutece.plugins.releaser.util.svn.ReleaseSvnCommitClient;
 import fr.paris.lutece.plugins.releaser.util.svn.ReleaseSvnCopyClient;
 import fr.paris.lutece.plugins.releaser.util.svn.SvnUtils;
+import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.util.httpaccess.HttpAccess;
 import fr.paris.lutece.util.httpaccess.HttpAccessException;
@@ -96,7 +97,12 @@ public class SvnResourceService implements IVCSResourceService
         }
         catch( HttpAccessException ex )
         {
+           
             AppLogService.error( "Error fecthing pom.xml content : " + ex.getMessage( ), ex );
+            if(ex.getResponseCode( )==401)
+            {
+                throw new AppException( ConstanteUtils.ERROR_TYPE_AUTHENTICATION_ERROR, ex );
+           }
         }
         return null;
     }

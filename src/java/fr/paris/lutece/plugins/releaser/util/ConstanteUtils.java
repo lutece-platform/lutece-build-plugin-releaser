@@ -40,6 +40,9 @@ public class ConstanteUtils
     public static final String BEAN_TWITTER_SERVICE= "releaser.twitterService";
     
     
+    public static final String PROPERTY_POM_PARENT_SITE_VERSION="releaser.pomParentSiteVersion";
+    
+    
     public static final String PROPERTY_ID_WORKFLOW_COMPONENT="releaser.idWorkflowComponent";
     public static final String PROPERTY_ID_WORKFLOW_LUTECE_SITE="releaser.idWorkflowLuteceSite";
     

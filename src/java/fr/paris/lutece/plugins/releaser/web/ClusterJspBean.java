@@ -71,6 +71,8 @@ public class ClusterJspBean extends ManageSitesJspBean
     // Parameters
     private static final String PARAMETER_ID_CLUSTER = "id";
     private static final String PARAMETER_ID_SITE = "id";
+    private static final String PARAMETER_ID_SITE_ERROR = "id_site_error";
+    
     private static final String PARAMETER_ERROR = "error";
     
 
@@ -89,6 +91,8 @@ public class ClusterJspBean extends ManageSitesJspBean
     private static final String MARK_CLUSTER = "cluster";
     private static final String MARK_CLUSTERS_LIST = "clusters_list";
     private static final String MARK_SITE = "site";
+   
+    
    
     private static final String MARK_IS_APPLICATION_ACCOUNT = "is_application_account";
     
@@ -162,7 +166,15 @@ public class ClusterJspBean extends ManageSitesJspBean
         model.put( ConstanteUtils.MARK_REPO_TYPE_GITHUB,RepositoryType.GITHUB );
         model.put( ConstanteUtils.MARK_REPO_TYPE_GITLAB,RepositoryType.GITLAB );
         model.put( ConstanteUtils.MARK_REPO_TYPE_SVN,RepositoryType.SVN );
-        
+        if(request.getParameter( PARAMETER_ID_SITE_ERROR )!=null)
+        {
+           //Load information site after authentication error
+            int nId = Integer.parseInt( request.getParameter( PARAMETER_ID_SITE_ERROR ) );
+            model.put( MARK_SITE, SiteHome.findByPrimaryKey( nId ));
+           
+           
+       }
+
         
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_CLUSTERS, TEMPLATE_MANAGE_CLUSTERS, model );
     }
@@ -267,7 +279,7 @@ public class ClusterJspBean extends ManageSitesJspBean
         if ( user ==null || !StringUtils.isEmpty( strError ))
         {
             addError( strError );
-            redirectView( request, VIEW_MANAGE_CLUSTERS );
+            return redirect( request, VIEW_MANAGE_CLUSTERS,PARAMETER_ID_SITE_ERROR,ReleaserUtils.convertStringToInt( strIdSite ));
         }
         
         
@@ -369,6 +381,8 @@ public class ClusterJspBean extends ManageSitesJspBean
     {
         _site = ( _site != null ) ? _site : new Site( );
 
+        String strIdCluster=request.getParameter(  PARAMETER_ID_CLUSTER);
+        _site.setIdCluster( ReleaserUtils.convertStringToInt( strIdCluster ) );
         Map<String, Object> model = getModel( );
         model.put( MARK_SITE, _site );
         model.put( MARK_CLUSTERS_LIST, ClusterHome.getClustersReferenceList( ) );

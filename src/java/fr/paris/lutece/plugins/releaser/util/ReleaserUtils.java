@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.maven.artifact.versioning.ComparableVersion;
 
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.RepositoryType;
@@ -65,17 +66,17 @@ public class ReleaserUtils
    
    }
 
-//    public static String getLocalSitePath( Site site )
-//    {
-//        String strCheckoutBasePath = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_LOCAL_SITE_BASE_PAH );
-//
-//        return strCheckoutBasePath + File.separator + site.getArtifactId( );
-//    }
-//
-//    public static String getLocalSitePomPath( Site site )
-//    {
-//        return getLocalSitePath( site ) + File.separator + ConstanteUtils.CONSTANTE_POM_XML;
-//    }
+    public static String getLocalSitePath( Site site )
+    {
+        String strCheckoutBasePath = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_LOCAL_SITE_BASE_PAH );
+
+        return strCheckoutBasePath + File.separator + site.getArtifactId( );
+    }
+
+    public static String getLocalSitePomPath( Site site )
+    {
+        return getLocalSitePath( site ) + File.separator + ConstanteUtils.CONSTANTE_POM_XML;
+    }
 //
 //    public static String getLocalComponentPath( String strComponentName )
 //    {
@@ -297,6 +298,21 @@ public class ReleaserUtils
         return AppPropertiesService.getPropertyBoolean( ConstanteUtils.PROPERTY_APPLICATION_ACCOUNT_ENABLE, false );
 
     }
+    
+    public static int compareVersion(String strVersion1,String strVersion2)
+    {
+        
+        
+      ComparableVersion cVersion1= new ComparableVersion( strVersion1 );
+      ComparableVersion cVersion2= new ComparableVersion( strVersion2 );
+     
+      return cVersion1.compareTo( cVersion2 );
+        
+     
+    }
+    
+    
+    
 
    
 }

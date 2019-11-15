@@ -34,7 +34,11 @@
 
 package fr.paris.lutece.plugins.releaser.service;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,11 +50,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.bind.JAXBException;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.Dependency;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser.Credential;
+import fr.paris.lutece.plugins.releaser.business.jaxb.maven.Model;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.SiteHome;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
@@ -58,6 +64,7 @@ import fr.paris.lutece.plugins.releaser.util.CVSFactoryService;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
+import fr.paris.lutece.plugins.releaser.util.pom.PomUpdater;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
 import fr.paris.lutece.portal.business.user.AdminUser;
@@ -65,6 +72,7 @@ import fr.paris.lutece.portal.service.datastore.DatastoreService;
 import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
+import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.util.httpaccess.HttpAccessException;
 
 /**
@@ -78,7 +86,8 @@ public class SiteService
     private static final String MESSAGE_TO_BE_RELEASED = "releaser.message.toBeReleased";
     private static final String MESSAGE_MORE_RECENT_VERSION_AVAILABLE = "releaser.message.moreRecentVersionAvailable";
     private static final String MESSAGE_AN_RELEASE_VERSION_ALREADY_EXIST = "releaser.message.releleaseVersionAlreadyExist";
-
+    private static final String MESSAGE_WRONG_POM_PARENT_SITE_VERSION = "releaser.message.wrongPomParentSiteVersion";
+    
     /**
      * Load a site from its id
      * 
@@ -322,6 +331,9 @@ public class SiteService
      */
     public static void buildComments( Site site, Locale locale )
     {
+        site.resetComments( );
+        buildReleaseComments( site, locale );
+      
         for ( Component component : site.getComponents( ) )
         {
             component.resetComments( );
@@ -348,7 +360,8 @@ public class SiteService
                 component.addReleaseComment( strComment );
             }
             else
-                if ( component.getLastAvailableVersion( ) != null && !component.getTargetVersion( ).equals( component.getLastAvailableVersion( ) ) )
+                if ( component.getLastAvailableVersion( ) != null &&
+                        ReleaserUtils.compareVersion( component.getTargetVersion( ), component.getLastAvailableVersion( ) )<0)
                 {
                     String [ ] arguments = {
                             component.getLastAvailableVersion( )
@@ -362,8 +375,8 @@ public class SiteService
         {
             if ( component.isSnapshotVersion( ) )
             {
-                if ( !component.getCurrentVersion( ).equals( component.getLastAvailableSnapshotVersion( ) ) )
-                {
+                if ( ReleaserUtils.compareVersion(component.getCurrentVersion( ), component.getLastAvailableSnapshotVersion( ) )<0)
+                  {
 
                     String [ ] arguments = {
                             component.getLastAvailableVersion( )
@@ -391,7 +404,7 @@ public class SiteService
                         }
             }
             else
-                if ( !component.getCurrentVersion( ).equals( component.getLastAvailableVersion( ) ) )
+                if (   ReleaserUtils.compareVersion( component.getCurrentVersion( ), component.getLastAvailableVersion( ) )<0 )
                 {
                     String [ ] arguments = {
                             component.getLastAvailableVersion( )
@@ -582,6 +595,49 @@ public class SiteService
     public String generateTargetPOM( Site site )
     {
         throw new UnsupportedOperationException( "Not supported yet." ); // To change body of generated methods, choose Tools | Templates.
+    }
+    
+    private static void buildReleaseComments( Site site, Locale locale )
+    {
+       
+        
+     
+        
+        if(!site.isTheme( ))
+        {
+         //Check pom
+        InputStream inputStream = null;
+        String strPomPath=ReleaserUtils.getLocalSitePomPath( site );
+        String strPomParentReferenceVersion=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_POM_PARENT_SITE_VERSION );
+        try
+        {
+
+            inputStream = new FileInputStream( strPomPath );
+            Model model = PomUpdater.unmarshal( Model.class, inputStream );
+            String strParentSiteVersion=model.getParent( ).getVersion( );
+            if(ReleaserUtils.compareVersion( strParentSiteVersion, strPomParentReferenceVersion )<=0 )
+            {
+                String [ ] arguments = {
+                        strPomParentReferenceVersion
+                };
+                String strComment = I18nService.getLocalizedString( MESSAGE_WRONG_POM_PARENT_SITE_VERSION, arguments, locale );
+                site.addReleaseComment( strComment );
+             }
+           
+            
+            
+            
+        }catch( FileNotFoundException e )
+        {
+            AppLogService.error( e );
+        }
+        catch( JAXBException e )
+        {
+            // TODO Auto-generated catch block
+            AppLogService.error( e );
+        }
+        }
+       
     }
 
 }

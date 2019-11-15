@@ -35,11 +35,8 @@ package fr.paris.lutece.plugins.releaser.business;
 
 import java.util.List;
 
-import com.sun.jna.platform.win32.OaIdl.CURRENCY._CURRENCY;
-
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
-import fr.paris.lutece.portal.service.i18n.I18nService;
 
 /**
  * This is the business class for the object Component
@@ -55,7 +52,7 @@ public class Component extends AbstractReleaserResource
     private String _strLastAvailableVersion;
     private String _strLastAvailableSnapshotVersion;
     private String _strNextSnapshotVersion;
-    private String _strReleaseComment;
+  
     private String _strDescription; 
     private boolean _bIsProject;
     private String _strJiraCode;
@@ -244,42 +241,7 @@ public class Component extends AbstractReleaserResource
         _strNextSnapshotVersion = strNextSnapshotVersion;
     }
 
-    /**
-     * Returns the ReleaseComment
-     * 
-     * @return The ReleaseComment
-     */
-    public String getReleaseComment( )
-    {
-        return _strReleaseComment;
-    }
-
-    /**
-     * Sets the ReleaseComment
-     * 
-     * @param strReleaseComment
-     *            The ReleaseComment
-     */
-    public void addReleaseComment( String strReleaseComment )
-    {
-        if ( _strReleaseComment != null )
-        {
-            _strReleaseComment = _strReleaseComment + "<br>\n" + strReleaseComment;
-        }
-        else
-        {
-            _strReleaseComment = strReleaseComment;
-        }
-    }
-
-    /**
-     * Reset comments
-     */
-    public void resetComments( )
-    {
-        _strReleaseComment = null;
-    }
-
+   
     /**
      * Returns the JiraCode
      * 

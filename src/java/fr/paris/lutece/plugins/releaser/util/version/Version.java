@@ -33,6 +33,7 @@
  */
 package fr.paris.lutece.plugins.releaser.util.version;
 
+import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -236,7 +237,7 @@ public class Version implements Comparable
             nPos = strCurrent.indexOf( '.' );
 
             String strMajor = strCurrent.substring( 0, nPos );
-            version.setMajor( Integer.parseInt( strMajor ) );
+            version.setMajor( ReleaserUtils.convertStringToInt( strMajor ) );
 
             // Search for minor digits
             strCurrent = strCurrent.substring( nPos + 1 );
@@ -245,14 +246,14 @@ public class Version implements Comparable
             if ( nPos != -1 )
             {
                 String strMinor = strCurrent.substring( 0, nPos );
-                version.setMinor( Integer.parseInt( strMinor ) );
+                version.setMinor( ReleaserUtils.convertStringToInt( strMinor ) );
 
                 strCurrent = strCurrent.substring( nPos + 1 );
-                version.setPatch( Integer.parseInt( strCurrent ) );
+                version.setPatch(  ReleaserUtils.convertStringToInt(strCurrent ) );
             }
             else
             {
-                version.setMinor( Integer.parseInt( strCurrent ) );
+                version.setMinor(  ReleaserUtils.convertStringToInt(strCurrent ) );
             }
         }
         catch( Exception e )

@@ -150,7 +150,7 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
             }
             catch (AppException e) {
               
-                  return redirect( request, JSP_MANAGE_CLUSTERS+"?action=releaseSite&error="+e.getMessage( )  );
+                  return redirect( request, JSP_MANAGE_CLUSTERS+"?action=releaseSite&error="+e.getMessage( )+"&"+PARAMETER_SITE_ID+"="+ strSiteId );
                
             }
         }

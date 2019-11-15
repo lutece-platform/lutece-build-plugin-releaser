@@ -4,6 +4,8 @@ import org.apache.commons.lang.StringUtils;
 
 public abstract class AbstractReleaserResource implements IReleaserResource
 {
+    
+    private String _strReleaseComment;
 
     public RepositoryType getRepoType()
     {
@@ -35,4 +37,40 @@ public abstract class AbstractReleaserResource implements IReleaserResource
         return repositoryType;
         
     }
+    /**
+     * Returns the ReleaseComment
+     * 
+     * @return The ReleaseComment
+     */
+    public String getReleaseComment( )
+    {
+        return _strReleaseComment;
+    }
+
+    /**
+     * Sets the ReleaseComment
+     * 
+     * @param strReleaseComment
+     *            The ReleaseComment
+     */
+    public void addReleaseComment( String strReleaseComment )
+    {
+        if ( _strReleaseComment != null )
+        {
+            _strReleaseComment = _strReleaseComment + "<br>\n" + strReleaseComment;
+        }
+        else
+        {
+            _strReleaseComment = strReleaseComment;
+        }
+    }
+
+    /**
+     * Reset comments
+     */
+    public void resetComments( )
+    {
+        _strReleaseComment = null;
+    }
+
 }
