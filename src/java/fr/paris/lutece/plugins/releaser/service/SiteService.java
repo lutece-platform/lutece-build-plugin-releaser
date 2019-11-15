@@ -183,9 +183,8 @@ public class SiteService
             component.setArtifactId( dependency.getArtifactId( ) );
             component.setGroupId( dependency.getGroupId( ) );
             component.setType( dependency.getType( ) );
-            String currentVersion=dependency.getVersion( ) ;
-            currentVersion=currentVersion.replace( "[", "" ).replace( "]", "" );
-            component.setCurrentVersion( dependency.getVersion( ) );
+            String currentVersion=dependency.getVersion( ).replace( "[", "" ).replace( "]", "" );
+            component.setCurrentVersion( currentVersion);
             site.addComponent( component );
         }
 
