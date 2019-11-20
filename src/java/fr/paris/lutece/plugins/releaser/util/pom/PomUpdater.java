@@ -18,8 +18,11 @@ import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.jaxb.maven.Model;
 import fr.paris.lutece.plugins.releaser.business.jaxb.maven.ObjectFactory;
+import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
+import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.util.AppLogService;
+import fr.paris.lutece.portal.service.util.AppPropertiesService;
 
 public class PomUpdater
 {
@@ -57,6 +60,20 @@ public class PomUpdater
 
                 }
             }
+            
+            String strParentSiteVersion=model.getParent( ).getVersion( );
+            String strPomParentReferenceVersion=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_POM_PARENT_SITE_VERSION );
+            
+            if(ReleaserUtils.compareVersion( strParentSiteVersion, strPomParentReferenceVersion )<0 )
+            {
+            	//update pom parent version
+            	 String strPomParentArtifactId=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_POM_PARENT_ARTIFCAT_ID );
+            	 String strPomParentGroupId=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_POM_PARENT_GROUP_ID );
+                  model.getParent().setArtifactId(strPomParentArtifactId);
+                  model.getParent().setGroupId(strPomParentGroupId);
+                  model.getParent().setVersion(strPomParentReferenceVersion);
+            }
+           
 
             outputStream = new FileOutputStream( strSiteLocalPomPath );
 

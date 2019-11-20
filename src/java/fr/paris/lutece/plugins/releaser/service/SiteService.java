@@ -616,7 +616,7 @@ public class SiteService
             inputStream = new FileInputStream( strPomPath );
             Model model = PomUpdater.unmarshal( Model.class, inputStream );
             String strParentSiteVersion=model.getParent( ).getVersion( );
-            if(ReleaserUtils.compareVersion( strParentSiteVersion, strPomParentReferenceVersion )<=0 )
+            if(ReleaserUtils.compareVersion( strParentSiteVersion, strPomParentReferenceVersion )<0 )
             {
                 String [ ] arguments = {
                         strPomParentReferenceVersion

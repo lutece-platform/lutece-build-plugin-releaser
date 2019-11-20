@@ -41,6 +41,11 @@ public class ConstanteUtils
     
     
     public static final String PROPERTY_POM_PARENT_SITE_VERSION="releaser.pomParentSiteVersion";
+    public static final String PROPERTY_POM_PARENT_ARTIFCAT_ID="releaser.pomParentArtifactId";
+    public static final String PROPERTY_POM_PARENT_GROUP_ID="releaser.pomParentGroupId";
+    
+    
+    
     
     
     public static final String PROPERTY_ID_WORKFLOW_COMPONENT="releaser.idWorkflowComponent";
