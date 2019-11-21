@@ -1,12 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<plug-in>
+<?xml version="1.0" encoding="UTF-8"?><plug-in>
     <name>releaser</name>
     <class>fr.paris.lutece.portal.service.plugin.PluginDefaultImplementation</class>
     <version>1.0.0</version>
-    <documentation></documentation>
-    <installation></installation>
-    <changes></changes>
-    <user-guide></user-guide>
+    <documentation/>
+    <installation/>
+    <changes/>
+    <user-guide/>
     <description>releaser.plugin.description</description>
     <provider>releaser.plugin.provider</provider>
     <provider-url>http://lutece.paris.fr</provider-url>
@@ -27,7 +26,7 @@
             <feature-description>releaser.adminFeature.ManageReleaser.description</feature-description>
             <feature-level>0</feature-level>
             <feature-url>jsp/admin/plugins/releaser/ManageClusters.jsp</feature-url>
-            <feature-icon-url></feature-icon-url>
+            <feature-icon-url/>
       </admin-feature>
     </admin-features>
        <admin-features>
@@ -37,7 +36,7 @@
             <feature-description>releaser.adminFeature.ManageReleaserComponent.description</feature-description>
             <feature-level>0</feature-level>
             <feature-url>jsp/admin/plugins/releaser/ManageComponent.jsp</feature-url>
-            <feature-icon-url></feature-icon-url>
+            <feature-icon-url/>
       </admin-feature>
     </admin-features>
     
