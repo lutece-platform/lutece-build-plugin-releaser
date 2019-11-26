@@ -9,7 +9,7 @@
     <groupId>fr.paris.lutece.plugins</groupId>
     <artifactId>plugin-releaser</artifactId>
     <packaging>lutece-plugin</packaging>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <name>Lutece releaser plugin</name>
 
     <properties>
@@ -149,11 +149,10 @@
               </plugin>
         </plugins>
     </build>
-
-    <scm>
+  <scm>
         <connection>scm:git:https://github.com/lutece-platform/lutece-build-plugin-releaser.git</connection>
         <developerConnection>scm:git:https://github.com/lutece-platform/lutece-build-plugin-releaser.git</developerConnection>
         <url>https://github.com/lutece-platform/lutece-build-plugin-releaser.git</url>
-      <tag>plugin-releaser-1.0.0</tag>
+      <tag>HEAD</tag>
   </scm>
 </project>
