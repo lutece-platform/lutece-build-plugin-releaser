@@ -73,7 +73,13 @@ import fr.paris.lutece.portal.service.util.AppPropertiesService;
 public class JiraComponentService implements IJiraService 
 {
     private static final String PROPERTY_JIRA_SEARCH_SERVICE = "releaser.component.jiraSearchQuery";
+    private static final String PROPERTY_JIRA_USER ="lutecetools.jira.user";
+    private static final String PROPERTY_JIRA_USER_PWD ="lutecetools.jira.pwd";
+    
     private static String URL_JIRA_SERVER ;
+    private static String JIRA_USER ;
+    private static String JIRA_USER_PWD;
+    
     private static final String CONSTANTE_SNAPSHOT_VERSION="-SNAPSHOT";
     private static AsynchronousJiraRestClientFactory _factory;
     private static BasicHttpAuthenticationHandler _auth;
@@ -129,9 +135,12 @@ public class JiraComponentService implements IJiraService
             AppLogService.info( "LuteceTools : Using httpaccess.properties defined proxy to connect to JIRA." );
         }
         
-        URL_JIRA_SERVER=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_URL_JIRA_SERVICE, "http://dev.lutece.paris.fr/jira/");
+        URL_JIRA_SERVER=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_URL_JIRA_SERVICE, "https://dev.lutece.paris.fr/jira/");
+        JIRA_USER=AppPropertiesService.getProperty(PROPERTY_JIRA_USER);
+        JIRA_USER_PWD=AppPropertiesService.getProperty(PROPERTY_JIRA_USER_PWD);
+        
         _factory = new AsynchronousJiraRestClientFactory( );
-        _auth = new BasicHttpAuthenticationHandler( "FME", "henry75" );
+        _auth = new BasicHttpAuthenticationHandler( JIRA_USER, JIRA_USER_PWD);
         
         
     }
