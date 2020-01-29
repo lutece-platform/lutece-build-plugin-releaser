@@ -168,7 +168,7 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
 
             for ( Component component : _paginatorComponents.getPageItems( ) )
             {
-                if ( component.getArtifactId( ).equals( strArtifactId ) )
+                if ( component.getArtifactId( )!=null && component.getArtifactId( ).equals( strArtifactId ) )
                 {
                     component.setTweetMessage( strTweetMessage );
                     nIdContext = ComponentService.getService( ).release( component, getLocale( ), getUser( ), request,true );

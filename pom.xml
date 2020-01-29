@@ -9,13 +9,13 @@
     <groupId>fr.paris.lutece.plugins</groupId>
     <artifactId>plugin-releaser</artifactId>
     <packaging>lutece-plugin</packaging>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.2-SNAPSHOT</version>
     <name>Lutece releaser plugin</name>
 
     <properties>
         <componentName>releaser</componentName>
         <jiraProjectName>RELEASER</jiraProjectName>
-        <jiraComponentId></jiraComponentId>
+        <jiraComponentId />
         <jiraVersion>3.0.0</jiraVersion>
     </properties>
  
@@ -149,10 +149,10 @@
               </plugin>
         </plugins>
     </build>
-
-    <scm>
+  <scm>
         <connection>scm:git:https://github.com/lutece-platform/lutece-build-plugin-releaser.git</connection>
         <developerConnection>scm:git:https://github.com/lutece-platform/lutece-build-plugin-releaser.git</developerConnection>
         <url>https://github.com/lutece-platform/lutece-build-plugin-releaser.git</url>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
 </project>
