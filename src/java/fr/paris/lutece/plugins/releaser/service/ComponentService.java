@@ -429,10 +429,8 @@ public class ComponentService implements IComponentService
     /**
      * Change the next release version
      * 
-     * @param site
-     *            The site
-     * @param strArtifactId
-     *            The component artifact id
+     * @param component
+     *            The component
      */
     public void changeNextReleaseVersion( Component component )
     {
