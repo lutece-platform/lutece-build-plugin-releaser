@@ -44,13 +44,12 @@ import fr.paris.lutece.test.LuteceTestCase;
 public class SvnSiteServiceTest extends LuteceTestCase
 {
 
-
     /**
      * Test of getLastRelease method, of class SvnSiteService.
      */
     @Test
-    public void testGetLastRelease()
+    public void testGetLastRelease( )
     {
     }
-    
+
 }

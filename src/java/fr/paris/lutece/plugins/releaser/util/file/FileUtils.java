@@ -40,44 +40,64 @@ import java.util.List;
 
 import fr.paris.lutece.portal.service.util.AppLogService;
 
-
+// TODO: Auto-generated Javadoc
+/**
+ * The Class FileUtils.
+ */
 public class FileUtils
 {
+    
+    /** The Constant STATUS_OK. */
     public static final boolean STATUS_OK = true;
+    
+    /** The Constant STATUS_ERROR. */
     public static final boolean STATUS_ERROR = false;
 
+    /**
+     * Delete.
+     *
+     * @param file the file
+     * @param logBuffer the log buffer
+     * @return true, if successful
+     */
     public static boolean delete( File file, StringBuffer logBuffer )
     {
-        if ( file.isDirectory(  ) )
+        if ( file.isDirectory( ) )
         {
             boolean bStatus = STATUS_OK;
 
-            for ( String fileName : file.list(  ) )
+            for ( String fileName : file.list( ) )
             {
-                //Names denoting the directory itself and the directory's parent directory are not included in the result
-                bStatus &= delete( new File( file.getAbsolutePath(  ) + File.separator + fileName ), logBuffer );
+                // Names denoting the directory itself and the directory's parent directory are not included in the result
+                bStatus &= delete( new File( file.getAbsolutePath( ) + File.separator + fileName ), logBuffer );
             }
         }
 
-        logBuffer.append( "DELETING " + file.getAbsolutePath(  ) + "\n" );
+        logBuffer.append( "DELETING " + file.getAbsolutePath( ) + "\n" );
 
-        if ( !file.delete(  ) )
+        if ( !file.delete( ) )
         {
-            logBuffer.append( "UNABLE TO DELETE : " + file.getAbsolutePath(  ) );
+            logBuffer.append( "UNABLE TO DELETE : " + file.getAbsolutePath( ) );
 
             return STATUS_ERROR;
         }
 
         return STATUS_OK;
     }
-    
-    public static String readFile(String strFilePath)
+
+    /**
+     * Read file.
+     *
+     * @param strFilePath the str file path
+     * @return the string
+     */
+    public static String readFile( String strFilePath )
     {
         File file = new File( strFilePath );
-        String strFile=null;
+        String strFile = null;
         try
         {
-             strFile = org.apache.commons.io.FileUtils.readFileToString(file, "UTF-8");
+            strFile = org.apache.commons.io.FileUtils.readFileToString( file, "UTF-8" );
         }
         catch( IOException e )
         {
@@ -85,37 +105,48 @@ public class FileUtils
             AppLogService.error( e );
         }
         return strFile;
-        
-    }
-    
 
+    }
+
+    /**
+     * List.
+     *
+     * @param strDirPath the str dir path
+     * @param strFileExtension the str file extension
+     * @return the list
+     */
     public static List<String> list( String strDirPath, String strFileExtension )
     {
         return list( strDirPath, strFileExtension, true );
     }
-    
+
+    /**
+     * List.
+     *
+     * @param strDirPath the str dir path
+     * @param strFileExtension the str file extension
+     * @param bRecursive the b recursive
+     * @return the list
+     */
     public static List<String> list( String strDirPath, String strFileExtension, boolean bRecursive )
     {
-        List<String> strFileList = new ArrayList<String>(  );
+        List<String> strFileList = new ArrayList<String>( );
         File file = new File( strDirPath );
 
         for ( File fileChild : file.listFiles( ) )
         {
-            if ( fileChild.isDirectory(  ) && bRecursive )
+            if ( fileChild.isDirectory( ) && bRecursive )
             {
-                strFileList.addAll( list( fileChild.getAbsolutePath( ), strFileExtension , bRecursive) );  
+                strFileList.addAll( list( fileChild.getAbsolutePath( ), strFileExtension, bRecursive ) );
             }
-            else if ( fileChild.isFile( ) && ( ( strFileExtension == null ) || file.getName(  ).endsWith( strFileExtension ) ) )
-            {
-                strFileList.add( file.getName(  ) );
-            }
+            else
+                if ( fileChild.isFile( ) && ( ( strFileExtension == null ) || file.getName( ).endsWith( strFileExtension ) ) )
+                {
+                    strFileList.add( file.getName( ) );
+                }
         }
 
         return strFileList;
     }
-    
-    
-    
-    
-   
+
 }

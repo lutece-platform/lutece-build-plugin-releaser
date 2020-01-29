@@ -6,34 +6,36 @@ import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.util.httpaccess.HttpAccessException;
 
+/**
+ * GetRemoteInformationsTask
+ *
+ */
 public class GetRemoteInformationsTask implements Runnable
 {
 
-    
-    
-    
-    private Component _component; 
-    
-    public GetRemoteInformationsTask(Component component)
+    private Component _component;
+
+    /**
+     * @param component
+     */
+    public GetRemoteInformationsTask( Component component )
     {
-        
-        this._component=component;
+
+        this._component = component;
     }
-    
+
     @Override
     public void run( )
     {
         try
         {
-            ComponentService.getService( ).setRemoteInformations( _component, _component.isProject( )?false:true  );
+            ComponentService.getService( ).setRemoteInformations( _component, _component.isProject( ) ? false : true );
         }
         catch( HttpAccessException | IOException e )
         {
-          AppLogService.error( e );
+            AppLogService.error( e );
         }
-        
-    }
 
-    
+    }
 
 }

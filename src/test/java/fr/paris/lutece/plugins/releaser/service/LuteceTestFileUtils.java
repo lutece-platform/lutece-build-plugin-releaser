@@ -25,7 +25,7 @@ public class LuteceTestFileUtils
      */
     public static Properties getTestProperties( )
     {
-      Properties properties = null;
+        Properties properties = null;
         try
         {
             URL url = Thread.currentThread( ).getContextClassLoader( ).getResource( "releaser-test.properties" );
@@ -48,7 +48,7 @@ public class LuteceTestFileUtils
 
         File luteceProperties = new File( strResourcesDir, "WEB-INF/conf/plugins/releaser.properties" );
         Properties props = new Properties( );
-        try( InputStream is = new FileInputStream( luteceProperties ) )
+        try ( InputStream is = new FileInputStream( luteceProperties ) )
         {
             props.load( is );
         }
@@ -63,16 +63,16 @@ public class LuteceTestFileUtils
             props.put( name, testProperties.getProperty( name ) );
         }
         // rewrite WEB-INF/conf/plugins/releaser.properties
-        try( OutputStream os = new FileOutputStream( luteceProperties ) )
+        try ( OutputStream os = new FileOutputStream( luteceProperties ) )
         {
             props.store( os, "saved for junit " + strClassName );
         }
         AppPropertiesService.reloadAll( );
     }
-    
-    public static String getProperty(String strProperty,RepositoryType type)
+
+    public static String getProperty( String strProperty, RepositoryType type )
     {
-        return AppPropertiesService.getProperty("releaser.test."+type.name( ).toLowerCase( )+"."+strProperty);
-        
+        return AppPropertiesService.getProperty( "releaser.test." + type.name( ).toLowerCase( ) + "." + strProperty );
+
     }
 }

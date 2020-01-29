@@ -38,23 +38,42 @@ import org.tmatesoft.svn.core.wc.ISVNOptions;
 import org.tmatesoft.svn.core.wc.ISVNRepositoryPool;
 import org.tmatesoft.svn.core.wc.SVNUpdateClient;
 
-
+// TODO: Auto-generated Javadoc
+/**
+ * The Class ReleaseSvnCheckoutClient.
+ */
 public class ReleaseSvnCheckoutClient extends SVNUpdateClient
 {
+    
+    /** The b cancelled. */
     private boolean bCancelled;
 
+    /**
+     * Instantiates a new release svn checkout client.
+     *
+     * @param authManager the auth manager
+     * @param options the options
+     */
     public ReleaseSvnCheckoutClient( ISVNAuthenticationManager authManager, ISVNOptions options )
     {
         super( authManager, options );
     }
 
+    /**
+     * Instantiates a new release svn checkout client.
+     *
+     * @param pool the pool
+     * @param options the options
+     */
     public ReleaseSvnCheckoutClient( ISVNRepositoryPool pool, ISVNOptions options )
     {
         super( pool, options );
     }
 
-
-    public void doCancel(  )
+    /**
+     * Do cancel.
+     */
+    public void doCancel( )
     {
         bCancelled = true;
     }

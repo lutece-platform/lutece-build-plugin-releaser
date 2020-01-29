@@ -90,7 +90,7 @@ public abstract class ManageSitesJspBean extends MVCAdminJspBean
 
         Map<String, Object> model = getModel( );
 
-        model.put( MARK_NB_ITEMS_PER_PAGE, String.valueOf(  _nItemsPerPage ));
+        model.put( MARK_NB_ITEMS_PER_PAGE, String.valueOf( _nItemsPerPage ) );
         model.put( MARK_PAGINATOR, paginator );
         model.put( strBookmark, paginator.getPageItems( ) );
 

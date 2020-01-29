@@ -108,6 +108,16 @@
     </dependencies>
     <build>
         <plugins>
+       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>${maven-javadoc-plugin.version}</version>
+        <configuration>
+          <excludePackageNames>fr.paris.lutece.plugins.releaser.business.jaxb.maven</excludePackageNames>
+         
+        </configuration>
+      </plugin>
+        
             
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

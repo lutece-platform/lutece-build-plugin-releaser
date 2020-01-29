@@ -72,9 +72,8 @@ public class ClusterJspBean extends ManageSitesJspBean
     private static final String PARAMETER_ID_CLUSTER = "id";
     private static final String PARAMETER_ID_SITE = "id";
     private static final String PARAMETER_ID_SITE_ERROR = "id_site_error";
-    
+
     private static final String PARAMETER_ERROR = "error";
-    
 
     // Properties for page titles
     private static final String PROPERTY_PAGE_TITLE_MANAGE_CLUSTERS = "releaser.manage_clusters.pageTitle";
@@ -91,18 +90,12 @@ public class ClusterJspBean extends ManageSitesJspBean
     private static final String MARK_CLUSTER = "cluster";
     private static final String MARK_CLUSTERS_LIST = "clusters_list";
     private static final String MARK_SITE = "site";
-   
-    
-   
+
     private static final String MARK_IS_APPLICATION_ACCOUNT = "is_application_account";
-    
-    
-    
-    
 
     private static final String JSP_MANAGE_CLUSTERS = "jsp/admin/plugins/releaser/ManageClusters.jsp";
     private static final String JSP_MANAGE_SITE_RELEASE = "ManageSiteRelease.jsp";
-     private static final String JSP_MANAGE_COMPONENT = "ManageComponent.jsp";
+    private static final String JSP_MANAGE_COMPONENT = "ManageComponent.jsp";
 
     // Properties
     private static final String MESSAGE_CONFIRM_REMOVE_CLUSTER = "releaser.message.confirmRemoveCluster";
@@ -111,7 +104,6 @@ public class ClusterJspBean extends ManageSitesJspBean
     private static final String VALIDATION_ATTRIBUTES_PREFIX = "releaser.model.entity.cluster.attribute.";
     private static final String VALIDATION_ATTRIBUTES_SITE_PREFIX = "releaser.model.entity.site.attribute.";
     private static final String VALIDATION_ATTRIBUTES_USER_PREFIX = "releaser.model.entity.user.attribute.";
-    
 
     // Views
     private static final String VIEW_MANAGE_CLUSTERS = "manageClusters";
@@ -125,8 +117,7 @@ public class ClusterJspBean extends ManageSitesJspBean
     private static final String ACTION_CREATE_CLUSTER = "createCluster";
     private static final String ACTION_RELEASE_SITE = "releaseSite";
     private static final String ACTION_RELEASE_COMPONENT = "releaseComponent";
-    
-    
+
     private static final String ACTION_MODIFY_CLUSTER = "modifyCluster";
     private static final String ACTION_REMOVE_CLUSTER = "removeCluster";
     private static final String ACTION_CONFIRM_REMOVE_CLUSTER = "confirmRemoveCluster";
@@ -161,21 +152,19 @@ public class ClusterJspBean extends ManageSitesJspBean
         _site = null;
         List<Cluster> listClusters = ClusterHome.getClustersList( );
         Map<String, Object> model = getPaginatedListModel( request, MARK_CLUSTER_LIST, listClusters, JSP_MANAGE_CLUSTERS );
-        model.put( ConstanteUtils.MARK_USER, ReleaserUtils.getReleaserUser( request, getLocale( ) ));
-        model.put( MARK_IS_APPLICATION_ACCOUNT, ReleaserUtils.isApplicationAccountEnable( ));
-        model.put( ConstanteUtils.MARK_REPO_TYPE_GITHUB,RepositoryType.GITHUB );
-        model.put( ConstanteUtils.MARK_REPO_TYPE_GITLAB,RepositoryType.GITLAB );
-        model.put( ConstanteUtils.MARK_REPO_TYPE_SVN,RepositoryType.SVN );
-        if(request.getParameter( PARAMETER_ID_SITE_ERROR )!=null)
+        model.put( ConstanteUtils.MARK_USER, ReleaserUtils.getReleaserUser( request, getLocale( ) ) );
+        model.put( MARK_IS_APPLICATION_ACCOUNT, ReleaserUtils.isApplicationAccountEnable( ) );
+        model.put( ConstanteUtils.MARK_REPO_TYPE_GITHUB, RepositoryType.GITHUB );
+        model.put( ConstanteUtils.MARK_REPO_TYPE_GITLAB, RepositoryType.GITLAB );
+        model.put( ConstanteUtils.MARK_REPO_TYPE_SVN, RepositoryType.SVN );
+        if ( request.getParameter( PARAMETER_ID_SITE_ERROR ) != null )
         {
-           //Load information site after authentication error
+            // Load information site after authentication error
             int nId = Integer.parseInt( request.getParameter( PARAMETER_ID_SITE_ERROR ) );
-            model.put( MARK_SITE, SiteHome.findByPrimaryKey( nId ));
-           
-           
-       }
+            model.put( MARK_SITE, SiteHome.findByPrimaryKey( nId ) );
 
-        
+        }
+
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_CLUSTERS, TEMPLATE_MANAGE_CLUSTERS, model );
     }
 
@@ -196,8 +185,7 @@ public class ClusterJspBean extends ManageSitesJspBean
 
         return getPage( PROPERTY_PAGE_TITLE_CREATE_CLUSTER, TEMPLATE_CREATE_CLUSTER, model );
     }
-    
-    
+
     /**
      * Process the data capture form of a new cluster
      *
@@ -221,7 +209,7 @@ public class ClusterJspBean extends ManageSitesJspBean
 
         return redirectView( request, VIEW_MANAGE_CLUSTERS );
     }
-    
+
     /**
      * Process the data capture form of a new cluster
      *
@@ -232,11 +220,11 @@ public class ClusterJspBean extends ManageSitesJspBean
     @Action( ACTION_RELEASE_COMPONENT )
     public String doReleaseComponent( HttpServletRequest request )
     {
-        ReleaserUser user=ReleaserUtils.getReleaserUser( request, getLocale( ) );
-         if(user==null)
+        ReleaserUser user = ReleaserUtils.getReleaserUser( request, getLocale( ) );
+        if ( user == null )
         {
-            user=new ReleaserUser( );
-            
+            user = new ReleaserUser( );
+
         }
         populate( user, request );
         ReleaserUtils.setReleaserUser( request, user );
@@ -244,12 +232,10 @@ public class ClusterJspBean extends ManageSitesJspBean
         // Check constraints
         if ( !validateBean( user, VALIDATION_ATTRIBUTES_USER_PREFIX ) )
         {
-            
+
             redirectView( request, VIEW_MANAGE_CLUSTERS );
         }
-       
-        
-        
+
         return redirect( request, JSP_MANAGE_COMPONENT );
     }
 
@@ -263,27 +249,25 @@ public class ClusterJspBean extends ManageSitesJspBean
     @Action( ACTION_RELEASE_SITE )
     public String doReleaseSite( HttpServletRequest request )
     {
-        ReleaserUser user=ReleaserUtils.getReleaserUser( request, getLocale( ) );
-        String strIdSite=request.getParameter( PARAMETER_ID_SITE );
-        String strError=request.getParameter( PARAMETER_ERROR );
-        if(user==null)
+        ReleaserUser user = ReleaserUtils.getReleaserUser( request, getLocale( ) );
+        String strIdSite = request.getParameter( PARAMETER_ID_SITE );
+        String strError = request.getParameter( PARAMETER_ERROR );
+        if ( user == null )
         {
-            user=new ReleaserUser( );
-            
+            user = new ReleaserUser( );
+
         }
-        ReleaserUtils.populateReleaserUser(request, user);
+        ReleaserUtils.populateReleaserUser( request, user );
         ReleaserUtils.setReleaserUser( request, user );
-        
-        
-        //  Check Authentication
-        if ( user ==null || !StringUtils.isEmpty( strError ))
+
+        // Check Authentication
+        if ( user == null || !StringUtils.isEmpty( strError ) )
         {
             addError( strError );
-            return redirect( request, VIEW_MANAGE_CLUSTERS,PARAMETER_ID_SITE_ERROR,ReleaserUtils.convertStringToInt( strIdSite ));
+            return redirect( request, VIEW_MANAGE_CLUSTERS, PARAMETER_ID_SITE_ERROR, ReleaserUtils.convertStringToInt( strIdSite ) );
         }
-        
-        
-        return redirect( request, JSP_MANAGE_SITE_RELEASE+"?"+PARAMETER_ID_SITE+"="+strIdSite );
+
+        return redirect( request, JSP_MANAGE_SITE_RELEASE + "?" + PARAMETER_ID_SITE + "=" + strIdSite );
     }
 
     /**
@@ -381,7 +365,7 @@ public class ClusterJspBean extends ManageSitesJspBean
     {
         _site = ( _site != null ) ? _site : new Site( );
 
-        String strIdCluster=request.getParameter(  PARAMETER_ID_CLUSTER);
+        String strIdCluster = request.getParameter( PARAMETER_ID_CLUSTER );
         _site.setIdCluster( ReleaserUtils.convertStringToInt( strIdCluster ) );
         Map<String, Object> model = getModel( );
         model.put( MARK_SITE, _site );

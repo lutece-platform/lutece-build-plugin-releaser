@@ -86,17 +86,19 @@ public class ComponentService implements IComponentService
     private static final String FIELD_VERSION = "version";
     private static final String FIELD_SNAPSHOT_VERSION = "snapshotVersion";
     private static final String FIELD_ATTRIBUTES = "attributes";
-    
 
     private static final String FIELD_JIRA_CODE = "jiraKey";
     private static final String FIELD_ROADMAP_URL = "jiraRoadmapUrl";
     private static final String FIELD_CLOSED_ISSUES = "jiraFixedIssuesCount";
     private static final String FIELD_OPENED_ISSUES = "jiraUnresolvedIssuesCount";
     private static final String FIELD_SCM_DEVELOPER_CONNECTION = "scmDeveloperConnection";
-    private static final String RELEASE_NOT_FOUND="Release not found";
-    
+    private static final String RELEASE_NOT_FOUND = "Release not found";
+
     private static IComponentService _instance;
 
+    /**
+     * @return get service
+     */
     public static IComponentService getService( )
     {
         if ( _instance == null )
@@ -122,31 +124,32 @@ public class ComponentService implements IComponentService
             }
             strInfosJSON = httpAccess.doGet( strUrl );
             JsonNode nodeRoot = _mapper.readTree( strInfosJSON );
-            if(nodeRoot!=null)
+            if ( nodeRoot != null )
             {
                 JsonNode nodeComponent = nodeRoot.path( FIELD_COMPONENT );
-                if(nodeComponent!=null)
+                if ( nodeComponent != null )
                 {
-                    String strVersion= nodeComponent.get( FIELD_VERSION ).asText( );
-                    if(!RELEASE_NOT_FOUND.equals( strVersion ))
+                    String strVersion = nodeComponent.get( FIELD_VERSION ).asText( );
+                    if ( !RELEASE_NOT_FOUND.equals( strVersion ) )
                     {
                         component.setLastAvailableVersion( nodeComponent.get( FIELD_VERSION ).asText( ) );
                     }
-                    
-                    JsonNode jnSnapshoteVersion=nodeComponent.get(FIELD_ATTRIBUTES).get( FIELD_SNAPSHOT_VERSION );
-                    JsonNode jnJiraCode=nodeComponent.get(FIELD_ATTRIBUTES).get( FIELD_JIRA_CODE );
-                    JsonNode jnJiraRoadMap=nodeComponent.get(FIELD_ATTRIBUTES).get( FIELD_ROADMAP_URL );
-                    JsonNode jnJiraCurrentVersionOpenedIssues=nodeComponent.get(FIELD_ATTRIBUTES).get( FIELD_OPENED_ISSUES );
-                    JsonNode jnJiraCurrentVersionClosedIssues=nodeComponent.get(FIELD_ATTRIBUTES).get( FIELD_CLOSED_ISSUES );
-                    JsonNode jnScmDeveloperConnection=nodeComponent.get(FIELD_ATTRIBUTES).get( FIELD_SCM_DEVELOPER_CONNECTION );
-                    
-                    component.setLastAvailableSnapshotVersion( jnSnapshoteVersion!=null?jnSnapshoteVersion.asText( ):null );
-                    component.setJiraCode( jnJiraCode!=null?jnJiraCode.asText( ):null );
-                    component.setJiraRoadmapUrl(jnJiraRoadMap!=null?jnJiraRoadMap.asText( ):null );
-                    component.setJiraCurrentVersionOpenedIssues( jnJiraCurrentVersionOpenedIssues!=null?jnJiraCurrentVersionOpenedIssues.asInt( ):0 );
-                    component.setJiraCurrentVersionClosedIssues( jnJiraCurrentVersionClosedIssues!=null?jnJiraCurrentVersionClosedIssues.asInt( ):0);
-                    
-                    if ( jnScmDeveloperConnection !=null && !StringUtils.isEmpty( jnScmDeveloperConnection.asText( ) ) && !jnScmDeveloperConnection.asText( ).equals( "null" ) )
+
+                    JsonNode jnSnapshoteVersion = nodeComponent.get( FIELD_ATTRIBUTES ).get( FIELD_SNAPSHOT_VERSION );
+                    JsonNode jnJiraCode = nodeComponent.get( FIELD_ATTRIBUTES ).get( FIELD_JIRA_CODE );
+                    JsonNode jnJiraRoadMap = nodeComponent.get( FIELD_ATTRIBUTES ).get( FIELD_ROADMAP_URL );
+                    JsonNode jnJiraCurrentVersionOpenedIssues = nodeComponent.get( FIELD_ATTRIBUTES ).get( FIELD_OPENED_ISSUES );
+                    JsonNode jnJiraCurrentVersionClosedIssues = nodeComponent.get( FIELD_ATTRIBUTES ).get( FIELD_CLOSED_ISSUES );
+                    JsonNode jnScmDeveloperConnection = nodeComponent.get( FIELD_ATTRIBUTES ).get( FIELD_SCM_DEVELOPER_CONNECTION );
+
+                    component.setLastAvailableSnapshotVersion( jnSnapshoteVersion != null ? jnSnapshoteVersion.asText( ) : null );
+                    component.setJiraCode( jnJiraCode != null ? jnJiraCode.asText( ) : null );
+                    component.setJiraRoadmapUrl( jnJiraRoadMap != null ? jnJiraRoadMap.asText( ) : null );
+                    component.setJiraCurrentVersionOpenedIssues( jnJiraCurrentVersionOpenedIssues != null ? jnJiraCurrentVersionOpenedIssues.asInt( ) : 0 );
+                    component.setJiraCurrentVersionClosedIssues( jnJiraCurrentVersionClosedIssues != null ? jnJiraCurrentVersionClosedIssues.asInt( ) : 0 );
+
+                    if ( jnScmDeveloperConnection != null && !StringUtils.isEmpty( jnScmDeveloperConnection.asText( ) )
+                            && !jnScmDeveloperConnection.asText( ).equals( "null" ) )
                     {
                         component.setScmDeveloperConnection( jnScmDeveloperConnection.asText( ) );
                     }
@@ -183,7 +186,6 @@ public class ComponentService implements IComponentService
         DatastoreService.setDataValue( ReleaserUtils.getLastReleaseVersionDataKey( strArtifactId ), strVersion );
 
     }
-    
 
     /**
      * Returns the LastAvailableVersion
@@ -207,16 +209,14 @@ public class ComponentService implements IComponentService
 
         DatastoreService.setDataValue( ReleaserUtils.getLastReleaseNextSnapshotVersionDataKey( strArtifactId ), strVersion );
     }
-    
-    
 
     @Override
     public int release( Component component, Locale locale, AdminUser user, HttpServletRequest request, boolean forceRelease )
     {
-        
 
         // Test if version in progression before release
-        if (  WorkflowReleaseContextService.getService( ).isReleaseInProgress( component.getArtifactId( ) ) || (!forceRelease &&( !component.isProject( ) || !component.shouldBeReleased( ))) )
+        if ( WorkflowReleaseContextService.getService( ).isReleaseInProgress( component.getArtifactId( ) )
+                || ( !forceRelease && ( !component.isProject( ) || !component.shouldBeReleased( ) ) ) )
         {
             return -1;
         }
@@ -310,14 +310,14 @@ public class ComponentService implements IComponentService
 
         int nItemsPerPageLoad = AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_NB_SEARCH_ITEM_PER_PAGE_LOAD, 10 );
         ReleaserUser user = ReleaserUtils.getReleaserUser( request, locale );
-        String strUserLogin = user.getCredential(RepositoryType.GITHUB).getLogin();
-        String strUserPassword = user.getCredential(RepositoryType.GITHUB).getPassword();
+        String strUserLogin = user.getCredential( RepositoryType.GITHUB ).getLogin( );
+        String strUserPassword = user.getCredential( RepositoryType.GITHUB ).getPassword( );
         List<Component> listResult = getListComponent(
                 GitUtils.searchRepo( strSearch, ConstanteUtils.CONSTANTE_GITHUB_ORG_LUTECE_PLATFORM, strUserLogin, strUserPassword ), strUserLogin,
                 strUserPassword );
-        listResult.addAll( getListComponent(
-                GitUtils.searchRepo( strSearch, ConstanteUtils.CONSTANTE_GITHUB_ORG_LUTECE_SECTEUR_PUBLIC, strUserLogin, strUserPassword ), strUserLogin,
-                strUserPassword ) );
+        listResult.addAll(
+                getListComponent( GitUtils.searchRepo( strSearch, ConstanteUtils.CONSTANTE_GITHUB_ORG_LUTECE_SECTEUR_PUBLIC, strUserLogin, strUserPassword ),
+                        strUserLogin, strUserPassword ) );
 
         LocalizedPaginator<Component> paginator = new LocalizedPaginator<Component>( listResult, nItemsPerPageLoad, strPaginateUrl,
                 LocalizedPaginator.PARAMETER_PAGE_INDEX, strCurrentPageIndex, locale );
@@ -393,15 +393,14 @@ public class ComponentService implements IComponentService
 
     }
 
-    public boolean isErrorSnapshotComponentInformations( Component component ,String strComponentPomPath)
+    public boolean isErrorSnapshotComponentInformations( Component component, String strComponentPomPath )
     {
 
         boolean bError = true;
 
-      
         PomParser parser = new PomParser( );
         Component componentPom = new Component( );
-        
+
         FileInputStream inputStream;
         try
         {
@@ -436,7 +435,7 @@ public class ComponentService implements IComponentService
     {
 
         List<String> listTargetVersions = component.getTargetVersions( );
-        if(!CollectionUtils.isEmpty( listTargetVersions))
+        if ( !CollectionUtils.isEmpty( listTargetVersions ) )
         {
             int nNewIndex = ( component.getTargetVersionIndex( ) + 1 ) % listTargetVersions.size( );
             String strTargetVersion = listTargetVersions.get( nNewIndex );
@@ -445,6 +444,5 @@ public class ComponentService implements IComponentService
             component.setNextSnapshotVersion( Version.getNextSnapshotVersion( strTargetVersion ) );
         }
     }
-
 
 }

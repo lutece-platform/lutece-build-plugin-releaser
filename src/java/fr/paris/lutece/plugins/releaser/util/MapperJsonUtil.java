@@ -48,38 +48,45 @@ public final class MapperJsonUtil
 
     static
     {
-        _mapper = new ObjectMapper(  );
+        _mapper = new ObjectMapper( );
         _mapper.configure( DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false );
     }
-    
+
     /** Private constructor */
-    private MapperJsonUtil()
+    private MapperJsonUtil( )
     {
     }
-    
+
     /**
      * parse the JSON for a bean
-     * @param <T> The Bean class
-     * @param strJson The JSON
-     * @param t The bean class
+     * 
+     * @param <T>
+     *            The Bean class
+     * @param strJson
+     *            The JSON
+     * @param t
+     *            The bean class
      * @return The bean
-     * @throws IOException if an error occurs
+     * @throws IOException
+     *             if an error occurs
      */
-    public static <T> T parse( String strJson , Class<T> t ) throws IOException
+    public static <T> T parse( String strJson, Class<T> t ) throws IOException
     {
         return _mapper.readValue( strJson, t );
     }
-    
+
     /**
      * parse a bean into a json
+     * 
      * @param object
      * @return The json
-     * @throws IOException if an error occurs
+     * @throws IOException
+     *             if an error occurs
      */
     public static String getJson( Object object ) throws IOException
     {
         StringWriter stringWriter = new StringWriter( );
         _mapper.writeValue( stringWriter, object );
-        return stringWriter.toString(  );
+        return stringWriter.toString( );
     }
 }

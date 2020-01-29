@@ -58,61 +58,89 @@ import fr.paris.lutece.util.json.AbstractJsonResponse;
 import fr.paris.lutece.util.json.JsonResponse;
 import fr.paris.lutece.util.json.JsonUtil;
 
+// TODO: Auto-generated Javadoc
 /**
- * ManageSiteRelease JSP Bean abstract class for JSP Bean
+ * ManageSiteRelease JSP Bean abstract class for JSP Bean.
  */
 @Controller( controllerJsp = "ManageComponent.jsp", controllerPath = "jsp/admin/plugins/releaser/", right = "RELEASER_MANAGEMENT" )
 public class ManageComponentReleaseJspBean extends MVCAdminJspBean
 {
     // Parameters
 
+    /** The Constant PARAMETER_SEARCH. */
     private static final String PARAMETER_SEARCH = "search";
 
+    /** The Constant VIEW_MANAGE_COMPONENT. */
     // Views
     private static final String VIEW_MANAGE_COMPONENT = "manageComponent";
     // Actions
 
+    /** The Constant TEMPLATE_MANAGE_COMPONENT. */
     private static final String TEMPLATE_MANAGE_COMPONENT = "/admin/plugins/releaser/manage_component.html";
 
+    /** The Constant MARK_LIST_COMPONENT. */
     private static final String MARK_LIST_COMPONENT = "list_component";
+    
+    /** The Constant MARK_PAGINATOR. */
     private static final String MARK_PAGINATOR = "paginator";
 
+    /** The Constant MARK_SEARCH. */
     private static final String MARK_SEARCH = "search";
+    
+    /** The Constant MARK_NB_ITEMS_PER_PAGE. */
     private static final String MARK_NB_ITEMS_PER_PAGE = "nb_items_per_page";
 
+    /** The Constant JSP_MANAGE_COMPONENT. */
     private static final String JSP_MANAGE_COMPONENT = "jsp/admin/plugins/releaser/ManageComponent.jsp";
+    
+    /** The Constant JSP_MANAGE_CLUSTERS. */
     private static final String JSP_MANAGE_CLUSTERS = "ManageClusters.jsp";
 
+    /** The Constant ACTION_CHANGE_COMPONENT_NEXT_RELEASE_VERSION. */
     private static final String ACTION_CHANGE_COMPONENT_NEXT_RELEASE_VERSION = "versionComponent";
+    
+    /** The Constant ACTION_RELEASE_COMPONENT. */
     private static final String ACTION_RELEASE_COMPONENT = "releaseComponent";
 
+    /** The Constant PARAMETER_ARTIFACT_ID. */
     private static final String PARAMETER_ARTIFACT_ID = "artifact_id";
+    
+    /** The Constant PARAMETER_TWEET_MESSAGE. */
     private static final String PARAMETER_TWEET_MESSAGE = "tweet_message";
 
+    /** The str search. */
     private String _strSearch;
+    
+    /** The str current page index. */
     private String _strCurrentPageIndex;
+    
+    /** The paginator components. */
     Paginator<Component> _paginatorComponents;
 
+    /**
+     * Gets the manage component.
+     *
+     * @param request the request
+     * @return the manage component
+     */
     @View( value = VIEW_MANAGE_COMPONENT, defaultView = true )
     public String getManageComponent( HttpServletRequest request )
     {
-        ReleaserUser user=ReleaserUtils.getReleaserUser( request, getLocale( ) );
-        if(user==null)
+        ReleaserUser user = ReleaserUtils.getReleaserUser( request, getLocale( ) );
+        if ( user == null )
         {
-            user=new ReleaserUser( );
-           
+            user = new ReleaserUser( );
+
         }
-        ReleaserUtils.populateReleaserUser(request, user);
+        ReleaserUtils.populateReleaserUser( request, user );
         ReleaserUtils.setReleaserUser( request, user );
-        
-        
-        _strSearch = request.getParameter( PARAMETER_SEARCH )!=null?request.getParameter( PARAMETER_SEARCH ):_strSearch;
+
+        _strSearch = request.getParameter( PARAMETER_SEARCH ) != null ? request.getParameter( PARAMETER_SEARCH ) : _strSearch;
         String stCurrentPageIndexOld = _strCurrentPageIndex;
         _strCurrentPageIndex = Paginator.getPageIndex( request, Paginator.PARAMETER_PAGE_INDEX, _strCurrentPageIndex );
 
-        
-
-        if (  !StringUtils.isEmpty( request.getParameter( PARAMETER_SEARCH )) || (_strCurrentPageIndex!=null && !_strCurrentPageIndex.equals( stCurrentPageIndexOld )) )
+        if ( !StringUtils.isEmpty( request.getParameter( PARAMETER_SEARCH ) )
+                || ( _strCurrentPageIndex != null && !_strCurrentPageIndex.equals( stCurrentPageIndexOld ) ) )
         {
 
             _paginatorComponents = ComponentService.getService( ).getSearchComponent( _strSearch, request, getLocale( ), JSP_MANAGE_COMPONENT,
@@ -122,14 +150,20 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
 
         Map<String, Object> model = getModel( );
         model.put( MARK_SEARCH, _strSearch );
-        model.put( MARK_LIST_COMPONENT, _paginatorComponents!=null?_paginatorComponents.getPageItems( ):null );
+        model.put( MARK_LIST_COMPONENT, _paginatorComponents != null ? _paginatorComponents.getPageItems( ) : null );
         model.put( MARK_PAGINATOR, _paginatorComponents );
-        model.put( MARK_NB_ITEMS_PER_PAGE,_paginatorComponents!=null?_paginatorComponents.getItemsPerPage( ):null );
+        model.put( MARK_NB_ITEMS_PER_PAGE, _paginatorComponents != null ? _paginatorComponents.getItemsPerPage( ) : null );
 
         HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_MANAGE_COMPONENT, getLocale( ), model );
         return template.getHtml( );
     }
 
+    /**
+     * Do change component next release version.
+     *
+     * @param request the request
+     * @return the string
+     */
     @Action( ACTION_CHANGE_COMPONENT_NEXT_RELEASE_VERSION )
     public String doChangeComponentNextReleaseVersion( HttpServletRequest request )
     {
@@ -154,12 +188,18 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
         return redirectView( request, VIEW_MANAGE_COMPONENT );
     }
 
+    /**
+     * Do release component.
+     *
+     * @param request the request
+     * @return the string
+     */
     @Action( ACTION_RELEASE_COMPONENT )
     public String doReleaseComponent( HttpServletRequest request )
     {
         String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
         String strTweetMessage = request.getParameter( PARAMETER_TWEET_MESSAGE );
-        
+
         AbstractJsonResponse jsonResponse = null;
         Integer nIdContext = null;
 
@@ -168,10 +208,10 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
 
             for ( Component component : _paginatorComponents.getPageItems( ) )
             {
-                if ( component.getArtifactId( )!=null && component.getArtifactId( ).equals( strArtifactId ) )
+                if ( component.getArtifactId( ) != null && component.getArtifactId( ).equals( strArtifactId ) )
                 {
                     component.setTweetMessage( strTweetMessage );
-                    nIdContext = ComponentService.getService( ).release( component, getLocale( ), getUser( ), request,true );
+                    nIdContext = ComponentService.getService( ).release( component, getLocale( ), getUser( ), request, true );
                     break;
                 }
             }

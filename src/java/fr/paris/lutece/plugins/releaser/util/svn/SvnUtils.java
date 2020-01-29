@@ -75,14 +75,24 @@ import fr.paris.lutece.plugins.releaser.util.file.FileUtils;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.util.ReferenceList;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class SvnUtils.
+ */
 public final class SvnUtils
 {
+    
+    /** The Constant MESSAGE_ERROR_SVN. */
     private static final String MESSAGE_ERROR_SVN = "Impossible de se connecter au SVN. Veuillez verifier vos identifiants";
+    
+    /** The Constant CONSTANTE_SLASH. */
     private static final String CONSTANTE_SLASH = "/";
+    
+    /** The Constant logger. */
     private static final Logger logger = Logger.getLogger( SvnUtils.class );
 
     /**
-     * Constructeur vide
+     * Constructeur vide.
      */
     private SvnUtils( )
     {
@@ -90,7 +100,7 @@ public final class SvnUtils
     }
 
     /**
-     * Initialise les diff�rentes factory pour le svn
+     * Initialise les diff�rentes factory pour le svn.
      */
     public static void init( )
     {
@@ -110,38 +120,35 @@ public final class SvnUtils
     }
 
     /**
-     * Commit
-     * 
-     * @param strSiteName
-     *            le nom du site
-     * @param strTagName
-     *            le nom du tag
-     * @param copyClient
-     *            le client svn permettant la copie
-     * @throws SVNException
+     * Commit.
+     *
+     * @param strPathFile the str path file
+     * @param strCommitMessage the str commit message
+     * @param commitClient the commit client
+     * @throws SVNException the SVN exception
      */
     public static void doCommit( String strPathFile, String strCommitMessage, ReleaseSvnCommitClient commitClient ) throws SVNException
     {
         SVNCommitPacket commitPacket = commitClient.doCollectCommitItems( new File [ ] {
-            new File( strPathFile )
+                new File( strPathFile )
         }, false, false, true );
 
         if ( !SVNCommitPacket.EMPTY.equals( commitPacket ) )
         {
-             commitClient.doCommit( commitPacket, false, strCommitMessage );
+            commitClient.doCommit( commitPacket, false, strCommitMessage );
         }
     }
 
     /**
-     * Tag un site
-     * 
-     * @param strSiteName
-     *            le nom du site
-     * @param strTagName
-     *            le nom du tag
-     * @param copyClient
-     *            le client svn permettant la copie
-     * @throws SVNException
+     * Tag un site.
+     *
+     * @param strSiteName            le nom du site
+     * @param strTagName            le nom du tag
+     * @param strSrcURL the str src URL
+     * @param strDstURL the str dst URL
+     * @param copyClient            le client svn permettant la copie
+     * @return string
+     * @throws SVNException the SVN exception
      */
     public static String doTagSite( String strSiteName, String strTagName, String strSrcURL, String strDstURL, SVNCopyClient copyClient ) throws SVNException
     {
@@ -163,6 +170,16 @@ public final class SvnUtils
         return null;
     }
 
+    /**
+     * Do svn checkout.
+     *
+     * @param strUrl the str url
+     * @param strCheckoutBaseSitePath the str checkout base site path
+     * @param updateClient the update client
+     * @param result the result
+     * @return the long
+     * @throws SVNException the SVN exception
+     */
     public static Long doSvnCheckout( String strUrl, String strCheckoutBaseSitePath, ReleaseSvnCheckoutClient updateClient, CommandResult result )
             throws SVNException
     {
@@ -200,9 +217,7 @@ public final class SvnUtils
 
             // SVNDepth.INFINITY + dernier param�tre � FALSE pour la version 1.3.2
             nLastCommitId = updateClient.doCheckout( repository.getLocation( ), file, SVNRevision.HEAD, SVNRevision.HEAD, true );
-            
-            
-            
+
         }
         catch( SVNAuthenticationException e )
         {
@@ -266,6 +281,14 @@ public final class SvnUtils
         return nLastCommitId;
     }
 
+    /**
+     * Gets the svn sites.
+     *
+     * @param strUrlSite the str url site
+     * @param clientManager the client manager
+     * @return the svn sites
+     * @throws SVNException the SVN exception
+     */
     public static ReferenceList getSvnSites( String strUrlSite, SVNClientManager clientManager ) throws SVNException
     {
         final ReferenceList listSites = new ReferenceList( );
@@ -293,85 +316,119 @@ public final class SvnUtils
         return listSites;
     }
 
-    public static Long getLastRevision(  String strRepoPath,String strUserName,String strPassword)
+    /**
+     * Gets the last revision.
+     *
+     * @param strRepoPath the str repo path
+     * @param strUserName the str user name
+     * @param strPassword the str password
+     * @return the last revision
+     */
+    public static Long getLastRevision( String strRepoPath, String strUserName, String strPassword )
     {
-        Long lRevision= null;
+        Long lRevision = null;
         SVNClientManager clientManager = SVNClientManager.newInstance( new DefaultSVNOptions( ), strUserName, strPassword );
         SVNRevision revision;
         try
         {
-            File fStrRepo=new File(strRepoPath );
+            File fStrRepo = new File( strRepoPath );
             revision = clientManager.getStatusClient( ).doStatus( fStrRepo, true ).getCommittedRevision( );
-            if(revision!=null)
+            if ( revision != null )
             {
                 return revision.getNumber( );
             }
         }
         catch( SVNException e )
         {
-           AppLogService.error( e );
+            AppLogService.error( e );
         }
-    
-    return lRevision;
+
+        return lRevision;
     }
-    
-    
-    public static void update(  String strRepoPath,String strUserName,String strPassword)
+
+    /**
+     * Update.
+     *
+     * @param strRepoPath the str repo path
+     * @param strUserName the str user name
+     * @param strPassword the str password
+     */
+    public static void update( String strRepoPath, String strUserName, String strPassword )
     {
         SVNClientManager clientManager = SVNClientManager.newInstance( new DefaultSVNOptions( ), strUserName, strPassword );
-      
+
         try
         {
-            File fStrRepo=new File(strRepoPath );
-            clientManager.getUpdateClient( ).doUpdate(fStrRepo , SVNRevision.HEAD, true );
-            
-          
+            File fStrRepo = new File( strRepoPath );
+            clientManager.getUpdateClient( ).doUpdate( fStrRepo, SVNRevision.HEAD, true );
+
         }
         catch( SVNException e )
         {
-           AppLogService.error( e );
+            AppLogService.error( e );
         }
-    
-    }
-    
-    public static void  revert(  String strRepoPath, String strCmUrl,String strUserName,String strPassword,Long revCurrentCommit,Long lRevertCommit)
-    {
-       
-        SVNClientManager clientManager = SVNClientManager.newInstance( new DefaultSVNOptions( ), strUserName, strPassword );
-        
-             SVNDiffClient diffClient = clientManager.getDiffClient();
-             SVNRevision sRevertCommit= SVNRevision.create( lRevertCommit );
-             SVNRevision sLastCommit= SVNRevision.create( revCurrentCommit );
-             
-             
-             if(revCurrentCommit>lRevertCommit)
-             {
-             
-                   SVNRevisionRange rangeToMerge = new SVNRevisionRange(sLastCommit, sRevertCommit);
-                   
-                   try
-                {
-                    diffClient.doMerge(SVNURL.parseURIEncoded( strCmUrl), sLastCommit, Collections.singleton(rangeToMerge), 
-                               new File(strRepoPath), SVNDepth.INFINITY, true, false, false, false);
-                }
-                catch( SVNException e )
-                {
-                   AppLogService.error( e );
-                }
-             }
-                 
-                   
-    }
-    
 
+    }
+
+    /**
+     * Revert.
+     *
+     * @param strRepoPath the str repo path
+     * @param strCmUrl the str cm url
+     * @param strUserName the str user name
+     * @param strPassword the str password
+     * @param revCurrentCommit the rev current commit
+     * @param lRevertCommit the l revert commit
+     */
+    public static void revert( String strRepoPath, String strCmUrl, String strUserName, String strPassword, Long revCurrentCommit, Long lRevertCommit )
+    {
+
+        SVNClientManager clientManager = SVNClientManager.newInstance( new DefaultSVNOptions( ), strUserName, strPassword );
+
+        SVNDiffClient diffClient = clientManager.getDiffClient( );
+        SVNRevision sRevertCommit = SVNRevision.create( lRevertCommit );
+        SVNRevision sLastCommit = SVNRevision.create( revCurrentCommit );
+
+        if ( revCurrentCommit > lRevertCommit )
+        {
+
+            SVNRevisionRange rangeToMerge = new SVNRevisionRange( sLastCommit, sRevertCommit );
+
+            try
+            {
+                diffClient.doMerge( SVNURL.parseURIEncoded( strCmUrl ), sLastCommit, Collections.singleton( rangeToMerge ), new File( strRepoPath ),
+                        SVNDepth.INFINITY, true, false, false, false );
+            }
+            catch( SVNException e )
+            {
+                AppLogService.error( e );
+            }
+        }
+
+    }
+
+    /**
+     * Gets the svn url tag site.
+     *
+     * @param strScmUrl the str scm url
+     * @param strTagName the str tag name
+     * @return the svn url tag site
+     */
     public static String getSvnUrlTagSite( String strScmUrl, String strTagName )
     {
 
-        String strUrl = strScmUrl.contains( ConstanteUtils.CONSTANTE_TRUNK ) ? strScmUrl
-                .replace( ConstanteUtils.CONSTANTE_TRUNK, ConstanteUtils.CONSTANTE_TAGS ) : strScmUrl;
+        String strUrl = strScmUrl.contains( ConstanteUtils.CONSTANTE_TRUNK )
+                ? strScmUrl.replace( ConstanteUtils.CONSTANTE_TRUNK, ConstanteUtils.CONSTANTE_TAGS )
+                : strScmUrl;
         return strUrl + ConstanteUtils.CONSTANTE_SEPARATOR_SLASH + strTagName;
     }
 
+    /**
+     * Gets the repo url.
+     *
+     * @param strRepoUrl the str repo url
+     * @return the repo url
+     */
     public static String getRepoUrl( String strRepoUrl )
     {
 
@@ -384,14 +441,21 @@ public final class SvnUtils
         return strRepoUrl;
 
     }
-    
-    public static boolean checkAuthentication( String strUrl,String strUserName,String strPassword )
+
+    /**
+     * Check authentication.
+     *
+     * @param strUrl the str url
+     * @param strUserName the str user name
+     * @param strPassword the str password
+     * @return true, if successful
+     */
+    public static boolean checkAuthentication( String strUrl, String strUserName, String strPassword )
     {
         try
         {
             ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager( strUserName, strPassword );
-                
-            
+
             SVNURL url = SVNURL.parseURIEncoded( strUrl );
             SVNRepository repository = SVNRepositoryFactory.create( url, null );
             repository.setAuthenticationManager( authManager );

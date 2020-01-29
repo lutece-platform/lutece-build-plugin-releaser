@@ -36,7 +36,11 @@ package fr.paris.lutece.plugins.releaser.util.maven;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * 
+ * MavenUtils
+ *
+ */
 public final class MavenUtils
 {
     private static final String TOKEN_RELEASE_VERSION = "$1";
@@ -45,36 +49,44 @@ public final class MavenUtils
     private static final String TOKEN_USERNAME = "$4";
     private static final String TOKEN_PASSWORD = "$5";
     private static final String RELEASE_PREPARE_BASE = "release:prepare";
-    private static final String RELEASE_PREPARE_ARGS = "-DignoreSnapshots=true" + " -DreleaseVersion=" +
-        TOKEN_RELEASE_VERSION + " -Dtag=" + TOKEN_TAG + " -DdevelopmentVersion=" + TOKEN_DEVELOPMENT_VERSION +
-        " -DforkMode=never" + " -Dusername=" + TOKEN_USERNAME + " -Dpassword=" + TOKEN_PASSWORD +
-        " -Darguments=\"-Dmaven.test.skip=true\" --batch-mode";
+    private static final String RELEASE_PREPARE_ARGS = "-DignoreSnapshots=true" + " -DreleaseVersion=" + TOKEN_RELEASE_VERSION + " -Dtag=" + TOKEN_TAG
+            + " -DdevelopmentVersion=" + TOKEN_DEVELOPMENT_VERSION + " -DforkMode=never" + " -Dusername=" + TOKEN_USERNAME + " -Dpassword=" + TOKEN_PASSWORD
+            + " -Darguments=\"-Dmaven.test.skip=true\" --batch-mode";
 
-    private MavenUtils(  )
+    private MavenUtils( )
     {
         // nothing
     }
 
     /**
      * Builds maven arguments for release:prepare (with release:prepare)
-     * @param strReleaseVersion release version
-     * @param strTag tag
-     * @param strDevelopmentVersion development version
+     * 
+     * @param strReleaseVersion
+     *            release version
+     * @param strTag
+     *            tag
+     * @param strDevelopmentVersion
+     *            development version
+     * @param strUsername
+     *            strUsername
+     * @param strPassword
+     *            strPassword
      * @return the list
      */
-    public static List<String> createReleasePrepare( String strReleaseVersion, String strTag, String strDevelopmentVersion, String strUsername, String strPassword )
+    public static List<String> createReleasePrepare( String strReleaseVersion, String strTag, String strDevelopmentVersion, String strUsername,
+            String strPassword )
     {
         String strArguments = RELEASE_PREPARE_ARGS.replace( TOKEN_DEVELOPMENT_VERSION, strDevelopmentVersion );
         strArguments = strArguments.replace( TOKEN_RELEASE_VERSION, strReleaseVersion );
         strArguments = strArguments.replace( TOKEN_TAG, strTag );
         strArguments = strArguments.replace( TOKEN_USERNAME, strUsername );
         strArguments = strArguments.replace( TOKEN_PASSWORD, strPassword );
-        
+
         List<String> listPrepare = new ArrayList<String>( 2 );
         listPrepare.add( RELEASE_PREPARE_BASE );
         listPrepare.add( strArguments );
-        
-        return listPrepare;     
+
+        return listPrepare;
     }
-    
+
 }

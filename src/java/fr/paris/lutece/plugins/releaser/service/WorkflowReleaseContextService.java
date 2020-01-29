@@ -44,14 +44,31 @@ import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.util.ReferenceItem;
 import fr.paris.lutece.util.ReferenceList;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class WorkflowReleaseContextService.
+ */
 public class WorkflowReleaseContextService implements IWorkflowReleaseContextService
 {
 
+    /** The singleton. */
     private static IWorkflowReleaseContextService _singleton;
+    
+    /** The map workflow release context. */
     private HashMap<Integer, WorkflowReleaseContext> _mapWorkflowReleaseContext = new HashMap<Integer, WorkflowReleaseContext>( );
+    
+    /** The executor. */
     private ExecutorService _executor;
+    
+    /** The release in progress. */
     private HashSet<String> _releaseInProgress = new HashSet<String>( );
 
+    /**
+     * Adds the workflow release context.
+     *
+     * @param context the context
+     * @return the int
+     */
     /*
      * (non-Javadoc)
      * 
@@ -70,6 +87,12 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         return nIdKey;
     }
 
+    /**
+     * Gets the workflow release context.
+     *
+     * @param nIdContext the n id context
+     * @return the workflow release context
+     */
     /*
      * (non-Javadoc)
      * 
@@ -81,6 +104,11 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         return _mapWorkflowReleaseContext.get( nIdContext );
     }
 
+    /**
+     * Save workflow release context.
+     *
+     * @param context the context
+     */
     public synchronized void saveWorkflowReleaseContext( WorkflowReleaseContext context )
     {
         try
@@ -97,6 +125,13 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         }
     }
 
+    /**
+     * Gets the workflow release context history.
+     *
+     * @param nIdContext the n id context
+     * @param strArtifactId the str artifact id
+     * @return the workflow release context history
+     */
     public WorkflowReleaseContext getWorkflowReleaseContextHistory( int nIdContext, String strArtifactId )
     {
         WorkflowReleaseContext context = null;
@@ -115,6 +150,12 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
     }
 
+    /**
+     * Gets the list workflow release context history.
+     *
+     * @param strArtifactId the str artifact id
+     * @return the list workflow release context history
+     */
     public List<WorkflowReleaseContext> getListWorkflowReleaseContextHistory( String strArtifactId )
     {
         WorkflowReleaseContext context = null;
@@ -151,6 +192,12 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
     }
 
+    /**
+     * Gets the id workflow.
+     *
+     * @param context the context
+     * @return the id workflow
+     */
     public int getIdWorkflow( WorkflowReleaseContext context )
     {
         int nIdWorkflow = ConstanteUtils.CONSTANTE_ID_NULL;
@@ -163,12 +210,17 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         else
         {
 
-                nIdWorkflow = AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_ID_WORKFLOW_COMPONENT, ConstanteUtils.CONSTANTE_ID_NULL );
-         }
+            nIdWorkflow = AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_ID_WORKFLOW_COMPONENT, ConstanteUtils.CONSTANTE_ID_NULL );
+        }
 
         return nIdWorkflow;
     }
 
+    /**
+     * Gets the service.
+     *
+     * @return the service
+     */
     public static IWorkflowReleaseContextService getService( )
     {
         if ( _singleton == null )
@@ -181,32 +233,37 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         return _singleton;
     }
 
+    /**
+     * Merge develop master.
+     *
+     * @param context the context
+     * @param locale the locale
+     */
     public void mergeDevelopMaster( WorkflowReleaseContext context, Locale locale )
     {
 
-        
-        if(!context.getReleaserResource( ).getRepoType( ).equals( RepositoryType.SVN ))
+        if ( !context.getReleaserResource( ).getRepoType( ).equals( RepositoryType.SVN ) )
         {
             FileRepository fLocalRepo = null;
             CommandResult commandResult = context.getCommandResult( );
             String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
             String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
-    
+
             ReleaserUtils.logStartAction( context, " Merge DEVELOP/MASTER" );
-    
+
             String strLocalComponentPath = ReleaserUtils.getLocalPath( context );
             Git git = null;
             try
             {
-    
+
                 fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
                 git = new Git( fLocalRepo );
                 commandResult.getLog( ).append( "Checking if local repository " + strLocalComponentPath + " exist\n" );
                 if ( !fLocalRepo.getDirectory( ).exists( ) )
                 {
-    
+
                     ReleaserUtils.addTechnicalError( commandResult, "the local repository does not exist" );
-    
+
                 }
                 else
                 {
@@ -215,7 +272,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                     commandResult.getLog( ).append( "Checkout successfull\n" );
                     // PROGRESS 15%
                     commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
-    
+
                     commandResult.getLog( ).append( "Going to merge '" + GitUtils.DEVELOP_BRANCH + "' branch on 'master' branch...\n" );
                     MergeResult mergeResult = GitUtils.mergeRepoBranch( git, GitUtils.DEVELOP_BRANCH );
                     if ( mergeResult.getMergeStatus( ).equals( MergeResult.MergeStatus.CHECKOUT_CONFLICT )
@@ -225,7 +282,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                     {
                         ReleaserUtils.addTechnicalError( commandResult, "An error appear during merge operation, the status of merge result is: "
                                 + mergeResult.getMergeStatus( ).toString( ) + "\nPlease merge manually before releasing." );
-    
+
                     }
                     else
                     {
@@ -235,20 +292,20 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                     ReleaserUtils.logEndAction( context, " Merge DEVELOP/MASTER" );
                     // PROGRESS 25%
                     commandResult.setProgressValue( commandResult.getProgressValue( ) + 10 );
-    
+
                 }
-    
+
             }
             catch( InvalidRemoteException e )
             {
-    
+
                 ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
-    
+
             }
             catch( TransportException e )
             {
                 ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
-    
+
             }
             catch( IOException e )
             {
@@ -260,24 +317,30 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             }
             finally
             {
-    
+
                 if ( fLocalRepo != null )
                 {
-    
+
                     fLocalRepo.close( );
-    
+
                 }
                 if ( git != null )
                 {
-    
+
                     git.close( );
-    
+
                 }
-    
+
             }
         }
     }
 
+    /**
+     * Release prepare component.
+     *
+     * @param context the context
+     * @param locale the locale
+     */
     public void releasePrepareComponent( WorkflowReleaseContext context, Locale locale )
     {
         String strComponentName = context.getComponent( ).getName( );
@@ -348,12 +411,11 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                 }
             }
 
-          
             MavenService.getService( ).mvnReleasePrepare( strLocalComponentPomPath, strComponentReleaseVersion, strComponentReleaseTagName,
                     strComponentReleaseNewDeveloppmentVersion, strLogin, strPassword, commandResult );
             // Merge Master
             cvsService.updateMasterBranch( context, locale );
-         // Checkout Develop after prepare
+            // Checkout Develop after prepare
             cvsService.checkoutDevelopBranch( context, locale );
 
             // PROGRESS 50%
@@ -418,6 +480,12 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
     }
 
+    /**
+     * Release perform component.
+     *
+     * @param context the context
+     * @param locale the locale
+     */
     public void releasePerformComponent( WorkflowReleaseContext context, Locale locale )
     {
 
@@ -436,8 +504,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         try
         {
 
-            
-           MavenService.getService( ).mvnReleasePerform( strLocalComponentPath, strLogin, strPassword, commandResult );
+            MavenService.getService( ).mvnReleasePerform( strLocalComponentPath, strLogin, strPassword, commandResult );
 
         }
         catch( AppException ex )
@@ -448,6 +515,12 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         ReleaserUtils.logEndAction( context, " Release Perform" );
     }
 
+    /**
+     * Checkout repository.
+     *
+     * @param context the context
+     * @param locale the locale
+     */
     public void checkoutRepository( WorkflowReleaseContext context, Locale locale )
     {
         CommandResult commandResult = context.getCommandResult( );
@@ -463,6 +536,12 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
     }
 
+    /**
+     * Release prepare site.
+     *
+     * @param context the context
+     * @param locale the locale
+     */
     public void releasePrepareSite( WorkflowReleaseContext context, Locale locale )
     {
 
@@ -500,10 +579,9 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
             // Merge Master
             cvsService.updateMasterBranch( context, locale );
-            //checkout/pull develop branch after prepare
+            // checkout/pull develop branch after prepare
             cvsService.checkoutDevelopBranch( context, locale );
 
-            
             // PROGRESS 20%
             commandResult.setProgressValue( commandResult.getProgressValue( ) + 20 );
 
@@ -530,6 +608,12 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
     }
 
+    /**
+     * Send tweet.
+     *
+     * @param context the context
+     * @param locale the locale
+     */
     public void sendTweet( WorkflowReleaseContext context, Locale locale )
     {
 
@@ -543,6 +627,12 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
     }
 
+    /**
+     * Update jira versions.
+     *
+     * @param context the context
+     * @param locale the locale
+     */
     public void updateJiraVersions( WorkflowReleaseContext context, Locale locale )
     {
 
@@ -556,11 +646,23 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
     }
 
+    /**
+     * Start workflow release context.
+     *
+     * @param context the context
+     * @param nIdWorkflow the n id workflow
+     * @param locale the locale
+     * @param request the request
+     * @param user the user
+     */
     public void startWorkflowReleaseContext( WorkflowReleaseContext context, int nIdWorkflow, Locale locale, HttpServletRequest request, AdminUser user )
     {
         _executor.execute( new ReleaseComponentTask( nIdWorkflow, context, request, user, locale ) );
     }
 
+    /**
+     * Inits the.
+     */
     public void init( )
     {
 
@@ -568,24 +670,46 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
     }
 
+    /**
+     * Start release in progress.
+     *
+     * @param strArtifactId the str artifact id
+     */
     public void startReleaseInProgress( String strArtifactId )
     {
 
         _releaseInProgress.add( strArtifactId );
     }
 
+    /**
+     * Stop release in progress.
+     *
+     * @param strArtifactId the str artifact id
+     */
     public void stopReleaseInProgress( String strArtifactId )
     {
 
         _releaseInProgress.remove( strArtifactId );
     }
 
+    /**
+     * Checks if is release in progress.
+     *
+     * @param strArtifactId the str artifact id
+     * @return true, if is release in progress
+     */
     public boolean isReleaseInProgress( String strArtifactId )
     {
 
         return _releaseInProgress.contains( strArtifactId );
     }
 
+    /**
+     * Release perform site.
+     *
+     * @param context the context
+     * @param locale the locale
+     */
     @Override
     public void releasePerformSite( WorkflowReleaseContext context, Locale locale )
     {

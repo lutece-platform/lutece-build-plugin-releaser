@@ -52,13 +52,13 @@ public class Component extends AbstractReleaserResource
     private String _strLastAvailableVersion;
     private String _strLastAvailableSnapshotVersion;
     private String _strNextSnapshotVersion;
-  
-    private String _strDescription; 
+
+    private String _strDescription;
     private boolean _bIsProject;
     private String _strJiraCode;
     private String _strJiraRoadmapUrl;
     private int _nJiraCurrentVersionClosedIssues;
-    private int _nJiraCurrentVersionOpenedIssues;   
+    private int _nJiraCurrentVersionOpenedIssues;
     private List<String> _listTargetVersions;
     private int _nTargetVersionIndex;
     private boolean _bDowngrade;
@@ -69,9 +69,6 @@ public class Component extends AbstractReleaserResource
     private String _strFullName;
     private String _strTweetMessage;
     private String _strScmDeveloperConnection;
-   
-    
-        
 
     /**
      * Returns the ArtifactId
@@ -241,7 +238,6 @@ public class Component extends AbstractReleaserResource
         _strNextSnapshotVersion = strNextSnapshotVersion;
     }
 
-   
     /**
      * Returns the JiraCode
      * 
@@ -325,43 +321,49 @@ public class Component extends AbstractReleaserResource
     {
         _nJiraCurrentVersionOpenedIssues = nJiraCurrentVersionOpenedIssues;
     }
-    
+
     /**
      * Set target versions list
-     * @param listTargetVersions The target versions list 
+     * 
+     * @param listTargetVersions
+     *            The target versions list
      */
     public void setTargetVersions( List<String> listTargetVersions )
     {
         _listTargetVersions = listTargetVersions;
     }
-    
+
     /**
      * Gets the target versions list
+     * 
      * @return the target versions list
      */
-    public List<String> getTargetVersions()
+    public List<String> getTargetVersions( )
     {
         return _listTargetVersions;
     }
-    
+
     /**
      * Set the target version index
-     * @param nIndex the target version index
+     * 
+     * @param nIndex
+     *            the target version index
      */
     public void setTargetVersionIndex( int nIndex )
     {
         _nTargetVersionIndex = nIndex;
     }
-    
+
     /**
      * Get the target version index
-     * @return the target version index 
+     * 
+     * @return the target version index
      */
-    public int getTargetVersionIndex()
+    public int getTargetVersionIndex( )
     {
         return _nTargetVersionIndex;
     }
-    
+
     /**
      * Returns the IsProject
      * 
@@ -370,16 +372,14 @@ public class Component extends AbstractReleaserResource
     public boolean shouldBeReleased( )
     {
 
-        if(this.isProject( ) && this.isSnapshotVersion( ) && this.getTargetVersion( )!=null && !Version.isSnapshot( this.getTargetVersion( ))&& !this.isTheme( ) && !this.isDowngrade( ) &&  this.getCurrentVersion( ).equals( this.getLastAvailableSnapshotVersion( ) )  )
+        if ( this.isProject( ) && this.isSnapshotVersion( ) && this.getTargetVersion( ) != null && !Version.isSnapshot( this.getTargetVersion( ) )
+                && !this.isTheme( ) && !this.isDowngrade( ) && this.getCurrentVersion( ).equals( this.getLastAvailableSnapshotVersion( ) ) )
         {
-             return true;   
+            return true;
         }
         return false;
-   }
+    }
 
-
-
-    
     /**
      * 
      * @return scm developer connection url
@@ -388,106 +388,157 @@ public class Component extends AbstractReleaserResource
     {
         return _strScmDeveloperConnection;
     }
+
     /**
      * 
-     * @param _strScmDeveloperConnection scm developer connection url
+     * @param _strScmDeveloperConnection
+     *            scm developer connection url
      */
     public void setScmDeveloperConnection( String _strScmDeveloperConnection )
     {
         this._strScmDeveloperConnection = _strScmDeveloperConnection;
     }
-    
+
     /**
      * 
-     * @return
+     * @return snapshot version
      */
-    public boolean isSnapshotVersion()
+    public boolean isSnapshotVersion( )
     {
-         return  Version.isSnapshot(getCurrentVersion( ));
+        return Version.isSnapshot( getCurrentVersion( ) );
     }
-    
-    
+
+    /**
+     * @return boolean
+     */
     public boolean isUpgrade( )
     {
         return _bUpgrade;
     }
 
+    /**
+     * @param _bUpgrade
+     */
     public void setUpgrade( boolean _bUpgrade )
     {
         this._bUpgrade = _bUpgrade;
     }
 
+    /**
+     * @return boolean
+     */
     public boolean isDowngrade( )
     {
         return _bDowngrade;
     }
 
+    /**
+     * @param _bDowngrade
+     */
     public void setDowngrade( boolean _bDowngrade )
     {
         this._bDowngrade = _bDowngrade;
     }
 
- 
+    /**
+     * @return boolean
+     */
     public boolean isTheme( )
     {
-        return getType( )!=null && ConstanteUtils.CONSTANTE_TYPE_LUTECE_SITE.equals( getType( ) );
+        return getType( ) != null && ConstanteUtils.CONSTANTE_TYPE_LUTECE_SITE.equals( getType( ) );
     }
 
+    /**
+     * @return getLastAvailableSnapshotVersion
+     */
     public String getLastAvailableSnapshotVersion( )
     {
         return _strLastAvailableSnapshotVersion;
     }
 
+    /**
+     * @param _strLastAvailableSnapshotVersion
+     */
     public void setLastAvailableSnapshotVersion( String _strLastAvailableSnapshotVersion )
     {
         this._strLastAvailableSnapshotVersion = _strLastAvailableSnapshotVersion;
     }
 
+    /**
+     * @return isErrorLastRelease
+     */
     public boolean isErrorLastRelease( )
     {
         return _bErrorLastRelease;
     }
 
+    /**
+     * @param _bErrorLastRelease
+     */
     public void setErrorLastRelease( boolean _bErrorLastRelease )
     {
         this._bErrorLastRelease = _bErrorLastRelease;
     }
 
+    /**
+     * @return getName
+     */
     public String getName( )
     {
         return _strName;
     }
 
+    /**
+     * @param _strName
+     */
     public void setName( String _strName )
     {
         this._strName = _strName;
     }
 
+    /**
+     * @return CloneUrl
+     */
     public String getCloneUrl( )
     {
         return _strCloneUrl;
     }
 
+    /**
+     * @param _strCloneUrl
+     */
     public void setCloneUrl( String _strCloneUrl )
     {
         this._strCloneUrl = _strCloneUrl;
     }
 
+    /**
+     * @return full name
+     */
     public String getFullName( )
     {
         return _strFullName;
     }
 
+    /**
+     * @param strFullName
+     */
     public void setFullName( String strFullName )
     {
         this._strFullName = strFullName;
     }
 
+    /**
+     * @return getTweetMessage
+     */
     public String getTweetMessage( )
     {
         return _strTweetMessage;
     }
 
+    /**
+     * @param _strTweetMessage
+     */
     public void setTweetMessage( String _strTweetMessage )
     {
         this._strTweetMessage = _strTweetMessage;
@@ -500,5 +551,4 @@ public class Component extends AbstractReleaserResource
         return getScmDeveloperConnection( );
     }
 
-            
 }

@@ -54,7 +54,7 @@ public class Site extends AbstractReleaserResource implements Serializable
     @NotEmpty( message = "#i18n{releaser.validation.site.ArtifactId.notEmpty}" )
     @Size( max = 50, message = "#i18n{releaser.validation.site.ArtifactId.size}" )
     private String _strArtifactId;
-   
+
     private int _nIdCluster;
     @URL( message = "#i18n{portal.validation.message.url}" )
     @NotEmpty( message = "#i18n{releaser.validation.site.ScmUrl.notEmpty}" )
@@ -71,14 +71,14 @@ public class Site extends AbstractReleaserResource implements Serializable
 
     @Size( max = 50, message = "#i18n{releaser.validation.site.JiraKey.size}" )
     private String _strJiraKey;
-    
+
     private String _strTagInformation;
-    
+
     private String _strCluster;
 
     private List<Dependency> _listCurrentDependencies = new ArrayList<>( );
     private List<Component> _listComponents = new ArrayList<>( );
-    
+
     private String _strCurrentVersion;
     private String _strLastReleaseVersion;
     private String _strNextReleaseVersion;
@@ -87,7 +87,6 @@ public class Site extends AbstractReleaserResource implements Serializable
     private String _strNextSnapshotVersion;
     private String _strGroupId;
     private boolean _bTheme;
-
 
     /**
      * Returns the Id
@@ -236,21 +235,33 @@ public class Site extends AbstractReleaserResource implements Serializable
         _strJiraKey = strJiraKey;
     }
 
+    /**
+     * @param dependency
+     */
     public void addCurrentDependency( Dependency dependency )
     {
         _listCurrentDependencies.add( dependency );
     }
 
+    /**
+     * @return getCurrentDependencies
+     */
     public List<Dependency> getCurrentDependencies( )
     {
         return _listCurrentDependencies;
     }
 
+    /**
+     * @param component
+     */
     public void addComponent( Component component )
     {
         _listComponents.add( component );
     }
 
+    /**
+     * @return getComponents
+     */
     public List<Component> getComponents( )
     {
         return _listComponents;
@@ -363,65 +374,89 @@ public class Site extends AbstractReleaserResource implements Serializable
 
     /**
      * Set target versions list
-     * @param listTargetVersions The target versions list 
+     * 
+     * @param listTargetVersions
+     *            The target versions list
      */
     public void setTargetVersions( List<String> listTargetVersions )
     {
         _listTargetVersions = listTargetVersions;
     }
-    
+
     /**
      * Gets the target versions list
+     * 
      * @return the target versions list
      */
-    public List<String> getTargetVersions()
+    public List<String> getTargetVersions( )
     {
         return _listTargetVersions;
     }
-    
+
     /**
      * Set the target version index
-     * @param nIndex the target version index
+     * 
+     * @param nIndex
+     *            the target version index
      */
     public void setTargetVersionIndex( int nIndex )
     {
         _nTargetVersionIndex = nIndex;
     }
-    
+
     /**
      * Get the target version index
-     * @return the target version index 
+     * 
+     * @return the target version index
      */
-    public int getTargetVersionIndex()
+    public int getTargetVersionIndex( )
     {
         return _nTargetVersionIndex;
     }
 
+    /**
+     * @return getTagInformation
+     */
     public String getTagInformation( )
     {
         return _strTagInformation;
     }
 
+    /**
+     * @param _strTagInfotmation
+     */
     public void setTagInformation( String _strTagInfotmation )
     {
         this._strTagInformation = _strTagInfotmation;
     }
 
+    /**
+     * @return getGroupId
+     */
     public String getGroupId( )
     {
         return _strGroupId;
     }
 
+    /**
+     * @param _strGroupId
+     */
     public void setGroupId( String _strGroupId )
     {
         this._strGroupId = _strGroupId;
     }
 
+    /**
+     * @return isTheme
+     */
     public boolean isTheme( )
     {
         return _bTheme;
     }
 
+    /**
+     * @param _bTheme
+     */
     public void setTheme( boolean _bTheme )
     {
         this._bTheme = _bTheme;
@@ -433,13 +468,5 @@ public class Site extends AbstractReleaserResource implements Serializable
         // TODO Auto-generated method stub
         return getNextReleaseVersion( );
     }
-    
-    
-    
- 
-    
-    
 
-    
-    
 }

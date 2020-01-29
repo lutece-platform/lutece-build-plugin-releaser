@@ -72,17 +72,19 @@ import fr.paris.lutece.util.httpaccess.HttpAccessException;
 import fr.paris.lutece.util.signrequest.BasicAuthorizationAuthenticator;
 import fr.paris.lutece.util.signrequest.RequestAuthenticator;
 
+// TODO: Auto-generated Javadoc
 /**
- * SvnSiteService
+ * SvnSiteService.
  */
 public class SvnResourceService implements IVCSResourceService
 {
 
     /**
      * Fetch the pom.xml content from a repository
-     * 
-     * @param strPomUrl
-     *            The POM URL
+     *
+     * @param site the site
+     * @param strLogin the str login
+     * @param strPassword the str password
      * @return The POM content
      */
     public String fetchPom( Site site, String strLogin, String strPassword )
@@ -97,23 +99,22 @@ public class SvnResourceService implements IVCSResourceService
         }
         catch( HttpAccessException ex )
         {
-           
+
             AppLogService.error( "Error fecthing pom.xml content : " + ex.getMessage( ), ex );
-            if(ex.getResponseCode( )==401)
+            if ( ex.getResponseCode( ) == 401 )
             {
                 throw new AppException( ConstanteUtils.ERROR_TYPE_AUTHENTICATION_ERROR, ex );
-           }
+            }
         }
         return null;
     }
 
     /**
-     * Gets the last release found in the SVN repository
-     * 
-     * @param strSiteArtifactId
-     *            The site artifact id
-     * @param strTrunkUrl
-     *            The trunk URL
+     * Gets the last release found in the SVN repository.
+     *
+     * @param site the site
+     * @param strLogin the str login
+     * @param strPassword the str password
      * @return The version if found otherwise null
      */
     public String getLastRelease( Site site, String strLogin, String strPassword )
@@ -154,10 +155,10 @@ public class SvnResourceService implements IVCSResourceService
     }
 
     /**
-     * Gets anchor list using more optimized method
+     * Gets anchor list using more optimized method.
      *
-     * @param strHtml
-     *            The HTML code
+     * @param strHtml            The HTML code
+     * @param strPrefix the str prefix
      * @return The list
      */
     private static List<String> getAnchorsList( String strHtml, String strPrefix )
@@ -186,8 +187,10 @@ public class SvnResourceService implements IVCSResourceService
     }
 
     /**
-     * Build an authenticathor to access the site repository
-     * 
+     * Build an authenticathor to access the site repository.
+     *
+     * @param strLogin the str login
+     * @param strPassword the str password
      * @return The authenticator
      */
     private static RequestAuthenticator getSiteAuthenticator( String strLogin, String strPassword )
@@ -196,19 +199,22 @@ public class SvnResourceService implements IVCSResourceService
         return new BasicAuthorizationAuthenticator( strLogin, strPassword );
     }
 
-
-
-
-    
+    /**
+     * Do checkout repository.
+     *
+     * @param context the context
+     * @param strLogin the str login
+     * @param strPassword the str password
+     * @return the string
+     */
     @Override
     public String doCheckoutRepository( WorkflowReleaseContext context, String strLogin, String strPassword )
     {
         CommandResult commandResult = context.getCommandResult( );
 
         ReleaserUtils.logStartAction( context, " Checkout Svn" );
-    
-        String strLocalBasePath  = ReleaserUtils.getLocalPath( context );
-        
+
+        String strLocalBasePath = ReleaserUtils.getLocalPath( context );
 
         File file = new File( strLocalBasePath );
 
@@ -223,145 +229,149 @@ public class SvnResourceService implements IVCSResourceService
             }
             commandResult.getLog( ).append( "Local SVN  has been cleaned\n" );
         }
-        
-        
-        
-        
+
         // PROGRESS 5%
         commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
 
-        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager( strLogin,
-                strPassword );
-       
-        
-          ReleaseSvnCheckoutClient updateClient = new ReleaseSvnCheckoutClient( authManager,
-                    SVNWCUtil.createDefaultOptions( false ) );
-            
-        
+        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager( strLogin, strPassword );
+
+        ReleaseSvnCheckoutClient updateClient = new ReleaseSvnCheckoutClient( authManager, SVNWCUtil.createDefaultOptions( false ) );
+
         commandResult.getLog( ).append( "Checkout SVN  ...\n" );
-        Long nLastCommitId=null;
-        
+        Long nLastCommitId = null;
+
         try
         {
-            nLastCommitId =SvnUtils.doSvnCheckout( SvnUtils.getRepoUrl( context.getReleaserResource( ).getScmUrl( )), strLocalBasePath, updateClient,
+            nLastCommitId = SvnUtils.doSvnCheckout( SvnUtils.getRepoUrl( context.getReleaserResource( ).getScmUrl( ) ), strLocalBasePath, updateClient,
                     commandResult );
-            
-           SvnUtils.getLastRevision( strLocalBasePath, strLogin, strPassword );
+
+            SvnUtils.getLastRevision( strLocalBasePath, strLogin, strPassword );
         }
-        catch ( Exception e )
+        catch( Exception e )
         {
-            ReleaserUtils.addTechnicalError(commandResult,"errreur lors du checkout du composant"+ e.getMessage(),e);
+            ReleaserUtils.addTechnicalError( commandResult, "errreur lors du checkout du composant" + e.getMessage( ), e );
         }
-        
-        
-        if(nLastCommitId!=null)
+
+        if ( nLastCommitId != null )
         {
             context.setRefBranchDev( nLastCommitId.toString( ) );
         }
         // PROGRESS 10%
         commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
-        
-        if(context.getSite( )==null && ComponentService.getService( ).isErrorSnapshotComponentInformations( context.getComponent( ) ,ReleaserUtils.getLocalPomPath( context)))
+
+        if ( context.getSite( ) == null
+                && ComponentService.getService( ).isErrorSnapshotComponentInformations( context.getComponent( ), ReleaserUtils.getLocalPomPath( context ) ) )
         {
-            ReleaserUtils.addTechnicalError( commandResult,"The checkout component does not match the release informations");
-         }
-        
+            ReleaserUtils.addTechnicalError( commandResult, "The checkout component does not match the release informations" );
+        }
 
         ReleaserUtils.logEndAction( context, "Checkout Svn Component " );
         return ConstanteUtils.CONSTANTE_EMPTY_STRING;
     }
 
+    /**
+     * Update develop branch.
+     *
+     * @param context the context
+     * @param locale the locale
+     * @param strMessage the str message
+     */
     @Override
     public void updateDevelopBranch( WorkflowReleaseContext context, Locale locale, String strMessage )
     {
-        
-        String strLogin =context.getReleaserUser( ).getCredential(context.getReleaserResource( ).getRepoType( )).getLogin();
-        String strPassword =context.getReleaserUser( ).getCredential(context.getReleaserResource( ).getRepoType( )).getPassword( );
-        String strLocalPath = ReleaserUtils.getLocalPath( context );
-        
-        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(strLogin,
-                strPassword);
 
-        ReleaseSvnCommitClient commitClient = new ReleaseSvnCommitClient( authManager,
-                SVNWCUtil.createDefaultOptions( false ) );
-        
+        String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
+        String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
+        String strLocalPath = ReleaserUtils.getLocalPath( context );
+
+        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager( strLogin, strPassword );
+
+        ReleaseSvnCommitClient commitClient = new ReleaseSvnCommitClient( authManager, SVNWCUtil.createDefaultOptions( false ) );
+
         try
         {
             SvnUtils.doCommit( strLocalPath, strMessage, commitClient );
         }
         catch( Exception e )
         {
-          
+
             AppLogService.error( e );
             ReleaserUtils.addTechnicalError( context.getCommandResult( ), e.getMessage( ), e );
         }
-        
-        
-    
-        
+
     }
 
+    /**
+     * Update master branch.
+     *
+     * @param context the context
+     * @param locale the locale
+     */
     @Override
     public void updateMasterBranch( WorkflowReleaseContext context, Locale locale )
     {
         // TODO Auto-generated method stub
-        
+
     }
 
+    /**
+     * Rollback release.
+     *
+     * @param context the context
+     * @param locale the locale
+     */
     @Override
     public void rollbackRelease( WorkflowReleaseContext context, Locale locale )
     {
-        
-        String strLogin =context.getReleaserUser( ).getCredential(context.getReleaserResource( ).getRepoType( )).getLogin();
-        String strPassword =context.getReleaserUser( ).getCredential(context.getReleaserResource( ).getRepoType( )).getPassword( );
-        String strLocalPath = ReleaserUtils.getLocalPath( context );
-       
-        ReleaserUtils.logStartAction( context, " Rollback Release prepare" );
-        
-        SvnUtils.update( strLocalPath,strLogin, strPassword);
-        Long lastRevision= SvnUtils.getLastRevision( strLocalPath,strLogin,
-                 strPassword);
-        
-        Long lastCommitBeforeRelease=context.getRefBranchDev( )!=null?new Long( context.getRefBranchDev( ) ):null;
-        
-        if(lastRevision !=null && lastCommitBeforeRelease!=null && lastRevision!=lastCommitBeforeRelease )
-        {
-        
-            SvnUtils.revert( strLocalPath, SvnUtils.getRepoUrl(context.getReleaserResource( ).getScmUrl( )),strLogin,
-                 strPassword, lastRevision, lastCommitBeforeRelease);
-       
-            
-            ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(strLogin,
-                    strPassword);
 
-            
-            
-            
-            ReleaseSvnCommitClient commitClient = new ReleaseSvnCommitClient( authManager,
-                    SVNWCUtil.createDefaultOptions( false ) );
-            
-            
+        String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
+        String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
+        String strLocalPath = ReleaserUtils.getLocalPath( context );
+
+        ReleaserUtils.logStartAction( context, " Rollback Release prepare" );
+
+        SvnUtils.update( strLocalPath, strLogin, strPassword );
+        Long lastRevision = SvnUtils.getLastRevision( strLocalPath, strLogin, strPassword );
+
+        Long lastCommitBeforeRelease = context.getRefBranchDev( ) != null ? new Long( context.getRefBranchDev( ) ) : null;
+
+        if ( lastRevision != null && lastCommitBeforeRelease != null && lastRevision != lastCommitBeforeRelease )
+        {
+
+            SvnUtils.revert( strLocalPath, SvnUtils.getRepoUrl( context.getReleaserResource( ).getScmUrl( ) ), strLogin, strPassword, lastRevision,
+                    lastCommitBeforeRelease );
+
+            ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager( strLogin, strPassword );
+
+            ReleaseSvnCommitClient commitClient = new ReleaseSvnCommitClient( authManager, SVNWCUtil.createDefaultOptions( false ) );
+
             try
             {
                 SvnUtils.doCommit( strLocalPath, "[site-release]-Revert after error during release", commitClient );
             }
             catch( Exception e )
             {
-              
+
                 AppLogService.error( e );
                 ReleaserUtils.addTechnicalError( context.getCommandResult( ), e.getMessage( ), e );
             }
-            
+
         }
         ReleaserUtils.logEndAction( context, " Rollback Release prepare" );
-        
+
     }
 
+    /**
+     * Checkout develop branch.
+     *
+     * @param context the context
+     * @param locale the locale
+     */
     @Override
     public void checkoutDevelopBranch( WorkflowReleaseContext context, Locale locale )
     {
         // TODO Auto-generated method stub
-        
+
     }
 
 }

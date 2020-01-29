@@ -24,56 +24,66 @@ import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class PomUpdater.
+ */
 public class PomUpdater
 {
 
-    public static String updateSiteBeforeTag( Site site,String strSiteLocalPomPath ) throws JAXBException
+    /**
+     * Update site before tag.
+     *
+     * @param site the site
+     * @param strSiteLocalPomPath the str site local pom path
+     * @return the string
+     * @throws JAXBException the JAXB exception
+     */
+    public static String updateSiteBeforeTag( Site site, String strSiteLocalPomPath ) throws JAXBException
     {
 
         InputStream inputStream = null;
         OutputStream outputStream = null;
-      
+
         try
         {
 
-           
             inputStream = new FileInputStream( strSiteLocalPomPath );
             Model model = unmarshal( Model.class, inputStream );
-            
+
             model.setDescription( site.getTagInformation( ) );
 
             fr.paris.lutece.plugins.releaser.business.jaxb.maven.Model.Dependencies dependencies = model.getDependencies( );
-            //update dependencies
+            // update dependencies
             if ( dependencies != null )
             {
                 for ( fr.paris.lutece.plugins.releaser.business.jaxb.maven.Dependency jaxDependency : dependencies.getDependency( ) )
                 {
                     for ( Component component : site.getComponents( ) )
                     {
-                        
+
                         if ( jaxDependency.getArtifactId( ).equals( component.getArtifactId( ) ) )
                         {
-                          
-                            jaxDependency.setVersion( "["+component.getTargetVersion( )+"]" );
+
+                            jaxDependency.setVersion( "[" + component.getTargetVersion( ) + "]" );
                         }
                     }
 
                 }
             }
-            
-            String strParentSiteVersion=model.getParent( ).getVersion( );
-            String strPomParentReferenceVersion=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_POM_PARENT_SITE_VERSION );
-            
-            if(ReleaserUtils.compareVersion( strParentSiteVersion, strPomParentReferenceVersion )<0 )
+
+            String strParentSiteVersion = model.getParent( ).getVersion( );
+            String strPomParentReferenceVersion = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_POM_PARENT_SITE_VERSION );
+
+            if ( ReleaserUtils.compareVersion( strParentSiteVersion, strPomParentReferenceVersion ) < 0 )
             {
-            	//update pom parent version
-            	 String strPomParentArtifactId=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_POM_PARENT_ARTIFCAT_ID );
-            	 String strPomParentGroupId=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_POM_PARENT_GROUP_ID );
-                  model.getParent().setArtifactId(strPomParentArtifactId);
-                  model.getParent().setGroupId(strPomParentGroupId);
-                  model.getParent().setVersion(strPomParentReferenceVersion);
+                // update pom parent version
+                String strPomParentArtifactId = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_POM_PARENT_ARTIFCAT_ID );
+                String strPomParentGroupId = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_POM_PARENT_GROUP_ID );
+                model.getParent( ).setArtifactId( strPomParentArtifactId );
+                model.getParent( ).setGroupId( strPomParentGroupId );
+                model.getParent( ).setVersion( strPomParentReferenceVersion );
             }
-           
 
             outputStream = new FileOutputStream( strSiteLocalPomPath );
 
@@ -103,24 +113,31 @@ public class PomUpdater
         return "";
     }
 
-    public static String updateSiteAfterTag( Site site ,String strSiteLocalPomPath) throws JAXBException
+    /**
+     * Update site after tag.
+     *
+     * @param site the site
+     * @param strSiteLocalPomPath the str site local pom path
+     * @return the string
+     * @throws JAXBException the JAXB exception
+     */
+    public static String updateSiteAfterTag( Site site, String strSiteLocalPomPath ) throws JAXBException
     {
 
         InputStream inputStream = null;
         OutputStream outputStream = null;
-    
 
         try
         {
 
             inputStream = new FileInputStream( strSiteLocalPomPath );
             Model model = unmarshal( Model.class, inputStream );
-            
+
             model.setVersion( site.getNextSnapshotVersion( ) );
-            model.setDescription( "");
+            model.setDescription( "" );
 
             fr.paris.lutece.plugins.releaser.business.jaxb.maven.Model.Dependencies dependencies = model.getDependencies( );
-            //update dependencies
+            // update dependencies
             if ( dependencies != null )
             {
                 for ( fr.paris.lutece.plugins.releaser.business.jaxb.maven.Dependency jaxDependency : dependencies.getDependency( ) )
@@ -131,10 +148,10 @@ public class PomUpdater
                         if ( jaxDependency.getArtifactId( ).equals( component.getArtifactId( ) ) )
                         {
 
-                            if(component.isProject( ) && component.isSnapshotVersion( ))
+                            if ( component.isProject( ) && component.isSnapshotVersion( ) )
                             {
-                               jaxDependency.setVersion( component.getNextSnapshotVersion( ) );
-                             }
+                                jaxDependency.setVersion( component.getNextSnapshotVersion( ) );
+                            }
 
                         }
                     }
@@ -169,6 +186,14 @@ public class PomUpdater
 
         return "";
     }
+
+    /**
+     * Save.
+     *
+     * @param model the model
+     * @param outputStream the output stream
+     * @throws JAXBException the JAXB exception
+     */
     public static void save( Model model, OutputStream outputStream ) throws JAXBException
     {
         String packageName = model.getClass( ).getPackage( ).getName( );
@@ -182,6 +207,15 @@ public class PomUpdater
         m.marshal( element, outputStream );
     }
 
+    /**
+     * Unmarshal.
+     *
+     * @param <T> the generic type
+     * @param docClass the doc class
+     * @param inputStream the input stream
+     * @return the t
+     * @throws JAXBException the JAXB exception
+     */
     public static <T> T unmarshal( Class<T> docClass, InputStream inputStream ) throws JAXBException
     {
         String packageName = docClass.getPackage( ).getName( );

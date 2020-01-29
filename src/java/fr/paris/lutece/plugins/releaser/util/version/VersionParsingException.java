@@ -34,11 +34,19 @@
 
 package fr.paris.lutece.plugins.releaser.util.version;
 
+// TODO: Auto-generated Javadoc
 /**
- * VersionParsingException
+ * VersionParsingException.
  */
 public class VersionParsingException extends Exception
 {
+    
+    /**
+     * Instantiates a new version parsing exception.
+     *
+     * @param strMessage the str message
+     * @param exception the exception
+     */
     public VersionParsingException( String strMessage, Throwable exception )
     {
         super( strMessage, exception );

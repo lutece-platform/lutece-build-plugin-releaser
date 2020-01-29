@@ -37,28 +37,42 @@ import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
 import org.tmatesoft.svn.core.wc.ISVNOptions;
 import org.tmatesoft.svn.core.wc.SVNCopyClient;
 
-
+// TODO: Auto-generated Javadoc
+/**
+ * The Class ReleaseSvnCopyClient.
+ */
 public class ReleaseSvnCopyClient extends SVNCopyClient
 {
+    
+    /** The b cancelled. */
     private boolean bCancelled;
 
+    /**
+     * Instantiates a new release svn copy client.
+     *
+     * @param authManager the auth manager
+     * @param options the options
+     */
     public ReleaseSvnCopyClient( ISVNAuthenticationManager authManager, ISVNOptions options )
     {
         super( authManager, options );
     }
 
-//    @Override
-//    public void checkCancelled(  ) throws SVNCancelException
-//    {
-//        if ( bCancelled )
-//        {
-//            throw new SVNCancelException( SVNErrorMessage.create( SVNErrorCode.CANCELLED, "Canceled by user" ) );
-//        }
-//
-//        super.checkCancelled(  );
-//    }
+    // @Override
+    // public void checkCancelled( ) throws SVNCancelException
+    // {
+    // if ( bCancelled )
+    // {
+    // throw new SVNCancelException( SVNErrorMessage.create( SVNErrorCode.CANCELLED, "Canceled by user" ) );
+    // }
+    //
+    // super.checkCancelled( );
+    // }
 
-    public void doCancel(  )
+    /**
+     * Do cancel.
+     */
+    public void doCancel( )
     {
         bCancelled = true;
     }

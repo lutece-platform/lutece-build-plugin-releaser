@@ -36,47 +36,95 @@ package fr.paris.lutece.plugins.releaser.util.svn;
 import java.util.HashMap;
 import java.util.Map;
 
-
+// TODO: Auto-generated Javadoc
+/**
+ * The Class SvnUser.
+ */
 public class SvnUser
 {
+    
+    /** The Constant MARK_CURRENT_THREAD. */
     public static final String MARK_CURRENT_THREAD = "current_thread";
+    
+    /** The Constant MARK_AUTHENTIFICATION_MANAGER. */
     public static final String MARK_AUTHENTIFICATION_MANAGER = "authentification_manager";
+    
+    /** The Constant MARK_OUR_CLIENT_MANAGER. */
     public static final String MARK_OUR_CLIENT_MANAGER = "our_client_manager";
+    
+    /** The str login. */
     private String _strLogin;
+    
+    /** The str paswword. */
     private String _strPaswword;
+    
+    /** The m user context. */
     private Map<String, Object> _mUserContext;
 
-    public SvnUser(  )
+    /**
+     * Instantiates a new svn user.
+     */
+    public SvnUser( )
     {
-        setUserContext( new HashMap<String, Object>(  ) );
+        setUserContext( new HashMap<String, Object>( ) );
     }
 
+    /**
+     * Sets the login.
+     *
+     * @param strLogin the new login
+     */
     public void setLogin( String strLogin )
     {
         this._strLogin = strLogin;
     }
 
-    public String getLogin(  )
+    /**
+     * Gets the login.
+     *
+     * @return the login
+     */
+    public String getLogin( )
     {
         return _strLogin;
     }
 
+    /**
+     * Sets the password.
+     *
+     * @param strPaswword the new password
+     */
     public void setPassword( String strPaswword )
     {
         this._strPaswword = strPaswword;
     }
 
-    public String getPasword(  )
+    /**
+     * Gets the pasword.
+     *
+     * @return the pasword
+     */
+    public String getPasword( )
     {
         return _strPaswword;
     }
 
+    /**
+     * Sets the user context.
+     *
+     * @param _mUserContex the m user contex
+     */
     public void setUserContext( Map<String, Object> _mUserContex )
     {
         this._mUserContext = _mUserContex;
     }
 
-    public Map<String, Object> getUserContext(  )
+    /**
+     * Gets the user context.
+     *
+     * @return the user context
+     */
+    public Map<String, Object> getUserContext( )
     {
         return _mUserContext;
     }

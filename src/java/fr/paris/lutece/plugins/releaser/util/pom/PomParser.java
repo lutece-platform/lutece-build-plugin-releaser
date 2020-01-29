@@ -54,51 +54,68 @@ import fr.paris.lutece.plugins.releaser.business.Dependency;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.portal.service.util.AppLogService;
 
+// TODO: Auto-generated Javadoc
 /**
- * PomParser
+ * PomParser.
  */
 public class PomParser
 {
     // Tags
 
-
-
+    /** The list dependencies. */
     private ArrayList<Dependency> _listDependencies = new ArrayList<Dependency>( );
 
+    /**
+     * Gets the dependencies.
+     *
+     * @return the dependencies
+     */
     public List<Dependency> getDependencies( )
     {
         return _listDependencies;
     }
 
+    /**
+     * Parses the.
+     *
+     * @param site the site
+     * @param strPOM the str POM
+     */
     public void parse( Site site, String strPOM )
     {
         try
         {
             InputSource isPOM = new InputSource( new StringReader( strPOM ) );
             Model model = unmarshal( Model.class, isPOM );
-         
+
             filledSite( site, model );
-         
-             fr.paris.lutece.plugins.releaser.business.jaxb.maven.Model.Dependencies dependencies=model.getDependencies( );
-             
-            if(dependencies!=null)
+
+            fr.paris.lutece.plugins.releaser.business.jaxb.maven.Model.Dependencies dependencies = model.getDependencies( );
+
+            if ( dependencies != null )
             {
-                for (  fr.paris.lutece.plugins.releaser.business.jaxb.maven.Dependency jaxDependency: dependencies.getDependency( ))
+                for ( fr.paris.lutece.plugins.releaser.business.jaxb.maven.Dependency jaxDependency : dependencies.getDependency( ) )
                 {
-                      filledDependency( site, jaxDependency );
-                    
+                    filledDependency( site, jaxDependency );
+
                 }
             }
         }
-        catch ( JAXBException e )
+        catch( JAXBException e )
         {
-           AppLogService.error( e );
+            AppLogService.error( e );
         }
     }
-    
-    public void parse( Component component , String strPOM )
+
+    /**
+     * Parses the.
+     *
+     * @param component the component
+     * @param strPOM the str POM
+     */
+    public void parse( Component component, String strPOM )
     {
-        
+
         try
         {
             InputSource isPOM = new InputSource( new StringReader( strPOM ) );
@@ -106,87 +123,108 @@ public class PomParser
             component.setArtifactId( model.getArtifactId( ) );
             component.setGroupId( model.getGroupId( ) );
             component.setCurrentVersion( model.getVersion( ) );
-            if(model.getScm() !=null)
+            if ( model.getScm( ) != null )
             {
                 component.setScmDeveloperConnection( model.getScm( ).getDeveloperConnection( ) );
-                
+
             }
-        
+
         }
-        catch ( JAXBException e )
+        catch( JAXBException e )
         {
-           AppLogService.error( e );
+            AppLogService.error( e );
         }
-    
 
     }
-    public void parse( Component component , InputStream inputStream )
+
+    /**
+     * Parses the.
+     *
+     * @param component the component
+     * @param inputStream the input stream
+     */
+    public void parse( Component component, InputStream inputStream )
     {
-        
+
         try
         {
-             Model model = PomUpdater.unmarshal( Model.class, inputStream );
+            Model model = PomUpdater.unmarshal( Model.class, inputStream );
             component.setArtifactId( model.getArtifactId( ) );
             component.setGroupId( model.getGroupId( ) );
             component.setCurrentVersion( model.getVersion( ) );
-            if(model.getScm() !=null)
+            if ( model.getScm( ) != null )
             {
                 component.setScmDeveloperConnection( model.getScm( ).getDeveloperConnection( ) );
-                
+
             }
-        
+
         }
-        catch ( JAXBException e )
+        catch( JAXBException e )
         {
-           AppLogService.error( e );
+            AppLogService.error( e );
         }
         finally
         {
-            
+
             try
             {
                 inputStream.close( );
             }
             catch( IOException e )
             {
-               AppLogService.error( e );
+                AppLogService.error( e );
             }
         }
-    
 
     }
 
+    /**
+     * Filled site.
+     *
+     * @param site the site
+     * @param model the model
+     */
     private void filledSite( Site site, Model model )
     {
-        site.setArtifactId(model.getArtifactId( ) );
+        site.setArtifactId( model.getArtifactId( ) );
         site.setGroupId( model.getGroupId( ) );
         site.setVersion( model.getVersion( ) );
     }
 
-    private void filledDependency( Site site,fr.paris.lutece.plugins.releaser.business.jaxb.maven.Dependency  jaxDependency )
+    /**
+     * Filled dependency.
+     *
+     * @param site the site
+     * @param jaxDependency the jax dependency
+     */
+    private void filledDependency( Site site, fr.paris.lutece.plugins.releaser.business.jaxb.maven.Dependency jaxDependency )
     {
         Dependency dep = new Dependency( );
         dep.setArtifactId( jaxDependency.getArtifactId( ) );
-        dep.setVersion( jaxDependency.getVersion( ));
+        dep.setVersion( jaxDependency.getVersion( ) );
         dep.setGroupId( jaxDependency.getGroupId( ) );
         dep.setType( jaxDependency.getType( ) );
-        
+
         site.addCurrentDependency( dep );
     }
-    
-    
 
-    public static <T> T unmarshal( Class<T> docClass, InputSource inputSource )
-        throws JAXBException
+    /**
+     * Unmarshal.
+     *
+     * @param <T> the generic type
+     * @param docClass the doc class
+     * @param inputSource the input source
+     * @return the t
+     * @throws JAXBException the JAXB exception
+     */
+    public static <T> T unmarshal( Class<T> docClass, InputSource inputSource ) throws JAXBException
     {
-        String packageName = docClass.getPackage(  ).getName(  );
+        String packageName = docClass.getPackage( ).getName( );
         JAXBContext jc = JAXBContext.newInstance( packageName );
-        Unmarshaller u = jc.createUnmarshaller(  );
+        Unmarshaller u = jc.createUnmarshaller( );
         JAXBElement<T> doc = (JAXBElement<T>) u.unmarshal( inputSource );
 
-        return doc.getValue(  );
+        return doc.getValue( );
     }
-
-   
 
 }

@@ -35,21 +35,44 @@ package fr.paris.lutece.plugins.releaser.util.maven;
 
 import java.util.Arrays;
 import java.util.List;
+
+// TODO: Auto-generated Javadoc
+/**
+ * MavenGoals.
+ */
 public enum MavenGoals
-{	
-	LUTECE_SITE_ASSEMBLY( "clean", "lutece:site-assembly"),
-	PACKAGE( "clean", "package" ),
-	RELEASE_PREPARE ( "release:prepare", "-DignoreSnapshots=true -DforkMode=never -Darguments=\"-Dmaven.test.skip=true\" --batch-mode" ),
-    RELEASE_PERFORM ( "release:perform", "-Dgoals=deploy -DforkMode=never -Darguments=\"-Dmaven.test.skip=true\" --batch-mode" );
+{
     
+    /** The lutece site assembly. */
+    LUTECE_SITE_ASSEMBLY( "clean", "lutece:site-assembly" ), 
+ /** The package. */
+ PACKAGE( "clean", "package" ), 
+ /** The release prepare. */
+ RELEASE_PREPARE( "release:prepare",
+            "-DignoreSnapshots=true -DforkMode=never -Darguments=\"-Dmaven.test.skip=true\" --batch-mode" ), 
+ /** The release perform. */
+ RELEASE_PERFORM( "release:perform",
+                    "-Dgoals=deploy -DforkMode=never -Darguments=\"-Dmaven.test.skip=true\" --batch-mode" );
+
+    /** The goals. */
     private List<String> _goals;
 
+    /**
+     * Instantiates a new maven goals.
+     *
+     * @param goals the goals
+     */
     MavenGoals( String... goals )
     {
         _goals = Arrays.asList( goals );
     }
 
-    public List<String> asList(  )
+    /**
+     * As list.
+     *
+     * @return goal list
+     */
+    public List<String> asList( )
     {
         return _goals;
     }

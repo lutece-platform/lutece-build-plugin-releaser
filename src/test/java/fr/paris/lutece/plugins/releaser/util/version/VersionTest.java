@@ -32,7 +32,6 @@
  * License 1.0
  */
 
-
 package fr.paris.lutece.plugins.releaser.util.version;
 
 import java.util.List;
@@ -42,7 +41,8 @@ import org.junit.Test;
 /**
  * VersionTest
  */
-public class VersionTest {
+public class VersionTest
+{
     /**
      * Test of parse method, of class Version.
      * 
@@ -77,16 +77,15 @@ public class VersionTest {
         assertEquals( "12.10.0-RC-01", result.getVersion( ) );
         System.out.println( result.getVersion( ) );
     }
-    
-    
+
     @Test
-    public void testGetNextReleaseVersions()
+    public void testGetNextReleaseVersions( )
     {
         System.out.println( "getNextReleaseVersions" );
         String strSource = "12.10.23";
         List<String> listVersions = Version.getNextReleaseVersions( strSource );
         System.out.println( "Next release versions for : " + strSource );
-        for( String strVersion : listVersions )
+        for ( String strVersion : listVersions )
         {
             System.out.println( "- " + strVersion );
         }
@@ -98,7 +97,7 @@ public class VersionTest {
         strSource = "12.10.23-RC-01";
         listVersions = Version.getNextReleaseVersions( strSource );
         System.out.println( "Next release versions for : " + strSource );
-        for( String strVersion : listVersions )
+        for ( String strVersion : listVersions )
         {
             System.out.println( "- " + strVersion );
         }
@@ -110,17 +109,15 @@ public class VersionTest {
         strSource = "12.10.23-SNAPSHOT";
         listVersions = Version.getNextReleaseVersions( strSource );
         System.out.println( "Next release versions for : " + strSource );
-        for( String strVersion : listVersions )
+        for ( String strVersion : listVersions )
         {
             System.out.println( "- " + strVersion );
         }
         assertEquals( listVersions.get( 0 ), "12.10.23-RC-01" );
         assertEquals( listVersions.get( 1 ), "12.10.23" );
         assertEquals( listVersions.get( 2 ), "12.11.0" );
-        assertEquals( listVersions.get( 3 ), "13.0.0" ); 
-
+        assertEquals( listVersions.get( 3 ), "13.0.0" );
 
     }
 
-    
 }

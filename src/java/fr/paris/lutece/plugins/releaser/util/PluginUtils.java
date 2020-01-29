@@ -25,23 +25,41 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class PluginUtils.
+ */
 public class PluginUtils
 {
 
+    /** The Constant CORE_PLUGIN_NAME1. */
     public static final String CORE_PLUGIN_NAME1 = "core";
-    public static final String CORE_PLUGIN_NAME2 = "lutece-core";
     
+    /** The Constant CORE_PLUGIN_NAME2. */
+    public static final String CORE_PLUGIN_NAME2 = "lutece-core";
+
+    /** The Constant SUFFIX_CONTEXT_FILE. */
     private static final String SUFFIX_CONTEXT_FILE = ".xml";
+    
+    /** The Constant CONSTANTE_PLUGIN_PATH. */
     private static final String CONSTANTE_PLUGIN_PATH = "webapp/WEB-INF/plugins/";
+    
+    /** The Constant CONSTANTE_CORE_CONF. */
     private static final String CONSTANTE_CORE_CONF = "webapp/WEB-INF/conf/";
+    
+    /** The Constant CONSTANTE_CORE_APP_INFO. */
     private static final String CONSTANTE_CORE_APP_INFO = "src/java/fr/paris/lutece/portal/service/init/AppInfo.java";
+    
+    /** The Constant REGEXP_VERSION_APP_INFO. */
     private static final String REGEXP_VERSION_APP_INFO = "(.*)private static final String APP_VERSION = \"(.*)\";";
+    
+    /** The Constant PATTERN_VERSION_APP_INFO. */
     private static final Pattern PATTERN_VERSION_APP_INFO = Pattern.compile( REGEXP_VERSION_APP_INFO );
 
     /**
-     * 
-     * @param strPluginName
-     *            plugin name
+     * Checks if is core.
+     *
+     * @param strPluginName            plugin name
      * @return <code>true</code> if core or lutece-core, <code>false</code> otherwise.
      */
     public static boolean isCore( String strPluginName )
@@ -49,9 +67,15 @@ public class PluginUtils
         return CORE_PLUGIN_NAME1.equals( strPluginName ) || CORE_PLUGIN_NAME2.equals( strPluginName );
     }
 
-    public static String getCoreXMLFile( String strComponentPath)
+    /**
+     * Gets the core XML file.
+     *
+     * @param strComponentPath the str component path
+     * @return the core XML file
+     */
+    public static String getCoreXMLFile( String strComponentPath )
     {
-        String strCodeXML = strComponentPath+ ( strComponentPath.endsWith( File.separator ) ? "" : File.separator ) + CONSTANTE_CORE_CONF + "core.xml";
+        String strCodeXML = strComponentPath + ( strComponentPath.endsWith( File.separator ) ? "" : File.separator ) + CONSTANTE_CORE_CONF + "core.xml";
         File fileCoreXML = new File( strCodeXML );
 
         if ( !fileCoreXML.exists( ) )
@@ -62,9 +86,15 @@ public class PluginUtils
         return strCodeXML;
     }
 
-    public static String [ ] getPluginXMLFile( String strComponentPath)
+    /**
+     * Gets the plugin XML file.
+     *
+     * @param strComponentPath the str component path
+     * @return the plugin XML file
+     */
+    public static String [ ] getPluginXMLFile( String strComponentPath )
     {
-        String strDirConfPlugins = strComponentPath+ ( strComponentPath.endsWith( File.separator ) ? "" : File.separator ) +  CONSTANTE_PLUGIN_PATH;
+        String strDirConfPlugins = strComponentPath + ( strComponentPath.endsWith( File.separator ) ? "" : File.separator ) + CONSTANTE_PLUGIN_PATH;
         File dirConfPlugins = new File( strDirConfPlugins );
 
         if ( !dirConfPlugins.exists( ) )
@@ -85,11 +115,16 @@ public class PluginUtils
         return filesName;
     }
 
-    public static String getAppInfoFile( String strBasePath)
+    /**
+     * Gets the app info file.
+     *
+     * @param strBasePath the str base path
+     * @return the app info file
+     */
+    public static String getAppInfoFile( String strBasePath )
     {
         String strAppInfo = strBasePath + File.separator + CONSTANTE_CORE_APP_INFO;
-        
-        
+
         File fileAppInfo = new File( strAppInfo );
         if ( !fileAppInfo.exists( ) )
         {
@@ -99,7 +134,15 @@ public class PluginUtils
         return strAppInfo;
     }
 
-    public static boolean updateAppInfoFile( String strFile, String strVersion, CommandResult commandResult ) 
+    /**
+     * Update app info file.
+     *
+     * @param strFile the str file
+     * @param strVersion the str version
+     * @param commandResult the command result
+     * @return true, if successful
+     */
+    public static boolean updateAppInfoFile( String strFile, String strVersion, CommandResult commandResult )
     {
         boolean bReplace = false;
         BufferedReader br = null;
@@ -185,7 +228,15 @@ public class PluginUtils
         return false;
     }
 
-    public static String updatePluginXMLVersion( String strFile, String strNewVersion, CommandResult commandResult) 
+    /**
+     * Update plugin XML version.
+     *
+     * @param strFile the str file
+     * @param strNewVersion the str new version
+     * @param commandResult the command result
+     * @return the string
+     */
+    public static String updatePluginXMLVersion( String strFile, String strNewVersion, CommandResult commandResult )
     {
         FileWriter fw = null;
         boolean bFileClosed = false;
@@ -222,11 +273,11 @@ public class PluginUtils
             bFileClosed = true;
 
         }
-        catch(Exception ex)
+        catch( Exception ex )
         {
             ReleaserUtils.addTechnicalError( commandResult, ex.getMessage( ), ex );
-         }
-      
+        }
+
         finally
         {
             if ( fw != null && !bFileClosed )
@@ -244,19 +295,21 @@ public class PluginUtils
 
         return "";
     }
-    
+
     /**
-     * Utils filename filter to identify context files
+     * Utils filename filter to identify context files.
      */
     static class ContextFileFilter implements FilenameFilter
     {
+        
         /**
-         * Filter filename
-         * @param file The current file
-         * @param strName The file name
+         * Filter filename.
+         *
+         * @param file            The current file
+         * @param strName            The file name
          * @return true if the file is a context file otherwise false
          */
-        public boolean accept(File file, String strName)
+        public boolean accept( File file, String strName )
         {
             return strName.endsWith( SUFFIX_CONTEXT_FILE );
         }

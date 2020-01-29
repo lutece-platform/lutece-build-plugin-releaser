@@ -128,7 +128,7 @@ public final class SiteDAO implements ISiteDAO
             site.setCluster( daoUtil.getString( nIndex++ ) );
             site.setScmUrl( daoUtil.getString( nIndex++ ) );
             site.setJiraKey( daoUtil.getString( nIndex++ ) );
-            site.setTheme( daoUtil.getBoolean( nIndex++  ) );
+            site.setTheme( daoUtil.getBoolean( nIndex++ ) );
         }
 
         daoUtil.free( );
@@ -165,7 +165,7 @@ public final class SiteDAO implements ISiteDAO
         daoUtil.setString( nIndex++, site.getDescription( ) );
         daoUtil.setString( nIndex++, site.getJiraKey( ) );
         daoUtil.setBoolean( nIndex++, site.isTheme( ) );
-        
+
         daoUtil.setInt( nIndex, site.getId( ) );
 
         daoUtil.executeUpdate( );
@@ -195,7 +195,7 @@ public final class SiteDAO implements ISiteDAO
             site.setCluster( daoUtil.getString( nIndex++ ) );
             site.setScmUrl( daoUtil.getString( nIndex++ ) );
             site.setJiraKey( daoUtil.getString( nIndex++ ) );
-            site.setTheme( daoUtil.getBoolean( nIndex++  ) );
+            site.setTheme( daoUtil.getBoolean( nIndex++ ) );
 
             siteList.add( site );
         }
@@ -266,7 +266,7 @@ public final class SiteDAO implements ISiteDAO
             site.setCluster( daoUtil.getString( nIndex++ ) );
             site.setScmUrl( daoUtil.getString( nIndex++ ) );
             site.setJiraKey( daoUtil.getString( nIndex++ ) );
-            site.setTheme( daoUtil.getBoolean( nIndex++  ) );
+            site.setTheme( daoUtil.getBoolean( nIndex++ ) );
 
             siteList.add( site );
         }

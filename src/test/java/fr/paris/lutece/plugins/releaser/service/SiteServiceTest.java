@@ -45,51 +45,51 @@ import static junit.framework.TestCase.*;
  */
 public class SiteServiceTest
 {
-	@Ignore 
+    @Ignore
     @Test
-    public void testGetOriginVersion()
+    public void testGetOriginVersion( )
     {
         System.out.println( "getOriginVersion" );
-        
+
         String strLastRelease = null;
         String strCurrent = "3.2.1-SNAPSHOT";
         String strOrigin = SiteService.getOriginVersion( strLastRelease, strCurrent );
         printNextReleases( strLastRelease, strCurrent, strOrigin );
-        assertEquals( strOrigin , strCurrent );
+        assertEquals( strOrigin, strCurrent );
 
         strLastRelease = "3.2.1";
         strCurrent = "3.2.2-SNAPSHOT";
         strOrigin = SiteService.getOriginVersion( strLastRelease, strCurrent );
         printNextReleases( strLastRelease, strCurrent, strOrigin );
-        assertEquals( strOrigin , strCurrent );
-        
+        assertEquals( strOrigin, strCurrent );
+
         strLastRelease = "3.2.1";
         strCurrent = "4.0.0-SNAPSHOT";
         strOrigin = SiteService.getOriginVersion( strLastRelease, strCurrent );
         printNextReleases( strLastRelease, strCurrent, strOrigin );
-        assertEquals( strOrigin , strCurrent );
-        
+        assertEquals( strOrigin, strCurrent );
+
         strLastRelease = "3.2.1-RC-02";
         strCurrent = "3.2.1-SNAPSHOT";
         strOrigin = SiteService.getOriginVersion( strLastRelease, strCurrent );
         printNextReleases( strLastRelease, strCurrent, strOrigin );
-        assertEquals( strOrigin , strLastRelease );
-        
-        
+        assertEquals( strOrigin, strLastRelease );
+
     }
-	 @Ignore 
+
+    @Ignore
     private void printNextReleases( String strLastRelease, String strCurrent, String strOrigin )
     {
         System.out.print( "Last release:" + strLastRelease + "   Current: " + strCurrent + "   Origin:" + strOrigin );
         List<String> listNextReleases = Version.getNextReleaseVersions( strOrigin );
         int i = 0;
-        for( String strVersion : listNextReleases )
+        for ( String strVersion : listNextReleases )
         {
             String strSeparator = ( i++ == 0 ) ? "\n -> next releases : " : ", ";
             System.out.print( strSeparator + strVersion );
         }
         i = 0;
-        for( String strVersion : listNextReleases )
+        for ( String strVersion : listNextReleases )
         {
             String strSeparator = ( i++ == 0 ) ? "\n -> next snapshots : " : ", ";
             System.out.print( strSeparator + Version.getNextSnapshotVersion( strVersion ) );
@@ -97,5 +97,4 @@ public class SiteServiceTest
         System.out.print( '\n' );
     }
 
-    
 }

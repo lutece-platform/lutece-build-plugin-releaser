@@ -54,43 +54,65 @@ import fr.paris.lutece.plugins.releaser.util.svn.SvnUser;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 
+// TODO: Auto-generated Javadoc
 /**
- * 
- * MavenService : provides maven command launcher
- * 
+ * MavenService : provides maven command launcher.
  */
 public class MavenService implements IMavenService
 {
+    
+    /** The invoker. */
     // private static IMavenService _singleton;
     private Invoker _invoker;
-    private static IMavenService _instance;
     
+    /** The instance. */
+    private static IMavenService _instance;
 
+    /**
+     * Instantiates a new maven service.
+     */
     private MavenService( )
     {
-       
-    }
-    
-    public static IMavenService getService()
-    {
-        if(_instance==null)
-        {
-            _instance=SpringContextService.getBean(ConstanteUtils.BEAN_MAVEN_SERVICE );
-            _instance.init( );
-        }
-            
-      return _instance;
-        
+
     }
 
+    /**
+     * Gets the service.
+     *
+     * @return the service
+     */
+    public static IMavenService getService( )
+    {
+        if ( _instance == null )
+        {
+            _instance = SpringContextService.getBean( ConstanteUtils.BEAN_MAVEN_SERVICE );
+            _instance.init( );
+        }
+
+        return _instance;
+
+    }
+
+    /**
+     * Inits the.
+     */
     public void init( )
     {
         _invoker = new DefaultInvoker( );
         _invoker.setMavenHome( new File( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_MAVEN_HOME_PATH ) ) );
         _invoker.setLocalRepositoryDirectory( new File( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_MAVEN_LOCAL_REPOSITORY ) ) );
-        
+
     }
 
+    /**
+     * Mvn site assembly.
+     *
+     * @param strSiteName the str site name
+     * @param strTagName the str tag name
+     * @param strMavenProfile the str maven profile
+     * @param user the user
+     * @param commandResult the command result
+     */
     /*
      * (non-Javadoc)
      * 
@@ -99,7 +121,7 @@ public class MavenService implements IMavenService
      */
     public void mvnSiteAssembly( String strSiteName, String strTagName, String strMavenProfile, SvnUser user, CommandResult commandResult )
     {
-        //String strSiteLocalBasePath = ReleaserUtils.getLocalSitePath( strSiteName );
+        // String strSiteLocalBasePath = ReleaserUtils.getLocalSitePath( strSiteName );
 
         List<String> listGoals = MavenGoals.LUTECE_SITE_ASSEMBLY.asList( );
         List<String> listGoalsProfile = new ArrayList<String>( );
@@ -110,12 +132,13 @@ public class MavenService implements IMavenService
     }
 
     /**
-     * Transforme la liste en chaine, pour passer l'argument � la ligne de commande
-     * 
-     * @param goals
-     * @return
+     * Transforme la liste en chaine, pour passer l'argument � la ligne de commande.
+     *
+     * @param strPathPom the str path pom
+     * @param goals the goals
+     * @param commandResult the command result
+     * @return the invocation result
      */
-
 
     // public static IMavenService getInstance()
     // {
@@ -140,7 +163,7 @@ public class MavenService implements IMavenService
      * @param strSVNBinPath
      *            svn bin path (ex: /home/svn/apps/subversion/bin)
      */
-   
+
     private synchronized InvocationResult mvnExecute( String strPathPom, List<String> goals, CommandResult commandResult )
     {
         InvocationRequest request = new DefaultInvocationRequest( );
@@ -148,19 +171,20 @@ public class MavenService implements IMavenService
         request.setGoals( goals );
         request.setShowErrors( true );
         request.setShellEnvironmentInherited( true );
-        
-        String strProxyHost=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_PROXY_HOST );
-        String strProxyPort=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_PROXY_PORT );
-         
-        if(!StringUtils.isEmpty( strProxyHost ) && !StringUtils.isEmpty( strProxyPort ))
+
+        String strProxyHost = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_PROXY_HOST );
+        String strProxyPort = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_PROXY_PORT );
+
+        if ( !StringUtils.isEmpty( strProxyHost ) && !StringUtils.isEmpty( strProxyPort ) )
         {
-            request.setMavenOpts( "-Dhttps.proxyHost="+strProxyHost+"  -Dhttps.proxyPort="+strProxyPort+" -Dhttp.proxyHost="+strProxyHost+"  -Dhttp.proxyPort="+strProxyPort +" -Dfile.encoding=UTF-8");
+            request.setMavenOpts( "-Dhttps.proxyHost=" + strProxyHost + "  -Dhttps.proxyPort=" + strProxyPort + " -Dhttp.proxyHost=" + strProxyHost
+                    + "  -Dhttp.proxyPort=" + strProxyPort + " -Dfile.encoding=UTF-8" );
         }
         InvocationResult invocationResult = null;
         try
         {
             final StringBuffer sbLog = commandResult.getLog( );
-            
+
             // logger
             _invoker.setOutputHandler( new InvocationOutputHandler( )
             {
@@ -184,33 +208,38 @@ public class MavenService implements IMavenService
         return invocationResult;
     }
 
-    public String mvnReleasePerform( String strPathPom,String strUsername, String strPassword, CommandResult commandResult )
+    /**
+     * Mvn release perform.
+     *
+     * @param strPathPom the str path pom
+     * @param strUsername the str username
+     * @param strPassword the str password
+     * @param commandResult the command result
+     * @return the string
+     */
+    public String mvnReleasePerform( String strPathPom, String strUsername, String strPassword, CommandResult commandResult )
     {
         InvocationResult invocationResult = mvnExecute( strPathPom, MavenGoals.RELEASE_PERFORM.asList( ), commandResult );
         int nStatus = invocationResult.getExitCode( );
-       System.out.println( commandResult.getLog( ).toString( ) );
+        System.out.println( commandResult.getLog( ).toString( ) );
         if ( nStatus != 0 )
         {
             ReleaserUtils.addTechnicalError( commandResult, "Error during Release Perform exit code is: " + nStatus );
         }
-        
+
         return "";
     }
 
     /**
-     * 
-     * mvnReleasePrepare
-     * 
-     * @param strBasePath
-     *            chemin sur le disque pour l'acces au composant
-     * @param strPluginName
-     *            le nom du composant
-     * @param strReleaseVersion
-     *            la version a release
-     * @param strTag
-     *            le nom du tag
-     * @param strDevelopmentVersion
-     *            la prochaine version de developpement (avec -SNAPSHOT)
+     * mvnReleasePrepare.
+     *
+     * @param strPathPom the str path pom
+     * @param strReleaseVersion            la version a release
+     * @param strTag            le nom du tag
+     * @param strDevelopmentVersion            la prochaine version de developpement (avec -SNAPSHOT)
+     * @param strUsername the str username
+     * @param strPassword the str password
+     * @param commandResult the command result
      * @return le thread
      */
     public String mvnReleasePrepare( String strPathPom, String strReleaseVersion, String strTag, String strDevelopmentVersion, String strUsername,
@@ -226,7 +255,7 @@ public class MavenService implements IMavenService
         {
             ReleaserUtils.addTechnicalError( commandResult, "Error during Release Prepare exit code is: " + nStatus );
         }
-        
+
         return "";
     }
 

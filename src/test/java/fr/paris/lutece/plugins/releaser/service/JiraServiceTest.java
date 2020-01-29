@@ -53,62 +53,48 @@ import fr.paris.lutece.test.LuteceTestCase;
 public class JiraServiceTest extends LuteceTestCase
 {
 
-    
-     @Test
-    public void testJiraService() throws IOException
+    @Test
+    public void testJiraService( ) throws IOException
     {
-        
-      
-         WorkflowReleaseContext context=initContextServiceTest( this.getResourcesDir( ), this.getClass( ).getCanonicalName( ));
-       
-       
-       ReleaserUtils.startCommandResult( context ) ;
-       
-       JiraComponentService.getService( ).updateComponentVersions( context.getComponent( ), context.getCommandResult( ) );
-         
-       ReleaserUtils.stopCommandResult( context ) ;
-        
+
+        WorkflowReleaseContext context = initContextServiceTest( this.getResourcesDir( ), this.getClass( ).getCanonicalName( ) );
+
+        ReleaserUtils.startCommandResult( context );
+
+        JiraComponentService.getService( ).updateComponentVersions( context.getComponent( ), context.getCommandResult( ) );
+
+        ReleaserUtils.stopCommandResult( context );
+
     }
-    
-    
-     
-  
-     
-   
-     
-     
-    public static WorkflowReleaseContext initContextServiceTest(String strRessourceDir,String strClassName) throws IOException
-     {
-         
-         LuteceTestFileUtils.injectTestProperties( strRessourceDir, strClassName);
-         String strArtifactId=AppPropertiesService.getProperty( "releaser.componentTest.artifactId" );
-         String strScmDevelopperConnection=AppPropertiesService.getProperty( "releaser.componentTest.scmDeveloperConnection" );
-         String strGitHubUserLogin=AppPropertiesService.getProperty(ConstanteUtils.PROPERTY_GITHUB_RELEASE_ACCOUNT_LOGIN );
-         String strGitHubUserPassword=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_ACCOUNT_PASSWORD);
-         String strJiraKey=AppPropertiesService.getProperty( "releaser.componentTest.jiraKey" );
-         String strCurrentVersion=AppPropertiesService.getProperty( "releaser.componentTest.currentVersion" );
-         String strReleaserVersion=AppPropertiesService.getProperty( "releaser.componentTest.releaseVersion" );
-         String strReleaserTagName=AppPropertiesService.getProperty( "releaser.componentTest.releaseTagName" );
-         String strReleaserNewDeveloppmentVersion=AppPropertiesService.getProperty( "releaser.componentTest.releaseNewDeveloppmentVersion");
-         
-             
-         
-         
-         
-         WorkflowReleaseContext context=new WorkflowReleaseContext( );
-         Component component=new Component( );
-         component.setArtifactId( strArtifactId );
-         component.setScmDeveloperConnection( strScmDevelopperConnection );
-         component.setNextSnapshotVersion( strReleaserNewDeveloppmentVersion );
-         component.setTargetVersion( strReleaserVersion );
-         component.setCurrentVersion( strCurrentVersion );
-         component.setJiraCode( strJiraKey );
-         ReleaserUser user=new ReleaserUser( );
-         user.addCredential( RepositoryType.GITHUB, user.new Credential(strGitHubUserLogin, strGitHubUserPassword));
-         
-         context.setReleaserUser( user );
-         context.setComponent(component );
-         return context;
-         
-     }
+
+    public static WorkflowReleaseContext initContextServiceTest( String strRessourceDir, String strClassName ) throws IOException
+    {
+
+        LuteceTestFileUtils.injectTestProperties( strRessourceDir, strClassName );
+        String strArtifactId = AppPropertiesService.getProperty( "releaser.componentTest.artifactId" );
+        String strScmDevelopperConnection = AppPropertiesService.getProperty( "releaser.componentTest.scmDeveloperConnection" );
+        String strGitHubUserLogin = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_ACCOUNT_LOGIN );
+        String strGitHubUserPassword = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_ACCOUNT_PASSWORD );
+        String strJiraKey = AppPropertiesService.getProperty( "releaser.componentTest.jiraKey" );
+        String strCurrentVersion = AppPropertiesService.getProperty( "releaser.componentTest.currentVersion" );
+        String strReleaserVersion = AppPropertiesService.getProperty( "releaser.componentTest.releaseVersion" );
+        String strReleaserTagName = AppPropertiesService.getProperty( "releaser.componentTest.releaseTagName" );
+        String strReleaserNewDeveloppmentVersion = AppPropertiesService.getProperty( "releaser.componentTest.releaseNewDeveloppmentVersion" );
+
+        WorkflowReleaseContext context = new WorkflowReleaseContext( );
+        Component component = new Component( );
+        component.setArtifactId( strArtifactId );
+        component.setScmDeveloperConnection( strScmDevelopperConnection );
+        component.setNextSnapshotVersion( strReleaserNewDeveloppmentVersion );
+        component.setTargetVersion( strReleaserVersion );
+        component.setCurrentVersion( strCurrentVersion );
+        component.setJiraCode( strJiraKey );
+        ReleaserUser user = new ReleaserUser( );
+        user.addCredential( RepositoryType.GITHUB, user.new Credential( strGitHubUserLogin, strGitHubUserPassword ) );
+
+        context.setReleaserUser( user );
+        context.setComponent( component );
+        return context;
+
+    }
 }
