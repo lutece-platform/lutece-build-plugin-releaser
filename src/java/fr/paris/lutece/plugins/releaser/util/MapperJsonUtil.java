@@ -39,11 +39,14 @@ import java.io.StringWriter;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 
+// TODO: Auto-generated Javadoc
 /**
- * JSON Mapper utils
+ * JSON Mapper utils.
  */
 public final class MapperJsonUtil
 {
+    
+    /** The Constant _mapper. */
     private static final ObjectMapper _mapper;
 
     static
@@ -52,23 +55,21 @@ public final class MapperJsonUtil
         _mapper.configure( DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false );
     }
 
-    /** Private constructor */
+    /**
+     *  Private constructor.
+     */
     private MapperJsonUtil( )
     {
     }
 
     /**
-     * parse the JSON for a bean
-     * 
-     * @param <T>
-     *            The Bean class
-     * @param strJson
-     *            The JSON
-     * @param t
-     *            The bean class
+     * parse the JSON for a bean.
+     *
+     * @param <T>            The Bean class
+     * @param strJson            The JSON
+     * @param t            The bean class
      * @return The bean
-     * @throws IOException
-     *             if an error occurs
+     * @throws IOException             if an error occurs
      */
     public static <T> T parse( String strJson, Class<T> t ) throws IOException
     {
@@ -76,12 +77,11 @@ public final class MapperJsonUtil
     }
 
     /**
-     * parse a bean into a json
-     * 
-     * @param object
+     * parse a bean into a json.
+     *
+     * @param object the object
      * @return The json
-     * @throws IOException
-     *             if an error occurs
+     * @throws IOException             if an error occurs
      */
     public static String getJson( Object object ) throws IOException
     {

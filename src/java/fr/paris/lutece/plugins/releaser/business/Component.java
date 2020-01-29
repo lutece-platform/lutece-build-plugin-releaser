@@ -38,41 +38,89 @@ import java.util.List;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
 
+// TODO: Auto-generated Javadoc
 /**
- * This is the business class for the object Component
+ * This is the business class for the object Component.
  */
 public class Component extends AbstractReleaserResource
 {
+    
+    /** The str artifact id. */
     // Variables declarations
     private String _strArtifactId;
+    
+    /** The str group id. */
     private String _strGroupId;
+    
+    /** The str type. */
     private String _strType;
+    
+    /** The str current version. */
     private String _strCurrentVersion;
+    
+    /** The str target version. */
     private String _strTargetVersion;
+    
+    /** The str last available version. */
     private String _strLastAvailableVersion;
+    
+    /** The str last available snapshot version. */
     private String _strLastAvailableSnapshotVersion;
+    
+    /** The str next snapshot version. */
     private String _strNextSnapshotVersion;
 
+    /** The str description. */
     private String _strDescription;
+    
+    /** The b is project. */
     private boolean _bIsProject;
+    
+    /** The str jira code. */
     private String _strJiraCode;
+    
+    /** The str jira roadmap url. */
     private String _strJiraRoadmapUrl;
+    
+    /** The n jira current version closed issues. */
     private int _nJiraCurrentVersionClosedIssues;
+    
+    /** The n jira current version opened issues. */
     private int _nJiraCurrentVersionOpenedIssues;
+    
+    /** The list target versions. */
     private List<String> _listTargetVersions;
+    
+    /** The n target version index. */
     private int _nTargetVersionIndex;
+    
+    /** The b downgrade. */
     private boolean _bDowngrade;
+    
+    /** The b upgrade. */
     private boolean _bUpgrade;
+    
+    /** The b error last release. */
     private boolean _bErrorLastRelease;
+    
+    /** The str name. */
     private String _strName;
+    
+    /** The str clone url. */
     private String _strCloneUrl;
+    
+    /** The str full name. */
     private String _strFullName;
+    
+    /** The str tweet message. */
     private String _strTweetMessage;
+    
+    /** The str scm developer connection. */
     private String _strScmDeveloperConnection;
 
     /**
-     * Returns the ArtifactId
-     * 
+     * Returns the ArtifactId.
+     *
      * @return The ArtifactId
      */
     public String getArtifactId( )
@@ -81,10 +129,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Sets the ArtifactId
-     * 
-     * @param strArtifactId
-     *            The ArtifactId
+     * Sets the ArtifactId.
+     *
+     * @param strArtifactId            The ArtifactId
      */
     public void setArtifactId( String strArtifactId )
     {
@@ -92,8 +139,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Returns the GroupId
-     * 
+     * Returns the GroupId.
+     *
      * @return The GroupId
      */
     public String getGroupId( )
@@ -102,10 +149,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Sets the GroupId
-     * 
-     * @param strGroupId
-     *            The GroupId
+     * Sets the GroupId.
+     *
+     * @param strGroupId            The GroupId
      */
     public void setGroupId( String strGroupId )
     {
@@ -113,8 +159,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Returns the Type
-     * 
+     * Returns the Type.
+     *
      * @return The Type
      */
     public String getType( )
@@ -123,10 +169,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Sets the Type
-     * 
-     * @param strType
-     *            The Type
+     * Sets the Type.
+     *
+     * @param strType            The Type
      */
     public void setType( String strType )
     {
@@ -134,8 +179,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Returns the CurrentVersion
-     * 
+     * Returns the CurrentVersion.
+     *
      * @return The CurrentVersion
      */
     public String getCurrentVersion( )
@@ -144,10 +189,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Sets the CurrentVersion
-     * 
-     * @param strCurrentVersion
-     *            The CurrentVersion
+     * Sets the CurrentVersion.
+     *
+     * @param strCurrentVersion            The CurrentVersion
      */
     public void setCurrentVersion( String strCurrentVersion )
     {
@@ -155,8 +199,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Returns the TargetVersion
-     * 
+     * Returns the TargetVersion.
+     *
      * @return The TargetVersion
      */
     public String getTargetVersion( )
@@ -165,10 +209,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Sets the TargetVersion
-     * 
-     * @param strTargetVersion
-     *            The TargetVersion
+     * Sets the TargetVersion.
+     *
+     * @param strTargetVersion            The TargetVersion
      */
     public void setTargetVersion( String strTargetVersion )
     {
@@ -176,8 +219,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Returns the IsProject
-     * 
+     * Returns the IsProject.
+     *
      * @return The IsProject
      */
     public boolean isProject( )
@@ -186,10 +229,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Sets the IsProject
-     * 
-     * @param bIsProject
-     *            The IsProject
+     * Sets the IsProject.
+     *
+     * @param bIsProject            The IsProject
      */
     public void setIsProject( boolean bIsProject )
     {
@@ -197,8 +239,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Returns the LastAvailableVersion
-     * 
+     * Returns the LastAvailableVersion.
+     *
      * @return The LastAvailableVersion
      */
     public String getLastAvailableVersion( )
@@ -207,10 +249,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Sets the LastAvailableVersion
-     * 
-     * @param strLastAvailableVersion
-     *            The LastAvailableVersion
+     * Sets the LastAvailableVersion.
+     *
+     * @param strLastAvailableVersion            The LastAvailableVersion
      */
     public void setLastAvailableVersion( String strLastAvailableVersion )
     {
@@ -218,8 +259,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Returns the NextSnapshotVersion
-     * 
+     * Returns the NextSnapshotVersion.
+     *
      * @return The NextSnapshotVersion
      */
     public String getNextSnapshotVersion( )
@@ -228,10 +269,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Sets the NextSnapshotVersion
-     * 
-     * @param strNextSnapshotVersion
-     *            The NextSnapshotVersion
+     * Sets the NextSnapshotVersion.
+     *
+     * @param strNextSnapshotVersion            The NextSnapshotVersion
      */
     public void setNextSnapshotVersion( String strNextSnapshotVersion )
     {
@@ -239,8 +279,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Returns the JiraCode
-     * 
+     * Returns the JiraCode.
+     *
      * @return The JiraCode
      */
     public String getJiraCode( )
@@ -249,10 +289,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Sets the JiraCode
-     * 
-     * @param strJiraCode
-     *            The JiraCode
+     * Sets the JiraCode.
+     *
+     * @param strJiraCode            The JiraCode
      */
     public void setJiraCode( String strJiraCode )
     {
@@ -260,8 +299,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Returns the JiraRoadmapUrl
-     * 
+     * Returns the JiraRoadmapUrl.
+     *
      * @return The JiraRoadmapUrl
      */
     public String getJiraRoadmapUrl( )
@@ -270,10 +309,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Sets the JiraRoadmapUrl
-     * 
-     * @param strJiraRoadmapUrl
-     *            The JiraRoadmapUrl
+     * Sets the JiraRoadmapUrl.
+     *
+     * @param strJiraRoadmapUrl            The JiraRoadmapUrl
      */
     public void setJiraRoadmapUrl( String strJiraRoadmapUrl )
     {
@@ -281,8 +319,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Returns the JiraCurrentVersionClosedIssues
-     * 
+     * Returns the JiraCurrentVersionClosedIssues.
+     *
      * @return The JiraCurrentVersionClosedIssues
      */
     public int getJiraCurrentVersionClosedIssues( )
@@ -291,10 +329,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Sets the JiraCurrentVersionClosedIssues
-     * 
-     * @param nJiraCurrentVersionClosedIssues
-     *            The JiraCurrentVersionClosedIssues
+     * Sets the JiraCurrentVersionClosedIssues.
+     *
+     * @param nJiraCurrentVersionClosedIssues            The JiraCurrentVersionClosedIssues
      */
     public void setJiraCurrentVersionClosedIssues( int nJiraCurrentVersionClosedIssues )
     {
@@ -302,8 +339,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Returns the JiraCurrentVersionOpenedIssues
-     * 
+     * Returns the JiraCurrentVersionOpenedIssues.
+     *
      * @return The JiraCurrentVersionOpenedIssues
      */
     public int getJiraCurrentVersionOpenedIssues( )
@@ -312,10 +349,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Sets the JiraCurrentVersionOpenedIssues
-     * 
-     * @param nJiraCurrentVersionOpenedIssues
-     *            The JiraCurrentVersionOpenedIssues
+     * Sets the JiraCurrentVersionOpenedIssues.
+     *
+     * @param nJiraCurrentVersionOpenedIssues            The JiraCurrentVersionOpenedIssues
      */
     public void setJiraCurrentVersionOpenedIssues( int nJiraCurrentVersionOpenedIssues )
     {
@@ -323,10 +359,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Set target versions list
-     * 
-     * @param listTargetVersions
-     *            The target versions list
+     * Set target versions list.
+     *
+     * @param listTargetVersions            The target versions list
      */
     public void setTargetVersions( List<String> listTargetVersions )
     {
@@ -334,8 +369,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Gets the target versions list
-     * 
+     * Gets the target versions list.
+     *
      * @return the target versions list
      */
     public List<String> getTargetVersions( )
@@ -344,10 +379,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Set the target version index
-     * 
-     * @param nIndex
-     *            the target version index
+     * Set the target version index.
+     *
+     * @param nIndex            the target version index
      */
     public void setTargetVersionIndex( int nIndex )
     {
@@ -355,8 +389,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Get the target version index
-     * 
+     * Get the target version index.
+     *
      * @return the target version index
      */
     public int getTargetVersionIndex( )
@@ -365,8 +399,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * Returns the IsProject
-     * 
+     * Returns the IsProject.
+     *
      * @return True if should be released
      */
     public boolean shouldBeReleased( )
@@ -381,7 +415,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * 
+     * Gets the scm developer connection.
+     *
      * @return scm developer connection url
      */
     public String getScmDeveloperConnection( )
@@ -390,9 +425,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * 
-     * @param _strScmDeveloperConnection
-     *            scm developer connection url
+     * Sets the scm developer connection.
+     *
+     * @param _strScmDeveloperConnection            scm developer connection url
      */
     public void setScmDeveloperConnection( String _strScmDeveloperConnection )
     {
@@ -400,7 +435,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * 
+     * Checks if is snapshot version.
+     *
      * @return snapshot version
      */
     public boolean isSnapshotVersion( )
@@ -409,6 +445,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
+     * Checks if is upgrade.
+     *
      * @return boolean
      */
     public boolean isUpgrade( )
@@ -417,7 +455,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * @param _bUpgrade
+     * Sets the upgrade.
+     *
+     * @param _bUpgrade the new upgrade
      */
     public void setUpgrade( boolean _bUpgrade )
     {
@@ -425,6 +465,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
+     * Checks if is downgrade.
+     *
      * @return boolean
      */
     public boolean isDowngrade( )
@@ -433,7 +475,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * @param _bDowngrade
+     * Sets the downgrade.
+     *
+     * @param _bDowngrade the new downgrade
      */
     public void setDowngrade( boolean _bDowngrade )
     {
@@ -441,6 +485,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
+     * Checks if is theme.
+     *
      * @return boolean
      */
     public boolean isTheme( )
@@ -449,6 +495,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
+     * Gets the last available snapshot version.
+     *
      * @return getLastAvailableSnapshotVersion
      */
     public String getLastAvailableSnapshotVersion( )
@@ -457,7 +505,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * @param _strLastAvailableSnapshotVersion
+     * Sets the last available snapshot version.
+     *
+     * @param _strLastAvailableSnapshotVersion the new last available snapshot version
      */
     public void setLastAvailableSnapshotVersion( String _strLastAvailableSnapshotVersion )
     {
@@ -465,6 +515,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
+     * Checks if is error last release.
+     *
      * @return isErrorLastRelease
      */
     public boolean isErrorLastRelease( )
@@ -473,7 +525,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * @param _bErrorLastRelease
+     * Sets the error last release.
+     *
+     * @param _bErrorLastRelease the new error last release
      */
     public void setErrorLastRelease( boolean _bErrorLastRelease )
     {
@@ -481,6 +535,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
+     * Gets the name.
+     *
      * @return getName
      */
     public String getName( )
@@ -489,7 +545,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * @param _strName
+     * Sets the name.
+     *
+     * @param _strName the new name
      */
     public void setName( String _strName )
     {
@@ -497,6 +555,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
+     * Gets the clone url.
+     *
      * @return CloneUrl
      */
     public String getCloneUrl( )
@@ -505,7 +565,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * @param _strCloneUrl
+     * Sets the clone url.
+     *
+     * @param _strCloneUrl the new clone url
      */
     public void setCloneUrl( String _strCloneUrl )
     {
@@ -513,6 +575,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
+     * Gets the full name.
+     *
      * @return full name
      */
     public String getFullName( )
@@ -521,7 +585,9 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * @param strFullName
+     * Sets the full name.
+     *
+     * @param strFullName the new full name
      */
     public void setFullName( String strFullName )
     {
@@ -529,6 +595,8 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
+     * Gets the tweet message.
+     *
      * @return getTweetMessage
      */
     public String getTweetMessage( )
@@ -537,13 +605,20 @@ public class Component extends AbstractReleaserResource
     }
 
     /**
-     * @param _strTweetMessage
+     * Sets the tweet message.
+     *
+     * @param _strTweetMessage the new tweet message
      */
     public void setTweetMessage( String _strTweetMessage )
     {
         this._strTweetMessage = _strTweetMessage;
     }
 
+    /**
+     * Gets the scm url.
+     *
+     * @return the scm url
+     */
     @Override
     public String getScmUrl( )
     {

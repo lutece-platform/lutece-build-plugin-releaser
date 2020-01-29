@@ -66,17 +66,19 @@ import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
 import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
 
+// TODO: Auto-generated Javadoc
 /**
- * SvnSiteService
+ * SvnSiteService.
  */
 public class GitResourceService implements IVCSResourceService
 {
 
     /**
      * Fetch the pom.xml content from a repository
-     * 
-     * @param strPomUrl
-     *            The POM URL
+     *
+     * @param site the site
+     * @param strGitLogin the str git login
+     * @param strGitPwd the str git pwd
      * @return The POM content
      */
     public String fetchPom( Site site, String strGitLogin, String strGitPwd )
@@ -95,12 +97,11 @@ public class GitResourceService implements IVCSResourceService
     }
 
     /**
-     * Gets the last release found in the SVN repository
-     * 
-     * @param strSiteArtifactId
-     *            The site artifact id
-     * @param strTrunkUrl
-     *            The trunk URL
+     * Gets the last release found in the SVN repository.
+     *
+     * @param site the site
+     * @param strGitLogin the str git login
+     * @param strGitPwd the str git pwd
      * @return The version if found otherwise null
      */
     public String getLastRelease( Site site, String strGitLogin, String strGitPwd )
@@ -132,6 +133,14 @@ public class GitResourceService implements IVCSResourceService
 
     }
 
+    /**
+     * Do checkout repository.
+     *
+     * @param context the context
+     * @param strLogin the str login
+     * @param strPassword the str password
+     * @return the string
+     */
     @Override
     public String doCheckoutRepository( WorkflowReleaseContext context, String strLogin, String strPassword )
     {
@@ -218,6 +227,13 @@ public class GitResourceService implements IVCSResourceService
         return ConstanteUtils.CONSTANTE_EMPTY_STRING;
     }
 
+    /**
+     * Update develop branch.
+     *
+     * @param context the context
+     * @param locale the locale
+     * @param strMessage the str message
+     */
     @Override
     public void updateDevelopBranch( WorkflowReleaseContext context, Locale locale, String strMessage )
     {
@@ -281,6 +297,12 @@ public class GitResourceService implements IVCSResourceService
 
     }
 
+    /**
+     * Update master branch.
+     *
+     * @param context the context
+     * @param locale the locale
+     */
     @Override
     public void updateMasterBranch( WorkflowReleaseContext context, Locale locale )
     {
@@ -344,6 +366,12 @@ public class GitResourceService implements IVCSResourceService
 
     }
 
+    /**
+     * Rollback release.
+     *
+     * @param context the context
+     * @param locale the locale
+     */
     @Override
     public void rollbackRelease( WorkflowReleaseContext context, Locale locale )
     {
@@ -460,6 +488,12 @@ public class GitResourceService implements IVCSResourceService
 
     }
 
+    /**
+     * Checkout develop branch.
+     *
+     * @param context the context
+     * @param locale the locale
+     */
     @Override
     public void checkoutDevelopBranch( WorkflowReleaseContext context, Locale locale )
     {

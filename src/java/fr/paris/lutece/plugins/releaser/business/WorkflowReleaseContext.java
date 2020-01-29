@@ -7,9 +7,9 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 
+// TODO: Auto-generated Javadoc
 /**
- * WorkflowReleaseContext
- *
+ * WorkflowReleaseContext.
  */
 
 @JsonIgnoreProperties( {
@@ -18,19 +18,37 @@ import fr.paris.lutece.plugins.releaser.util.CommandResult;
 public class WorkflowReleaseContext implements Serializable
 {
 
+    /** The Constant WORKFLOW_RESOURCE_TYPE. */
     public static final String WORKFLOW_RESOURCE_TYPE = "WORKFLOW_RELEASE_CONTEXT";
 
+    /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 8956577881980599537L;
+    
+    /** The n id. */
     private int _nId;
+    
+    /** The component. */
     private Component _component;
+    
+    /** The site. */
     private Site _site;
+    
+    /** The command result. */
     private CommandResult _commandResult;
+    
+    /** The releaser user. */
     @JsonIgnore
     private ReleaserUser _releaserUser;
+    
+    /** The str ref branch release. */
     private String _strRefBranchRelease;
+    
+    /** The str ref branch dev. */
     private String _strRefBranchDev;
 
     /**
+     * Gets the id.
+     *
      * @return get Id
      */
     public int getId( )
@@ -39,17 +57,18 @@ public class WorkflowReleaseContext implements Serializable
     }
 
     /**
-     * @param _nId
+     * Sets the id.
+     *
+     * @param _nId the new id
      */
-    /**
-     * @param _nId
-     */
-    public void setId( int _nId )
+     public void setId( int _nId )
     {
         this._nId = _nId;
     }
 
     /**
+     * Gets the component.
+     *
      * @return componet
      */
     public Component getComponent( )
@@ -58,7 +77,9 @@ public class WorkflowReleaseContext implements Serializable
     }
 
     /**
-     * @param _component
+     * Sets the component.
+     *
+     * @param _component the new component
      */
     public void setComponent( Component _component )
     {
@@ -66,6 +87,8 @@ public class WorkflowReleaseContext implements Serializable
     }
 
     /**
+     * Gets the command result.
+     *
      * @return command result
      */
     public CommandResult getCommandResult( )
@@ -74,6 +97,8 @@ public class WorkflowReleaseContext implements Serializable
     }
 
     /**
+     * Sets the command result.
+     *
      * @param _commandResult command result
      */
     public void setCommandResult( CommandResult _commandResult )
@@ -82,7 +107,9 @@ public class WorkflowReleaseContext implements Serializable
     }
 
     /**
-     * @param site
+     * Sets the site.
+     *
+     * @param site the new site
      */
     public void setSite( Site site )
     {
@@ -90,6 +117,8 @@ public class WorkflowReleaseContext implements Serializable
     }
 
     /**
+     * Gets the site.
+     *
      * @return get Site
      */
     public Site getSite( )
@@ -98,7 +127,8 @@ public class WorkflowReleaseContext implements Serializable
     }
 
     /**
-     * 
+     * Checks if is lutece site.
+     *
      * @return true if the component is a lutece site
      */
     public boolean isLuteceSite( )
@@ -107,6 +137,8 @@ public class WorkflowReleaseContext implements Serializable
     }
 
     /**
+     * Gets the releaser user.
+     *
      * @return getReleaserUser
      */
     @JsonIgnore
@@ -116,7 +148,9 @@ public class WorkflowReleaseContext implements Serializable
     }
 
     /**
-     * @param _releaserUser
+     * Sets the releaser user.
+     *
+     * @param _releaserUser the new releaser user
      */
     @JsonIgnore
     public void setReleaserUser( ReleaserUser _releaserUser )
@@ -125,6 +159,8 @@ public class WorkflowReleaseContext implements Serializable
     }
 
     /**
+     * Gets the ref branch release.
+     *
      * @return getRefBranchRelease
      */
     public String getRefBranchRelease( )
@@ -133,7 +169,9 @@ public class WorkflowReleaseContext implements Serializable
     }
 
     /**
-     * @param _strRefBranchRelease
+     * Sets the ref branch release.
+     *
+     * @param _strRefBranchRelease the new ref branch release
      */
     public void setRefBranchRelease( String _strRefBranchRelease )
     {
@@ -141,6 +179,8 @@ public class WorkflowReleaseContext implements Serializable
     }
 
     /**
+     * Gets the ref branch dev.
+     *
      * @return getRefBranchDev
      */
     public String getRefBranchDev( )
@@ -149,7 +189,9 @@ public class WorkflowReleaseContext implements Serializable
     }
 
     /**
-     * @param _strRefBranchDev
+     * Sets the ref branch dev.
+     *
+     * @param _strRefBranchDev the new ref branch dev
      */
     public void setRefBranchDev( String _strRefBranchDev )
     {
@@ -157,6 +199,8 @@ public class WorkflowReleaseContext implements Serializable
     }
 
     /**
+     * Gets the releaser resource.
+     *
      * @return getReleaserResource
      */
     public IReleaserResource getReleaserResource( )

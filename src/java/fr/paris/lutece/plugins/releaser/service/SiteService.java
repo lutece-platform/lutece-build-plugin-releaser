@@ -169,7 +169,7 @@ public class SiteService
 
     /**
      * Define which version between last released or current snapshot should be the origin for next release versions. Ex of cases :<br>
-     * last release : 3.2.1 current : 4.0.0-SNAPSHOT -- current> <br>
+     * last release : 3.2.1 current : 4.0.0-SNAPSHOT -- current  <br>
      * last release : 3.2.1 current : 3.2.2-SNAPSHOT -- last or current <br>
      * last release : missing current : 1.0.0-SNAPSHOT -- current <br>
      * last release : 3.2.1-RC-02 current : 3.2.1-SNAPSHOT -- last <br>

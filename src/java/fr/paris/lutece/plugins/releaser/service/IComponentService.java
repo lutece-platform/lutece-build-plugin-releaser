@@ -76,10 +76,7 @@ int release( Component component, Locale locale, AdminUser user, HttpServletRequ
      * @param strArtifactId the str artifact id
      * @return The LastAvailableVersion
      */
-    /**
-     * @param strArtifactId
-     * @return lastRelease version
-     */
+
     String getLastReleaseVersion( String strArtifactId);    
     
     /**
@@ -90,10 +87,7 @@ int release( Component component, Locale locale, AdminUser user, HttpServletRequ
      * @param strArtifactId the str artifact id
      * @param strVersion the str version
      */
-    /**
-     * @param strArtifactId
-     * @param strVersion
-     */
+   
     void setLastReleaseVersion( String strArtifactId,String strVersion);
     
     /**
@@ -102,11 +96,7 @@ int release( Component component, Locale locale, AdminUser user, HttpServletRequ
      * @param strArtifactId the str artifact id
      * @return The LastAvailableVersion
      */
-    /**
-     * @param strArtifactId
-     * @return LastReleaseNextSnapshotVersion
-     */
-    String getLastReleaseNextSnapshotVersion( String strArtifactId);
+      String getLastReleaseNextSnapshotVersion( String strArtifactId);
     
 
     

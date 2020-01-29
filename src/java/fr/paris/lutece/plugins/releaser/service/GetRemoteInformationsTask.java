@@ -16,7 +16,9 @@ public class GetRemoteInformationsTask implements Runnable
     private Component _component;
 
     /**
-     * @param component
+     * Instantiates a new gets the remote informations task.
+     *
+     * @param component the component
      */
     public GetRemoteInformationsTask( Component component )
     {

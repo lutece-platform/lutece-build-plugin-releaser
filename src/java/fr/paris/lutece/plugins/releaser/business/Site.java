@@ -41,56 +41,87 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+// TODO: Auto-generated Javadoc
 /**
- * This is the business class for the object Site
+ * This is the business class for the object Site.
  */
 public class Site extends AbstractReleaserResource implements Serializable
 {
+    
+    /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 1L;
 
+    /** The n id. */
     // Variables declarations
     private int _nId;
 
+    /** The str artifact id. */
     @NotEmpty( message = "#i18n{releaser.validation.site.ArtifactId.notEmpty}" )
     @Size( max = 50, message = "#i18n{releaser.validation.site.ArtifactId.size}" )
     private String _strArtifactId;
 
+    /** The n id cluster. */
     private int _nIdCluster;
+    
+    /** The str scm url. */
     @URL( message = "#i18n{portal.validation.message.url}" )
     @NotEmpty( message = "#i18n{releaser.validation.site.ScmUrl.notEmpty}" )
     @Size( max = 255, message = "#i18n{releaser.validation.site.ScmUrl.size}" )
     private String _strScmUrl;
 
+    /** The str name. */
     @NotEmpty( message = "#i18n{releaser.validation.site.Name.notEmpty}" )
     @Size( max = 50, message = "#i18n{releaser.validation.site.Name.size}" )
     private String _strName;
 
+    /** The str description. */
     @NotEmpty( message = "#i18n{releaser.validation.site.Description.notEmpty}" )
     @Size( max = 255, message = "#i18n{releaser.validation.site.Description.size}" )
     private String _strDescription;
 
+    /** The str jira key. */
     @Size( max = 50, message = "#i18n{releaser.validation.site.JiraKey.size}" )
     private String _strJiraKey;
 
+    /** The str tag information. */
     private String _strTagInformation;
 
+    /** The str cluster. */
     private String _strCluster;
 
+    /** The list current dependencies. */
     private List<Dependency> _listCurrentDependencies = new ArrayList<>( );
+    
+    /** The list components. */
     private List<Component> _listComponents = new ArrayList<>( );
 
+    /** The str current version. */
     private String _strCurrentVersion;
+    
+    /** The str last release version. */
     private String _strLastReleaseVersion;
+    
+    /** The str next release version. */
     private String _strNextReleaseVersion;
+    
+    /** The list target versions. */
     private List<String> _listTargetVersions;
+    
+    /** The n target version index. */
     private int _nTargetVersionIndex;
+    
+    /** The str next snapshot version. */
     private String _strNextSnapshotVersion;
+    
+    /** The str group id. */
     private String _strGroupId;
+    
+    /** The b theme. */
     private boolean _bTheme;
 
     /**
-     * Returns the Id
-     * 
+     * Returns the Id.
+     *
      * @return The Id
      */
     public int getId( )
@@ -99,10 +130,9 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Sets the Id
-     * 
-     * @param nId
-     *            The Id
+     * Sets the Id.
+     *
+     * @param nId            The Id
      */
     public void setId( int nId )
     {
@@ -110,8 +140,8 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Returns the ArtifactId
-     * 
+     * Returns the ArtifactId.
+     *
      * @return The ArtifactId
      */
     public String getArtifactId( )
@@ -120,10 +150,9 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Sets the ArtifactId
-     * 
-     * @param strArtifactId
-     *            The ArtifactId
+     * Sets the ArtifactId.
+     *
+     * @param strArtifactId            The ArtifactId
      */
     public void setArtifactId( String strArtifactId )
     {
@@ -131,8 +160,8 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Returns the IdCluster
-     * 
+     * Returns the IdCluster.
+     *
      * @return The IdCluster
      */
     public int getIdCluster( )
@@ -141,10 +170,9 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Sets the IdCluster
-     * 
-     * @param nIdCluster
-     *            The IdCluster
+     * Sets the IdCluster.
+     *
+     * @param nIdCluster            The IdCluster
      */
     public void setIdCluster( int nIdCluster )
     {
@@ -152,8 +180,8 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Returns the ScmUrl
-     * 
+     * Returns the ScmUrl.
+     *
      * @return The ScmUrl
      */
     public String getScmUrl( )
@@ -162,10 +190,9 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Sets the ScmUrl
-     * 
-     * @param strScmUrl
-     *            The ScmUrl
+     * Sets the ScmUrl.
+     *
+     * @param strScmUrl            The ScmUrl
      */
     public void setScmUrl( String strScmUrl )
     {
@@ -173,8 +200,8 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Returns the Name
-     * 
+     * Returns the Name.
+     *
      * @return The Name
      */
     public String getName( )
@@ -183,10 +210,9 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Sets the Name
-     * 
-     * @param strName
-     *            The Name
+     * Sets the Name.
+     *
+     * @param strName            The Name
      */
     public void setName( String strName )
     {
@@ -194,8 +220,8 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Returns the Description
-     * 
+     * Returns the Description.
+     *
      * @return The Description
      */
     public String getDescription( )
@@ -204,10 +230,9 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Sets the Description
-     * 
-     * @param strDescription
-     *            The Description
+     * Sets the Description.
+     *
+     * @param strDescription            The Description
      */
     public void setDescription( String strDescription )
     {
@@ -215,8 +240,8 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Returns the JiraKey
-     * 
+     * Returns the JiraKey.
+     *
      * @return The JiraKey
      */
     public String getJiraKey( )
@@ -225,10 +250,9 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Sets the JiraKey
-     * 
-     * @param strJiraKey
-     *            The JiraKey
+     * Sets the JiraKey.
+     *
+     * @param strJiraKey            The JiraKey
      */
     public void setJiraKey( String strJiraKey )
     {
@@ -236,7 +260,9 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * @param dependency
+     * Adds the current dependency.
+     *
+     * @param dependency the dependency
      */
     public void addCurrentDependency( Dependency dependency )
     {
@@ -244,6 +270,8 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
+     * Gets the current dependencies.
+     *
      * @return getCurrentDependencies
      */
     public List<Dependency> getCurrentDependencies( )
@@ -252,7 +280,9 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * @param component
+     * Adds the component.
+     *
+     * @param component the component
      */
     public void addComponent( Component component )
     {
@@ -260,6 +290,8 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
+     * Gets the components.
+     *
      * @return getComponents
      */
     public List<Component> getComponents( )
@@ -268,8 +300,8 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Returns the Version
-     * 
+     * Returns the Version.
+     *
      * @return The Version
      */
     public String getVersion( )
@@ -278,10 +310,9 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Sets the Version
-     * 
-     * @param strVersion
-     *            The Version
+     * Sets the Version.
+     *
+     * @param strVersion            The Version
      */
     public void setVersion( String strVersion )
     {
@@ -289,8 +320,8 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Returns the Cluster
-     * 
+     * Returns the Cluster.
+     *
      * @return The Cluster
      */
     public String getCluster( )
@@ -299,10 +330,9 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Sets the Cluster
-     * 
-     * @param strCluster
-     *            The Cluster
+     * Sets the Cluster.
+     *
+     * @param strCluster            The Cluster
      */
     public void setCluster( String strCluster )
     {
@@ -310,8 +340,8 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Returns the Last Release Version
-     * 
+     * Returns the Last Release Version.
+     *
      * @return The Release Version
      */
     public String getLastReleaseVersion( )
@@ -320,10 +350,9 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Sets the Last Release Version
-     * 
-     * @param strLastReleaseVersion
-     *            The Release Version
+     * Sets the Last Release Version.
+     *
+     * @param strLastReleaseVersion            The Release Version
      */
     public void setLastReleaseVersion( String strLastReleaseVersion )
     {
@@ -331,8 +360,8 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Returns the Next Release Version
-     * 
+     * Returns the Next Release Version.
+     *
      * @return The Release Version
      */
     public String getNextReleaseVersion( )
@@ -341,10 +370,9 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Sets the Next Release Version
-     * 
-     * @param strNextReleaseVersion
-     *            The Release Version
+     * Sets the Next Release Version.
+     *
+     * @param strNextReleaseVersion            The Release Version
      */
     public void setNextReleaseVersion( String strNextReleaseVersion )
     {
@@ -352,8 +380,8 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Returns the NextSnapshotVersion
-     * 
+     * Returns the NextSnapshotVersion.
+     *
      * @return The NextSnapshotVersion
      */
     public String getNextSnapshotVersion( )
@@ -362,10 +390,9 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Sets the NextSnapshotVersion
-     * 
-     * @param strNextSnapshotVersion
-     *            The NextSnapshotVersion
+     * Sets the NextSnapshotVersion.
+     *
+     * @param strNextSnapshotVersion            The NextSnapshotVersion
      */
     public void setNextSnapshotVersion( String strNextSnapshotVersion )
     {
@@ -373,10 +400,9 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Set target versions list
-     * 
-     * @param listTargetVersions
-     *            The target versions list
+     * Set target versions list.
+     *
+     * @param listTargetVersions            The target versions list
      */
     public void setTargetVersions( List<String> listTargetVersions )
     {
@@ -384,8 +410,8 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Gets the target versions list
-     * 
+     * Gets the target versions list.
+     *
      * @return the target versions list
      */
     public List<String> getTargetVersions( )
@@ -394,10 +420,9 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Set the target version index
-     * 
-     * @param nIndex
-     *            the target version index
+     * Set the target version index.
+     *
+     * @param nIndex            the target version index
      */
     public void setTargetVersionIndex( int nIndex )
     {
@@ -405,8 +430,8 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * Get the target version index
-     * 
+     * Get the target version index.
+     *
      * @return the target version index
      */
     public int getTargetVersionIndex( )
@@ -415,6 +440,8 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
+     * Gets the tag information.
+     *
      * @return getTagInformation
      */
     public String getTagInformation( )
@@ -423,7 +450,9 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * @param _strTagInfotmation
+     * Sets the tag information.
+     *
+     * @param _strTagInfotmation the new tag information
      */
     public void setTagInformation( String _strTagInfotmation )
     {
@@ -431,6 +460,8 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
+     * Gets the group id.
+     *
      * @return getGroupId
      */
     public String getGroupId( )
@@ -439,7 +470,9 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * @param _strGroupId
+     * Sets the group id.
+     *
+     * @param _strGroupId the new group id
      */
     public void setGroupId( String _strGroupId )
     {
@@ -447,6 +480,8 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
+     * Checks if is theme.
+     *
      * @return isTheme
      */
     public boolean isTheme( )
@@ -455,13 +490,20 @@ public class Site extends AbstractReleaserResource implements Serializable
     }
 
     /**
-     * @param _bTheme
+     * Sets the theme.
+     *
+     * @param _bTheme the new theme
      */
     public void setTheme( boolean _bTheme )
     {
         this._bTheme = _bTheme;
     }
 
+    /**
+     * Gets the target version.
+     *
+     * @return the target version
+     */
     @Override
     public String getTargetVersion( )
     {
