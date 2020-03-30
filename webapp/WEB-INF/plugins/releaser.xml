@@ -40,6 +40,15 @@
       </admin-feature>
     </admin-features>
     
+    <!-- RBAC Resources -->    
+    <rbac-resource-types>
+		<rbac-resource-type>
+			<rbac-resource-type-class>
+				fr.paris.lutece.plugins.releaser.service.SiteResourceIdService
+			</rbac-resource-type-class>
+		</rbac-resource-type>
+	</rbac-resource-types>   	
+	
     <!-- Admin css -->
      <admin-css-stylesheets>
         <admin-css-stylesheet>css/admin/AdminLTEv2.css</admin-css-stylesheet>

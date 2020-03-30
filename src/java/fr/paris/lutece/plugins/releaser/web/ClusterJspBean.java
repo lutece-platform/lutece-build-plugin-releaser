@@ -39,9 +39,11 @@ import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.SiteHome;
+import fr.paris.lutece.plugins.releaser.service.ClusterService;
 import fr.paris.lutece.plugins.releaser.service.SiteService;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
+import fr.paris.lutece.portal.service.admin.AdminUserService;
 import fr.paris.lutece.portal.service.message.AdminMessage;
 import fr.paris.lutece.portal.service.message.AdminMessageService;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
@@ -150,7 +152,10 @@ public class ClusterJspBean extends ManageSitesJspBean
     {
         _cluster = null;
         _site = null;
-        List<Cluster> listClusters = ClusterHome.getClustersList( );
+        
+        //List<Cluster> listClusters = ClusterHome.getClustersList( );
+        List<Cluster> listClusters = ClusterService.getClustersListWithPermissedSites(AdminUserService.getAdminUser(request));
+        
         Map<String, Object> model = getPaginatedListModel( request, MARK_CLUSTER_LIST, listClusters, JSP_MANAGE_CLUSTERS );
         model.put( ConstanteUtils.MARK_USER, ReleaserUtils.getReleaserUser( request, getLocale( ) ) );
         model.put( MARK_IS_APPLICATION_ACCOUNT, ReleaserUtils.isApplicationAccountEnable( ) );

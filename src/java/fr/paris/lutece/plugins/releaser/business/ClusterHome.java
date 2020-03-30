@@ -125,6 +125,17 @@ public final class ClusterHome
     }
 
     /**
+     * Load the data of all the cluster objects without sites and returns them as a list
+     * 
+     * @return the list which contains the data of all the cluster objects
+     */
+    public static List<Cluster> getClustersListWithoutSites( )
+    {
+        return _dao.selectClustersList( _plugin );
+    }
+
+    
+    /**
      * Load the id of all the cluster objects and returns them as a list
      * 
      * @return the list which contains the id of all the cluster objects

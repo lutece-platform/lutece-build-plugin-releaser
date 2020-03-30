@@ -104,6 +104,7 @@
 			<artifactId>jira-rest-java-client-core</artifactId>
 			<version>${jiraVersion}</version>
 		</dependency>
+		
 	       
     </dependencies>
     <build>
