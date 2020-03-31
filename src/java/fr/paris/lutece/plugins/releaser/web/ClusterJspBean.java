@@ -40,17 +40,22 @@ import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.SiteHome;
 import fr.paris.lutece.plugins.releaser.service.ClusterService;
+import fr.paris.lutece.plugins.releaser.service.SiteResourceIdService;
 import fr.paris.lutece.plugins.releaser.service.SiteService;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
+import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.admin.AdminUserService;
 import fr.paris.lutece.portal.service.message.AdminMessage;
 import fr.paris.lutece.portal.service.message.AdminMessageService;
+import fr.paris.lutece.portal.service.rbac.RBACResource;
+import fr.paris.lutece.portal.service.rbac.RBACService;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.View;
 import fr.paris.lutece.util.url.UrlItem;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -138,7 +143,7 @@ public class ClusterJspBean extends ManageSitesJspBean
 
     // Session variable to store working values
     private Cluster _cluster;
-    private Site _site;
+    private Site _site;    
 
     /**
      * Build the Manage View
@@ -153,10 +158,33 @@ public class ClusterJspBean extends ManageSitesJspBean
         _cluster = null;
         _site = null;
         
-        //List<Cluster> listClusters = ClusterHome.getClustersList( );
         List<Cluster> listClusters = ClusterService.getClustersListWithPermissedSites(AdminUserService.getAdminUser(request));
         
         Map<String, Object> model = getPaginatedListModel( request, MARK_CLUSTER_LIST, listClusters, JSP_MANAGE_CLUSTERS );
+        
+        // Add site permissions
+        model.put("addSitePermission", false);
+        model.put("modifySitePermission", false);
+        model.put("deleteSitePermission", false);
+        
+        if ( !listClusters.isEmpty( ) && !listClusters.get( 0 ).getSites( ).isEmpty( ) )
+        {
+	        if (RBACService.isAuthorized( listClusters.get( 0 ).getSites( ).get( 0 ), SiteResourceIdService.PERMISSION_ADD, AdminUserService.getAdminUser(request) ))
+	        {
+		        model.put("addSitePermission", true);
+	        }
+        
+	        if (RBACService.isAuthorized( listClusters.get( 0 ).getSites( ).get( 0 ), SiteResourceIdService.PERMISSION_MODIFY, AdminUserService.getAdminUser(request) ))
+	        {
+		        model.put("modifySitePermission", true);
+	        }
+	        
+	        if (RBACService.isAuthorized( listClusters.get( 0 ).getSites( ).get( 0 ), SiteResourceIdService.PERMISSION_DELETE, AdminUserService.getAdminUser(request) ))
+	        {
+		        model.put("deleteSitePermission", true);
+	        }
+	    } 
+        
         model.put( ConstanteUtils.MARK_USER, ReleaserUtils.getReleaserUser( request, getLocale( ) ) );
         model.put( MARK_IS_APPLICATION_ACCOUNT, ReleaserUtils.isApplicationAccountEnable( ) );
         model.put( ConstanteUtils.MARK_REPO_TYPE_GITHUB, RepositoryType.GITHUB );
@@ -167,13 +195,12 @@ public class ClusterJspBean extends ManageSitesJspBean
             // Load information site after authentication error
             int nId = Integer.parseInt( request.getParameter( PARAMETER_ID_SITE_ERROR ) );
             model.put( MARK_SITE, SiteHome.findByPrimaryKey( nId ) );
-
         }
 
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_CLUSTERS, TEMPLATE_MANAGE_CLUSTERS, model );
     }
 
-    /**
+	/**
      * Returns the form to create a cluster
      *
      * @param request
@@ -237,7 +264,6 @@ public class ClusterJspBean extends ManageSitesJspBean
         // Check constraints
         if ( !validateBean( user, VALIDATION_ATTRIBUTES_USER_PREFIX ) )
         {
-
             redirectView( request, VIEW_MANAGE_CLUSTERS );
         }
 
@@ -486,5 +512,4 @@ public class ClusterJspBean extends ManageSitesJspBean
 
         return redirectView( request, VIEW_MANAGE_SITES );
     }
-
 }

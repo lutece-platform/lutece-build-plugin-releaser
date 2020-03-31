@@ -7,7 +7,8 @@ import fr.paris.lutece.plugins.releaser.business.Cluster;
 import fr.paris.lutece.plugins.releaser.business.ClusterHome;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.SiteHome;
-import fr.paris.lutece.portal.business.user.AdminUser;import fr.paris.lutece.portal.service.rbac.RBACService;
+import fr.paris.lutece.portal.business.user.AdminUser;
+import fr.paris.lutece.portal.service.rbac.RBACService;
 
 /**
  * ClusterService.
@@ -56,14 +57,15 @@ public class ClusterService
         		if ( RBACService.isAuthorized( Site.RESOURCE_TYPE, site.getResourceId(), 
         				SiteResourceIdService.PERMISSION_VIEW, adminUser ) )
         		{
-        			listPermissedSites.add( site );
-        		}	             
+        			listPermissedSites.add( site );   
+        		
+        		}	     
         	}
         	
         	if ( listPermissedSites != null && !listPermissedSites.isEmpty( ) )
         	{
         		clusterWithPermissedList.setSites( listPermissedSites );
-        		listClusterWithPermissedSites.add( clusterWithPermissedList );
+        		listClusterWithPermissedSites.add( clusterWithPermissedList );        		
         	}
         	
         }

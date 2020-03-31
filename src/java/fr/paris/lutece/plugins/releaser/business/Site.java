@@ -42,6 +42,7 @@ import fr.paris.lutece.portal.service.rbac.RBACResource;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 // TODO: Auto-generated Javadoc
@@ -53,6 +54,7 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
 	
 	// RBAC management
     public static final String RESOURCE_TYPE = "site";
+    //public static HashMap<String, Boolean> permissions;
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 1L;

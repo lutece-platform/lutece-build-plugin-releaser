@@ -22,6 +22,7 @@ public final class SiteResourceIdService extends ResourceIdService
 	private static final String PROPERTY_LABEL_RESOURCE_TYPE = "releaser.rbac.site.resourceType";
     private static final String PROPERTY_LABEL_CREATE = "releaser.rbac.site.permission.create";
     private static final String PROPERTY_LABEL_VIEW = "releaser.rbac.site.permission.view";
+    private static final String PROPERTY_LABEL_MODIFY = "releaser.rbac.site.permission.modify";
     private static final String PROPERTY_LABEL_DELETE = "releaser.rbac.site.permission.delete";
      
     private static final String PLUGIN_NAME = "releaser";
@@ -60,6 +61,11 @@ public final class SiteResourceIdService extends ResourceIdService
         p = new Permission(  );
         p.setPermissionKey( PERMISSION_VIEW );
         p.setPermissionTitleKey( PROPERTY_LABEL_VIEW );
+        rt.registerPermission( p );
+
+        p = new Permission(  );
+        p.setPermissionKey( PERMISSION_MODIFY );
+        p.setPermissionTitleKey( PROPERTY_LABEL_MODIFY );
         rt.registerPermission( p );
 
         p = new Permission(  );
