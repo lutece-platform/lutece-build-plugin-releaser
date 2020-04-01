@@ -158,33 +158,10 @@ public class ClusterJspBean extends ManageSitesJspBean
         _cluster = null;
         _site = null;
         
-        List<Cluster> listClusters = ClusterService.getClustersListWithPermissedSites(AdminUserService.getAdminUser(request));
+        List<Cluster> listClusters = ClusterService.getClustersListWithAuthorizedSites(AdminUserService.getAdminUser(request));
         
         Map<String, Object> model = getPaginatedListModel( request, MARK_CLUSTER_LIST, listClusters, JSP_MANAGE_CLUSTERS );
-        
-        // Add site permissions
-        model.put("addSitePermission", false);
-        model.put("modifySitePermission", false);
-        model.put("deleteSitePermission", false);
-        
-        if ( !listClusters.isEmpty( ) && !listClusters.get( 0 ).getSites( ).isEmpty( ) )
-        {
-	        if (RBACService.isAuthorized( listClusters.get( 0 ).getSites( ).get( 0 ), SiteResourceIdService.PERMISSION_ADD, AdminUserService.getAdminUser(request) ))
-	        {
-		        model.put("addSitePermission", true);
-	        }
-        
-	        if (RBACService.isAuthorized( listClusters.get( 0 ).getSites( ).get( 0 ), SiteResourceIdService.PERMISSION_MODIFY, AdminUserService.getAdminUser(request) ))
-	        {
-		        model.put("modifySitePermission", true);
-	        }
-	        
-	        if (RBACService.isAuthorized( listClusters.get( 0 ).getSites( ).get( 0 ), SiteResourceIdService.PERMISSION_DELETE, AdminUserService.getAdminUser(request) ))
-	        {
-		        model.put("deleteSitePermission", true);
-	        }
-	    } 
-        
+                
         model.put( ConstanteUtils.MARK_USER, ReleaserUtils.getReleaserUser( request, getLocale( ) ) );
         model.put( MARK_IS_APPLICATION_ACCOUNT, ReleaserUtils.isApplicationAccountEnable( ) );
         model.put( ConstanteUtils.MARK_REPO_TYPE_GITHUB, RepositoryType.GITHUB );

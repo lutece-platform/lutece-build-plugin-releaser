@@ -54,7 +54,7 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
 	
 	// RBAC management
     public static final String RESOURCE_TYPE = "site";
-    //public static HashMap<String, Boolean> permissions;
+    private HashMap<String, Boolean> permissions;
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 1L;
@@ -536,6 +536,17 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     {
         return String.valueOf( _nId );
     }
+
+	public HashMap<String, Boolean> getPermissions() {
+		return permissions;
+	}
+
+	public void setPermissions(HashMap<String, Boolean> permissions) {
+		if ( this.permissions == null) this.permissions = new HashMap<String, Boolean>( );
+		else this.permissions.clear();
+		
+		this.permissions.putAll( permissions );
+	}
 
 
 }
