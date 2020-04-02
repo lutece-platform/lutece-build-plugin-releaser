@@ -37,17 +37,25 @@ import javax.validation.constraints.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.constraints.*;
+
+import fr.paris.lutece.portal.service.rbac.RBACResource;
+
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 // TODO: Auto-generated Javadoc
 /**
  * This is the business class for the object Site.
  */
-public class Site extends AbstractReleaserResource implements Serializable
+public class Site extends AbstractReleaserResource implements RBACResource, Serializable
 {
-    
+	
+	// RBAC management
+    public static final String RESOURCE_TYPE = "site";
+    private HashMap<String, Boolean> permissions;
+
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 1L;
 
@@ -510,5 +518,35 @@ public class Site extends AbstractReleaserResource implements Serializable
         // TODO Auto-generated method stub
         return getNextReleaseVersion( );
     }
+    
+    /**
+    * RBAC resource implementation
+    * @return The resource type code
+    */
+    public String getResourceTypeCode(  )
+    {
+        return RESOURCE_TYPE;
+    }
+
+    /**
+     * RBAC resource implementation
+     * @return The resourceId
+     */
+    public String getResourceId(  )
+    {
+        return String.valueOf( _nId );
+    }
+
+	public HashMap<String, Boolean> getPermissions() {
+		return permissions;
+	}
+
+	public void setPermissions(HashMap<String, Boolean> permissions) {
+		if ( this.permissions == null) this.permissions = new HashMap<String, Boolean>( );
+		else this.permissions.clear();
+		
+		this.permissions.putAll( permissions );
+	}
+
 
 }

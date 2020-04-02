@@ -52,6 +52,7 @@ import java.util.concurrent.Future;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.bind.JAXBException;
 
+import fr.paris.lutece.plugins.releaser.business.Cluster;
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.Dependency;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
@@ -727,5 +728,6 @@ public class SiteService
         }
 
     }
+   
 
 }
