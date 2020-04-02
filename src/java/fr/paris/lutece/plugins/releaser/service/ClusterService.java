@@ -112,14 +112,10 @@ public class ClusterService
         	if ( listAuthorizedSites != null && !listAuthorizedSites.isEmpty( ) )
         	{
         		clusterWithAuthorizedList.setSites( listAuthorizedSites );
-        		listClusterWithAuthorizedSites.add( clusterWithAuthorizedList );
-        		
+        		listClusterWithAuthorizedSites.add( clusterWithAuthorizedList );        		
         	}        	
         }
         
         return listClusterWithAuthorizedSites;
-    }
-
-	
-	
+    }	
 }
