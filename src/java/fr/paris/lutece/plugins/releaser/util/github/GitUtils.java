@@ -7,9 +7,12 @@ import java.net.URLEncoder;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
@@ -444,7 +447,11 @@ public class GitUtils
         try
         {
 
-            strResponse = httpAccess.doGet( strUrl, new BasicAuthorizationAuthenticator( strUserName, strPassword ), null );
+        	String strApiToken=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_SEARCH_REPO_API_TOKEN );
+        	Map<String,String> mapHeaderToken=new HashMap<String, String>();
+        	mapHeaderToken.put("Authorization", "token "+strApiToken );
+            strResponse = httpAccess.doGet(strUrl, null, null,mapHeaderToken );
+            
 
             if ( !StringUtils.isEmpty( strResponse ) )
             {

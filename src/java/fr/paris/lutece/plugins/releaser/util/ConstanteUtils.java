@@ -120,7 +120,8 @@ public class ConstanteUtils
 
     /** The Constant PROPERTY_GITHUB_SEARCH_REPO_API. */
     public static final String PROPERTY_GITHUB_SEARCH_REPO_API = "releaser.githubSearchRepoApi";
-
+    /** The Constant PROPERTY_NB_SEARCH_ITEM_PER_PAGE_LOAD. */
+    public static final String PROPERTY_GITHUB_SEARCH_REPO_API_TOKEN= "releaser.githubSearchRepoApiToken";
     /** The Constant PROPERTY_MAVEN_LOCAL_REPOSITORY. */
     public static final String PROPERTY_MAVEN_LOCAL_REPOSITORY = "releaser.mavenLocalRepository";
     
@@ -159,6 +160,9 @@ public class ConstanteUtils
     
     /** The Constant PROPERTY_NB_SEARCH_ITEM_PER_PAGE_LOAD. */
     public static final String PROPERTY_NB_SEARCH_ITEM_PER_PAGE_LOAD = "releaser.nbSearchItemPerPageLoad";
+ 
+    
+    
 
     /** The Constant PROPERTY_URL_JIRA_SERVICE. */
     public static final String PROPERTY_URL_JIRA_SERVICE = "releaser.urlJiraService";
