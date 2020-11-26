@@ -32,7 +32,7 @@
         </repository>
         <repository>
                 <id>atlassian-public-repository2</id>
-                <url>https://packages.atlassian.com/repository/public/</url>
+                <url>https://packages.atlassian.com/mvn/maven-atlassian-external/</url>
         </repository>
    </repositories>
     <dependencies>
