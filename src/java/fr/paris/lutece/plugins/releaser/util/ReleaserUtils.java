@@ -3,6 +3,8 @@ package fr.paris.lutece.plugins.releaser.util;
 import java.io.File;
 import java.util.Date;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -450,6 +452,20 @@ public class ReleaserUtils
 
         return cVersion1.compareTo( cVersion2 );
 
+    }
+    
+    
+    
+    public static String cleanPWDInLog(String strLog)
+    {
+    	
+    	 Pattern pattern2 = Pattern.compile("(?<prot>https|http):\\/\\/(?<user>\\S+):(?<pwd>\\S+)@");
+         Matcher matcher2 = pattern2.matcher(strLog);
+         
+         return matcher2.replaceAll("${prot}${user}:cleanpwd@");
+        
+           
+    	
     }
 
 }

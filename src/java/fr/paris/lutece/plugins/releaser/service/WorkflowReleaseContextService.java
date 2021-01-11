@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.bind.JAXBException;
@@ -34,6 +36,7 @@ import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
 import fr.paris.lutece.plugins.releaser.util.PluginUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
+import fr.paris.lutece.plugins.releaser.util.maven.MavenUtils;
 import fr.paris.lutece.plugins.releaser.util.pom.PomUpdater;
 import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.datastore.DatastoreService;
@@ -114,9 +117,11 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         try
         {
             String strJsonContext = MapperJsonUtil.getJson( context );
+            //clean PWD in log before save in history
+            String strJsonContextClean= ReleaserUtils.cleanPWDInLog(strJsonContext);
             DatastoreService.setDataValue( ReleaserUtils.getWorklowContextDataKey(
                     context.getComponent( ) != null ? context.getComponent( ).getArtifactId( ) : context.getSite( ).getArtifactId( ), context.getId( ) ),
-                    strJsonContext );
+            		strJsonContextClean );
 
         }
         catch( IOException e )
