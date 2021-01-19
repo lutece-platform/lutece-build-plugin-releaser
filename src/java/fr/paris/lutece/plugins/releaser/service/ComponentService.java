@@ -371,7 +371,7 @@ public class ComponentService implements IComponentService
             AppLogService.error( e );
         }
         ComponentService.getService( ).updateRemoteInformations( component );
-        component.setTargetVersions( Version.getNextReleaseVersions( component.getCurrentVersion( ) ) );
+        component.setTargetVersions( Version.getNextReleaseVersions( component.getLastAvailableVersion() ) );
         component.setTargetVersion( Version.getReleaseVersion( component.getCurrentVersion( ) ) );
 
         String strNextSnapshotVersion = null;
