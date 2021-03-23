@@ -462,6 +462,7 @@ public class ClusterJspBean extends ManageSitesJspBean
 
         Map<String, Object> model = getModel( );
         model.put( MARK_SITE, _site );
+        model.put( MARK_CLUSTERS_LIST, ClusterHome.getClustersReferenceList( ) );
 
         return getPage( PROPERTY_PAGE_TITLE_MODIFY_SITE, TEMPLATE_MODIFY_SITE, model );
     }
