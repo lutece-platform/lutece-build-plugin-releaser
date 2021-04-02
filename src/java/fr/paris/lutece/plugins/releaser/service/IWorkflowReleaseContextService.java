@@ -49,14 +49,7 @@ public interface IWorkflowReleaseContextService
      */
     WorkflowReleaseContext getWorkflowReleaseContext( int nIdContext );
 
-    /**
-     * Gets the workflow release context history.
-     *
-     * @param nIdContext the n id context
-     * @param strArtifactId the str artifact id
-     * @return the workflow release context history
-     */
-    WorkflowReleaseContext getWorkflowReleaseContextHistory( int nIdContext, String strArtifactId );
+    
 
     /**
      * Gets the list workflow release context history.

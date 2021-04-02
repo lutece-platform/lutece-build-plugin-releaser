@@ -27,3 +27,17 @@ name varchar(50) default '' NOT NULL,
 description varchar(255) default '' NOT NULL,
 PRIMARY KEY (id_cluster)
 );
+
+
+
+
+DROP TABLE IF EXISTS releaser_workflow_context_history;
+CREATE TABLE releaser_workflow_context_history (
+id_wf_context int AUTO_INCREMENT,
+date_begin TIMESTAMP DEFAULT 0,
+date_end TIMESTAMP DEFAULT 0,
+artifact_id varchar(255) default '',
+user_name varchar(255) default '',
+data long varchar,
+PRIMARY KEY (id_wf_context)
+);

@@ -542,10 +542,13 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
 	}
 
 	public void setPermissions(HashMap<String, Boolean> permissions) {
-		if ( this.permissions == null) this.permissions = new HashMap<String, Boolean>( );
-		else this.permissions.clear();
-		
-		this.permissions.putAll( permissions );
+		if (this.permissions == null)
+			this.permissions = new HashMap<String, Boolean>();
+		else
+			this.permissions.clear();
+		if (permissions != null) {
+			this.permissions.putAll(permissions);
+		}
 	}
 
 

@@ -1,16 +1,14 @@
 package fr.paris.lutece.plugins.releaser.service;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.bind.JAXBException;
@@ -27,6 +25,8 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.RepositoryType;
+import fr.paris.lutece.plugins.releaser.business.WorkflowContextHistory;
+import fr.paris.lutece.plugins.releaser.business.WorkflowContextHistoryHome;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.util.CVSFactoryService;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
@@ -36,16 +36,12 @@ import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
 import fr.paris.lutece.plugins.releaser.util.PluginUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
-import fr.paris.lutece.plugins.releaser.util.maven.MavenUtils;
 import fr.paris.lutece.plugins.releaser.util.pom.PomUpdater;
 import fr.paris.lutece.portal.business.user.AdminUser;
-import fr.paris.lutece.portal.service.datastore.DatastoreService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
-import fr.paris.lutece.util.ReferenceItem;
-import fr.paris.lutece.util.ReferenceList;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -81,13 +77,27 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     @Override
     public synchronized int addWorkflowReleaseContext( WorkflowReleaseContext context )
     {
-        int nIdKey = Integer.parseInt( DatastoreService.getDataValue( ConstanteUtils.CONSTANTE_MAX_RELEASE_CONTEXT_KEY, "0" ) ) + 1;
-        // stored key in database
-        DatastoreService.setDataValue( ConstanteUtils.CONSTANTE_MAX_RELEASE_CONTEXT_KEY, Integer.toString( nIdKey ) );
-        context.setId( nIdKey );
-        _mapWorkflowReleaseContext.put( nIdKey, context );
+       
+    	
+    	try
+        {
+            String strJsonContext = MapperJsonUtil.getJson( context );
+            //clean PWD in log before save in history
+            String strJsonContextClean= ReleaserUtils.cleanPWDInLog(strJsonContext);
+         
+            WorkflowContextHistory wfHistory=new WorkflowContextHistory();
+            wfHistory.setArtifactId(context.getComponent( )!=null?context.getComponent( ).getArtifactId( ) : context.getSite( ).getArtifactId( ));
+   	 		wfHistory.setData(strJsonContextClean);
+   	 		WorkflowContextHistoryHome.create(wfHistory);
+   	 		context.setId( wfHistory.getId() );
+   	 		_mapWorkflowReleaseContext.put( context.getId(), context );
+        }
+   	 	catch( IOException e )
+        {
+            AppLogService.error( "error during add workkflow context context json", e );
+        }
 
-        return nIdKey;
+        return context.getId();
     }
 
     /**
@@ -119,9 +129,34 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             String strJsonContext = MapperJsonUtil.getJson( context );
             //clean PWD in log before save in history
             String strJsonContextClean= ReleaserUtils.cleanPWDInLog(strJsonContext);
-            DatastoreService.setDataValue( ReleaserUtils.getWorklowContextDataKey(
-                    context.getComponent( ) != null ? context.getComponent( ).getArtifactId( ) : context.getSite( ).getArtifactId( ), context.getId( ) ),
-            		strJsonContextClean );
+            
+            WorkflowContextHistory wfHistory = WorkflowContextHistoryHome.findByPrimaryKey(context.getId());
+            
+            if(wfHistory!=null)
+            {
+            	if(context.getCommandResult()!=null && context.getCommandResult().getDateBegin()!=null)
+            	{
+            		wfHistory.setDateBegin(new Timestamp(context.getCommandResult().getDateBegin().getTime())  );
+            	}
+            	if(context.getCommandResult()!=null && context.getCommandResult().getDateEnd()!=null)
+            	{
+            		wfHistory.setDateEnd(new Timestamp(context.getCommandResult().getDateEnd().getTime())  );
+            	}
+            	wfHistory.setData(strJsonContextClean);
+            	WorkflowContextHistoryHome.update(wfHistory);
+            }
+            else
+            {
+            	 wfHistory=new WorkflowContextHistory();
+            	
+            	 wfHistory.setArtifactId(context.getComponent( )!=null?context.getComponent( ).getArtifactId( ) : context.getSite( ).getArtifactId( ));
+            	 wfHistory.setData(strJsonContextClean);
+            	 WorkflowContextHistoryHome.create(wfHistory);
+            	 context.setId(wfHistory.getId());
+            }
+            
+            
+
 
         }
         catch( IOException e )
@@ -134,17 +169,16 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
      * Gets the workflow release context history.
      *
      * @param nIdContext the n id context
-     * @param strArtifactId the str artifact id
      * @return the workflow release context history
      */
-    public WorkflowReleaseContext getWorkflowReleaseContextHistory( int nIdContext, String strArtifactId )
+    public WorkflowReleaseContext getWorkflowReleaseContextHistory( int nIdContext )
     {
         WorkflowReleaseContext context = null;
         try
         {
 
-            String strJsonContext = DatastoreService.getDataValue( ReleaserUtils.getWorklowContextDataKey( strArtifactId, nIdContext ), null );
-            context = MapperJsonUtil.parse( strJsonContext, WorkflowReleaseContext.class );
+            WorkflowContextHistory wfHistory = WorkflowContextHistoryHome.findByPrimaryKey(nIdContext);
+            context = MapperJsonUtil.parse( wfHistory.getData(), WorkflowReleaseContext.class );
 
         }
         catch( IOException e )
@@ -169,29 +203,25 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         try
         {
 
-            ReferenceList refListContextHistory = DatastoreService.getDataByPrefix( ConstanteUtils.CONSTANTE_RELEASE_CONTEXT_PREFIX + strArtifactId );
-            if ( !CollectionUtils.isEmpty( refListContextHistory ) )
+        	List<WorkflowContextHistory> listWfContextHistory=WorkflowContextHistoryHome.getWorkflowDeployContextsListByArtifactId(strArtifactId);
+            if ( !CollectionUtils.isEmpty( listWfContextHistory ) )
             {
-                for ( Iterator iterator = refListContextHistory.iterator( ); iterator.hasNext( ); )
-                {
-
-                    ReferenceItem referenceItem = (ReferenceItem) iterator.next( );
-
-                    // return only the reference item associated to the artifact id
-                    if ( referenceItem.getCode( ).startsWith( ConstanteUtils.CONSTANTE_RELEASE_CONTEXT_PREFIX + strArtifactId + "_" ) )
-                    {
-                        context = MapperJsonUtil.parse( referenceItem.getName( ), WorkflowReleaseContext.class );
+            	
+            	
+            	for(WorkflowContextHistory wfHistory:listWfContextHistory)
+            	{
+                        context = MapperJsonUtil.parse( wfHistory.getData(), WorkflowReleaseContext.class );
                         if ( context != null )
                         {
                             listContext.add( context );
                         }
                     }
-                }
+                
             }
         }
         catch( IOException e )
         {
-            AppLogService.error( "error during get context in the datastore", e );
+            AppLogService.error( "error for parsing json workflow context" , e );
         }
         return listContext;
 
@@ -750,5 +780,6 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             commandResult.getLog( ).append( "No release Perform for Site" );
         }
     }
+
 
 }
