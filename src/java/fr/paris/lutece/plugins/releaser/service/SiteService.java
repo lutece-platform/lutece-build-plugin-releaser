@@ -410,7 +410,9 @@ public class SiteService
                 component.addReleaseComment( strComment );
             }
             else
-                if ( component.getLastAvailableVersion( ) != null
+                if ( component.getLastAvailableVersion( ) != null  
+                    && component.getTargetVersion( )!=null 
+                    && component.getLastAvailableVersion( )!=null
                         && ReleaserUtils.compareVersion( component.getTargetVersion( ), component.getLastAvailableVersion( ) ) < 0 )
                 {
                     String [ ] arguments = {
