@@ -447,10 +447,14 @@ public class ReleaserUtils
     public static int compareVersion( String strVersion1, String strVersion2 )
     {
 
-        ComparableVersion cVersion1 = new ComparableVersion( strVersion1 );
-        ComparableVersion cVersion2 = new ComparableVersion( strVersion2 );
+        if( strVersion1!=null && strVersion2!=null)
+        {
+            ComparableVersion cVersion1 = new ComparableVersion( strVersion1 );
+            ComparableVersion cVersion2 = new ComparableVersion( strVersion2 );
 
-        return cVersion1.compareTo( cVersion2 );
+            return cVersion1.compareTo( cVersion2 );
+        }
+        return -1;
 
     }
     

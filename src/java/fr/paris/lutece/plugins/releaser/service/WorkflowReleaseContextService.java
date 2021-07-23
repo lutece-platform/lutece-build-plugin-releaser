@@ -325,6 +325,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                         commandResult.getLog( ).append( mergeResult.getMergeStatus( ) );
                     }
                     ReleaserUtils.logEndAction( context, " Merge DEVELOP/MASTER" );
+                    //BACK to Branch DEVELOP after merge
+                    GitUtils.checkoutRepoBranch( git, GitUtils.DEVELOP_BRANCH, commandResult );
                     // PROGRESS 25%
                     commandResult.setProgressValue( commandResult.getProgressValue( ) + 10 );
 
@@ -382,6 +384,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
         String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
         IVCSResourceService cvsService = CVSFactoryService.getService( context.getComponent( ).getRepoType( ) );
+        // Checkout Develop before prepare
+        cvsService.checkoutDevelopBranch( context, locale );
 
         try
         {

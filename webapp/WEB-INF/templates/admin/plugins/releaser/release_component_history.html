@@ -21,10 +21,10 @@
               <div class="col-xs-12 col-sm-5 col-md-6">
                 <h4>
                  <#if release_history.component??>
-                    <p class="lead">Version ${release_history.component.targetVersion}  <strong><#if  (release_history.commandResult.status==1 ||release_history.commandResult.errorType==0 ) ><span class="text-success"> <i class="fa fa-check fa-fw"></i> OK</span>  <#else><span class="text-danger">  <i class="fa fa-remove fa-fw"></i> KO </span></#if></strong></p>
+                    <p class="lead">Version ${release_history.component.targetVersion!''}  <strong><#if  (release_history.commandResult.status==1 ||release_history.commandResult.errorType==0 ) ><span class="text-success"> <i class="fa fa-check fa-fw"></i> OK</span>  <#else><span class="text-danger">  <i class="fa fa-remove fa-fw"></i> KO </span></#if></strong></p>
                     <p><i class="fa fa-calendar fa-fw"></i> ${release_history.commandResult.dateBegin?string('dd.MM.yyyy HH:mm:ss')}-${release_history.commandResult.dateEnd?string('HH:mm:ss')} <p>
                  <#else>
-                    <p class="lead">Version ${release_history.site.nextReleaseVersion} <strong><#if release_history.commandResult.status==1 && !release_history.commandResult.running> <span class="text-success"> <i class="fa fa-check fa-fw"></i> OK</span>  <#else><span class="text-danger">  <i class="fa fa-remove fa-fw"></i> KO </span></#if></strong></p>
+                    <p class="lead">Version ${release_history.site.nextReleaseVersion!''} <strong><#if release_history.commandResult.status==1 && !release_history.commandResult.running> <span class="text-success"> <i class="fa fa-check fa-fw"></i> OK</span>  <#else><span class="text-danger">  <i class="fa fa-remove fa-fw"></i> KO </span></#if></strong></p>
                     <p><i class="fa fa-calendar fa-fw"></i> ${release_history.commandResult.dateBegin?string('dd.MM.yyyy HH:mm:ss')}-${release_history.commandResult.dateEnd?string('HH:mm:ss')} </p>
                 </#if>
                 </h4>
