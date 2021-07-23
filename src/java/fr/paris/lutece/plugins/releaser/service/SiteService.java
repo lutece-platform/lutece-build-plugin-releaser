@@ -38,7 +38,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,7 +51,6 @@ import java.util.concurrent.Future;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.bind.JAXBException;
 
-import fr.paris.lutece.plugins.releaser.business.Cluster;
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.Dependency;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
@@ -71,6 +69,7 @@ import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
 import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.datastore.DatastoreService;
 import fr.paris.lutece.portal.service.i18n.I18nService;
+import fr.paris.lutece.portal.service.rbac.RBACService;
 import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
@@ -728,6 +727,83 @@ public class SiteService
         }
 
     }
-   
+    
+    public static List<Site> getAuthorizedSites( int clusterId, AdminUser adminUser)
+    {
+
+    	List<Site> listAuthorizedSites = new ArrayList<Site>( );
+		
+    	List<Site> listSite = SiteHome.findByCluster( clusterId );
+    	
+		// Assign site's permissions
+    	for ( Site site : listSite )
+    	{        			
+    		boolean bAutoriseViewSite = false;
+
+            HashMap<String, Boolean> sitePermissions = new HashMap<String, Boolean>( );
+			
+			// Release site permission
+			if (RBACService.isAuthorized( Site.RESOURCE_TYPE, site.getResourceId(), 
+    				SiteResourceIdService.PERMISSION_RELEASE, adminUser ))
+	        {
+		        sitePermissions.put(Site.PERMISSION_RELEASE_SITE, true);
+		        bAutoriseViewSite = true;
+	        }
+			else 
+			{
+				sitePermissions.put(Site.PERMISSION_RELEASE_SITE, false);
+			}
+        
+			// Modify site permission
+	        if (RBACService.isAuthorized( Site.RESOURCE_TYPE, site.getResourceId(), 
+    				SiteResourceIdService.PERMISSION_MODIFY, adminUser ))
+	        {
+	        	sitePermissions.put(Site.PERMISSION_MODIFY_SITE, true);
+		        bAutoriseViewSite = true;
+	        }
+			else 
+			{
+				sitePermissions.put(Site.PERMISSION_MODIFY_SITE, false);
+			}
+	        	        
+	        // Delete site permission
+	        if (RBACService.isAuthorized( Site.RESOURCE_TYPE, site.getResourceId(), 
+    				SiteResourceIdService.PERMISSION_DELETE, adminUser ))
+	        {
+	        	sitePermissions.put(Site.PERMISSION_DELETE_SITE, true);
+		        bAutoriseViewSite = true;
+	        } 
+			else 
+			{
+				sitePermissions.put(Site.PERMISSION_DELETE_SITE, false);
+			}   
+	        
+	        
+	        // Set permissions
+	        if (bAutoriseViewSite)
+	        {
+    	        // Add permissions to the site
+    	        site.setPermissions( sitePermissions );
+    	        
+    	        // Add the site to list of Authorized sites
+    			listAuthorizedSites.add( site );
+	        }    			     
+    	}
+    	
+    	return listAuthorizedSites;
+    }   
+
+    public static boolean IsUserAuthorized (AdminUser adminUser, String siteId, String permission)
+    {
+    	
+    	boolean bAuthorized = false;
+    	
+    	if ( RBACService.isAuthorized( Site.RESOURCE_TYPE, siteId, permission, adminUser ) )
+        {
+    		bAuthorized = true;
+        }  
+    	
+    	return bAuthorized;
+    }
 
 }

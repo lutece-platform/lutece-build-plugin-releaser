@@ -33,17 +33,24 @@
  */
 package fr.paris.lutece.plugins.releaser.business;
 
+import java.util.HashMap;
 import java.util.List;
-
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
+import fr.paris.lutece.portal.service.rbac.RBACResource;
 
 // TODO: Auto-generated Javadoc
 /**
  * This is the business class for the object Component.
  */
-public class Component extends AbstractReleaserResource
+public class Component extends AbstractReleaserResource implements RBACResource 
 {
+	// RBAC management
+    public static final String RESOURCE_TYPE = "component";
+       
+    // Component permissions
+    public static final String PERMISSION_SEARCH_COMPONENT = "searchComponentPermission";
+    private HashMap<String, Boolean> permissions;
     
     /** The str artifact id. */
     // Variables declarations
@@ -625,5 +632,23 @@ public class Component extends AbstractReleaserResource
         // TODO Auto-generated method stub
         return getScmDeveloperConnection( );
     }
+
+	@Override
+	public String getResourceTypeCode() {
+        return RESOURCE_TYPE;
+	}
+
+	@Override
+	public String getResourceId() {
+        return _strArtifactId;
+	}
+
+	public HashMap<String, Boolean> getPermissions() {
+		return permissions;
+	}
+
+	public void setPermissions(HashMap<String, Boolean> permissions) {
+		this.permissions = permissions;
+	}
 
 }

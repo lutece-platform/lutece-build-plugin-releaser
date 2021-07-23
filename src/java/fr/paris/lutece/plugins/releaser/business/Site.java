@@ -54,6 +54,12 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
 	
 	// RBAC management
     public static final String RESOURCE_TYPE = "site";
+
+	// site Permissions
+    public static final String PERMISSION_RELEASE_SITE = "releaseSitePermission";
+    public static final String PERMISSION_MODIFY_SITE = "modifySitePermission";
+    public static final String PERMISSION_DELETE_SITE = "deleteSitePermission";
+    
     private HashMap<String, Boolean> permissions;
 
     /** The Constant serialVersionUID. */
@@ -523,6 +529,7 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     * RBAC resource implementation
     * @return The resource type code
     */
+    @Override
     public String getResourceTypeCode(  )
     {
         return RESOURCE_TYPE;
@@ -532,6 +539,7 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
      * RBAC resource implementation
      * @return The resourceId
      */
+    @Override
     public String getResourceId(  )
     {
         return String.valueOf( _nId );
@@ -546,6 +554,7 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
 			this.permissions = new HashMap<String, Boolean>();
 		else
 			this.permissions.clear();
+		
 		if (permissions != null) {
 			this.permissions.putAll(permissions);
 		}

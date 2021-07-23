@@ -35,16 +35,29 @@ package fr.paris.lutece.plugins.releaser.business;
 
 import javax.validation.constraints.*;
 import org.hibernate.validator.constraints.*;
+import fr.paris.lutece.portal.service.rbac.RBACResource;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 
 /**
  * This is the business class for the object Cluster
  */
-public class Cluster implements Serializable
+public class Cluster implements RBACResource, Serializable
 {
     private static final long serialVersionUID = 1L;
 
+	// RBAC management
+    public static final String RESOURCE_TYPE = "cluster";
+
+    // Cluster permissions
+    public static final String PERMISSION_ADD_CLUSTER = "addClusterPermission";
+    public static final String PERMISSION_MODIFY_CLUSTER = "modifyClusterPermission";
+    public static final String PERMISSION_DELETE_CLUSTER = "deleteClusterPermission";
+    public static final String PERMISSION_ADD_SITES_TO_CLUSTER = "addSitesToClusterPermission";
+
+    private HashMap<String, Boolean> permissions;
+        
     // Variables declarations
     private int _nId;
 
@@ -141,5 +154,23 @@ public class Cluster implements Serializable
     {
         _listSites = listSites;
     }
+
+	@Override
+	public String getResourceTypeCode() {
+        return RESOURCE_TYPE;
+	}
+
+	@Override
+	public String getResourceId() {
+        return String.valueOf( _nId );
+	}
+
+	public HashMap<String, Boolean> getPermissions() {
+		return permissions;
+	}
+
+	public void setPermissions(HashMap<String, Boolean> permissions) {
+		this.permissions = permissions;
+	}
 
 }

@@ -16,15 +16,9 @@ import fr.paris.lutece.portal.service.rbac.RBACService;
  */
 public class ClusterService 
 {
-	// Permissions
-    private static final String PERMISSION_ADD_SITE = "addSitePermission";
-    private static final String PERMISSION_VIEW_SITE = "viewSitePermission";
-    private static final String PERMISSION_MODIFY_SITE = "modifySitePermission";
-    private static final String PERMISSION_DELETE_SITE = "deleteSitePermission";
 
-    
 	/**
-     * Load the liste of sites into each cluster object and returns the list of clusters
+     * Load the list of sites into each cluster object and returns the list of clusters
      * 
      * @return the list which contains the data of all the cluster objects
      */
@@ -45,77 +39,100 @@ public class ClusterService
     }
     
     /**
-     * Load the liste of sites into each cluster object and returns the list of clusters
+     * Load the list of sites into each cluster object and returns the list of clusters
      * 
      * @return the list which contains the data of all the cluster objects
      */
-    public static List<Cluster> getClustersListWithAuthorizedSites( AdminUser adminUser)
+    public static List<Cluster> getUserClusters( AdminUser adminUser)
     {
         List<Cluster> listCluster = ClusterHome.getClustersList( );
-        List<Cluster> listClusterWithAuthorizedSites = new ArrayList<Cluster>( );
-        HashMap<String, Boolean> sitePermissions = new HashMap<String, Boolean>( );
+        List<Cluster> listAuthorizedClusters = new ArrayList<Cluster>( );
         
         for ( Cluster cluster : listCluster )
-        {
-			Cluster clusterWithAuthorizedList = cluster;			
-			List<Site> listAuthorizedSites = new ArrayList<Site>( );
-			
-        	List<Site> listSite = SiteHome.findByCluster( cluster.getId( ) );
-        	for ( Site site : listSite )
-        	{        			
-        		if ( RBACService.isAuthorized( Site.RESOURCE_TYPE, site.getResourceId(), 
-        				SiteResourceIdService.PERMISSION_VIEW, adminUser ) )
-        		{
-        			sitePermissions.clear();
-        			
-        			// Add site's permissions
-        			sitePermissions.put(PERMISSION_VIEW_SITE, true);
-        			
-        			if (RBACService.isAuthorized( Site.RESOURCE_TYPE, site.getResourceId(), 
-            				SiteResourceIdService.PERMISSION_ADD, adminUser ))
-        	        {
-        		        sitePermissions.put(PERMISSION_ADD_SITE, true);
-        	        }
-        			else 
-        			{
-        				sitePermissions.put(PERMISSION_ADD_SITE, false);
-        			}
-                
-        	        if (RBACService.isAuthorized( Site.RESOURCE_TYPE, site.getResourceId(), 
-            				SiteResourceIdService.PERMISSION_MODIFY, adminUser ))
-        	        {
-        	        	sitePermissions.put(PERMISSION_MODIFY_SITE, true);
-        	        }
-        			else 
-        			{
-        				sitePermissions.put(PERMISSION_MODIFY_SITE, false);
-        			}
-        	        
-        	        if (RBACService.isAuthorized( Site.RESOURCE_TYPE, site.getResourceId(), 
-            				SiteResourceIdService.PERMISSION_DELETE, adminUser ))
-        	        {
-        	        	sitePermissions.put(PERMISSION_DELETE_SITE, true);
-        	        } 
-        			else 
-        			{
-        				sitePermissions.put(PERMISSION_DELETE_SITE, false);
-        			}   
-        	        
-        	        // Add permissions to the site
-        	        site.setPermissions( sitePermissions );
-        	        
-        	        // Add the site to list of Authorized sites
-        			listAuthorizedSites.add( site );
-        		}	     
-        	}
-        	
-        	if ( listAuthorizedSites != null && !listAuthorizedSites.isEmpty( ) )
+        {   			
+    		HashMap<String, Boolean> clusterPermissions = new HashMap<String, Boolean>( );
+    		boolean bAuthoriseViewCluster = false;
+    		   	        
+   			// Add site to the cluster permission
+   	        if (RBACService.isAuthorized( Cluster.RESOURCE_TYPE, cluster.getResourceId(), 
+       				ClusterResourceIdService.PERMISSION_ADD_SITE_TO_CLUSTER, adminUser ))
+   	        {
+   	        	clusterPermissions.put(Cluster.PERMISSION_ADD_SITES_TO_CLUSTER, true);
+   	        	bAuthoriseViewCluster = true;
+   	        }
+   			else 
+   			{
+   				clusterPermissions.put(Cluster.PERMISSION_ADD_SITES_TO_CLUSTER, false);
+   			}
+       	                        
+			// Modify cluster permission
+	        if (RBACService.isAuthorized( Cluster.RESOURCE_TYPE, cluster.getResourceId(), 
+    				ClusterResourceIdService.PERMISSION_MODIFY, adminUser ))
+	        {
+	        	clusterPermissions.put(Cluster.PERMISSION_MODIFY_CLUSTER, true);
+	        	bAuthoriseViewCluster = true;
+	        }
+			else 
+			{
+				clusterPermissions.put(Cluster.PERMISSION_MODIFY_CLUSTER, false);
+			}
+	                	        
+	        // Delete cluster permission
+	        if (RBACService.isAuthorized( Cluster.RESOURCE_TYPE, cluster.getResourceId(), 
+    				ClusterResourceIdService.PERMISSION_DELETE, adminUser ))
+	        {
+	        	clusterPermissions.put(Cluster.PERMISSION_DELETE_CLUSTER, true);
+	        	bAuthoriseViewCluster = true;
+	        } 
+			else 
+			{
+				clusterPermissions.put(Cluster.PERMISSION_DELETE_CLUSTER, false);
+			}   
+	        
+	        // Add permissions to the cluster 
+	        cluster.setPermissions( clusterPermissions );
+	        
+	        // Add autorized sites
+	        List<Site> listAuthorizedSites = SiteService.getAuthorizedSites( cluster.getId( ), adminUser);
+		 
+        	if ( listAuthorizedSites != null )
         	{
-        		clusterWithAuthorizedList.setSites( listAuthorizedSites );
-        		listClusterWithAuthorizedSites.add( clusterWithAuthorizedList );        		
-        	}        	
-        }
-        
-        return listClusterWithAuthorizedSites;
+        		cluster.setSites( listAuthorizedSites );
+        		
+        		if ( !listAuthorizedSites.isEmpty() )
+            	{
+            		bAuthoriseViewCluster = true;
+            	}   
+        	}    	        
+	            
+        	if (bAuthoriseViewCluster)
+    		listAuthorizedClusters.add( cluster );
+		}
+	    
+        return listAuthorizedClusters;
     }	
+
+    public static boolean IsAddClusterAuthorized (AdminUser adminUser)
+    {
+    	
+        if ( RBACService.isAuthorized( new Cluster(), ClusterResourceIdService.PERMISSION_ADD, adminUser ) )
+        {
+        	return true;
+        }	        
+    	
+    	return false;
+    }
+
+    public static boolean IsUserAuthorized (AdminUser adminUser, String clusterId, String permission)
+    {
+    	
+    	boolean bAuthorized = false;
+    	
+    	if ( RBACService.isAuthorized( Cluster.RESOURCE_TYPE, clusterId, permission, adminUser ) )
+        {
+    		bAuthorized = true;
+        }  
+    	
+    	return bAuthorized;
+    }
 }

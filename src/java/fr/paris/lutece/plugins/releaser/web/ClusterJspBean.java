@@ -39,23 +39,23 @@ import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.SiteHome;
+import fr.paris.lutece.plugins.releaser.service.ClusterResourceIdService;
 import fr.paris.lutece.plugins.releaser.service.ClusterService;
+import fr.paris.lutece.plugins.releaser.service.ComponentService;
 import fr.paris.lutece.plugins.releaser.service.SiteResourceIdService;
 import fr.paris.lutece.plugins.releaser.service.SiteService;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.portal.business.user.AdminUser;
+import fr.paris.lutece.portal.service.admin.AccessDeniedException;
 import fr.paris.lutece.portal.service.admin.AdminUserService;
 import fr.paris.lutece.portal.service.message.AdminMessage;
 import fr.paris.lutece.portal.service.message.AdminMessageService;
-import fr.paris.lutece.portal.service.rbac.RBACResource;
-import fr.paris.lutece.portal.service.rbac.RBACService;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.View;
 import fr.paris.lutece.util.url.UrlItem;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -91,7 +91,10 @@ public class ClusterJspBean extends ManageSitesJspBean
 
     // Properties
     private static final String MESSAGE_CONFIRM_REMOVE_SITE = "releaser.message.confirmRemoveSite";
-
+ 
+    // Messages
+    private static final String MESSAGE_ACCESS_DENIED = "releaser.message.accesDenied";
+   
     // Markers
     private static final String MARK_CLUSTER_LIST = "cluster_list";
     private static final String MARK_CLUSTER = "cluster";
@@ -99,6 +102,8 @@ public class ClusterJspBean extends ManageSitesJspBean
     private static final String MARK_SITE = "site";
 
     private static final String MARK_IS_APPLICATION_ACCOUNT = "is_application_account";
+    private static final String MARK_IS_ADD_CLUSTER_AUTHORIZED = "add_cluster_authorized";
+    private static final String MARK_IS_SEARCH_COMPONENT_AUTHORIZED = "search_component_authorized";
 
     private static final String JSP_MANAGE_CLUSTERS = "jsp/admin/plugins/releaser/ManageClusters.jsp";
     private static final String JSP_MANAGE_SITE_RELEASE = "ManageSiteRelease.jsp";
@@ -158,7 +163,8 @@ public class ClusterJspBean extends ManageSitesJspBean
         _cluster = null;
         _site = null;
         
-        List<Cluster> listClusters = ClusterService.getClustersListWithAuthorizedSites(AdminUserService.getAdminUser(request));
+        AdminUser adminUser = AdminUserService.getAdminUser( request );
+        List<Cluster> listClusters = ClusterService.getUserClusters( adminUser );
         
         Map<String, Object> model = getPaginatedListModel( request, MARK_CLUSTER_LIST, listClusters, JSP_MANAGE_CLUSTERS );
                 
@@ -167,6 +173,8 @@ public class ClusterJspBean extends ManageSitesJspBean
         model.put( ConstanteUtils.MARK_REPO_TYPE_GITHUB, RepositoryType.GITHUB );
         model.put( ConstanteUtils.MARK_REPO_TYPE_GITLAB, RepositoryType.GITLAB );
         model.put( ConstanteUtils.MARK_REPO_TYPE_SVN, RepositoryType.SVN );
+        model.put( MARK_IS_ADD_CLUSTER_AUTHORIZED, ClusterService.IsAddClusterAuthorized( adminUser ));
+        model.put( MARK_IS_SEARCH_COMPONENT_AUTHORIZED, ComponentService.IsSearchComponentAuthorized( adminUser ));
         if ( request.getParameter( PARAMETER_ID_SITE_ERROR ) != null )
         {
             // Load information site after authentication error
@@ -183,10 +191,17 @@ public class ClusterJspBean extends ManageSitesJspBean
      * @param request
      *            The Http request
      * @return the html code of the cluster form
+	 * @throws AccessDeniedException 
      */
     @View( VIEW_CREATE_CLUSTER )
-    public String getCreateCluster( HttpServletRequest request )
+    public String getCreateCluster( HttpServletRequest request ) throws AccessDeniedException
     {
+
+        if ( !ClusterService.IsAddClusterAuthorized( AdminUserService.getAdminUser(request) ) )
+        {
+            throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
+        }
+        
         _cluster = ( _cluster != null ) ? _cluster : new Cluster( );
 
         Map<String, Object> model = getModel( );
@@ -201,10 +216,17 @@ public class ClusterJspBean extends ManageSitesJspBean
      * @param request
      *            The Http Request
      * @return The Jsp URL of the process result
+     * @throws AccessDeniedException 
      */
     @Action( ACTION_CREATE_CLUSTER )
-    public String doCreateCluster( HttpServletRequest request )
+    public String doCreateCluster( HttpServletRequest request ) throws AccessDeniedException
     {
+
+    	if ( !ClusterService.IsAddClusterAuthorized( AdminUserService.getAdminUser(request) ) )
+        {
+            throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
+        }
+        
         populate( _cluster, request );
 
         // Check constraints
@@ -225,10 +247,12 @@ public class ClusterJspBean extends ManageSitesJspBean
      * @param request
      *            The Http Request
      * @return The Jsp URL of the process result
+     * @throws AccessDeniedException 
      */
     @Action( ACTION_RELEASE_COMPONENT )
-    public String doReleaseComponent( HttpServletRequest request )
+    public String doReleaseComponent( HttpServletRequest request ) throws AccessDeniedException
     {
+        
         ReleaserUser user = ReleaserUtils.getReleaserUser( request, getLocale( ) );
         if ( user == null )
         {
@@ -253,10 +277,17 @@ public class ClusterJspBean extends ManageSitesJspBean
      * @param request
      *            The Http Request
      * @return The Jsp URL of the process result
+     * @throws AccessDeniedException 
      */
     @Action( ACTION_RELEASE_SITE )
-    public String doReleaseSite( HttpServletRequest request )
+    public String doReleaseSite( HttpServletRequest request ) throws AccessDeniedException
     {
+
+        if ( !SiteService.IsUserAuthorized( AdminUserService.getAdminUser(request), request.getParameter( PARAMETER_ID_SITE ), SiteResourceIdService.PERMISSION_RELEASE ) )
+        {
+            throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
+        }
+        
         ReleaserUser user = ReleaserUtils.getReleaserUser( request, getLocale( ) );
         String strIdSite = request.getParameter( PARAMETER_ID_SITE );
         String strError = request.getParameter( PARAMETER_ERROR );
@@ -284,10 +315,17 @@ public class ClusterJspBean extends ManageSitesJspBean
      * @param request
      *            The Http request
      * @return the html code to confirm
+     * @throws AccessDeniedException 
      */
     @Action( ACTION_CONFIRM_REMOVE_CLUSTER )
-    public String getConfirmRemoveCluster( HttpServletRequest request )
+    public String getConfirmRemoveCluster( HttpServletRequest request ) throws AccessDeniedException
     {
+
+        if ( !ClusterService.IsUserAuthorized( AdminUserService.getAdminUser(request), request.getParameter( PARAMETER_ID_CLUSTER ), ClusterResourceIdService.PERMISSION_DELETE ) )
+        {
+            throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
+        }
+        
         int nId = Integer.parseInt( request.getParameter( PARAMETER_ID_CLUSTER ) );
         UrlItem url = new UrlItem( getActionUrl( ACTION_REMOVE_CLUSTER ) );
         url.addParameter( PARAMETER_ID_CLUSTER, nId );
@@ -303,11 +341,19 @@ public class ClusterJspBean extends ManageSitesJspBean
      * @param request
      *            The Http request
      * @return the jsp URL to display the form to manage clusters
+     * @throws AccessDeniedException 
      */
     @Action( ACTION_REMOVE_CLUSTER )
-    public String doRemoveCluster( HttpServletRequest request )
+    public String doRemoveCluster( HttpServletRequest request ) throws AccessDeniedException
     {
+
+        if ( !ClusterService.IsUserAuthorized( AdminUserService.getAdminUser(request), request.getParameter( PARAMETER_ID_CLUSTER ), ClusterResourceIdService.PERMISSION_DELETE ) )
+        {
+            throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
+        }
+        
         int nId = Integer.parseInt( request.getParameter( PARAMETER_ID_CLUSTER ) );
+        
         ClusterHome.remove( nId );
         addInfo( INFO_CLUSTER_REMOVED, getLocale( ) );
 
@@ -320,10 +366,17 @@ public class ClusterJspBean extends ManageSitesJspBean
      * @param request
      *            The Http request
      * @return The HTML form to update info
+     * @throws AccessDeniedException 
      */
     @View( VIEW_MODIFY_CLUSTER )
-    public String getModifyCluster( HttpServletRequest request )
+    public String getModifyCluster( HttpServletRequest request ) throws AccessDeniedException
     {
+
+        if ( !ClusterService.IsUserAuthorized( AdminUserService.getAdminUser(request), request.getParameter( PARAMETER_ID_CLUSTER ), ClusterResourceIdService.PERMISSION_MODIFY ) )
+        {
+            throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
+        }
+        
         int nId = Integer.parseInt( request.getParameter( PARAMETER_ID_CLUSTER ) );
 
         if ( _cluster == null || ( _cluster.getId( ) != nId ) )
@@ -343,10 +396,17 @@ public class ClusterJspBean extends ManageSitesJspBean
      * @param request
      *            The Http request
      * @return The Jsp URL of the process result
+     * @throws AccessDeniedException 
      */
     @Action( ACTION_MODIFY_CLUSTER )
-    public String doModifyCluster( HttpServletRequest request )
+    public String doModifyCluster( HttpServletRequest request ) throws AccessDeniedException
     {
+
+        if ( !ClusterService.IsUserAuthorized( AdminUserService.getAdminUser(request), request.getParameter( PARAMETER_ID_CLUSTER ), ClusterResourceIdService.PERMISSION_MODIFY ) )
+        {
+            throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
+        }
+        
         populate( _cluster, request );
 
         // Check constraints
@@ -367,10 +427,17 @@ public class ClusterJspBean extends ManageSitesJspBean
      * @param request
      *            The Http request
      * @return the html code of the site form
+     * @throws AccessDeniedException 
      */
     @View( VIEW_CREATE_SITE )
-    public String getCreateSite( HttpServletRequest request )
+    public String getCreateSite( HttpServletRequest request ) throws AccessDeniedException
     {
+
+        if ( !ClusterService.IsUserAuthorized( AdminUserService.getAdminUser(request), request.getParameter( PARAMETER_ID_CLUSTER ), ClusterResourceIdService.PERMISSION_ADD_SITE_TO_CLUSTER ) )
+        {
+            throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
+        }
+        
         _site = ( _site != null ) ? _site : new Site( );
 
         String strIdCluster = request.getParameter( PARAMETER_ID_CLUSTER );
@@ -388,10 +455,17 @@ public class ClusterJspBean extends ManageSitesJspBean
      * @param request
      *            The Http Request
      * @return The Jsp URL of the process result
+     * @throws AccessDeniedException 
      */
     @Action( ACTION_CREATE_SITE )
-    public String doCreateSite( HttpServletRequest request )
+    public String doCreateSite( HttpServletRequest request ) throws AccessDeniedException
     {
+
+        if ( !ClusterService.IsUserAuthorized( AdminUserService.getAdminUser(request), request.getParameter( PARAMETER_ID_CLUSTER ), ClusterResourceIdService.PERMISSION_ADD_SITE_TO_CLUSTER ) )
+        {
+            throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
+        }
+        
         populate( _site, request );
 
         // Check constraints
@@ -412,10 +486,17 @@ public class ClusterJspBean extends ManageSitesJspBean
      * @param request
      *            The Http request
      * @return the html code to confirm
+     * @throws AccessDeniedException 
      */
     @Action( ACTION_CONFIRM_REMOVE_SITE )
-    public String getConfirmRemoveSite( HttpServletRequest request )
+    public String getConfirmRemoveSite( HttpServletRequest request ) throws AccessDeniedException
     {
+
+        if ( !SiteService.IsUserAuthorized( AdminUserService.getAdminUser(request), request.getParameter( PARAMETER_ID_SITE ), SiteResourceIdService.PERMISSION_DELETE ) )
+        {
+            throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
+        }
+        
         int nId = Integer.parseInt( request.getParameter( PARAMETER_ID_SITE ) );
         UrlItem url = new UrlItem( getActionUrl( ACTION_REMOVE_SITE ) );
         url.addParameter( PARAMETER_ID_SITE, nId );
@@ -431,10 +512,17 @@ public class ClusterJspBean extends ManageSitesJspBean
      * @param request
      *            The Http request
      * @return the jsp URL to display the form to manage sites
+     * @throws AccessDeniedException 
      */
     @Action( ACTION_REMOVE_SITE )
-    public String doRemoveSite( HttpServletRequest request )
+    public String doRemoveSite( HttpServletRequest request ) throws AccessDeniedException
     {
+
+        if ( !SiteService.IsUserAuthorized( AdminUserService.getAdminUser(request), request.getParameter( PARAMETER_ID_SITE ), SiteResourceIdService.PERMISSION_DELETE ) )
+        {
+            throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
+        }
+        
         int nId = Integer.parseInt( request.getParameter( PARAMETER_ID_SITE ) );
         SiteHome.remove( nId );
         SiteService.removeComponentAsProjectBySite( nId );
@@ -449,10 +537,17 @@ public class ClusterJspBean extends ManageSitesJspBean
      * @param request
      *            The Http request
      * @return The HTML form to update info
+     * @throws AccessDeniedException 
      */
     @View( VIEW_MODIFY_SITE )
-    public String getModifySite( HttpServletRequest request )
+    public String getModifySite( HttpServletRequest request ) throws AccessDeniedException
     {
+
+        if ( !SiteService.IsUserAuthorized( AdminUserService.getAdminUser(request), request.getParameter( PARAMETER_ID_SITE ), SiteResourceIdService.PERMISSION_MODIFY ) )
+        {
+            throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
+        }
+        
         int nId = Integer.parseInt( request.getParameter( PARAMETER_ID_SITE ) );
 
         if ( _site == null || ( _site.getId( ) != nId ) )
@@ -473,10 +568,17 @@ public class ClusterJspBean extends ManageSitesJspBean
      * @param request
      *            The Http request
      * @return The Jsp URL of the process result
+     * @throws AccessDeniedException 
      */
     @Action( ACTION_MODIFY_SITE )
-    public String doModifySite( HttpServletRequest request )
+    public String doModifySite( HttpServletRequest request ) throws AccessDeniedException
     {
+
+        if ( !SiteService.IsUserAuthorized( AdminUserService.getAdminUser(request), request.getParameter( PARAMETER_ID_SITE ), SiteResourceIdService.PERMISSION_MODIFY ) )
+        {
+            throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
+        }
+        
         populate( _site, request );
 
         // Check constraints

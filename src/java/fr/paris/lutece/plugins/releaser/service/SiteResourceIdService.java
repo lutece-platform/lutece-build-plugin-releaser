@@ -20,18 +20,14 @@ import fr.paris.lutece.util.ReferenceList;
 public final class SiteResourceIdService extends ResourceIdService
 {
 	private static final String PROPERTY_LABEL_RESOURCE_TYPE = "releaser.rbac.site.resourceType";
-    private static final String PROPERTY_LABEL_CREATE = "releaser.rbac.site.permission.create";
-    private static final String PROPERTY_LABEL_VIEW = "releaser.rbac.site.permission.view";
+    private static final String PROPERTY_LABEL_RELEASE = "releaser.rbac.site.permission.release";
     private static final String PROPERTY_LABEL_MODIFY = "releaser.rbac.site.permission.modify";
     private static final String PROPERTY_LABEL_DELETE = "releaser.rbac.site.permission.delete";
      
     private static final String PLUGIN_NAME = "releaser";
 
-    /** Permission for creating site */
-    public static final String PERMISSION_ADD = "ADD";
-
-    /** Permission for viewing site */
-    public static final String PERMISSION_VIEW = "VIEW";
+    /** Permission for release site */
+    public static final String PERMISSION_RELEASE = "RELEASE";
 
     /** Permission for deleting site */
     public static final String PERMISSION_DELETE = "DELETE";
@@ -53,14 +49,11 @@ public final class SiteResourceIdService extends ResourceIdService
         rt.setResourceTypeKey( Site.RESOURCE_TYPE );
         rt.setResourceTypeLabelKey( PROPERTY_LABEL_RESOURCE_TYPE );
       
-        Permission p = new Permission(  );
-        p.setPermissionKey( PERMISSION_ADD );
-        p.setPermissionTitleKey( PROPERTY_LABEL_CREATE );
-        rt.registerPermission( p );
-
+        Permission p;
+        
         p = new Permission(  );
-        p.setPermissionKey( PERMISSION_VIEW );
-        p.setPermissionTitleKey( PROPERTY_LABEL_VIEW );
+        p.setPermissionKey( PERMISSION_RELEASE );
+        p.setPermissionTitleKey( PROPERTY_LABEL_RELEASE );
         rt.registerPermission( p );
 
         p = new Permission(  );
@@ -78,7 +71,8 @@ public final class SiteResourceIdService extends ResourceIdService
 
         
 	@Override
-	public ReferenceList getResourceIdList(Locale local) {
+	public ReferenceList getResourceIdList(Locale local) 
+	{
 		
 		ReferenceList referenceListSite = new ReferenceList(  );
         List<Site> listSites = SiteHome.getSitesList();

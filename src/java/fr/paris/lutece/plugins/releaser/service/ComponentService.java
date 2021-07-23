@@ -66,6 +66,7 @@ import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
 import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.datastore.DatastoreService;
+import fr.paris.lutece.portal.service.rbac.RBACService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
@@ -443,6 +444,17 @@ public class ComponentService implements IComponentService
             component.setTargetVersionIndex( nNewIndex );
             component.setNextSnapshotVersion( Version.getNextSnapshotVersion( strTargetVersion ) );
         }
+    }
+    
+    public static boolean IsSearchComponentAuthorized (AdminUser adminUser)
+    {
+    	
+        if ( RBACService.isAuthorized( new Component(), ComponentResourceIdService.PERMISSION_SEARCH, adminUser ) )
+        {
+        	return true;
+        }	        
+    	
+    	return false;
     }
 
 }

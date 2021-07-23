@@ -38,10 +38,13 @@ import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
+import fr.paris.lutece.plugins.releaser.service.SiteResourceIdService;
 import fr.paris.lutece.plugins.releaser.service.SiteService;
 import fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
+import fr.paris.lutece.portal.service.admin.AccessDeniedException;
+import fr.paris.lutece.portal.service.admin.AdminUserService;
 import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.template.AppTemplateService;
 import fr.paris.lutece.portal.service.util.AppException;
@@ -178,6 +181,9 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /** The Constant MESSAGE_ERROR_INFORMATION. */
     private static final String MESSAGE_ERROR_INFORMATION = "releaser.message.errorInfomationReleaseNotChecked";
 
+    // Messages
+    private static final String MESSAGE_ACCESS_DENIED = "releaser.message.accesDenied";
+
     /** The site. */
     private Site _site;
     
@@ -192,12 +198,18 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
      *
      * @param request the request
      * @return the prepare site release
+     * @throws AccessDeniedException 
      */
     @View( value = VIEW_MANAGE_SITE_RELEASE, defaultView = true )
-    public String getPrepareSiteRelease( HttpServletRequest request )
+    public String getPrepareSiteRelease( HttpServletRequest request ) throws AccessDeniedException
     {
         _modifValidated = null;
         String strSiteId = request.getParameter( PARAMETER_SITE_ID );
+
+        if ( !SiteService.IsUserAuthorized( AdminUserService.getAdminUser(request), strSiteId, SiteResourceIdService.PERMISSION_RELEASE ) )
+        {
+            throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
+        }        
 
         if ( ( _site == null ) || ( strSiteId != null ) )
         {

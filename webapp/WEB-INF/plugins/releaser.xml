@@ -37,6 +37,16 @@
 				fr.paris.lutece.plugins.releaser.service.SiteResourceIdService
 			</rbac-resource-type-class>
 		</rbac-resource-type>
+		<rbac-resource-type>
+			<rbac-resource-type-class>
+				fr.paris.lutece.plugins.releaser.service.ClusterResourceIdService
+			</rbac-resource-type-class>
+		</rbac-resource-type>
+		<rbac-resource-type>
+			<rbac-resource-type-class>
+				fr.paris.lutece.plugins.releaser.service.ComponentResourceIdService
+			</rbac-resource-type-class>
+		</rbac-resource-type>
 	</rbac-resource-types>   	
 	
     <!-- Admin css -->

@@ -33,8 +33,6 @@
  */
 package fr.paris.lutece.plugins.releaser.web;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -44,14 +42,14 @@ import org.apache.commons.lang.StringUtils;
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.service.ComponentService;
-import fr.paris.lutece.plugins.releaser.service.SiteService;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
+import fr.paris.lutece.portal.service.admin.AccessDeniedException;
+import fr.paris.lutece.portal.service.admin.AdminUserService;
 import fr.paris.lutece.portal.service.template.AppTemplateService;
 import fr.paris.lutece.portal.util.mvc.admin.MVCAdminJspBean;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.View;
-import fr.paris.lutece.util.ReferenceList;
 import fr.paris.lutece.util.html.HtmlTemplate;
 import fr.paris.lutece.util.html.Paginator;
 import fr.paris.lutece.util.json.AbstractJsonResponse;
@@ -93,9 +91,6 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
     /** The Constant JSP_MANAGE_COMPONENT. */
     private static final String JSP_MANAGE_COMPONENT = "jsp/admin/plugins/releaser/ManageComponent.jsp";
     
-    /** The Constant JSP_MANAGE_CLUSTERS. */
-    private static final String JSP_MANAGE_CLUSTERS = "ManageClusters.jsp";
-
     /** The Constant ACTION_CHANGE_COMPONENT_NEXT_RELEASE_VERSION. */
     private static final String ACTION_CHANGE_COMPONENT_NEXT_RELEASE_VERSION = "versionComponent";
     
@@ -108,6 +103,9 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
     /** The Constant PARAMETER_TWEET_MESSAGE. */
     private static final String PARAMETER_TWEET_MESSAGE = "tweet_message";
 
+    // Messages
+    private static final String MESSAGE_ACCESS_DENIED = "releaser.message.accesDenied";
+       
     /** The str search. */
     private String _strSearch;
     
@@ -122,10 +120,17 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
      *
      * @param request the request
      * @return the manage component
+     * @throws AccessDeniedException 
      */
     @View( value = VIEW_MANAGE_COMPONENT, defaultView = true )
-    public String getManageComponent( HttpServletRequest request )
+    public String getManageComponent( HttpServletRequest request ) throws AccessDeniedException
     {
+
+        if ( !ComponentService.IsSearchComponentAuthorized( AdminUserService.getAdminUser(request) ) )
+        {
+            throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
+        }
+        
         ReleaserUser user = ReleaserUtils.getReleaserUser( request, getLocale( ) );
         if ( user == null )
         {
