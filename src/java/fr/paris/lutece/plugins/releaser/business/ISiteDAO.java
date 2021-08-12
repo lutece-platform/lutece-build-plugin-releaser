@@ -124,4 +124,23 @@ public interface ISiteDAO
      * @return the list which contains the data of all the site objects
      */
     List<Site> selectByCluster( int nClusterId, Plugin plugin );
+    
+    /**
+     * Find if site is already exist
+     * 
+     * @param siteName
+     *            The site Name 
+     *            
+     * @param artifactId
+     *            The artifactId of the site
+     *             
+     * @param scmurl
+     *            The site's scm url
+     *            
+     * @param plugin
+     *            The plugin
+     *            
+     * @return the cluster name which contains the existing site
+     */
+    String searchDuplicateSite( String siteName, String artifactId, String scmUrl, Plugin plugin );
 }

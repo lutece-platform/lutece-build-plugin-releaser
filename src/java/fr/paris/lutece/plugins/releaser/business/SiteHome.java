@@ -148,5 +148,25 @@ public final class SiteHome
     {
         return _dao.selectByCluster( nClusterId, _plugin );
     }
+    
+    /**
+     * Search if the site is already exist
+     * 
+     * @param siteName
+     *            The site name
+     *            
+     * @param artifactId
+     *            The site artifacteId
+     *            
+     * @param scmUrl
+     *            The site sources url
+     *            
+     * @return the the cluster name if site exists or null otherwise
+     */
+    public static String findDuplicateSite( String siteName, String artifactId, String scmUrl )
+    {
+        return _dao.searchDuplicateSite( siteName, artifactId, scmUrl, _plugin );
+    }
+    
 
 }

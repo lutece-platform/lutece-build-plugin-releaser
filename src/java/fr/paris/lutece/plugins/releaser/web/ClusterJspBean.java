@@ -49,6 +49,7 @@ import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.admin.AccessDeniedException;
 import fr.paris.lutece.portal.service.admin.AdminUserService;
+import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.message.AdminMessage;
 import fr.paris.lutece.portal.service.message.AdminMessageService;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
@@ -94,6 +95,7 @@ public class ClusterJspBean extends ManageSitesJspBean
  
     // Messages
     private static final String MESSAGE_ACCESS_DENIED = "releaser.message.accesDenied";
+    private static final String MESSAGE_SITE_ALREADY_EXIST = "releaser.message.siteAlreadyExist";
    
     // Markers
     private static final String MARK_CLUSTER_LIST = "cluster_list";
@@ -473,6 +475,13 @@ public class ClusterJspBean extends ManageSitesJspBean
         {
             return redirectView( request, VIEW_CREATE_SITE );
         }
+        
+        if ( SiteService.IsSiteAlreadyExist(_site.getName(), _site.getArtifactId(), _site.getScmUrl()) )
+        {
+        	String errorMessage = I18nService.getLocalizedString( MESSAGE_SITE_ALREADY_EXIST, getLocale() );
+        	addError(errorMessage);
+            return redirectView( request, VIEW_CREATE_SITE );
+        }	
 
         SiteHome.create( _site );
         addInfo( INFO_SITE_CREATED, getLocale( ) );

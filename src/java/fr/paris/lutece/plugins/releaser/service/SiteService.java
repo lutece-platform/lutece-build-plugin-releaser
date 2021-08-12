@@ -69,6 +69,7 @@ import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
 import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.datastore.DatastoreService;
 import fr.paris.lutece.portal.service.i18n.I18nService;
+import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.portal.service.rbac.RBACService;
 import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
@@ -806,6 +807,15 @@ public class SiteService
         }  
     	
     	return bAuthorized;
+    }
+    
+    public static boolean IsSiteAlreadyExist ( String siteName, String artifactId, String scmUrl )
+    {
+    	String clusterName = SiteHome.findDuplicateSite( siteName, artifactId, scmUrl );
+    	if (clusterName != null)
+    		return true;    	
+    	
+    	return false;
     }
 
 }

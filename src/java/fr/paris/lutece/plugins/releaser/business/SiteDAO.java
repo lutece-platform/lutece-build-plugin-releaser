@@ -58,6 +58,8 @@ public final class SiteDAO implements ISiteDAO
     private static final String SQL_QUERY_SELECT_BY_CLUSTER = "SELECT a.id_site, a.name, a.description, a.artifact_id, a.id_cluster, b.name, a.scm_url, a.jira_key,a.is_theme "
             + " FROM releaser_site a , releaser_cluster b  WHERE a.id_cluster = b.id_cluster AND a.id_cluster = ?";
     private static final String SQL_QUERY_SELECTALL_ID = "SELECT id_site FROM releaser_site";
+    private static final String SQL_QUERY_SELECT_SEARCH_DUPLICATE_SITE = "SELECT b.name, a.id_site FROM releaser_site a LEFT OUTER JOIN releaser_cluster b" 
+    		+ " ON a.id_cluster = b.id_cluster WHERE a.artifact_id = ? OR a.name = ? OR a.scm_url = ?";
 
     /**
      * Generates a new primary key
@@ -273,5 +275,29 @@ public final class SiteDAO implements ISiteDAO
 
         daoUtil.free( );
         return siteList;
+    }
+
+    /**
+     * {@inheritDoc }
+     */
+    @Override
+    public String searchDuplicateSite( String siteName, String artifactId, String scmUrl, Plugin plugin )
+    {
+        String clusterName = null;
+        DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECT_SEARCH_DUPLICATE_SITE, plugin );
+        daoUtil.setNString( 1, artifactId );
+        daoUtil.setNString( 2, siteName );
+        daoUtil.setNString( 3, scmUrl );
+        daoUtil.executeQuery( );
+
+        while ( daoUtil.next( ) )
+        {
+        	int nIndex = 1;
+        	if ( daoUtil != null && daoUtil.getString( 1 ) != null )
+        		clusterName = daoUtil.getString( 1 );           
+        }
+
+        daoUtil.free( );
+        return clusterName;
     }
 }
