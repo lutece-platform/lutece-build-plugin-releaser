@@ -275,17 +275,17 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         Map<String, Object> model = getModel( );
 
         if ( _site.getRepoType( ).equals( RepositoryType.GITHUB )
-                || _site.getComponents( ).stream( ).anyMatch( x -> x.shouldBeReleased( ) && x.getRepoType( ).equals( RepositoryType.GITHUB ) ) )
+                || _site.getComponents( ).stream( ).anyMatch( x -> x.shouldBeReleased( ) && RepositoryType.GITHUB.equals(x.getRepoType( )  ) ) )
         {
             model.put( ConstanteUtils.MARK_REPO_TYPE_GITHUB, RepositoryType.GITHUB );
         }
         if ( _site.getRepoType( ).equals( RepositoryType.GITLAB )
-                || _site.getComponents( ).stream( ).anyMatch( x -> x.shouldBeReleased( ) && x.getRepoType( ).equals( RepositoryType.GITLAB ) ) )
+                || _site.getComponents( ).stream( ).anyMatch( x -> x.shouldBeReleased( ) &&RepositoryType.GITLAB .equals(x.getRepoType( ) ) ) )
         {
             model.put( ConstanteUtils.MARK_REPO_TYPE_GITLAB, RepositoryType.GITLAB );
         }
         if ( _site.getRepoType( ).equals( RepositoryType.SVN )
-                || _site.getComponents( ).stream( ).anyMatch( x -> x.shouldBeReleased( ) && x.getRepoType( ).equals( RepositoryType.SVN ) ) )
+                || _site.getComponents( ).stream( ).anyMatch( x -> x.shouldBeReleased( ) && RepositoryType.SVN .equals(x.getRepoType( ) ) ) )
         {
             model.put( ConstanteUtils.MARK_REPO_TYPE_SVN, RepositoryType.SVN );
         }
