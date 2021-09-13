@@ -1,3 +1,36 @@
+/*
+ * Copyright (c) 2002-2021, City of Paris
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  1. Redistributions of source code must retain the above copyright notice
+ *     and the following disclaimer.
+ *
+ *  2. Redistributions in binary form must reproduce the above copyright notice
+ *     and the following disclaimer in the documentation and/or other materials
+ *     provided with the distribution.
+ *
+ *  3. Neither the name of 'Mairie de Paris' nor 'Lutece' nor the names of its
+ *     contributors may be used to endorse or promote products derived from
+ *     this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * License 1.0
+ */
 package fr.paris.lutece.plugins.releaser.util;
 
 import java.io.BufferedReader;
@@ -34,32 +67,33 @@ public class PluginUtils
 
     /** The Constant CORE_PLUGIN_NAME1. */
     public static final String CORE_PLUGIN_NAME1 = "core";
-    
+
     /** The Constant CORE_PLUGIN_NAME2. */
     public static final String CORE_PLUGIN_NAME2 = "lutece-core";
 
     /** The Constant SUFFIX_CONTEXT_FILE. */
     private static final String SUFFIX_CONTEXT_FILE = ".xml";
-    
+
     /** The Constant CONSTANTE_PLUGIN_PATH. */
     private static final String CONSTANTE_PLUGIN_PATH = "webapp/WEB-INF/plugins/";
-    
+
     /** The Constant CONSTANTE_CORE_CONF. */
     private static final String CONSTANTE_CORE_CONF = "webapp/WEB-INF/conf/";
-    
+
     /** The Constant CONSTANTE_CORE_APP_INFO. */
     private static final String CONSTANTE_CORE_APP_INFO = "src/java/fr/paris/lutece/portal/service/init/AppInfo.java";
-    
+
     /** The Constant REGEXP_VERSION_APP_INFO. */
     private static final String REGEXP_VERSION_APP_INFO = "(.*)private static final String APP_VERSION = \"(.*)\";";
-    
+
     /** The Constant PATTERN_VERSION_APP_INFO. */
     private static final Pattern PATTERN_VERSION_APP_INFO = Pattern.compile( REGEXP_VERSION_APP_INFO );
 
     /**
      * Checks if is core.
      *
-     * @param strPluginName            plugin name
+     * @param strPluginName
+     *            plugin name
      * @return <code>true</code> if core or lutece-core, <code>false</code> otherwise.
      */
     public static boolean isCore( String strPluginName )
@@ -70,7 +104,8 @@ public class PluginUtils
     /**
      * Gets the core XML file.
      *
-     * @param strComponentPath the str component path
+     * @param strComponentPath
+     *            the str component path
      * @return the core XML file
      */
     public static String getCoreXMLFile( String strComponentPath )
@@ -89,7 +124,8 @@ public class PluginUtils
     /**
      * Gets the plugin XML file.
      *
-     * @param strComponentPath the str component path
+     * @param strComponentPath
+     *            the str component path
      * @return the plugin XML file
      */
     public static String [ ] getPluginXMLFile( String strComponentPath )
@@ -118,7 +154,8 @@ public class PluginUtils
     /**
      * Gets the app info file.
      *
-     * @param strBasePath the str base path
+     * @param strBasePath
+     *            the str base path
      * @return the app info file
      */
     public static String getAppInfoFile( String strBasePath )
@@ -137,9 +174,12 @@ public class PluginUtils
     /**
      * Update app info file.
      *
-     * @param strFile the str file
-     * @param strVersion the str version
-     * @param commandResult the command result
+     * @param strFile
+     *            the str file
+     * @param strVersion
+     *            the str version
+     * @param commandResult
+     *            the command result
      * @return true, if successful
      */
     public static boolean updateAppInfoFile( String strFile, String strVersion, CommandResult commandResult )
@@ -231,9 +271,12 @@ public class PluginUtils
     /**
      * Update plugin XML version.
      *
-     * @param strFile the str file
-     * @param strNewVersion the str new version
-     * @param commandResult the command result
+     * @param strFile
+     *            the str file
+     * @param strNewVersion
+     *            the str new version
+     * @param commandResult
+     *            the command result
      * @return the string
      */
     public static String updatePluginXMLVersion( String strFile, String strNewVersion, CommandResult commandResult )
@@ -301,12 +344,14 @@ public class PluginUtils
      */
     static class ContextFileFilter implements FilenameFilter
     {
-        
+
         /**
          * Filter filename.
          *
-         * @param file            The current file
-         * @param strName            The file name
+         * @param file
+         *            The current file
+         * @param strName
+         *            The file name
          * @return true if the file is a context file otherwise false
          */
         public boolean accept( File file, String strName )

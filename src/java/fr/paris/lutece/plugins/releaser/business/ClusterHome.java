@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2017, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -134,7 +134,6 @@ public final class ClusterHome
         return _dao.selectClustersList( _plugin );
     }
 
-    
     /**
      * Load the id of all the cluster objects and returns them as a list
      * 

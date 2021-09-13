@@ -1,3 +1,36 @@
+/*
+ * Copyright (c) 2002-2021, City of Paris
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  1. Redistributions of source code must retain the above copyright notice
+ *     and the following disclaimer.
+ *
+ *  2. Redistributions in binary form must reproduce the above copyright notice
+ *     and the following disclaimer in the documentation and/or other materials
+ *     provided with the distribution.
+ *
+ *  3. Neither the name of 'Mairie de Paris' nor 'Lutece' nor the names of its
+ *     contributors may be used to endorse or promote products derived from
+ *     this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * License 1.0
+ */
 package fr.paris.lutece.plugins.releaser.util.github;
 
 import java.io.File;
@@ -57,22 +90,28 @@ public class GitUtils
 
     /** The Constant MASTER_BRANCH. */
     public static final String MASTER_BRANCH = "master";
-    
+
     /** The Constant DEVELOP_BRANCH. */
     public static final String DEVELOP_BRANCH = "develop";
-    
+
     /** The Constant CONSTANTE_REF_TAG. */
     private static final String CONSTANTE_REF_TAG = "refs/tags/";
 
     /**
      * Clone repo.
      *
-     * @param sClonePath the s clone path
-     * @param sRepoURL the s repo URL
-     * @param commandResult the command result
-     * @param strGitHubUserLogin the str git hub user login
-     * @param strUserName the str user name
-     * @param strPassword the str password
+     * @param sClonePath
+     *            the s clone path
+     * @param sRepoURL
+     *            the s repo URL
+     * @param commandResult
+     *            the command result
+     * @param strGitHubUserLogin
+     *            the str git hub user login
+     * @param strUserName
+     *            the str user name
+     * @param strPassword
+     *            the str password
      * @return the git
      */
     public static Git cloneRepo( String sClonePath, String sRepoURL, CommandResult commandResult, String strGitHubUserLogin, String strUserName,
@@ -130,9 +169,12 @@ public class GitUtils
     /**
      * Checkout repo branch.
      *
-     * @param git the git
-     * @param sBranchName the s branch name
-     * @param commandResult the command result
+     * @param git
+     *            the git
+     * @param sBranchName
+     *            the s branch name
+     * @param commandResult
+     *            the command result
      */
     public static void checkoutRepoBranch( Git git, String sBranchName, CommandResult commandResult )
     {
@@ -163,9 +205,12 @@ public class GitUtils
     /**
      * Creates the local branch.
      *
-     * @param git the git
-     * @param sBranchName the s branch name
-     * @param commandResult the command result
+     * @param git
+     *            the git
+     * @param sBranchName
+     *            the s branch name
+     * @param commandResult
+     *            the command result
      */
     public static void createLocalBranch( Git git, String sBranchName, CommandResult commandResult )
     {
@@ -196,9 +241,12 @@ public class GitUtils
     /**
      * Gets the ref branch.
      *
-     * @param git the git
-     * @param sBranchName the s branch name
-     * @param commandResult the command result
+     * @param git
+     *            the git
+     * @param sBranchName
+     *            the s branch name
+     * @param commandResult
+     *            the command result
      * @return the ref branch
      */
     public static String getRefBranch( Git git, String sBranchName, CommandResult commandResult )
@@ -237,13 +285,20 @@ public class GitUtils
     /**
      * Push force.
      *
-     * @param git the git
-     * @param strRefSpec the str ref spec
-     * @param strUserName the str user name
-     * @param strPassword the str password
-     * @throws InvalidRemoteException the invalid remote exception
-     * @throws TransportException the transport exception
-     * @throws GitAPIException the git API exception
+     * @param git
+     *            the git
+     * @param strRefSpec
+     *            the str ref spec
+     * @param strUserName
+     *            the str user name
+     * @param strPassword
+     *            the str password
+     * @throws InvalidRemoteException
+     *             the invalid remote exception
+     * @throws TransportException
+     *             the transport exception
+     * @throws GitAPIException
+     *             the git API exception
      */
     public static void pushForce( Git git, String strRefSpec, String strUserName, String strPassword )
             throws InvalidRemoteException, TransportException, GitAPIException
@@ -257,21 +312,35 @@ public class GitUtils
     /**
      * Pull repo branch.
      *
-     * @param git the git
-     * @param sBranchName the s branch name
-     * @param strUserName the str user name
-     * @param strPassword the str password
+     * @param git
+     *            the git
+     * @param sBranchName
+     *            the s branch name
+     * @param strUserName
+     *            the str user name
+     * @param strPassword
+     *            the str password
      * @return the pull result
-     * @throws IOException Signals that an I/O exception has occurred.
-     * @throws WrongRepositoryStateException the wrong repository state exception
-     * @throws InvalidConfigurationException the invalid configuration exception
-     * @throws DetachedHeadException the detached head exception
-     * @throws InvalidRemoteException the invalid remote exception
-     * @throws CanceledException the canceled exception
-     * @throws RefNotFoundException the ref not found exception
-     * @throws NoHeadException the no head exception
-     * @throws TransportException the transport exception
-     * @throws GitAPIException the git API exception
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     * @throws WrongRepositoryStateException
+     *             the wrong repository state exception
+     * @throws InvalidConfigurationException
+     *             the invalid configuration exception
+     * @throws DetachedHeadException
+     *             the detached head exception
+     * @throws InvalidRemoteException
+     *             the invalid remote exception
+     * @throws CanceledException
+     *             the canceled exception
+     * @throws RefNotFoundException
+     *             the ref not found exception
+     * @throws NoHeadException
+     *             the no head exception
+     * @throws TransportException
+     *             the transport exception
+     * @throws GitAPIException
+     *             the git API exception
      */
     public static PullResult pullRepoBranch( Git git, String sBranchName, String strUserName, String strPassword )
             throws IOException, WrongRepositoryStateException, InvalidConfigurationException, DetachedHeadException, InvalidRemoteException, CanceledException,
@@ -286,19 +355,31 @@ public class GitUtils
     /**
      * Merge repo branch.
      *
-     * @param git the git
-     * @param strBranchToMerge the str branch to merge
+     * @param git
+     *            the git
+     * @param strBranchToMerge
+     *            the str branch to merge
      * @return the merge result
-     * @throws IOException Signals that an I/O exception has occurred.
-     * @throws WrongRepositoryStateException the wrong repository state exception
-     * @throws InvalidConfigurationException the invalid configuration exception
-     * @throws DetachedHeadException the detached head exception
-     * @throws InvalidRemoteException the invalid remote exception
-     * @throws CanceledException the canceled exception
-     * @throws RefNotFoundException the ref not found exception
-     * @throws NoHeadException the no head exception
-     * @throws TransportException the transport exception
-     * @throws GitAPIException the git API exception
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     * @throws WrongRepositoryStateException
+     *             the wrong repository state exception
+     * @throws InvalidConfigurationException
+     *             the invalid configuration exception
+     * @throws DetachedHeadException
+     *             the detached head exception
+     * @throws InvalidRemoteException
+     *             the invalid remote exception
+     * @throws CanceledException
+     *             the canceled exception
+     * @throws RefNotFoundException
+     *             the ref not found exception
+     * @throws NoHeadException
+     *             the no head exception
+     * @throws TransportException
+     *             the transport exception
+     * @throws GitAPIException
+     *             the git API exception
      */
     public static MergeResult mergeRepoBranch( Git git, String strBranchToMerge )
             throws IOException, WrongRepositoryStateException, InvalidConfigurationException, DetachedHeadException, InvalidRemoteException, CanceledException,
@@ -321,11 +402,15 @@ public class GitUtils
     /**
      * Gets the last log.
      *
-     * @param git the git
-     * @param nMaxCommit the n max commit
+     * @param git
+     *            the git
+     * @param nMaxCommit
+     *            the n max commit
      * @return the last log
-     * @throws NoHeadException the no head exception
-     * @throws GitAPIException the git API exception
+     * @throws NoHeadException
+     *             the no head exception
+     * @throws GitAPIException
+     *             the git API exception
      */
     public static String getLastLog( Git git, int nMaxCommit ) throws NoHeadException, GitAPIException
     {
@@ -345,10 +430,13 @@ public class GitUtils
     /**
      * Gets the last commit id.
      *
-     * @param git the git
+     * @param git
+     *            the git
      * @return the last commit id
-     * @throws NoHeadException the no head exception
-     * @throws GitAPIException the git API exception
+     * @throws NoHeadException
+     *             the no head exception
+     * @throws GitAPIException
+     *             the git API exception
      */
     public static String getLastCommitId( Git git ) throws NoHeadException, GitAPIException
     {
@@ -367,13 +455,19 @@ public class GitUtils
     /**
      * Merge back.
      *
-     * @param git the git
-     * @param strUserName the str user name
-     * @param strPassword the str password
-     * @param commandResult the command result
+     * @param git
+     *            the git
+     * @param strUserName
+     *            the str user name
+     * @param strPassword
+     *            the str password
+     * @param commandResult
+     *            the command result
      * @return the merge result
-     * @throws IOException Signals that an I/O exception has occurred.
-     * @throws GitAPIException the git API exception
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     * @throws GitAPIException
+     *             the git API exception
      */
     public static MergeResult mergeBack( Git git, String strUserName, String strPassword, CommandResult commandResult ) throws IOException, GitAPIException
     {
@@ -419,10 +513,14 @@ public class GitUtils
     /**
      * Search repo.
      *
-     * @param strSearch the str search
-     * @param strOrganization the str organization
-     * @param strUserName the str user name
-     * @param strPassword the str password
+     * @param strSearch
+     *            the str search
+     * @param strOrganization
+     *            the str organization
+     * @param strUserName
+     *            the str user name
+     * @param strPassword
+     *            the str password
      * @return the github search result
      */
     public static GithubSearchResult searchRepo( String strSearch, String strOrganization, String strUserName, String strPassword )
@@ -447,11 +545,10 @@ public class GitUtils
         try
         {
 
-        	String strApiToken=AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_SEARCH_REPO_API_TOKEN );
-        	Map<String,String> mapHeaderToken=new HashMap<String, String>();
-        	mapHeaderToken.put("Authorization", "token "+strApiToken );
-            strResponse = httpAccess.doGet(strUrl, null, null,mapHeaderToken );
-            
+            String strApiToken = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_SEARCH_REPO_API_TOKEN );
+            Map<String, String> mapHeaderToken = new HashMap<String, String>( );
+            mapHeaderToken.put( "Authorization", "token " + strApiToken );
+            strResponse = httpAccess.doGet( strUrl, null, null, mapHeaderToken );
 
             if ( !StringUtils.isEmpty( strResponse ) )
             {
@@ -475,11 +572,16 @@ public class GitUtils
     /**
      * Gets the file content.
      *
-     * @param strFullName the str full name
-     * @param strPathFile the str path file
-     * @param strBranch the str branch
-     * @param strUserName the str user name
-     * @param strPassword the str password
+     * @param strFullName
+     *            the str full name
+     * @param strPathFile
+     *            the str path file
+     * @param strBranch
+     *            the str branch
+     * @param strUserName
+     *            the str user name
+     * @param strPassword
+     *            the str password
      * @return the file content
      */
     public static String getFileContent( String strFullName, String strPathFile, String strBranch, String strUserName, String strPassword )
@@ -507,9 +609,11 @@ public class GitUtils
     /**
      * Gets the tag linked to last release.
      *
-     * @param git the git
+     * @param git
+     *            the git
      * @return the tag linked to last release
-     * @throws GitAPIException the git API exception
+     * @throws GitAPIException
+     *             the git API exception
      */
     private static Ref getTagLinkedToLastRelease( Git git ) throws GitAPIException
     {
@@ -554,7 +658,8 @@ public class GitUtils
     /**
      * Gets the tag name list.
      *
-     * @param git the git
+     * @param git
+     *            the git
      * @return the tag name list
      */
     public static List<String> getTagNameList( Git git )
@@ -576,7 +681,8 @@ public class GitUtils
     /**
      * Gets the repo url.
      *
-     * @param strRepoUrl the str repo url
+     * @param strRepoUrl
+     *            the str repo url
      * @return the repo url
      */
     private static String getRepoUrl( String strRepoUrl )
@@ -595,7 +701,8 @@ public class GitUtils
     /**
      * Gets the git.
      *
-     * @param strClonePath the str clone path
+     * @param strClonePath
+     *            the str clone path
      * @return the git
      */
     public static Git getGit( String strClonePath )

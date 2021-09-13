@@ -1,3 +1,36 @@
+/*
+ * Copyright (c) 2002-2021, City of Paris
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  1. Redistributions of source code must retain the above copyright notice
+ *     and the following disclaimer.
+ *
+ *  2. Redistributions in binary form must reproduce the above copyright notice
+ *     and the following disclaimer in the documentation and/or other materials
+ *     provided with the distribution.
+ *
+ *  3. Neither the name of 'Mairie de Paris' nor 'Lutece' nor the names of its
+ *     contributors may be used to endorse or promote products derived from
+ *     this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * License 1.0
+ */
 package fr.paris.lutece.plugins.releaser.util.pom;
 
 import java.io.FileInputStream;
@@ -34,10 +67,13 @@ public class PomUpdater
     /**
      * Update site before tag.
      *
-     * @param site the site
-     * @param strSiteLocalPomPath the str site local pom path
+     * @param site
+     *            the site
+     * @param strSiteLocalPomPath
+     *            the str site local pom path
      * @return the string
-     * @throws JAXBException the JAXB exception
+     * @throws JAXBException
+     *             the JAXB exception
      */
     public static String updateSiteBeforeTag( Site site, String strSiteLocalPomPath ) throws JAXBException
     {
@@ -116,10 +152,13 @@ public class PomUpdater
     /**
      * Update site after tag.
      *
-     * @param site the site
-     * @param strSiteLocalPomPath the str site local pom path
+     * @param site
+     *            the site
+     * @param strSiteLocalPomPath
+     *            the str site local pom path
      * @return the string
-     * @throws JAXBException the JAXB exception
+     * @throws JAXBException
+     *             the JAXB exception
      */
     public static String updateSiteAfterTag( Site site, String strSiteLocalPomPath ) throws JAXBException
     {
@@ -190,9 +229,12 @@ public class PomUpdater
     /**
      * Save.
      *
-     * @param model the model
-     * @param outputStream the output stream
-     * @throws JAXBException the JAXB exception
+     * @param model
+     *            the model
+     * @param outputStream
+     *            the output stream
+     * @throws JAXBException
+     *             the JAXB exception
      */
     public static void save( Model model, OutputStream outputStream ) throws JAXBException
     {
@@ -210,11 +252,15 @@ public class PomUpdater
     /**
      * Unmarshal.
      *
-     * @param <T> the generic type
-     * @param docClass the doc class
-     * @param inputStream the input stream
+     * @param <T>
+     *            the generic type
+     * @param docClass
+     *            the doc class
+     * @param inputStream
+     *            the input stream
      * @return the t
-     * @throws JAXBException the JAXB exception
+     * @throws JAXBException
+     *             the JAXB exception
      */
     public static <T> T unmarshal( Class<T> docClass, InputStream inputStream ) throws JAXBException
     {

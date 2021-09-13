@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2017, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,7 +47,7 @@ public class Cluster implements RBACResource, Serializable
 {
     private static final long serialVersionUID = 1L;
 
-	// RBAC management
+    // RBAC management
     public static final String RESOURCE_TYPE = "cluster";
 
     // Cluster permissions
@@ -57,7 +57,7 @@ public class Cluster implements RBACResource, Serializable
     public static final String PERMISSION_ADD_SITES_TO_CLUSTER = "addSitesToClusterPermission";
 
     private HashMap<String, Boolean> permissions;
-        
+
     // Variables declarations
     private int _nId;
 
@@ -155,22 +155,26 @@ public class Cluster implements RBACResource, Serializable
         _listSites = listSites;
     }
 
-	@Override
-	public String getResourceTypeCode() {
+    @Override
+    public String getResourceTypeCode( )
+    {
         return RESOURCE_TYPE;
-	}
+    }
 
-	@Override
-	public String getResourceId() {
+    @Override
+    public String getResourceId( )
+    {
         return String.valueOf( _nId );
-	}
+    }
 
-	public HashMap<String, Boolean> getPermissions() {
-		return permissions;
-	}
+    public HashMap<String, Boolean> getPermissions( )
+    {
+        return permissions;
+    }
 
-	public void setPermissions(HashMap<String, Boolean> permissions) {
-		this.permissions = permissions;
-	}
+    public void setPermissions( HashMap<String, Boolean> permissions )
+    {
+        this.permissions = permissions;
+    }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2017, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,6 @@
  *
  * License 1.0
  */
-
 package fr.paris.lutece.plugins.releaser.util.version;
 
 import java.util.List;
@@ -89,10 +88,10 @@ public class VersionTest
         {
             System.out.println( "- " + strVersion );
         }
-//        assertEquals( listVersions.get( 0 ), "12.10.24-RC-01" );
-//        assertEquals( listVersions.get( 1 ), "12.10.24" );
-//        assertEquals( listVersions.get( 2 ), "12.11.0" );
-//        assertEquals( listVersions.get( 3 ), "13.0.0" );
+        // assertEquals( listVersions.get( 0 ), "12.10.24-RC-01" );
+        // assertEquals( listVersions.get( 1 ), "12.10.24" );
+        // assertEquals( listVersions.get( 2 ), "12.11.0" );
+        // assertEquals( listVersions.get( 3 ), "13.0.0" );
 
         strSource = "5.5.25-RC-01";
         listVersions = Version.getNextReleaseVersions( strSource );

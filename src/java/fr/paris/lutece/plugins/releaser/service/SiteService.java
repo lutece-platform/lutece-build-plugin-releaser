@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2017, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,6 @@
  *
  * License 1.0
  */
-
 package fr.paris.lutece.plugins.releaser.service;
 
 import java.io.FileInputStream;
@@ -82,34 +81,37 @@ import fr.paris.lutece.util.httpaccess.HttpAccessException;
  */
 public class SiteService
 {
-    
+
     /** The Constant NB_POOL_REMOTE_INFORMATION. */
     private static final int NB_POOL_REMOTE_INFORMATION = 60;
-    
+
     /** The Constant MESSAGE_AVOID_SNAPSHOT. */
     private static final String MESSAGE_AVOID_SNAPSHOT = "releaser.message.avoidSnapshot";
-    
+
     /** The Constant MESSAGE_UPGRADE_SELECTED. */
     private static final String MESSAGE_UPGRADE_SELECTED = "releaser.message.upgradeSelected";
-    
+
     /** The Constant MESSAGE_TO_BE_RELEASED. */
     private static final String MESSAGE_TO_BE_RELEASED = "releaser.message.toBeReleased";
-    
+
     /** The Constant MESSAGE_MORE_RECENT_VERSION_AVAILABLE. */
     private static final String MESSAGE_MORE_RECENT_VERSION_AVAILABLE = "releaser.message.moreRecentVersionAvailable";
-    
+
     /** The Constant MESSAGE_AN_RELEASE_VERSION_ALREADY_EXIST. */
     private static final String MESSAGE_AN_RELEASE_VERSION_ALREADY_EXIST = "releaser.message.releleaseVersionAlreadyExist";
-    
+
     /** The Constant MESSAGE_WRONG_POM_PARENT_SITE_VERSION. */
     private static final String MESSAGE_WRONG_POM_PARENT_SITE_VERSION = "releaser.message.wrongPomParentSiteVersion";
 
     /**
      * Load a site from its id.
      *
-     * @param nSiteId            The site id
-     * @param request the request
-     * @param locale the locale
+     * @param nSiteId
+     *            The site id
+     * @param request
+     *            the request
+     * @param locale
+     *            the locale
      * @return A site object
      */
     public static Site getSite( int nSiteId, HttpServletRequest request, Locale locale )
@@ -142,9 +144,12 @@ public class SiteService
     /**
      * Inits the site.
      *
-     * @param site the site
-     * @param request the request
-     * @param locale the locale
+     * @param site
+     *            the site
+     * @param request
+     *            the request
+     * @param locale
+     *            the locale
      */
     private static void initSite( Site site, HttpServletRequest request, Locale locale )
     {
@@ -170,7 +175,7 @@ public class SiteService
 
     /**
      * Define which version between last released or current snapshot should be the origin for next release versions. Ex of cases :<br>
-     * last release : 3.2.1 current : 4.0.0-SNAPSHOT -- current  <br>
+     * last release : 3.2.1 current : 4.0.0-SNAPSHOT -- current <br>
      * last release : 3.2.1 current : 3.2.2-SNAPSHOT -- last or current <br>
      * last release : missing current : 1.0.0-SNAPSHOT -- current <br>
      * last release : 3.2.1-RC-02 current : 3.2.1-SNAPSHOT -- last <br>
@@ -194,7 +199,8 @@ public class SiteService
     /**
      * Initialize the component list for a given site.
      *
-     * @param site            The site
+     * @param site
+     *            The site
      */
     private static void initComponents( Site site )
     {
@@ -258,7 +264,8 @@ public class SiteService
      * - current version for non project component <br>
      * - nex release for project component.
      *
-     * @param component            The component
+     * @param component
+     *            The component
      */
     private static void defineTargetVersion( Component component )
     {
@@ -285,7 +292,8 @@ public class SiteService
     /**
      * Define the next snapshot version for a given component.
      *
-     * @param component            The component
+     * @param component
+     *            The component
      */
     private static void defineNextSnapshotVersion( Component component )
     {
@@ -315,8 +323,10 @@ public class SiteService
     /**
      * Checks if is project component.
      *
-     * @param site the site
-     * @param strArtifactId the str artifact id
+     * @param site
+     *            the site
+     * @param strArtifactId
+     *            the str artifact id
      * @return true, if is project component
      */
     private static boolean isProjectComponent( Site site, String strArtifactId )
@@ -327,9 +337,12 @@ public class SiteService
     /**
      * Update component as project status.
      *
-     * @param site the site
-     * @param strArtifactId the str artifact id
-     * @param bIsProject the b is project
+     * @param site
+     *            the site
+     * @param strArtifactId
+     *            the str artifact id
+     * @param bIsProject
+     *            the b is project
      */
     public static void updateComponentAsProjectStatus( Site site, String strArtifactId, Boolean bIsProject )
     {
@@ -340,7 +353,8 @@ public class SiteService
     /**
      * Removes the component as project by site.
      *
-     * @param nIdSite the n id site
+     * @param nIdSite
+     *            the n id site
      */
     public static void removeComponentAsProjectBySite( int nIdSite )
     {
@@ -351,8 +365,10 @@ public class SiteService
     /**
      * Gets the componet is project data key.
      *
-     * @param site the site
-     * @param strArtifactId the str artifact id
+     * @param site
+     *            the site
+     * @param strArtifactId
+     *            the str artifact id
      * @return the componet is project data key
      */
     private static String getComponetIsProjectDataKey( Site site, String strArtifactId )
@@ -365,7 +381,8 @@ public class SiteService
     /**
      * Gets the prefix is project data key.
      *
-     * @param nIdSite the n id site
+     * @param nIdSite
+     *            the n id site
      * @return the prefix is project data key
      */
     private static String getPrefixIsProjectDataKey( int nIdSite )
@@ -378,8 +395,10 @@ public class SiteService
     /**
      * Build release comments for a given site.
      *
-     * @param site            The site
-     * @param locale            The locale to use for comments
+     * @param site
+     *            The site
+     * @param locale
+     *            The locale to use for comments
      */
     public static void buildComments( Site site, Locale locale )
     {
@@ -396,8 +415,10 @@ public class SiteService
     /**
      * Build release comments for a given component.
      *
-     * @param component            The component
-     * @param locale            The locale to use for comments
+     * @param component
+     *            The component
+     * @param locale
+     *            The locale to use for comments
      */
     private static void buildReleaseComments( Component component, Locale locale )
     {
@@ -410,9 +431,7 @@ public class SiteService
                 component.addReleaseComment( strComment );
             }
             else
-                if ( component.getLastAvailableVersion( ) != null  
-                    && component.getTargetVersion( )!=null 
-                    && component.getLastAvailableVersion( )!=null
+                if ( component.getLastAvailableVersion( ) != null && component.getTargetVersion( ) != null && component.getLastAvailableVersion( ) != null
                         && ReleaserUtils.compareVersion( component.getTargetVersion( ), component.getLastAvailableVersion( ) ) < 0 )
                 {
                     String [ ] arguments = {
@@ -471,8 +490,10 @@ public class SiteService
     /**
      * Upgrade component.
      *
-     * @param site the site
-     * @param strArtifactId the str artifact id
+     * @param site
+     *            the site
+     * @param strArtifactId
+     *            the str artifact id
      */
     public static void upgradeComponent( Site site, String strArtifactId )
     {
@@ -489,8 +510,10 @@ public class SiteService
     /**
      * Cancel upgrade component.
      *
-     * @param site the site
-     * @param strArtifactId the str artifact id
+     * @param site
+     *            the site
+     * @param strArtifactId
+     *            the str artifact id
      */
     public static void cancelUpgradeComponent( Site site, String strArtifactId )
     {
@@ -508,8 +531,10 @@ public class SiteService
     /**
      * Downgrade component.
      *
-     * @param site the site
-     * @param strArtifactId the str artifact id
+     * @param site
+     *            the site
+     * @param strArtifactId
+     *            the str artifact id
      */
     public static void downgradeComponent( Site site, String strArtifactId )
     {
@@ -527,8 +552,10 @@ public class SiteService
     /**
      * Cancel downgrade component.
      *
-     * @param site the site
-     * @param strArtifactId the str artifact id
+     * @param site
+     *            the site
+     * @param strArtifactId
+     *            the str artifact id
      */
     public static void cancelDowngradeComponent( Site site, String strArtifactId )
     {
@@ -546,11 +573,16 @@ public class SiteService
     /**
      * Release component.
      *
-     * @param site the site
-     * @param strArtifactId the str artifact id
-     * @param locale the locale
-     * @param user the user
-     * @param request the request
+     * @param site
+     *            the site
+     * @param strArtifactId
+     *            the str artifact id
+     * @param locale
+     *            the locale
+     * @param user
+     *            the user
+     * @param request
+     *            the request
      * @return the int
      */
     public static int releaseComponent( Site site, String strArtifactId, Locale locale, AdminUser user, HttpServletRequest request )
@@ -570,10 +602,14 @@ public class SiteService
     /**
      * Release site.
      *
-     * @param site the site
-     * @param locale the locale
-     * @param user the user
-     * @param request the request
+     * @param site
+     *            the site
+     * @param locale
+     *            the locale
+     * @param user
+     *            the user
+     * @param request
+     *            the request
      * @return the map
      */
     public static Map<String, Integer> releaseSite( Site site, Locale locale, AdminUser user, HttpServletRequest request )
@@ -611,8 +647,10 @@ public class SiteService
     /**
      * Add or Remove a component from the project's components list.
      *
-     * @param site            The site
-     * @param strArtifactId            The component artifact id
+     * @param site
+     *            The site
+     * @param strArtifactId
+     *            The component artifact id
      */
     public static void toggleProjectComponent( Site site, String strArtifactId )
     {
@@ -646,8 +684,10 @@ public class SiteService
     /**
      * Change the next release version.
      *
-     * @param site            The site
-     * @param strArtifactId            The component artifact id
+     * @param site
+     *            The site
+     * @param strArtifactId
+     *            The component artifact id
      */
     public static void changeNextReleaseVersion( Site site, String strArtifactId )
     {
@@ -663,7 +703,8 @@ public class SiteService
     /**
      * Change the next release version.
      *
-     * @param site            The site
+     * @param site
+     *            The site
      */
     public static void changeNextReleaseVersion( Site site )
     {
@@ -690,8 +731,10 @@ public class SiteService
     /**
      * Builds the release comments.
      *
-     * @param site the site
-     * @param locale the locale
+     * @param site
+     *            the site
+     * @param locale
+     *            the locale
      */
     private static void buildReleaseComments( Site site, Locale locale )
     {
@@ -730,92 +773,88 @@ public class SiteService
         }
 
     }
-    
-    public static List<Site> getAuthorizedSites( int clusterId, AdminUser adminUser)
+
+    public static List<Site> getAuthorizedSites( int clusterId, AdminUser adminUser )
     {
 
-    	List<Site> listAuthorizedSites = new ArrayList<Site>( );
-		
-    	List<Site> listSite = SiteHome.findByCluster( clusterId );
-    	
-		// Assign site's permissions
-    	for ( Site site : listSite )
-    	{        			
-    		boolean bAutoriseViewSite = false;
+        List<Site> listAuthorizedSites = new ArrayList<Site>( );
+
+        List<Site> listSite = SiteHome.findByCluster( clusterId );
+
+        // Assign site's permissions
+        for ( Site site : listSite )
+        {
+            boolean bAutoriseViewSite = false;
 
             HashMap<String, Boolean> sitePermissions = new HashMap<String, Boolean>( );
-			
-			// Release site permission
-			if (RBACService.isAuthorized( Site.RESOURCE_TYPE, site.getResourceId(), 
-    				SiteResourceIdService.PERMISSION_RELEASE, adminUser ))
-	        {
-		        sitePermissions.put(Site.PERMISSION_RELEASE_SITE, true);
-		        bAutoriseViewSite = true;
-	        }
-			else 
-			{
-				sitePermissions.put(Site.PERMISSION_RELEASE_SITE, false);
-			}
-        
-			// Modify site permission
-	        if (RBACService.isAuthorized( Site.RESOURCE_TYPE, site.getResourceId(), 
-    				SiteResourceIdService.PERMISSION_MODIFY, adminUser ))
-	        {
-	        	sitePermissions.put(Site.PERMISSION_MODIFY_SITE, true);
-		        bAutoriseViewSite = true;
-	        }
-			else 
-			{
-				sitePermissions.put(Site.PERMISSION_MODIFY_SITE, false);
-			}
-	        	        
-	        // Delete site permission
-	        if (RBACService.isAuthorized( Site.RESOURCE_TYPE, site.getResourceId(), 
-    				SiteResourceIdService.PERMISSION_DELETE, adminUser ))
-	        {
-	        	sitePermissions.put(Site.PERMISSION_DELETE_SITE, true);
-		        bAutoriseViewSite = true;
-	        } 
-			else 
-			{
-				sitePermissions.put(Site.PERMISSION_DELETE_SITE, false);
-			}   
-	        
-	        
-	        // Set permissions
-	        if (bAutoriseViewSite)
-	        {
-    	        // Add permissions to the site
-    	        site.setPermissions( sitePermissions );
-    	        
-    	        // Add the site to list of Authorized sites
-    			listAuthorizedSites.add( site );
-	        }    			     
-    	}
-    	
-    	return listAuthorizedSites;
-    }   
 
-    public static boolean IsUserAuthorized (AdminUser adminUser, String siteId, String permission)
-    {
-    	
-    	boolean bAuthorized = false;
-    	
-    	if ( RBACService.isAuthorized( Site.RESOURCE_TYPE, siteId, permission, adminUser ) )
-        {
-    		bAuthorized = true;
-        }  
-    	
-    	return bAuthorized;
+            // Release site permission
+            if ( RBACService.isAuthorized( Site.RESOURCE_TYPE, site.getResourceId( ), SiteResourceIdService.PERMISSION_RELEASE, adminUser ) )
+            {
+                sitePermissions.put( Site.PERMISSION_RELEASE_SITE, true );
+                bAutoriseViewSite = true;
+            }
+            else
+            {
+                sitePermissions.put( Site.PERMISSION_RELEASE_SITE, false );
+            }
+
+            // Modify site permission
+            if ( RBACService.isAuthorized( Site.RESOURCE_TYPE, site.getResourceId( ), SiteResourceIdService.PERMISSION_MODIFY, adminUser ) )
+            {
+                sitePermissions.put( Site.PERMISSION_MODIFY_SITE, true );
+                bAutoriseViewSite = true;
+            }
+            else
+            {
+                sitePermissions.put( Site.PERMISSION_MODIFY_SITE, false );
+            }
+
+            // Delete site permission
+            if ( RBACService.isAuthorized( Site.RESOURCE_TYPE, site.getResourceId( ), SiteResourceIdService.PERMISSION_DELETE, adminUser ) )
+            {
+                sitePermissions.put( Site.PERMISSION_DELETE_SITE, true );
+                bAutoriseViewSite = true;
+            }
+            else
+            {
+                sitePermissions.put( Site.PERMISSION_DELETE_SITE, false );
+            }
+
+            // Set permissions
+            if ( bAutoriseViewSite )
+            {
+                // Add permissions to the site
+                site.setPermissions( sitePermissions );
+
+                // Add the site to list of Authorized sites
+                listAuthorizedSites.add( site );
+            }
+        }
+
+        return listAuthorizedSites;
     }
-    
-    public static boolean IsSiteAlreadyExist ( String siteName, String artifactId, String scmUrl )
+
+    public static boolean IsUserAuthorized( AdminUser adminUser, String siteId, String permission )
     {
-    	String clusterName = SiteHome.findDuplicateSite( siteName, artifactId, scmUrl );
-    	if (clusterName != null)
-    		return true;    	
-    	
-    	return false;
+
+        boolean bAuthorized = false;
+
+        if ( RBACService.isAuthorized( Site.RESOURCE_TYPE, siteId, permission, adminUser ) )
+        {
+            bAuthorized = true;
+        }
+
+        return bAuthorized;
+    }
+
+    public static boolean IsSiteAlreadyExist( String siteName, String artifactId, String scmUrl )
+    {
+        String clusterName = SiteHome.findDuplicateSite( siteName, artifactId, scmUrl );
+        if ( clusterName != null )
+            return true;
+
+        return false;
     }
 
 }

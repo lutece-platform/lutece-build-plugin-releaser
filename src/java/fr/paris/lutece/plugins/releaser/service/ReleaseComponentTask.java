@@ -1,3 +1,36 @@
+/*
+ * Copyright (c) 2002-2021, City of Paris
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  1. Redistributions of source code must retain the above copyright notice
+ *     and the following disclaimer.
+ *
+ *  2. Redistributions in binary form must reproduce the above copyright notice
+ *     and the following disclaimer in the documentation and/or other materials
+ *     provided with the distribution.
+ *
+ *  3. Neither the name of 'Mairie de Paris' nor 'Lutece' nor the names of its
+ *     contributors may be used to endorse or promote products derived from
+ *     this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * License 1.0
+ */
 package fr.paris.lutece.plugins.releaser.service;
 
 import java.util.Collection;
@@ -28,30 +61,35 @@ public class ReleaseComponentTask implements Runnable
 
     /** The Constant WAIT_TIME. */
     private static final long WAIT_TIME = 1000;
-    
+
     /** The n id workflow. */
     private int _nIdWorkflow;
-    
+
     /** The wf context. */
     private WorkflowReleaseContext _wfContext;
-    
+
     /** The request. */
     private HttpServletRequest _request;
-    
+
     /** The user. */
     private AdminUser _user;
-    
+
     /** The locale. */
     private Locale _locale;
 
     /**
      * Instantiates a new release component task.
      *
-     * @param nIdWf the n id wf
-     * @param context the context
-     * @param request the request
-     * @param user the user
-     * @param locale the locale
+     * @param nIdWf
+     *            the n id wf
+     * @param context
+     *            the context
+     * @param request
+     *            the request
+     * @param user
+     *            the user
+     * @param locale
+     *            the locale
      */
     public ReleaseComponentTask( int nIdWf, WorkflowReleaseContext context, HttpServletRequest request, AdminUser user, Locale locale )
     {
@@ -142,7 +180,8 @@ public class ReleaseComponentTask implements Runnable
     /**
      * Test all component released.
      *
-     * @param site the site
+     * @param site
+     *            the site
      * @return true, if successful
      */
     private boolean testAllComponentReleased( Site site )
@@ -168,7 +207,8 @@ public class ReleaseComponentTask implements Runnable
     /**
      * Checks for error during release component.
      *
-     * @param site the site
+     * @param site
+     *            the site
      * @return true, if successful
      */
     private boolean hasErrorDuringReleaseComponent( Site site )

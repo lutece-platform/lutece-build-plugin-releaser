@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2013, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,11 +60,11 @@ import fr.paris.lutece.portal.service.util.AppPropertiesService;
  */
 public class MavenService implements IMavenService
 {
-    
+
     /** The invoker. */
     // private static IMavenService _singleton;
     private Invoker _invoker;
-    
+
     /** The instance. */
     private static IMavenService _instance;
 
@@ -107,11 +107,16 @@ public class MavenService implements IMavenService
     /**
      * Mvn site assembly.
      *
-     * @param strSiteName the str site name
-     * @param strTagName the str tag name
-     * @param strMavenProfile the str maven profile
-     * @param user the user
-     * @param commandResult the command result
+     * @param strSiteName
+     *            the str site name
+     * @param strTagName
+     *            the str tag name
+     * @param strMavenProfile
+     *            the str maven profile
+     * @param user
+     *            the user
+     * @param commandResult
+     *            the command result
      */
     /*
      * (non-Javadoc)
@@ -134,9 +139,12 @@ public class MavenService implements IMavenService
     /**
      * Transforme la liste en chaine, pour passer l'argument � la ligne de commande.
      *
-     * @param strPathPom the str path pom
-     * @param goals the goals
-     * @param commandResult the command result
+     * @param strPathPom
+     *            the str path pom
+     * @param goals
+     *            the goals
+     * @param commandResult
+     *            the command result
      * @return the invocation result
      */
 
@@ -211,10 +219,14 @@ public class MavenService implements IMavenService
     /**
      * Mvn release perform.
      *
-     * @param strPathPom the str path pom
-     * @param strUsername the str username
-     * @param strPassword the str password
-     * @param commandResult the command result
+     * @param strPathPom
+     *            the str path pom
+     * @param strUsername
+     *            the str username
+     * @param strPassword
+     *            the str password
+     * @param commandResult
+     *            the command result
      * @return the string
      */
     public String mvnReleasePerform( String strPathPom, String strUsername, String strPassword, CommandResult commandResult )
@@ -233,13 +245,20 @@ public class MavenService implements IMavenService
     /**
      * mvnReleasePrepare.
      *
-     * @param strPathPom the str path pom
-     * @param strReleaseVersion            la version a release
-     * @param strTag            le nom du tag
-     * @param strDevelopmentVersion            la prochaine version de developpement (avec -SNAPSHOT)
-     * @param strUsername the str username
-     * @param strPassword the str password
-     * @param commandResult the command result
+     * @param strPathPom
+     *            the str path pom
+     * @param strReleaseVersion
+     *            la version a release
+     * @param strTag
+     *            le nom du tag
+     * @param strDevelopmentVersion
+     *            la prochaine version de developpement (avec -SNAPSHOT)
+     * @param strUsername
+     *            the str username
+     * @param strPassword
+     *            the str password
+     * @param commandResult
+     *            the command result
      * @return le thread
      */
     public String mvnReleasePrepare( String strPathPom, String strReleaseVersion, String strTag, String strDevelopmentVersion, String strUsername,

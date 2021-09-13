@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2015, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,6 @@
  *
  * License 1.0
  */
-
 package fr.paris.lutece.plugins.releaser.service.svn;
 
 import java.io.File;
@@ -82,9 +81,12 @@ public class SvnResourceService implements IVCSResourceService
     /**
      * Fetch the pom.xml content from a repository
      *
-     * @param site the site
-     * @param strLogin the str login
-     * @param strPassword the str password
+     * @param site
+     *            the site
+     * @param strLogin
+     *            the str login
+     * @param strPassword
+     *            the str password
      * @return The POM content
      */
     public String fetchPom( Site site, String strLogin, String strPassword )
@@ -112,9 +114,12 @@ public class SvnResourceService implements IVCSResourceService
     /**
      * Gets the last release found in the SVN repository.
      *
-     * @param site the site
-     * @param strLogin the str login
-     * @param strPassword the str password
+     * @param site
+     *            the site
+     * @param strLogin
+     *            the str login
+     * @param strPassword
+     *            the str password
      * @return The version if found otherwise null
      */
     public String getLastRelease( Site site, String strLogin, String strPassword )
@@ -157,8 +162,10 @@ public class SvnResourceService implements IVCSResourceService
     /**
      * Gets anchor list using more optimized method.
      *
-     * @param strHtml            The HTML code
-     * @param strPrefix the str prefix
+     * @param strHtml
+     *            The HTML code
+     * @param strPrefix
+     *            the str prefix
      * @return The list
      */
     private static List<String> getAnchorsList( String strHtml, String strPrefix )
@@ -189,8 +196,10 @@ public class SvnResourceService implements IVCSResourceService
     /**
      * Build an authenticathor to access the site repository.
      *
-     * @param strLogin the str login
-     * @param strPassword the str password
+     * @param strLogin
+     *            the str login
+     * @param strPassword
+     *            the str password
      * @return The authenticator
      */
     private static RequestAuthenticator getSiteAuthenticator( String strLogin, String strPassword )
@@ -202,9 +211,12 @@ public class SvnResourceService implements IVCSResourceService
     /**
      * Do checkout repository.
      *
-     * @param context the context
-     * @param strLogin the str login
-     * @param strPassword the str password
+     * @param context
+     *            the context
+     * @param strLogin
+     *            the str login
+     * @param strPassword
+     *            the str password
      * @return the string
      */
     @Override
@@ -272,9 +284,12 @@ public class SvnResourceService implements IVCSResourceService
     /**
      * Update develop branch.
      *
-     * @param context the context
-     * @param locale the locale
-     * @param strMessage the str message
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
+     * @param strMessage
+     *            the str message
      */
     @Override
     public void updateDevelopBranch( WorkflowReleaseContext context, Locale locale, String strMessage )
@@ -304,8 +319,10 @@ public class SvnResourceService implements IVCSResourceService
     /**
      * Update master branch.
      *
-     * @param context the context
-     * @param locale the locale
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
      */
     @Override
     public void updateMasterBranch( WorkflowReleaseContext context, Locale locale )
@@ -317,8 +334,10 @@ public class SvnResourceService implements IVCSResourceService
     /**
      * Rollback release.
      *
-     * @param context the context
-     * @param locale the locale
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
      */
     @Override
     public void rollbackRelease( WorkflowReleaseContext context, Locale locale )
@@ -364,8 +383,10 @@ public class SvnResourceService implements IVCSResourceService
     /**
      * Checkout develop branch.
      *
-     * @param context the context
-     * @param locale the locale
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
      */
     @Override
     public void checkoutDevelopBranch( WorkflowReleaseContext context, Locale locale )

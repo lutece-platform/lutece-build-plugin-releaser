@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2017, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,85 +43,85 @@ import fr.paris.lutece.portal.service.rbac.RBACResource;
 /**
  * This is the business class for the object Component.
  */
-public class Component extends AbstractReleaserResource implements RBACResource 
+public class Component extends AbstractReleaserResource implements RBACResource
 {
-	// RBAC management
+    // RBAC management
     public static final String RESOURCE_TYPE = "component";
-       
+
     // Component permissions
     public static final String PERMISSION_SEARCH_COMPONENT = "searchComponentPermission";
     private HashMap<String, Boolean> permissions;
-    
+
     /** The str artifact id. */
     // Variables declarations
     private String _strArtifactId;
-    
+
     /** The str group id. */
     private String _strGroupId;
-    
+
     /** The str type. */
     private String _strType;
-    
+
     /** The str current version. */
     private String _strCurrentVersion;
-    
+
     /** The str target version. */
     private String _strTargetVersion;
-    
+
     /** The str last available version. */
     private String _strLastAvailableVersion;
-    
+
     /** The str last available snapshot version. */
     private String _strLastAvailableSnapshotVersion;
-    
+
     /** The str next snapshot version. */
     private String _strNextSnapshotVersion;
 
     /** The str description. */
     private String _strDescription;
-    
+
     /** The b is project. */
     private boolean _bIsProject;
-    
+
     /** The str jira code. */
     private String _strJiraCode;
-    
+
     /** The str jira roadmap url. */
     private String _strJiraRoadmapUrl;
-    
+
     /** The n jira current version closed issues. */
     private int _nJiraCurrentVersionClosedIssues;
-    
+
     /** The n jira current version opened issues. */
     private int _nJiraCurrentVersionOpenedIssues;
-    
+
     /** The list target versions. */
     private List<String> _listTargetVersions;
-    
+
     /** The n target version index. */
     private int _nTargetVersionIndex;
-    
+
     /** The b downgrade. */
     private boolean _bDowngrade;
-    
+
     /** The b upgrade. */
     private boolean _bUpgrade;
-    
+
     /** The b error last release. */
     private boolean _bErrorLastRelease;
-    
+
     /** The str name. */
     private String _strName;
-    
+
     /** The str clone url. */
     private String _strCloneUrl;
-    
+
     /** The str full name. */
     private String _strFullName;
-    
+
     /** The str tweet message. */
     private String _strTweetMessage;
-    
+
     /** The str scm developer connection. */
     private String _strScmDeveloperConnection;
 
@@ -138,7 +138,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the ArtifactId.
      *
-     * @param strArtifactId            The ArtifactId
+     * @param strArtifactId
+     *            The ArtifactId
      */
     public void setArtifactId( String strArtifactId )
     {
@@ -158,7 +159,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the GroupId.
      *
-     * @param strGroupId            The GroupId
+     * @param strGroupId
+     *            The GroupId
      */
     public void setGroupId( String strGroupId )
     {
@@ -178,7 +180,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the Type.
      *
-     * @param strType            The Type
+     * @param strType
+     *            The Type
      */
     public void setType( String strType )
     {
@@ -198,7 +201,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the CurrentVersion.
      *
-     * @param strCurrentVersion            The CurrentVersion
+     * @param strCurrentVersion
+     *            The CurrentVersion
      */
     public void setCurrentVersion( String strCurrentVersion )
     {
@@ -218,7 +222,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the TargetVersion.
      *
-     * @param strTargetVersion            The TargetVersion
+     * @param strTargetVersion
+     *            The TargetVersion
      */
     public void setTargetVersion( String strTargetVersion )
     {
@@ -238,7 +243,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the IsProject.
      *
-     * @param bIsProject            The IsProject
+     * @param bIsProject
+     *            The IsProject
      */
     public void setIsProject( boolean bIsProject )
     {
@@ -258,7 +264,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the LastAvailableVersion.
      *
-     * @param strLastAvailableVersion            The LastAvailableVersion
+     * @param strLastAvailableVersion
+     *            The LastAvailableVersion
      */
     public void setLastAvailableVersion( String strLastAvailableVersion )
     {
@@ -278,7 +285,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the NextSnapshotVersion.
      *
-     * @param strNextSnapshotVersion            The NextSnapshotVersion
+     * @param strNextSnapshotVersion
+     *            The NextSnapshotVersion
      */
     public void setNextSnapshotVersion( String strNextSnapshotVersion )
     {
@@ -298,7 +306,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the JiraCode.
      *
-     * @param strJiraCode            The JiraCode
+     * @param strJiraCode
+     *            The JiraCode
      */
     public void setJiraCode( String strJiraCode )
     {
@@ -318,7 +327,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the JiraRoadmapUrl.
      *
-     * @param strJiraRoadmapUrl            The JiraRoadmapUrl
+     * @param strJiraRoadmapUrl
+     *            The JiraRoadmapUrl
      */
     public void setJiraRoadmapUrl( String strJiraRoadmapUrl )
     {
@@ -338,7 +348,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the JiraCurrentVersionClosedIssues.
      *
-     * @param nJiraCurrentVersionClosedIssues            The JiraCurrentVersionClosedIssues
+     * @param nJiraCurrentVersionClosedIssues
+     *            The JiraCurrentVersionClosedIssues
      */
     public void setJiraCurrentVersionClosedIssues( int nJiraCurrentVersionClosedIssues )
     {
@@ -358,7 +369,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the JiraCurrentVersionOpenedIssues.
      *
-     * @param nJiraCurrentVersionOpenedIssues            The JiraCurrentVersionOpenedIssues
+     * @param nJiraCurrentVersionOpenedIssues
+     *            The JiraCurrentVersionOpenedIssues
      */
     public void setJiraCurrentVersionOpenedIssues( int nJiraCurrentVersionOpenedIssues )
     {
@@ -368,7 +380,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Set target versions list.
      *
-     * @param listTargetVersions            The target versions list
+     * @param listTargetVersions
+     *            The target versions list
      */
     public void setTargetVersions( List<String> listTargetVersions )
     {
@@ -388,7 +401,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Set the target version index.
      *
-     * @param nIndex            the target version index
+     * @param nIndex
+     *            the target version index
      */
     public void setTargetVersionIndex( int nIndex )
     {
@@ -434,7 +448,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the scm developer connection.
      *
-     * @param _strScmDeveloperConnection            scm developer connection url
+     * @param _strScmDeveloperConnection
+     *            scm developer connection url
      */
     public void setScmDeveloperConnection( String _strScmDeveloperConnection )
     {
@@ -464,7 +479,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the upgrade.
      *
-     * @param _bUpgrade the new upgrade
+     * @param _bUpgrade
+     *            the new upgrade
      */
     public void setUpgrade( boolean _bUpgrade )
     {
@@ -484,7 +500,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the downgrade.
      *
-     * @param _bDowngrade the new downgrade
+     * @param _bDowngrade
+     *            the new downgrade
      */
     public void setDowngrade( boolean _bDowngrade )
     {
@@ -514,7 +531,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the last available snapshot version.
      *
-     * @param _strLastAvailableSnapshotVersion the new last available snapshot version
+     * @param _strLastAvailableSnapshotVersion
+     *            the new last available snapshot version
      */
     public void setLastAvailableSnapshotVersion( String _strLastAvailableSnapshotVersion )
     {
@@ -534,7 +552,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the error last release.
      *
-     * @param _bErrorLastRelease the new error last release
+     * @param _bErrorLastRelease
+     *            the new error last release
      */
     public void setErrorLastRelease( boolean _bErrorLastRelease )
     {
@@ -554,7 +573,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the name.
      *
-     * @param _strName the new name
+     * @param _strName
+     *            the new name
      */
     public void setName( String _strName )
     {
@@ -574,7 +594,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the clone url.
      *
-     * @param _strCloneUrl the new clone url
+     * @param _strCloneUrl
+     *            the new clone url
      */
     public void setCloneUrl( String _strCloneUrl )
     {
@@ -594,7 +615,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the full name.
      *
-     * @param strFullName the new full name
+     * @param strFullName
+     *            the new full name
      */
     public void setFullName( String strFullName )
     {
@@ -614,7 +636,8 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /**
      * Sets the tweet message.
      *
-     * @param _strTweetMessage the new tweet message
+     * @param _strTweetMessage
+     *            the new tweet message
      */
     public void setTweetMessage( String _strTweetMessage )
     {
@@ -633,22 +656,26 @@ public class Component extends AbstractReleaserResource implements RBACResource
         return getScmDeveloperConnection( );
     }
 
-	@Override
-	public String getResourceTypeCode() {
+    @Override
+    public String getResourceTypeCode( )
+    {
         return RESOURCE_TYPE;
-	}
+    }
 
-	@Override
-	public String getResourceId() {
+    @Override
+    public String getResourceId( )
+    {
         return _strArtifactId;
-	}
+    }
 
-	public HashMap<String, Boolean> getPermissions() {
-		return permissions;
-	}
+    public HashMap<String, Boolean> getPermissions( )
+    {
+        return permissions;
+    }
 
-	public void setPermissions(HashMap<String, Boolean> permissions) {
-		this.permissions = permissions;
-	}
+    public void setPermissions( HashMap<String, Boolean> permissions )
+    {
+        this.permissions = permissions;
+    }
 
 }

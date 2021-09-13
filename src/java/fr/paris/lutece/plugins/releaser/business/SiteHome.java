@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2017, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -148,25 +148,24 @@ public final class SiteHome
     {
         return _dao.selectByCluster( nClusterId, _plugin );
     }
-    
+
     /**
      * Search if the site is already exist
      * 
      * @param siteName
      *            The site name
-     *            
+     * 
      * @param artifactId
      *            The site artifacteId
-     *            
+     * 
      * @param scmUrl
      *            The site sources url
-     *            
+     * 
      * @return the the cluster name if site exists or null otherwise
      */
     public static String findDuplicateSite( String siteName, String artifactId, String scmUrl )
     {
         return _dao.searchDuplicateSite( siteName, artifactId, scmUrl, _plugin );
     }
-    
 
 }

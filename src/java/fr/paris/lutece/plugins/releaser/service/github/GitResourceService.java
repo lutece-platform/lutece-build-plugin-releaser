@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2015, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,6 @@
  *
  * License 1.0
  */
-
 package fr.paris.lutece.plugins.releaser.service.github;
 
 import java.io.File;
@@ -76,9 +75,12 @@ public class GitResourceService implements IVCSResourceService
     /**
      * Fetch the pom.xml content from a repository
      *
-     * @param site the site
-     * @param strGitLogin the str git login
-     * @param strGitPwd the str git pwd
+     * @param site
+     *            the site
+     * @param strGitLogin
+     *            the str git login
+     * @param strGitPwd
+     *            the str git pwd
      * @return The POM content
      */
     public String fetchPom( Site site, String strGitLogin, String strGitPwd )
@@ -99,9 +101,12 @@ public class GitResourceService implements IVCSResourceService
     /**
      * Gets the last release found in the SVN repository.
      *
-     * @param site the site
-     * @param strGitLogin the str git login
-     * @param strGitPwd the str git pwd
+     * @param site
+     *            the site
+     * @param strGitLogin
+     *            the str git login
+     * @param strGitPwd
+     *            the str git pwd
      * @return The version if found otherwise null
      */
     public String getLastRelease( Site site, String strGitLogin, String strGitPwd )
@@ -136,9 +141,12 @@ public class GitResourceService implements IVCSResourceService
     /**
      * Do checkout repository.
      *
-     * @param context the context
-     * @param strLogin the str login
-     * @param strPassword the str password
+     * @param context
+     *            the context
+     * @param strLogin
+     *            the str login
+     * @param strPassword
+     *            the str password
      * @return the string
      */
     @Override
@@ -230,9 +238,12 @@ public class GitResourceService implements IVCSResourceService
     /**
      * Update develop branch.
      *
-     * @param context the context
-     * @param locale the locale
-     * @param strMessage the str message
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
+     * @param strMessage
+     *            the str message
      */
     @Override
     public void updateDevelopBranch( WorkflowReleaseContext context, Locale locale, String strMessage )
@@ -300,8 +311,10 @@ public class GitResourceService implements IVCSResourceService
     /**
      * Update master branch.
      *
-     * @param context the context
-     * @param locale the locale
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
      */
     @Override
     public void updateMasterBranch( WorkflowReleaseContext context, Locale locale )
@@ -369,8 +382,10 @@ public class GitResourceService implements IVCSResourceService
     /**
      * Rollback release.
      *
-     * @param context the context
-     * @param locale the locale
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
      */
     @Override
     public void rollbackRelease( WorkflowReleaseContext context, Locale locale )
@@ -491,8 +506,10 @@ public class GitResourceService implements IVCSResourceService
     /**
      * Checkout develop branch.
      *
-     * @param context the context
-     * @param locale the locale
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
      */
     @Override
     public void checkoutDevelopBranch( WorkflowReleaseContext context, Locale locale )

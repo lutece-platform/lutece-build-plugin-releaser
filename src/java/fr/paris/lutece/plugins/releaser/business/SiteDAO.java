@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2017, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,6 @@
  *
  * License 1.0
  */
-
 package fr.paris.lutece.plugins.releaser.business;
 
 import fr.paris.lutece.portal.service.plugin.Plugin;
@@ -58,8 +57,8 @@ public final class SiteDAO implements ISiteDAO
     private static final String SQL_QUERY_SELECT_BY_CLUSTER = "SELECT a.id_site, a.name, a.description, a.artifact_id, a.id_cluster, b.name, a.scm_url, a.jira_key,a.is_theme "
             + " FROM releaser_site a , releaser_cluster b  WHERE a.id_cluster = b.id_cluster AND a.id_cluster = ?";
     private static final String SQL_QUERY_SELECTALL_ID = "SELECT id_site FROM releaser_site";
-    private static final String SQL_QUERY_SELECT_SEARCH_DUPLICATE_SITE = "SELECT b.name, a.id_site FROM releaser_site a LEFT OUTER JOIN releaser_cluster b" 
-    		+ " ON a.id_cluster = b.id_cluster WHERE a.artifact_id = ? OR a.name = ? OR a.scm_url = ?";
+    private static final String SQL_QUERY_SELECT_SEARCH_DUPLICATE_SITE = "SELECT b.name, a.id_site FROM releaser_site a LEFT OUTER JOIN releaser_cluster b"
+            + " ON a.id_cluster = b.id_cluster WHERE a.artifact_id = ? OR a.name = ? OR a.scm_url = ?";
 
     /**
      * Generates a new primary key
@@ -292,9 +291,9 @@ public final class SiteDAO implements ISiteDAO
 
         while ( daoUtil.next( ) )
         {
-        	int nIndex = 1;
-        	if ( daoUtil != null && daoUtil.getString( 1 ) != null )
-        		clusterName = daoUtil.getString( 1 );           
+            int nIndex = 1;
+            if ( daoUtil != null && daoUtil.getString( 1 ) != null )
+                clusterName = daoUtil.getString( 1 );
         }
 
         daoUtil.free( );

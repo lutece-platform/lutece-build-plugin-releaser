@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2017, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,7 @@ import org.codehaus.jackson.map.ObjectMapper;
  */
 public final class MapperJsonUtil
 {
-    
+
     /** The Constant _mapper. */
     private static final ObjectMapper _mapper;
 
@@ -56,7 +56,7 @@ public final class MapperJsonUtil
     }
 
     /**
-     *  Private constructor.
+     * Private constructor.
      */
     private MapperJsonUtil( )
     {
@@ -65,11 +65,15 @@ public final class MapperJsonUtil
     /**
      * parse the JSON for a bean.
      *
-     * @param <T>            The Bean class
-     * @param strJson            The JSON
-     * @param t            The bean class
+     * @param <T>
+     *            The Bean class
+     * @param strJson
+     *            The JSON
+     * @param t
+     *            The bean class
      * @return The bean
-     * @throws IOException             if an error occurs
+     * @throws IOException
+     *             if an error occurs
      */
     public static <T> T parse( String strJson, Class<T> t ) throws IOException
     {
@@ -79,9 +83,11 @@ public final class MapperJsonUtil
     /**
      * parse a bean into a json.
      *
-     * @param object the object
+     * @param object
+     *            the object
      * @return The json
-     * @throws IOException             if an error occurs
+     * @throws IOException
+     *             if an error occurs
      */
     public static String getJson( Object object ) throws IOException
     {

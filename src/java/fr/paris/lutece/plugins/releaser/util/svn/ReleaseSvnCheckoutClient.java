@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2013, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,15 +44,17 @@ import org.tmatesoft.svn.core.wc.SVNUpdateClient;
  */
 public class ReleaseSvnCheckoutClient extends SVNUpdateClient
 {
-    
+
     /** The b cancelled. */
     private boolean bCancelled;
 
     /**
      * Instantiates a new release svn checkout client.
      *
-     * @param authManager the auth manager
-     * @param options the options
+     * @param authManager
+     *            the auth manager
+     * @param options
+     *            the options
      */
     public ReleaseSvnCheckoutClient( ISVNAuthenticationManager authManager, ISVNOptions options )
     {
@@ -62,8 +64,10 @@ public class ReleaseSvnCheckoutClient extends SVNUpdateClient
     /**
      * Instantiates a new release svn checkout client.
      *
-     * @param pool the pool
-     * @param options the options
+     * @param pool
+     *            the pool
+     * @param options
+     *            the options
      */
     public ReleaseSvnCheckoutClient( ISVNRepositoryPool pool, ISVNOptions options )
     {

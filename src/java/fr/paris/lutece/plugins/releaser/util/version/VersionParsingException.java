@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2015, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,6 @@
  *
  * License 1.0
  */
-
 package fr.paris.lutece.plugins.releaser.util.version;
 
 // TODO: Auto-generated Javadoc
@@ -40,12 +39,14 @@ package fr.paris.lutece.plugins.releaser.util.version;
  */
 public class VersionParsingException extends Exception
 {
-    
+
     /**
      * Instantiates a new version parsing exception.
      *
-     * @param strMessage the str message
-     * @param exception the exception
+     * @param strMessage
+     *            the str message
+     * @param exception
+     *            the exception
      */
     public VersionParsingException( String strMessage, Throwable exception )
     {

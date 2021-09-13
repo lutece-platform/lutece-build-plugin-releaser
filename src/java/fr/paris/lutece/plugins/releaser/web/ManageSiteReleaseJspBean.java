@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2017, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -72,33 +72,33 @@ import org.apache.commons.lang.StringUtils;
 @Controller( controllerJsp = "ManageSiteRelease.jsp", controllerPath = "jsp/admin/plugins/releaser/", right = "RELEASER_MANAGEMENT" )
 public class ManageSiteReleaseJspBean extends MVCAdminJspBean
 {
-    
+
     /** The Constant PARAMETER_SITE_ID. */
     // Parameters
     private static final String PARAMETER_SITE_ID = "id";
-    
+
     /** The Constant PARAMETER_ARTIFACT_ID. */
     private static final String PARAMETER_ARTIFACT_ID = "id";
-    
+
     /** The Constant PARAMETER_ID_CONTEXT. */
     private static final String PARAMETER_ID_CONTEXT = "id_context";
-    
+
     /** The Constant PARAMETER_TAG_INFORMATION. */
     private static final String PARAMETER_TAG_INFORMATION = "tag_information";
-    
+
     /** The Constant PARAMETER_OPEN_SITE_VERSION. */
     private static final String PARAMETER_OPEN_SITE_VERSION = "open_site_version";
-    
+
     /** The Constant PARAMETER_TWEET_MESSAGE. */
     private static final String PARAMETER_TWEET_MESSAGE = "tweet_message_";
-    
+
     /** The Constant PARAMETER_VALID_RELEASE_MODIF. */
     private static final String PARAMETER_VALID_RELEASE_MODIF = "valid_release_modif_";
 
     /** The Constant VIEW_MANAGE_SITE_RELEASE. */
     // Views
     private static final String VIEW_MANAGE_SITE_RELEASE = "siteRelease";
-    
+
     /** The Constant VIEW_CONFIRM_RELEASE_SITE. */
     private static final String VIEW_CONFIRM_RELEASE_SITE = "confirmReleaseSite";
 
@@ -107,44 +107,44 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
 
     /** The Constant VIEW_RELEASE_INFO_JSON. */
     private static final String VIEW_RELEASE_INFO_JSON = "releaseInfoJson";
-    
+
     /** The Constant VIEW_RELEASE_COMPONENT_HISTORY. */
     private static final String VIEW_RELEASE_COMPONENT_HISTORY = "releaseComponentHistory";
 
     /** The Constant ACTION_RELEASE_SITE. */
     // Actions
     private static final String ACTION_RELEASE_SITE = "releaseSite";
-    
+
     /** The Constant ACTION_DO_CONFIRM_RELEASE_SITE. */
     private static final String ACTION_DO_CONFIRM_RELEASE_SITE = "doConfirmReleaseSite";
 
     /** The Constant ACTION_RELEASE_COMPONENT. */
     private static final String ACTION_RELEASE_COMPONENT = "releaseComponent";
-    
+
     /** The Constant ACTION_UPGRADE_COMPONENT. */
     private static final String ACTION_UPGRADE_COMPONENT = "upgradeComponent";
-    
+
     /** The Constant ACTION_DOWNGRADE_COMPONENT. */
     private static final String ACTION_DOWNGRADE_COMPONENT = "downgradeComponent";
-    
+
     /** The Constant ACTION_CANCEL_DOWNGRADE_COMPONENT. */
     private static final String ACTION_CANCEL_DOWNGRADE_COMPONENT = "cancelDowngradeComponent";
-    
+
     /** The Constant ACTION_CANCEL_UPGRADE_COMPONENT. */
     private static final String ACTION_CANCEL_UPGRADE_COMPONENT = "cancelUpgradeComponent";
 
     /** The Constant ACTION_PROJECT_COMPONENT. */
     private static final String ACTION_PROJECT_COMPONENT = "projectComponent";
-    
+
     /** The Constant ACTION_CHANGE_COMPONENT_NEXT_RELEASE_VERSION. */
     private static final String ACTION_CHANGE_COMPONENT_NEXT_RELEASE_VERSION = "versionComponent";
-    
+
     /** The Constant ACTION_CHANGE_SITE_NEXT_RELEASE_VERSION. */
     private static final String ACTION_CHANGE_SITE_NEXT_RELEASE_VERSION = "versionSite";
 
     /** The Constant TEMPLATE_PREPARE_SITE_RELEASE. */
     private static final String TEMPLATE_PREPARE_SITE_RELEASE = "/admin/plugins/releaser/prepare_site_release.html";
-    
+
     /** The Constant TEMPLATE_CONFIRM_RELEASE_SITE. */
     private static final String TEMPLATE_CONFIRM_RELEASE_SITE = "/admin/plugins/releaser/confirm_release_site.html";
 
@@ -156,13 +156,13 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
 
     /** The Constant MARK_SITE. */
     private static final String MARK_SITE = "site";
-    
+
     /** The Constant MARK_MODIF_VALIDATED. */
     private static final String MARK_MODIF_VALIDATED = "modif_validated";
 
     /** The Constant MARK_RELEASE_CTX_RESULT. */
     private static final String MARK_RELEASE_CTX_RESULT = "release_ctx_result";
-    
+
     /** The Constant MARK_OPEN_SITE_VERSION. */
     private static final String MARK_OPEN_SITE_VERSION = "open_site_version";
 
@@ -171,7 +171,7 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
 
     /** The Constant JSP_MANAGE_CLUSTERS. */
     private static final String JSP_MANAGE_CLUSTERS = "ManageClusters.jsp";
-    
+
     /** The Constant JSP_MANAGE_RELEASE_SITE. */
     private static final String JSP_MANAGE_RELEASE_SITE = "ManageSiteRelease.jsp";
 
@@ -186,19 +186,20 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
 
     /** The site. */
     private Site _site;
-    
+
     /** The map release site context. */
     private Map<String, Integer> _mapReleaseSiteContext;
-    
+
     /** The modif validated. */
     private Map<String, Boolean> _modifValidated;
 
     /**
      * Gets the prepare site release.
      *
-     * @param request the request
+     * @param request
+     *            the request
      * @return the prepare site release
-     * @throws AccessDeniedException 
+     * @throws AccessDeniedException
      */
     @View( value = VIEW_MANAGE_SITE_RELEASE, defaultView = true )
     public String getPrepareSiteRelease( HttpServletRequest request ) throws AccessDeniedException
@@ -206,10 +207,10 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         _modifValidated = null;
         String strSiteId = request.getParameter( PARAMETER_SITE_ID );
 
-        if ( !SiteService.IsUserAuthorized( AdminUserService.getAdminUser(request), strSiteId, SiteResourceIdService.PERMISSION_RELEASE ) )
+        if ( !SiteService.IsUserAuthorized( AdminUserService.getAdminUser( request ), strSiteId, SiteResourceIdService.PERMISSION_RELEASE ) )
         {
             throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
-        }        
+        }
 
         if ( ( _site == null ) || ( strSiteId != null ) )
         {
@@ -247,7 +248,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /**
      * Gets the confirm release site.
      *
-     * @param request the request
+     * @param request
+     *            the request
      * @return the confirm release site
      */
     @View( value = VIEW_CONFIRM_RELEASE_SITE )
@@ -275,17 +277,17 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         Map<String, Object> model = getModel( );
 
         if ( _site.getRepoType( ).equals( RepositoryType.GITHUB )
-                || _site.getComponents( ).stream( ).anyMatch( x -> x.shouldBeReleased( ) && RepositoryType.GITHUB.equals(x.getRepoType( )  ) ) )
+                || _site.getComponents( ).stream( ).anyMatch( x -> x.shouldBeReleased( ) && RepositoryType.GITHUB.equals( x.getRepoType( ) ) ) )
         {
             model.put( ConstanteUtils.MARK_REPO_TYPE_GITHUB, RepositoryType.GITHUB );
         }
         if ( _site.getRepoType( ).equals( RepositoryType.GITLAB )
-                || _site.getComponents( ).stream( ).anyMatch( x -> x.shouldBeReleased( ) &&RepositoryType.GITLAB .equals(x.getRepoType( ) ) ) )
+                || _site.getComponents( ).stream( ).anyMatch( x -> x.shouldBeReleased( ) && RepositoryType.GITLAB.equals( x.getRepoType( ) ) ) )
         {
             model.put( ConstanteUtils.MARK_REPO_TYPE_GITLAB, RepositoryType.GITLAB );
         }
         if ( _site.getRepoType( ).equals( RepositoryType.SVN )
-                || _site.getComponents( ).stream( ).anyMatch( x -> x.shouldBeReleased( ) && RepositoryType.SVN .equals(x.getRepoType( ) ) ) )
+                || _site.getComponents( ).stream( ).anyMatch( x -> x.shouldBeReleased( ) && RepositoryType.SVN.equals( x.getRepoType( ) ) ) )
         {
             model.put( ConstanteUtils.MARK_REPO_TYPE_SVN, RepositoryType.SVN );
         }
@@ -302,7 +304,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /**
      * Gets the release component history.
      *
-     * @param request the request
+     * @param request
+     *            the request
      * @return the release component history
      */
     @View( value = VIEW_RELEASE_COMPONENT_HISTORY )
@@ -328,7 +331,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /**
      * Gets the release info json.
      *
-     * @param request the request
+     * @param request
+     *            the request
      * @return the release info json
      */
     @View( value = VIEW_RELEASE_INFO_JSON )
@@ -366,7 +370,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /**
      * Do downgrade component.
      *
-     * @param request the request
+     * @param request
+     *            the request
      * @return the string
      */
     @Action( ACTION_DOWNGRADE_COMPONENT )
@@ -381,7 +386,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /**
      * Do cancel downgrade component.
      *
-     * @param request the request
+     * @param request
+     *            the request
      * @return the string
      */
     @Action( ACTION_CANCEL_DOWNGRADE_COMPONENT )
@@ -396,7 +402,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /**
      * Do upgrade component.
      *
-     * @param request the request
+     * @param request
+     *            the request
      * @return the string
      */
     @Action( ACTION_UPGRADE_COMPONENT )
@@ -411,7 +418,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /**
      * Do cancel upgrade component.
      *
-     * @param request the request
+     * @param request
+     *            the request
      * @return the string
      */
     @Action( ACTION_CANCEL_UPGRADE_COMPONENT )
@@ -427,7 +435,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /**
      * Do release component.
      *
-     * @param request the request
+     * @param request
+     *            the request
      * @return the string
      */
     @Action( ACTION_RELEASE_COMPONENT )
@@ -456,7 +465,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /**
      * Do confirm release site.
      *
-     * @param request the request
+     * @param request
+     *            the request
      * @return the string
      */
     @Action( ACTION_DO_CONFIRM_RELEASE_SITE )
@@ -512,7 +522,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /**
      * Do release site.
      *
-     * @param request the request
+     * @param request
+     *            the request
      * @return the string
      */
     @Action( ACTION_RELEASE_SITE )
@@ -532,7 +543,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /**
      * Gets the release site result.
      *
-     * @param request the request
+     * @param request
+     *            the request
      * @return the release site result
      */
     @View( value = VIEW_RELEASE_SITE_RESULT )
@@ -555,7 +567,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /**
      * Do project component.
      *
-     * @param request the request
+     * @param request
+     *            the request
      * @return the string
      */
     @Action( ACTION_PROJECT_COMPONENT )
@@ -570,7 +583,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /**
      * Do change component next release version.
      *
-     * @param request the request
+     * @param request
+     *            the request
      * @return the string
      */
     @Action( ACTION_CHANGE_COMPONENT_NEXT_RELEASE_VERSION )
@@ -585,7 +599,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /**
      * Do change site next release version.
      *
-     * @param request the request
+     * @param request
+     *            the request
      * @return the string
      */
     @Action( ACTION_CHANGE_SITE_NEXT_RELEASE_VERSION )

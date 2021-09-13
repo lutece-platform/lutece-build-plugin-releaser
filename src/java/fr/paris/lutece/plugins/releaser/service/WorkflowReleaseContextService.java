@@ -1,3 +1,36 @@
+/*
+ * Copyright (c) 2002-2021, City of Paris
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  1. Redistributions of source code must retain the above copyright notice
+ *     and the following disclaimer.
+ *
+ *  2. Redistributions in binary form must reproduce the above copyright notice
+ *     and the following disclaimer in the documentation and/or other materials
+ *     provided with the distribution.
+ *
+ *  3. Neither the name of 'Mairie de Paris' nor 'Lutece' nor the names of its
+ *     contributors may be used to endorse or promote products derived from
+ *     this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * License 1.0
+ */
 package fr.paris.lutece.plugins.releaser.service;
 
 import java.io.IOException;
@@ -52,20 +85,21 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
     /** The singleton. */
     private static IWorkflowReleaseContextService _singleton;
-    
+
     /** The map workflow release context. */
     private HashMap<Integer, WorkflowReleaseContext> _mapWorkflowReleaseContext = new HashMap<Integer, WorkflowReleaseContext>( );
-    
+
     /** The executor. */
     private ExecutorService _executor;
-    
+
     /** The release in progress. */
     private HashSet<String> _releaseInProgress = new HashSet<String>( );
 
     /**
      * Adds the workflow release context.
      *
-     * @param context the context
+     * @param context
+     *            the context
      * @return the int
      */
     /*
@@ -77,33 +111,33 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     @Override
     public synchronized int addWorkflowReleaseContext( WorkflowReleaseContext context )
     {
-       
-    	
-    	try
+
+        try
         {
             String strJsonContext = MapperJsonUtil.getJson( context );
-            //clean PWD in log before save in history
-            String strJsonContextClean= ReleaserUtils.cleanPWDInLog(strJsonContext);
-         
-            WorkflowContextHistory wfHistory=new WorkflowContextHistory();
-            wfHistory.setArtifactId(context.getComponent( )!=null?context.getComponent( ).getArtifactId( ) : context.getSite( ).getArtifactId( ));
-   	 		wfHistory.setData(strJsonContextClean);
-   	 		WorkflowContextHistoryHome.create(wfHistory);
-   	 		context.setId( wfHistory.getId() );
-   	 		_mapWorkflowReleaseContext.put( context.getId(), context );
+            // clean PWD in log before save in history
+            String strJsonContextClean = ReleaserUtils.cleanPWDInLog( strJsonContext );
+
+            WorkflowContextHistory wfHistory = new WorkflowContextHistory( );
+            wfHistory.setArtifactId( context.getComponent( ) != null ? context.getComponent( ).getArtifactId( ) : context.getSite( ).getArtifactId( ) );
+            wfHistory.setData( strJsonContextClean );
+            WorkflowContextHistoryHome.create( wfHistory );
+            context.setId( wfHistory.getId( ) );
+            _mapWorkflowReleaseContext.put( context.getId( ), context );
         }
-   	 	catch( IOException e )
+        catch( IOException e )
         {
             AppLogService.error( "error during add workkflow context context json", e );
         }
 
-        return context.getId();
+        return context.getId( );
     }
 
     /**
      * Gets the workflow release context.
      *
-     * @param nIdContext the n id context
+     * @param nIdContext
+     *            the n id context
      * @return the workflow release context
      */
     /*
@@ -120,43 +154,41 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     /**
      * Save workflow release context.
      *
-     * @param context the context
+     * @param context
+     *            the context
      */
     public synchronized void saveWorkflowReleaseContext( WorkflowReleaseContext context )
     {
         try
         {
             String strJsonContext = MapperJsonUtil.getJson( context );
-            //clean PWD in log before save in history
-            String strJsonContextClean= ReleaserUtils.cleanPWDInLog(strJsonContext);
-            
-            WorkflowContextHistory wfHistory = WorkflowContextHistoryHome.findByPrimaryKey(context.getId());
-            
-            if(wfHistory!=null)
+            // clean PWD in log before save in history
+            String strJsonContextClean = ReleaserUtils.cleanPWDInLog( strJsonContext );
+
+            WorkflowContextHistory wfHistory = WorkflowContextHistoryHome.findByPrimaryKey( context.getId( ) );
+
+            if ( wfHistory != null )
             {
-            	if(context.getCommandResult()!=null && context.getCommandResult().getDateBegin()!=null)
-            	{
-            		wfHistory.setDateBegin(new Timestamp(context.getCommandResult().getDateBegin().getTime())  );
-            	}
-            	if(context.getCommandResult()!=null && context.getCommandResult().getDateEnd()!=null)
-            	{
-            		wfHistory.setDateEnd(new Timestamp(context.getCommandResult().getDateEnd().getTime())  );
-            	}
-            	wfHistory.setData(strJsonContextClean);
-            	WorkflowContextHistoryHome.update(wfHistory);
+                if ( context.getCommandResult( ) != null && context.getCommandResult( ).getDateBegin( ) != null )
+                {
+                    wfHistory.setDateBegin( new Timestamp( context.getCommandResult( ).getDateBegin( ).getTime( ) ) );
+                }
+                if ( context.getCommandResult( ) != null && context.getCommandResult( ).getDateEnd( ) != null )
+                {
+                    wfHistory.setDateEnd( new Timestamp( context.getCommandResult( ).getDateEnd( ).getTime( ) ) );
+                }
+                wfHistory.setData( strJsonContextClean );
+                WorkflowContextHistoryHome.update( wfHistory );
             }
             else
             {
-            	 wfHistory=new WorkflowContextHistory();
-            	
-            	 wfHistory.setArtifactId(context.getComponent( )!=null?context.getComponent( ).getArtifactId( ) : context.getSite( ).getArtifactId( ));
-            	 wfHistory.setData(strJsonContextClean);
-            	 WorkflowContextHistoryHome.create(wfHistory);
-            	 context.setId(wfHistory.getId());
-            }
-            
-            
+                wfHistory = new WorkflowContextHistory( );
 
+                wfHistory.setArtifactId( context.getComponent( ) != null ? context.getComponent( ).getArtifactId( ) : context.getSite( ).getArtifactId( ) );
+                wfHistory.setData( strJsonContextClean );
+                WorkflowContextHistoryHome.create( wfHistory );
+                context.setId( wfHistory.getId( ) );
+            }
 
         }
         catch( IOException e )
@@ -168,7 +200,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     /**
      * Gets the workflow release context history.
      *
-     * @param nIdContext the n id context
+     * @param nIdContext
+     *            the n id context
      * @return the workflow release context history
      */
     public WorkflowReleaseContext getWorkflowReleaseContextHistory( int nIdContext )
@@ -177,8 +210,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         try
         {
 
-            WorkflowContextHistory wfHistory = WorkflowContextHistoryHome.findByPrimaryKey(nIdContext);
-            context = MapperJsonUtil.parse( wfHistory.getData(), WorkflowReleaseContext.class );
+            WorkflowContextHistory wfHistory = WorkflowContextHistoryHome.findByPrimaryKey( nIdContext );
+            context = MapperJsonUtil.parse( wfHistory.getData( ), WorkflowReleaseContext.class );
 
         }
         catch( IOException e )
@@ -192,7 +225,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     /**
      * Gets the list workflow release context history.
      *
-     * @param strArtifactId the str artifact id
+     * @param strArtifactId
+     *            the str artifact id
      * @return the list workflow release context history
      */
     public List<WorkflowReleaseContext> getListWorkflowReleaseContextHistory( String strArtifactId )
@@ -203,25 +237,24 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         try
         {
 
-        	List<WorkflowContextHistory> listWfContextHistory=WorkflowContextHistoryHome.getWorkflowDeployContextsListByArtifactId(strArtifactId);
+            List<WorkflowContextHistory> listWfContextHistory = WorkflowContextHistoryHome.getWorkflowDeployContextsListByArtifactId( strArtifactId );
             if ( !CollectionUtils.isEmpty( listWfContextHistory ) )
             {
-            	
-            	
-            	for(WorkflowContextHistory wfHistory:listWfContextHistory)
-            	{
-                        context = MapperJsonUtil.parse( wfHistory.getData(), WorkflowReleaseContext.class );
-                        if ( context != null )
-                        {
-                            listContext.add( context );
-                        }
+
+                for ( WorkflowContextHistory wfHistory : listWfContextHistory )
+                {
+                    context = MapperJsonUtil.parse( wfHistory.getData( ), WorkflowReleaseContext.class );
+                    if ( context != null )
+                    {
+                        listContext.add( context );
                     }
-                
+                }
+
             }
         }
         catch( IOException e )
         {
-            AppLogService.error( "error for parsing json workflow context" , e );
+            AppLogService.error( "error for parsing json workflow context", e );
         }
         return listContext;
 
@@ -230,7 +263,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     /**
      * Gets the id workflow.
      *
-     * @param context the context
+     * @param context
+     *            the context
      * @return the id workflow
      */
     public int getIdWorkflow( WorkflowReleaseContext context )
@@ -271,8 +305,10 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     /**
      * Merge develop master.
      *
-     * @param context the context
-     * @param locale the locale
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
      */
     public void mergeDevelopMaster( WorkflowReleaseContext context, Locale locale )
     {
@@ -325,7 +361,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                         commandResult.getLog( ).append( mergeResult.getMergeStatus( ) );
                     }
                     ReleaserUtils.logEndAction( context, " Merge DEVELOP/MASTER" );
-                    //BACK to Branch DEVELOP after merge
+                    // BACK to Branch DEVELOP after merge
                     GitUtils.checkoutRepoBranch( git, GitUtils.DEVELOP_BRANCH, commandResult );
                     // PROGRESS 25%
                     commandResult.setProgressValue( commandResult.getProgressValue( ) + 10 );
@@ -375,8 +411,10 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     /**
      * Release prepare component.
      *
-     * @param context the context
-     * @param locale the locale
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
      */
     public void releasePrepareComponent( WorkflowReleaseContext context, Locale locale )
     {
@@ -522,8 +560,10 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     /**
      * Release perform component.
      *
-     * @param context the context
-     * @param locale the locale
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
      */
     public void releasePerformComponent( WorkflowReleaseContext context, Locale locale )
     {
@@ -557,8 +597,10 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     /**
      * Checkout repository.
      *
-     * @param context the context
-     * @param locale the locale
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
      */
     public void checkoutRepository( WorkflowReleaseContext context, Locale locale )
     {
@@ -578,8 +620,10 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     /**
      * Release prepare site.
      *
-     * @param context the context
-     * @param locale the locale
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
      */
     public void releasePrepareSite( WorkflowReleaseContext context, Locale locale )
     {
@@ -650,8 +694,10 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     /**
      * Send tweet.
      *
-     * @param context the context
-     * @param locale the locale
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
      */
     public void sendTweet( WorkflowReleaseContext context, Locale locale )
     {
@@ -669,8 +715,10 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     /**
      * Update jira versions.
      *
-     * @param context the context
-     * @param locale the locale
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
      */
     public void updateJiraVersions( WorkflowReleaseContext context, Locale locale )
     {
@@ -688,11 +736,16 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     /**
      * Start workflow release context.
      *
-     * @param context the context
-     * @param nIdWorkflow the n id workflow
-     * @param locale the locale
-     * @param request the request
-     * @param user the user
+     * @param context
+     *            the context
+     * @param nIdWorkflow
+     *            the n id workflow
+     * @param locale
+     *            the locale
+     * @param request
+     *            the request
+     * @param user
+     *            the user
      */
     public void startWorkflowReleaseContext( WorkflowReleaseContext context, int nIdWorkflow, Locale locale, HttpServletRequest request, AdminUser user )
     {
@@ -712,7 +765,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     /**
      * Start release in progress.
      *
-     * @param strArtifactId the str artifact id
+     * @param strArtifactId
+     *            the str artifact id
      */
     public void startReleaseInProgress( String strArtifactId )
     {
@@ -723,7 +777,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     /**
      * Stop release in progress.
      *
-     * @param strArtifactId the str artifact id
+     * @param strArtifactId
+     *            the str artifact id
      */
     public void stopReleaseInProgress( String strArtifactId )
     {
@@ -734,7 +789,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     /**
      * Checks if is release in progress.
      *
-     * @param strArtifactId the str artifact id
+     * @param strArtifactId
+     *            the str artifact id
      * @return true, if is release in progress
      */
     public boolean isReleaseInProgress( String strArtifactId )
@@ -746,8 +802,10 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     /**
      * Release perform site.
      *
-     * @param context the context
-     * @param locale the locale
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
      */
     @Override
     public void releasePerformSite( WorkflowReleaseContext context, Locale locale )
@@ -784,6 +842,5 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             commandResult.getLog( ).append( "No release Perform for Site" );
         }
     }
-
 
 }

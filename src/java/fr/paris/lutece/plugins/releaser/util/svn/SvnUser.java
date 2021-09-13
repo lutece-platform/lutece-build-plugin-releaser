@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2013, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,22 +42,22 @@ import java.util.Map;
  */
 public class SvnUser
 {
-    
+
     /** The Constant MARK_CURRENT_THREAD. */
     public static final String MARK_CURRENT_THREAD = "current_thread";
-    
+
     /** The Constant MARK_AUTHENTIFICATION_MANAGER. */
     public static final String MARK_AUTHENTIFICATION_MANAGER = "authentification_manager";
-    
+
     /** The Constant MARK_OUR_CLIENT_MANAGER. */
     public static final String MARK_OUR_CLIENT_MANAGER = "our_client_manager";
-    
+
     /** The str login. */
     private String _strLogin;
-    
+
     /** The str paswword. */
     private String _strPaswword;
-    
+
     /** The m user context. */
     private Map<String, Object> _mUserContext;
 
@@ -72,7 +72,8 @@ public class SvnUser
     /**
      * Sets the login.
      *
-     * @param strLogin the new login
+     * @param strLogin
+     *            the new login
      */
     public void setLogin( String strLogin )
     {
@@ -92,7 +93,8 @@ public class SvnUser
     /**
      * Sets the password.
      *
-     * @param strPaswword the new password
+     * @param strPaswword
+     *            the new password
      */
     public void setPassword( String strPaswword )
     {
@@ -112,7 +114,8 @@ public class SvnUser
     /**
      * Sets the user context.
      *
-     * @param _mUserContex the m user contex
+     * @param _mUserContex
+     *            the m user contex
      */
     public void setUserContext( Map<String, Object> _mUserContex )
     {

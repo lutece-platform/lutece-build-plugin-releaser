@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2013, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,15 +43,17 @@ import org.tmatesoft.svn.core.wc.SVNCopyClient;
  */
 public class ReleaseSvnCopyClient extends SVNCopyClient
 {
-    
+
     /** The b cancelled. */
     private boolean bCancelled;
 
     /**
      * Instantiates a new release svn copy client.
      *
-     * @param authManager the auth manager
-     * @param options the options
+     * @param authManager
+     *            the auth manager
+     * @param options
+     *            the options
      */
     public ReleaseSvnCopyClient( ISVNAuthenticationManager authManager, ISVNOptions options )
     {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2013, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,40 +44,40 @@ import java.util.Map;
  */
 public class CommandResult implements Cloneable, Serializable
 {
-    
+
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 1L;
 
     /** The status error. */
     public static int STATUS_ERROR = 0;
-    
+
     /** The status ok. */
     public static int STATUS_OK = 1;
-    
+
     /** The error type info. */
     public static int ERROR_TYPE_INFO = 0;
-    
+
     /** The error type stop. */
     public static int ERROR_TYPE_STOP = 1;
 
     /** The str log. */
     private StringBuffer _strLog;
-    
+
     /** The n status. */
     private int _nStatus;
-    
+
     /** The n error type. */
     private int _nErrorType;
-    
+
     /** The b running. */
     private boolean _bRunning;
-    
+
     /** The d begin. */
     private Date _dBegin;
-    
+
     /** The d end. */
     private Date _dEnd;
-    
+
     /** The progress value. */
     private int progressValue;
 
@@ -100,7 +100,8 @@ public class CommandResult implements Cloneable, Serializable
     /**
      * "Setter method" pour la variable {@link #_strLog}.
      *
-     * @param strLog            La nouvelle valeur de la variable {@link #_strLog}
+     * @param strLog
+     *            La nouvelle valeur de la variable {@link #_strLog}
      */
     public void setLog( StringBuffer strLog )
     {
@@ -120,7 +121,8 @@ public class CommandResult implements Cloneable, Serializable
     /**
      * "Setter method" pour la variable {@link #_nStatus}.
      *
-     * @param nStatus            La nouvelle valeur de la variable {@link #_nStatus}
+     * @param nStatus
+     *            La nouvelle valeur de la variable {@link #_nStatus}
      */
     public void setStatus( int nStatus )
     {
@@ -140,7 +142,8 @@ public class CommandResult implements Cloneable, Serializable
     /**
      * "Setter method" pour la variable {@link #_bRunning}.
      *
-     * @param bRunning            La nouvelle valeur de la variable {@link #_bRunning}
+     * @param bRunning
+     *            La nouvelle valeur de la variable {@link #_bRunning}
      */
     public void setRunning( boolean bRunning )
     {
@@ -176,7 +179,8 @@ public class CommandResult implements Cloneable, Serializable
     /**
      * "Setter method" pour la variable {@link #_strError}.
      *
-     * @param strIdError            strIdError
+     * @param strIdError
+     *            strIdError
      */
     public void setError( String strIdError )
     {
@@ -196,7 +200,8 @@ public class CommandResult implements Cloneable, Serializable
     /**
      * Sets the result informations.
      *
-     * @param _mResultInformations            result informations
+     * @param _mResultInformations
+     *            result informations
      */
     public void setResultInformations( Map<String, String> _mResultInformations )
     {
@@ -216,7 +221,8 @@ public class CommandResult implements Cloneable, Serializable
     /**
      * Sets the error type.
      *
-     * @param _nErrorType            error type
+     * @param _nErrorType
+     *            error type
      */
     public void setErrorType( int _nErrorType )
     {
@@ -236,7 +242,8 @@ public class CommandResult implements Cloneable, Serializable
     /**
      * Sets the date begin.
      *
-     * @param _dBegin            date begin
+     * @param _dBegin
+     *            date begin
      */
     public void setDateBegin( Date _dBegin )
     {
@@ -256,7 +263,8 @@ public class CommandResult implements Cloneable, Serializable
     /**
      * Sets the date end.
      *
-     * @param _dEnd            date end
+     * @param _dEnd
+     *            date end
      */
     public void setDateEnd( Date _dEnd )
     {
@@ -276,7 +284,8 @@ public class CommandResult implements Cloneable, Serializable
     /**
      * Sets the progress value.
      *
-     * @param progressValue            progress value
+     * @param progressValue
+     *            progress value
      */
     public void setProgressValue( int progressValue )
     {

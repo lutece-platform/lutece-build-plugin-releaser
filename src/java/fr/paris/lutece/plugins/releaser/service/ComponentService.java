@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2017, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,6 @@
  *
  * License 1.0
  */
-
 package fr.paris.lutece.plugins.releaser.service;
 
 import java.io.FileInputStream;
@@ -372,7 +371,7 @@ public class ComponentService implements IComponentService
             AppLogService.error( e );
         }
         ComponentService.getService( ).updateRemoteInformations( component );
-        component.setTargetVersions( Version.getNextReleaseVersions( component.getLastAvailableVersion() ) );
+        component.setTargetVersions( Version.getNextReleaseVersions( component.getLastAvailableVersion( ) ) );
         component.setTargetVersion( Version.getReleaseVersion( component.getCurrentVersion( ) ) );
 
         String strNextSnapshotVersion = null;
@@ -445,16 +444,16 @@ public class ComponentService implements IComponentService
             component.setNextSnapshotVersion( Version.getNextSnapshotVersion( strTargetVersion ) );
         }
     }
-    
-    public static boolean IsSearchComponentAuthorized (AdminUser adminUser)
+
+    public static boolean IsSearchComponentAuthorized( AdminUser adminUser )
     {
-    	
-        if ( RBACService.isAuthorized( new Component(), ComponentResourceIdService.PERMISSION_SEARCH, adminUser ) )
+
+        if ( RBACService.isAuthorized( new Component( ), ComponentResourceIdService.PERMISSION_SEARCH, adminUser ) )
         {
-        	return true;
-        }	        
-    	
-    	return false;
+            return true;
+        }
+
+        return false;
     }
 
 }

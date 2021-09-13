@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2013, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,17 +42,15 @@ import java.util.List;
  */
 public enum MavenGoals
 {
-    
+
     /** The lutece site assembly. */
-    LUTECE_SITE_ASSEMBLY( "clean", "lutece:site-assembly" ), 
- /** The package. */
- PACKAGE( "clean", "package" ), 
- /** The release prepare. */
- RELEASE_PREPARE( "release:prepare",
-            "-DignoreSnapshots=true -DforkMode=never -Darguments=\"-Dmaven.test.skip=true\" --batch-mode" ), 
- /** The release perform. */
- RELEASE_PERFORM( "release:perform",
-                    "-Dgoals=deploy -DforkMode=never -Darguments=\"-Dmaven.test.skip=true\" --batch-mode" );
+    LUTECE_SITE_ASSEMBLY( "clean", "lutece:site-assembly" ),
+    /** The package. */
+    PACKAGE( "clean", "package" ),
+    /** The release prepare. */
+    RELEASE_PREPARE( "release:prepare", "-DignoreSnapshots=true -DforkMode=never -Darguments=\"-Dmaven.test.skip=true\" --batch-mode" ),
+    /** The release perform. */
+    RELEASE_PERFORM( "release:perform", "-Dgoals=deploy -DforkMode=never -Darguments=\"-Dmaven.test.skip=true\" --batch-mode" );
 
     /** The goals. */
     private List<String> _goals;
@@ -60,7 +58,8 @@ public enum MavenGoals
     /**
      * Instantiates a new maven goals.
      *
-     * @param goals the goals
+     * @param goals
+     *            the goals
      */
     MavenGoals( String... goals )
     {

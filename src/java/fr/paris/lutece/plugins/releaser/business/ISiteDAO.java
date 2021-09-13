@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2017, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,6 @@
  *
  * License 1.0
  */
-
 package fr.paris.lutece.plugins.releaser.business;
 
 import fr.paris.lutece.portal.service.plugin.Plugin;
@@ -124,22 +123,22 @@ public interface ISiteDAO
      * @return the list which contains the data of all the site objects
      */
     List<Site> selectByCluster( int nClusterId, Plugin plugin );
-    
+
     /**
      * Find if site is already exist
      * 
      * @param siteName
-     *            The site Name 
-     *            
+     *            The site Name
+     * 
      * @param artifactId
      *            The artifactId of the site
-     *             
+     * 
      * @param scmurl
      *            The site's scm url
-     *            
+     * 
      * @param plugin
      *            The plugin
-     *            
+     * 
      * @return the cluster name which contains the existing site
      */
     String searchDuplicateSite( String siteName, String artifactId, String scmUrl, Plugin plugin );

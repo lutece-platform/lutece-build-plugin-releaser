@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2017, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,42 +46,42 @@ import java.util.List;
  */
 public class Version implements Comparable
 {
-    
+
     /** The Constant NOT_AVAILABLE. */
     public static final String NOT_AVAILABLE = "Not available";
-    
+
     /** The Constant QUALIFIER_SNAPSHOT. */
     private static final String QUALIFIER_SNAPSHOT = "SNAPSHOT";
-    
+
     /** The Constant QUALIFIER_CANDIDATE. */
     private static final String QUALIFIER_CANDIDATE = "RC";
-    
+
     /** The Constant PATTERN_NUMBER. */
     private static final String PATTERN_NUMBER = "\\d+";
-    
+
     /** The Constant QUALIFIER_VERSION_FORMAT. */
     private static final String QUALIFIER_VERSION_FORMAT = "%02d";
 
     /** The n major. */
     private int _nMajor;
-    
+
     /** The n minor. */
     private int _nMinor;
-    
+
     /** The n patch. */
     private int _nPatch;
-    
+
     /** The str qualifier. */
     private String _strQualifier;
-    
+
     /** The str qualifier radix. */
     private String _strQualifierRadix;
-    
+
     /** The n qualifier number. */
     private int _nQualifierNumber;
 
     /**
-     *  Constructor.
+     * Constructor.
      */
     public Version( )
     {
@@ -90,10 +90,14 @@ public class Version implements Comparable
     /**
      * Constructor.
      *
-     * @param nMajor            major digit
-     * @param nMinor            minor digit
-     * @param nPatch            patch digit
-     * @param strQualifier            qualifier
+     * @param nMajor
+     *            major digit
+     * @param nMinor
+     *            minor digit
+     * @param nPatch
+     *            patch digit
+     * @param strQualifier
+     *            qualifier
      */
     public Version( int nMajor, int nMinor, int nPatch, String strQualifier )
     {
@@ -116,7 +120,8 @@ public class Version implements Comparable
     /**
      * Sets the major.
      *
-     * @param nMajor            the nMajor to set
+     * @param nMajor
+     *            the nMajor to set
      */
     public void setMajor( int nMajor )
     {
@@ -136,7 +141,8 @@ public class Version implements Comparable
     /**
      * Sets the minor.
      *
-     * @param nMinor            the nMinor to set
+     * @param nMinor
+     *            the nMinor to set
      */
     public void setMinor( int nMinor )
     {
@@ -156,7 +162,8 @@ public class Version implements Comparable
     /**
      * Sets the patch.
      *
-     * @param nPatch            the nPatch to set
+     * @param nPatch
+     *            the nPatch to set
      */
     public void setPatch( int nPatch )
     {
@@ -176,7 +183,8 @@ public class Version implements Comparable
     /**
      * Sets the qualifier.
      *
-     * @param strQualifier            the Qualifier to set
+     * @param strQualifier
+     *            the Qualifier to set
      */
     public void setQualifier( String strQualifier )
     {
@@ -194,7 +202,8 @@ public class Version implements Comparable
     /**
      * Compare to.
      *
-     * @param object the object
+     * @param object
+     *            the object
      * @return the int
      */
     @Override
@@ -252,9 +261,11 @@ public class Version implements Comparable
     /**
      * Parse a string to extract version.
      *
-     * @param strSource            The source
+     * @param strSource
+     *            The source
      * @return The version object
-     * @throws VersionParsingException             if parsing failed
+     * @throws VersionParsingException
+     *             if parsing failed
      */
     public static Version parse( String strSource ) throws VersionParsingException
     {
@@ -316,7 +327,8 @@ public class Version implements Comparable
     /**
      * Build a new version object with major digit incremented.
      *
-     * @param bSnapshot            if snapshot qualifier needed
+     * @param bSnapshot
+     *            if snapshot qualifier needed
      * @return The next version object
      */
     public Version nextMajor( boolean bSnapshot )
@@ -329,7 +341,8 @@ public class Version implements Comparable
     /**
      * Build a new version object with minor digit incremented.
      *
-     * @param bSnapshot            if snapshot qualifier needed
+     * @param bSnapshot
+     *            if snapshot qualifier needed
      * @return The next version object
      */
     public Version nextMinor( boolean bSnapshot )
@@ -342,7 +355,8 @@ public class Version implements Comparable
     /**
      * Build a new version object with patch digit incremented.
      *
-     * @param bSnapshot            if snapshot qualifier needed
+     * @param bSnapshot
+     *            if snapshot qualifier needed
      * @return The next version object
      */
     public Version nextPatch( boolean bSnapshot )
@@ -410,7 +424,8 @@ public class Version implements Comparable
     /**
      * Check if a given version is a SNAPSHOT.
      *
-     * @param strVersion            The version to check
+     * @param strVersion
+     *            The version to check
      * @return True if snapshot otherwise false
      */
     public static boolean isSnapshot( String strVersion )
@@ -430,7 +445,8 @@ public class Version implements Comparable
     /**
      * Check if a given version is a RELEASE CANDIDATE.
      *
-     * @param strVersion            The version to check
+     * @param strVersion
+     *            The version to check
      * @return True if candidate otherwise false
      */
     public static boolean isCandidate( String strVersion )
@@ -450,7 +466,8 @@ public class Version implements Comparable
     /**
      * Get a list of next versions for a given version.
      *
-     * @param strPreviousReleaseVersion            The current version
+     * @param strPreviousReleaseVersion
+     *            The current version
      * @return The list
      */
     public static List<String> getNextReleaseVersions( String strPreviousReleaseVersion )
@@ -474,7 +491,8 @@ public class Version implements Comparable
     /**
      * Get the next snapshot version for a given version.
      *
-     * @param strVersion            The current version
+     * @param strVersion
+     *            The current version
      * @return The version
      */
     public static String getNextSnapshotVersion( String strVersion )
@@ -503,7 +521,8 @@ public class Version implements Comparable
     /**
      * Get the next release version for a given version.
      *
-     * @param strVersion            The current version
+     * @param strVersion
+     *            The current version
      * @return The version
      */
     public static String getReleaseVersion( String strVersion )

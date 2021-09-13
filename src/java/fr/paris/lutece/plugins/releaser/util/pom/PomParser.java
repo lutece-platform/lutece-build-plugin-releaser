@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2015, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -78,8 +78,10 @@ public class PomParser
     /**
      * Parses the.
      *
-     * @param site the site
-     * @param strPOM the str POM
+     * @param site
+     *            the site
+     * @param strPOM
+     *            the str POM
      */
     public void parse( Site site, String strPOM )
     {
@@ -110,8 +112,10 @@ public class PomParser
     /**
      * Parses the.
      *
-     * @param component the component
-     * @param strPOM the str POM
+     * @param component
+     *            the component
+     * @param strPOM
+     *            the str POM
      */
     public void parse( Component component, String strPOM )
     {
@@ -140,8 +144,10 @@ public class PomParser
     /**
      * Parses the.
      *
-     * @param component the component
-     * @param inputStream the input stream
+     * @param component
+     *            the component
+     * @param inputStream
+     *            the input stream
      */
     public void parse( Component component, InputStream inputStream )
     {
@@ -181,8 +187,10 @@ public class PomParser
     /**
      * Filled site.
      *
-     * @param site the site
-     * @param model the model
+     * @param site
+     *            the site
+     * @param model
+     *            the model
      */
     private void filledSite( Site site, Model model )
     {
@@ -194,8 +202,10 @@ public class PomParser
     /**
      * Filled dependency.
      *
-     * @param site the site
-     * @param jaxDependency the jax dependency
+     * @param site
+     *            the site
+     * @param jaxDependency
+     *            the jax dependency
      */
     private void filledDependency( Site site, fr.paris.lutece.plugins.releaser.business.jaxb.maven.Dependency jaxDependency )
     {
@@ -211,11 +221,15 @@ public class PomParser
     /**
      * Unmarshal.
      *
-     * @param <T> the generic type
-     * @param docClass the doc class
-     * @param inputSource the input source
+     * @param <T>
+     *            the generic type
+     * @param docClass
+     *            the doc class
+     * @param inputSource
+     *            the input source
      * @return the t
-     * @throws JAXBException the JAXB exception
+     * @throws JAXBException
+     *             the JAXB exception
      */
     public static <T> T unmarshal( Class<T> docClass, InputSource inputSource ) throws JAXBException
     {

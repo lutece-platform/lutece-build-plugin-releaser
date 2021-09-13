@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2017, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,15 +51,15 @@ import java.util.List;
  */
 public class Site extends AbstractReleaserResource implements RBACResource, Serializable
 {
-	
-	// RBAC management
+
+    // RBAC management
     public static final String RESOURCE_TYPE = "site";
 
-	// site Permissions
+    // site Permissions
     public static final String PERMISSION_RELEASE_SITE = "releaseSitePermission";
     public static final String PERMISSION_MODIFY_SITE = "modifySitePermission";
     public static final String PERMISSION_DELETE_SITE = "deleteSitePermission";
-    
+
     private HashMap<String, Boolean> permissions;
 
     /** The Constant serialVersionUID. */
@@ -76,7 +76,7 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
 
     /** The n id cluster. */
     private int _nIdCluster;
-    
+
     /** The str scm url. */
     @URL( message = "#i18n{portal.validation.message.url}" )
     @NotEmpty( message = "#i18n{releaser.validation.site.ScmUrl.notEmpty}" )
@@ -105,31 +105,31 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
 
     /** The list current dependencies. */
     private List<Dependency> _listCurrentDependencies = new ArrayList<>( );
-    
+
     /** The list components. */
     private List<Component> _listComponents = new ArrayList<>( );
 
     /** The str current version. */
     private String _strCurrentVersion;
-    
+
     /** The str last release version. */
     private String _strLastReleaseVersion;
-    
+
     /** The str next release version. */
     private String _strNextReleaseVersion;
-    
+
     /** The list target versions. */
     private List<String> _listTargetVersions;
-    
+
     /** The n target version index. */
     private int _nTargetVersionIndex;
-    
+
     /** The str next snapshot version. */
     private String _strNextSnapshotVersion;
-    
+
     /** The str group id. */
     private String _strGroupId;
-    
+
     /** The b theme. */
     private boolean _bTheme;
 
@@ -146,7 +146,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Sets the Id.
      *
-     * @param nId            The Id
+     * @param nId
+     *            The Id
      */
     public void setId( int nId )
     {
@@ -166,7 +167,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Sets the ArtifactId.
      *
-     * @param strArtifactId            The ArtifactId
+     * @param strArtifactId
+     *            The ArtifactId
      */
     public void setArtifactId( String strArtifactId )
     {
@@ -186,7 +188,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Sets the IdCluster.
      *
-     * @param nIdCluster            The IdCluster
+     * @param nIdCluster
+     *            The IdCluster
      */
     public void setIdCluster( int nIdCluster )
     {
@@ -206,7 +209,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Sets the ScmUrl.
      *
-     * @param strScmUrl            The ScmUrl
+     * @param strScmUrl
+     *            The ScmUrl
      */
     public void setScmUrl( String strScmUrl )
     {
@@ -226,7 +230,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Sets the Name.
      *
-     * @param strName            The Name
+     * @param strName
+     *            The Name
      */
     public void setName( String strName )
     {
@@ -246,7 +251,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Sets the Description.
      *
-     * @param strDescription            The Description
+     * @param strDescription
+     *            The Description
      */
     public void setDescription( String strDescription )
     {
@@ -266,7 +272,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Sets the JiraKey.
      *
-     * @param strJiraKey            The JiraKey
+     * @param strJiraKey
+     *            The JiraKey
      */
     public void setJiraKey( String strJiraKey )
     {
@@ -276,7 +283,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Adds the current dependency.
      *
-     * @param dependency the dependency
+     * @param dependency
+     *            the dependency
      */
     public void addCurrentDependency( Dependency dependency )
     {
@@ -296,7 +304,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Adds the component.
      *
-     * @param component the component
+     * @param component
+     *            the component
      */
     public void addComponent( Component component )
     {
@@ -326,7 +335,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Sets the Version.
      *
-     * @param strVersion            The Version
+     * @param strVersion
+     *            The Version
      */
     public void setVersion( String strVersion )
     {
@@ -346,7 +356,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Sets the Cluster.
      *
-     * @param strCluster            The Cluster
+     * @param strCluster
+     *            The Cluster
      */
     public void setCluster( String strCluster )
     {
@@ -366,7 +377,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Sets the Last Release Version.
      *
-     * @param strLastReleaseVersion            The Release Version
+     * @param strLastReleaseVersion
+     *            The Release Version
      */
     public void setLastReleaseVersion( String strLastReleaseVersion )
     {
@@ -386,7 +398,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Sets the Next Release Version.
      *
-     * @param strNextReleaseVersion            The Release Version
+     * @param strNextReleaseVersion
+     *            The Release Version
      */
     public void setNextReleaseVersion( String strNextReleaseVersion )
     {
@@ -406,7 +419,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Sets the NextSnapshotVersion.
      *
-     * @param strNextSnapshotVersion            The NextSnapshotVersion
+     * @param strNextSnapshotVersion
+     *            The NextSnapshotVersion
      */
     public void setNextSnapshotVersion( String strNextSnapshotVersion )
     {
@@ -416,7 +430,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Set target versions list.
      *
-     * @param listTargetVersions            The target versions list
+     * @param listTargetVersions
+     *            The target versions list
      */
     public void setTargetVersions( List<String> listTargetVersions )
     {
@@ -436,7 +451,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Set the target version index.
      *
-     * @param nIndex            the target version index
+     * @param nIndex
+     *            the target version index
      */
     public void setTargetVersionIndex( int nIndex )
     {
@@ -466,7 +482,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Sets the tag information.
      *
-     * @param _strTagInfotmation the new tag information
+     * @param _strTagInfotmation
+     *            the new tag information
      */
     public void setTagInformation( String _strTagInfotmation )
     {
@@ -486,7 +503,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Sets the group id.
      *
-     * @param _strGroupId the new group id
+     * @param _strGroupId
+     *            the new group id
      */
     public void setGroupId( String _strGroupId )
     {
@@ -506,7 +524,8 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /**
      * Sets the theme.
      *
-     * @param _bTheme the new theme
+     * @param _bTheme
+     *            the new theme
      */
     public void setTheme( boolean _bTheme )
     {
@@ -524,41 +543,45 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
         // TODO Auto-generated method stub
         return getNextReleaseVersion( );
     }
-    
+
     /**
-    * RBAC resource implementation
-    * @return The resource type code
-    */
+     * RBAC resource implementation
+     * 
+     * @return The resource type code
+     */
     @Override
-    public String getResourceTypeCode(  )
+    public String getResourceTypeCode( )
     {
         return RESOURCE_TYPE;
     }
 
     /**
      * RBAC resource implementation
+     * 
      * @return The resourceId
      */
     @Override
-    public String getResourceId(  )
+    public String getResourceId( )
     {
         return String.valueOf( _nId );
     }
 
-	public HashMap<String, Boolean> getPermissions() {
-		return permissions;
-	}
+    public HashMap<String, Boolean> getPermissions( )
+    {
+        return permissions;
+    }
 
-	public void setPermissions(HashMap<String, Boolean> permissions) {
-		if (this.permissions == null)
-			this.permissions = new HashMap<String, Boolean>();
-		else
-			this.permissions.clear();
-		
-		if (permissions != null) {
-			this.permissions.putAll(permissions);
-		}
-	}
+    public void setPermissions( HashMap<String, Boolean> permissions )
+    {
+        if ( this.permissions == null )
+            this.permissions = new HashMap<String, Boolean>( );
+        else
+            this.permissions.clear( );
 
+        if ( permissions != null )
+        {
+            this.permissions.putAll( permissions );
+        }
+    }
 
 }

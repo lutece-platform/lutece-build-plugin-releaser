@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2013, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,13 +81,13 @@ import fr.paris.lutece.util.ReferenceList;
  */
 public final class SvnUtils
 {
-    
+
     /** The Constant MESSAGE_ERROR_SVN. */
     private static final String MESSAGE_ERROR_SVN = "Impossible de se connecter au SVN. Veuillez verifier vos identifiants";
-    
+
     /** The Constant CONSTANTE_SLASH. */
     private static final String CONSTANTE_SLASH = "/";
-    
+
     /** The Constant logger. */
     private static final Logger logger = Logger.getLogger( SvnUtils.class );
 
@@ -122,10 +122,14 @@ public final class SvnUtils
     /**
      * Commit.
      *
-     * @param strPathFile the str path file
-     * @param strCommitMessage the str commit message
-     * @param commitClient the commit client
-     * @throws SVNException the SVN exception
+     * @param strPathFile
+     *            the str path file
+     * @param strCommitMessage
+     *            the str commit message
+     * @param commitClient
+     *            the commit client
+     * @throws SVNException
+     *             the SVN exception
      */
     public static void doCommit( String strPathFile, String strCommitMessage, ReleaseSvnCommitClient commitClient ) throws SVNException
     {
@@ -142,13 +146,19 @@ public final class SvnUtils
     /**
      * Tag un site.
      *
-     * @param strSiteName            le nom du site
-     * @param strTagName            le nom du tag
-     * @param strSrcURL the str src URL
-     * @param strDstURL the str dst URL
-     * @param copyClient            le client svn permettant la copie
+     * @param strSiteName
+     *            le nom du site
+     * @param strTagName
+     *            le nom du tag
+     * @param strSrcURL
+     *            the str src URL
+     * @param strDstURL
+     *            the str dst URL
+     * @param copyClient
+     *            le client svn permettant la copie
      * @return string
-     * @throws SVNException the SVN exception
+     * @throws SVNException
+     *             the SVN exception
      */
     public static String doTagSite( String strSiteName, String strTagName, String strSrcURL, String strDstURL, SVNCopyClient copyClient ) throws SVNException
     {
@@ -173,12 +183,17 @@ public final class SvnUtils
     /**
      * Do svn checkout.
      *
-     * @param strUrl the str url
-     * @param strCheckoutBaseSitePath the str checkout base site path
-     * @param updateClient the update client
-     * @param result the result
+     * @param strUrl
+     *            the str url
+     * @param strCheckoutBaseSitePath
+     *            the str checkout base site path
+     * @param updateClient
+     *            the update client
+     * @param result
+     *            the result
      * @return the long
-     * @throws SVNException the SVN exception
+     * @throws SVNException
+     *             the SVN exception
      */
     public static Long doSvnCheckout( String strUrl, String strCheckoutBaseSitePath, ReleaseSvnCheckoutClient updateClient, CommandResult result )
             throws SVNException
@@ -284,10 +299,13 @@ public final class SvnUtils
     /**
      * Gets the svn sites.
      *
-     * @param strUrlSite the str url site
-     * @param clientManager the client manager
+     * @param strUrlSite
+     *            the str url site
+     * @param clientManager
+     *            the client manager
      * @return the svn sites
-     * @throws SVNException the SVN exception
+     * @throws SVNException
+     *             the SVN exception
      */
     public static ReferenceList getSvnSites( String strUrlSite, SVNClientManager clientManager ) throws SVNException
     {
@@ -319,9 +337,12 @@ public final class SvnUtils
     /**
      * Gets the last revision.
      *
-     * @param strRepoPath the str repo path
-     * @param strUserName the str user name
-     * @param strPassword the str password
+     * @param strRepoPath
+     *            the str repo path
+     * @param strUserName
+     *            the str user name
+     * @param strPassword
+     *            the str password
      * @return the last revision
      */
     public static Long getLastRevision( String strRepoPath, String strUserName, String strPassword )
@@ -349,9 +370,12 @@ public final class SvnUtils
     /**
      * Update.
      *
-     * @param strRepoPath the str repo path
-     * @param strUserName the str user name
-     * @param strPassword the str password
+     * @param strRepoPath
+     *            the str repo path
+     * @param strUserName
+     *            the str user name
+     * @param strPassword
+     *            the str password
      */
     public static void update( String strRepoPath, String strUserName, String strPassword )
     {
@@ -373,12 +397,18 @@ public final class SvnUtils
     /**
      * Revert.
      *
-     * @param strRepoPath the str repo path
-     * @param strCmUrl the str cm url
-     * @param strUserName the str user name
-     * @param strPassword the str password
-     * @param revCurrentCommit the rev current commit
-     * @param lRevertCommit the l revert commit
+     * @param strRepoPath
+     *            the str repo path
+     * @param strCmUrl
+     *            the str cm url
+     * @param strUserName
+     *            the str user name
+     * @param strPassword
+     *            the str password
+     * @param revCurrentCommit
+     *            the rev current commit
+     * @param lRevertCommit
+     *            the l revert commit
      */
     public static void revert( String strRepoPath, String strCmUrl, String strUserName, String strPassword, Long revCurrentCommit, Long lRevertCommit )
     {
@@ -410,8 +440,10 @@ public final class SvnUtils
     /**
      * Gets the svn url tag site.
      *
-     * @param strScmUrl the str scm url
-     * @param strTagName the str tag name
+     * @param strScmUrl
+     *            the str scm url
+     * @param strTagName
+     *            the str tag name
      * @return the svn url tag site
      */
     public static String getSvnUrlTagSite( String strScmUrl, String strTagName )
@@ -426,7 +458,8 @@ public final class SvnUtils
     /**
      * Gets the repo url.
      *
-     * @param strRepoUrl the str repo url
+     * @param strRepoUrl
+     *            the str repo url
      * @return the repo url
      */
     public static String getRepoUrl( String strRepoUrl )
@@ -445,9 +478,12 @@ public final class SvnUtils
     /**
      * Check authentication.
      *
-     * @param strUrl the str url
-     * @param strUserName the str user name
-     * @param strPassword the str password
+     * @param strUrl
+     *            the str url
+     * @param strUserName
+     *            the str user name
+     * @param strPassword
+     *            the str password
      * @return true, if successful
      */
     public static boolean checkAuthentication( String strUrl, String strUserName, String strPassword )

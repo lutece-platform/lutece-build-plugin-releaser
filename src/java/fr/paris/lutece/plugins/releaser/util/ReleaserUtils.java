@@ -1,3 +1,36 @@
+/*
+ * Copyright (c) 2002-2021, City of Paris
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  1. Redistributions of source code must retain the above copyright notice
+ *     and the following disclaimer.
+ *
+ *  2. Redistributions in binary form must reproduce the above copyright notice
+ *     and the following disclaimer in the documentation and/or other materials
+ *     provided with the distribution.
+ *
+ *  3. Neither the name of 'Mairie de Paris' nor 'Lutece' nor the names of its
+ *     contributors may be used to endorse or promote products derived from
+ *     this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * License 1.0
+ */
 package fr.paris.lutece.plugins.releaser.util;
 
 import java.io.File;
@@ -36,8 +69,10 @@ public class ReleaserUtils
     /**
      * Gets the worklow context data key.
      *
-     * @param strArtifactId the str artifact id
-     * @param nContextId the n context id
+     * @param strArtifactId
+     *            the str artifact id
+     * @param nContextId
+     *            the n context id
      * @return the worklow context data key
      */
     public static String getWorklowContextDataKey( String strArtifactId, int nContextId )
@@ -48,7 +83,8 @@ public class ReleaserUtils
     /**
      * Gets the last release version data key.
      *
-     * @param strArtifactId the str artifact id
+     * @param strArtifactId
+     *            the str artifact id
      * @return the last release version data key
      */
     public static String getLastReleaseVersionDataKey( String strArtifactId )
@@ -59,7 +95,8 @@ public class ReleaserUtils
     /**
      * Gets the last release next snapshot version data key.
      *
-     * @param strArtifactId the str artifact id
+     * @param strArtifactId
+     *            the str artifact id
      * @return the last release next snapshot version data key
      */
     public static String getLastReleaseNextSnapshotVersionDataKey( String strArtifactId )
@@ -70,7 +107,8 @@ public class ReleaserUtils
     /**
      * Gets the local path.
      *
-     * @param context the context
+     * @param context
+     *            the context
      * @return the local path
      */
     public static String getLocalPath( WorkflowReleaseContext context )
@@ -96,7 +134,8 @@ public class ReleaserUtils
     /**
      * Gets the local pom path.
      *
-     * @param context the context
+     * @param context
+     *            the context
      * @return the local pom path
      */
     public static String getLocalPomPath( WorkflowReleaseContext context )
@@ -109,7 +148,8 @@ public class ReleaserUtils
     /**
      * Gets the local site path.
      *
-     * @param site the site
+     * @param site
+     *            the site
      * @return the local site path
      */
     public static String getLocalSitePath( Site site )
@@ -122,7 +162,8 @@ public class ReleaserUtils
     /**
      * Gets the local site pom path.
      *
-     * @param site the site
+     * @param site
+     *            the site
      * @return the local site pom path
      */
     public static String getLocalSitePomPath( Site site )
@@ -145,8 +186,10 @@ public class ReleaserUtils
     /**
      * Gets the component name.
      *
-     * @param strScmDeveloperConnection the str scm developer connection
-     * @param strArtifactId the str artifact id
+     * @param strScmDeveloperConnection
+     *            the str scm developer connection
+     * @param strArtifactId
+     *            the str artifact id
      * @return the component name
      */
     public static String getComponentName( String strScmDeveloperConnection, String strArtifactId )
@@ -165,7 +208,8 @@ public class ReleaserUtils
     /**
      * Gets the site tag name.
      *
-     * @param site the site
+     * @param site
+     *            the site
      * @return the site tag name
      */
     public static String getSiteTagName( Site site )
@@ -183,9 +227,12 @@ public class ReleaserUtils
     /**
      * Adds the info error.
      *
-     * @param commandResult the command result
-     * @param strError the str error
-     * @param e the e
+     * @param commandResult
+     *            the command result
+     * @param strError
+     *            the str error
+     * @param e
+     *            the e
      */
     public static void addInfoError( CommandResult commandResult, String strError, Exception e )
     {
@@ -211,10 +258,14 @@ public class ReleaserUtils
     /**
      * Adds the technical error.
      *
-     * @param commandResult the command result
-     * @param strError the str error
-     * @param e the e
-     * @throws AppException the app exception
+     * @param commandResult
+     *            the command result
+     * @param strError
+     *            the str error
+     * @param e
+     *            the e
+     * @throws AppException
+     *             the app exception
      */
     public static void addTechnicalError( CommandResult commandResult, String strError, Exception e ) throws AppException
     {
@@ -249,9 +300,12 @@ public class ReleaserUtils
     /**
      * Adds the technical error.
      *
-     * @param commandResult the command result
-     * @param strError the str error
-     * @throws AppException the app exception
+     * @param commandResult
+     *            the command result
+     * @param strError
+     *            the str error
+     * @throws AppException
+     *             the app exception
      */
     public static void addTechnicalError( CommandResult commandResult, String strError ) throws AppException
     {
@@ -261,7 +315,8 @@ public class ReleaserUtils
     /**
      * Start command result.
      *
-     * @param context the context
+     * @param context
+     *            the context
      */
     public static void startCommandResult( WorkflowReleaseContext context )
     {
@@ -280,8 +335,10 @@ public class ReleaserUtils
     /**
      * Log start action.
      *
-     * @param context the context
-     * @param strActionName the str action name
+     * @param context
+     *            the context
+     * @param strActionName
+     *            the str action name
      */
     public static void logStartAction( WorkflowReleaseContext context, String strActionName )
     {
@@ -293,8 +350,10 @@ public class ReleaserUtils
     /**
      * Log end action.
      *
-     * @param context the context
-     * @param strActionName the str action name
+     * @param context
+     *            the context
+     * @param strActionName
+     *            the str action name
      */
     public static void logEndAction( WorkflowReleaseContext context, String strActionName )
     {
@@ -305,7 +364,8 @@ public class ReleaserUtils
     /**
      * Stop command result.
      *
-     * @param context the context
+     * @param context
+     *            the context
      */
     public static void stopCommandResult( WorkflowReleaseContext context )
     {
@@ -320,7 +380,8 @@ public class ReleaserUtils
     /**
      * convert a string to int.
      *
-     * @param strParameter            the string parameter to convert
+     * @param strParameter
+     *            the string parameter to convert
      * @return the conversion
      */
     public static int convertStringToInt( String strParameter )
@@ -345,8 +406,10 @@ public class ReleaserUtils
     /**
      * Gets the releaser user.
      *
-     * @param request the request
-     * @param locale the locale
+     * @param request
+     *            the request
+     * @param locale
+     *            the locale
      * @return the releaser user
      */
     public static ReleaserUser getReleaserUser( HttpServletRequest request, Locale locale )
@@ -387,8 +450,10 @@ public class ReleaserUtils
     /**
      * Populate releaser user.
      *
-     * @param request the request
-     * @param user the user
+     * @param request
+     *            the request
+     * @param user
+     *            the user
      */
     public static void populateReleaserUser( HttpServletRequest request, ReleaserUser user )
     {
@@ -410,8 +475,10 @@ public class ReleaserUtils
     /**
      * Sets the releaser user.
      *
-     * @param request the request
-     * @param releaserUser the releaser user
+     * @param request
+     *            the request
+     * @param releaserUser
+     *            the releaser user
      */
     public static void setReleaserUser( HttpServletRequest request, ReleaserUser releaserUser )
     {
@@ -440,14 +507,16 @@ public class ReleaserUtils
     /**
      * Compare version.
      *
-     * @param strVersion1 the str version 1
-     * @param strVersion2 the str version 2
+     * @param strVersion1
+     *            the str version 1
+     * @param strVersion2
+     *            the str version 2
      * @return the int
      */
     public static int compareVersion( String strVersion1, String strVersion2 )
     {
 
-        if( strVersion1!=null && strVersion2!=null)
+        if ( strVersion1 != null && strVersion2 != null )
         {
             ComparableVersion cVersion1 = new ComparableVersion( strVersion1 );
             ComparableVersion cVersion2 = new ComparableVersion( strVersion2 );
@@ -457,19 +526,15 @@ public class ReleaserUtils
         return -1;
 
     }
-    
-    
-    
-    public static String cleanPWDInLog(String strLog)
+
+    public static String cleanPWDInLog( String strLog )
     {
-    	
-    	 Pattern pattern2 = Pattern.compile("(?<prot>https|http):\\/\\/(?<user>\\S+):(?<pwd>\\S+)@");
-         Matcher matcher2 = pattern2.matcher(strLog);
-         
-         return matcher2.replaceAll("${prot}${user}:cleanpwd@");
-        
-           
-    	
+
+        Pattern pattern2 = Pattern.compile( "(?<prot>https|http):\\/\\/(?<user>\\S+):(?<pwd>\\S+)@" );
+        Matcher matcher2 = pattern2.matcher( strLog );
+
+        return matcher2.replaceAll( "${prot}${user}:cleanpwd@" );
+
     }
 
 }

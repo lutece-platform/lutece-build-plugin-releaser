@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2013, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,28 +42,40 @@ import fr.paris.lutece.plugins.releaser.util.svn.SvnUser;
  */
 public interface IMavenService
 {
-    
+
     /**
      * mvnReleasePrepare.
      *
-     * @param strSiteName the str site name
-     * @param strTagName the str tag name
-     * @param strMavenProfile the str maven profile
-     * @param user the user
-     * @param commandResult the command result
+     * @param strSiteName
+     *            the str site name
+     * @param strTagName
+     *            the str tag name
+     * @param strMavenProfile
+     *            the str maven profile
+     * @param user
+     *            the user
+     * @param commandResult
+     *            the command result
      */
     void mvnSiteAssembly( String strSiteName, String strTagName, String strMavenProfile, SvnUser user, CommandResult commandResult );
 
     /**
      * Mvn release prepare.
      *
-     * @param strPathPom the str path pom
-     * @param strReleaseVersion the str release version
-     * @param strTag the str tag
-     * @param strDevelopmentVersion the str development version
-     * @param strUsername the str username
-     * @param strPassword the str password
-     * @param commandResult the command result
+     * @param strPathPom
+     *            the str path pom
+     * @param strReleaseVersion
+     *            the str release version
+     * @param strTag
+     *            the str tag
+     * @param strDevelopmentVersion
+     *            the str development version
+     * @param strUsername
+     *            the str username
+     * @param strPassword
+     *            the str password
+     * @param commandResult
+     *            the command result
      * @return the string
      */
     String mvnReleasePrepare( String strPathPom, String strReleaseVersion, String strTag, String strDevelopmentVersion, String strUsername, String strPassword,
@@ -72,10 +84,14 @@ public interface IMavenService
     /**
      * Mvn release perform.
      *
-     * @param strPathPom the str path pom
-     * @param strUsername the str username
-     * @param strPassword the str password
-     * @param commandResult the command result
+     * @param strPathPom
+     *            the str path pom
+     * @param strUsername
+     *            the str username
+     * @param strPassword
+     *            the str password
+     * @param commandResult
+     *            the command result
      * @return the string
      */
     String mvnReleasePerform( String strPathPom, String strUsername, String strPassword, CommandResult commandResult );

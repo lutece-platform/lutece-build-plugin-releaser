@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2013, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,18 +46,20 @@ import fr.paris.lutece.portal.service.util.AppLogService;
  */
 public class FileUtils
 {
-    
+
     /** The Constant STATUS_OK. */
     public static final boolean STATUS_OK = true;
-    
+
     /** The Constant STATUS_ERROR. */
     public static final boolean STATUS_ERROR = false;
 
     /**
      * Delete.
      *
-     * @param file the file
-     * @param logBuffer the log buffer
+     * @param file
+     *            the file
+     * @param logBuffer
+     *            the log buffer
      * @return true, if successful
      */
     public static boolean delete( File file, StringBuffer logBuffer )
@@ -88,7 +90,8 @@ public class FileUtils
     /**
      * Read file.
      *
-     * @param strFilePath the str file path
+     * @param strFilePath
+     *            the str file path
      * @return the string
      */
     public static String readFile( String strFilePath )
@@ -111,8 +114,10 @@ public class FileUtils
     /**
      * List.
      *
-     * @param strDirPath the str dir path
-     * @param strFileExtension the str file extension
+     * @param strDirPath
+     *            the str dir path
+     * @param strFileExtension
+     *            the str file extension
      * @return the list
      */
     public static List<String> list( String strDirPath, String strFileExtension )
@@ -123,9 +128,12 @@ public class FileUtils
     /**
      * List.
      *
-     * @param strDirPath the str dir path
-     * @param strFileExtension the str file extension
-     * @param bRecursive the b recursive
+     * @param strDirPath
+     *            the str dir path
+     * @param strFileExtension
+     *            the str file extension
+     * @param bRecursive
+     *            the b recursive
      * @return the list
      */
     public static List<String> list( String strDirPath, String strFileExtension, boolean bRecursive )

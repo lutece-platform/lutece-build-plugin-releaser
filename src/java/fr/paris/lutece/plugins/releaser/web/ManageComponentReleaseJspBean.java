@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2017, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -78,59 +78,60 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
 
     /** The Constant MARK_LIST_COMPONENT. */
     private static final String MARK_LIST_COMPONENT = "list_component";
-    
+
     /** The Constant MARK_PAGINATOR. */
     private static final String MARK_PAGINATOR = "paginator";
 
     /** The Constant MARK_SEARCH. */
     private static final String MARK_SEARCH = "search";
-    
+
     /** The Constant MARK_NB_ITEMS_PER_PAGE. */
     private static final String MARK_NB_ITEMS_PER_PAGE = "nb_items_per_page";
 
     /** The Constant JSP_MANAGE_COMPONENT. */
     private static final String JSP_MANAGE_COMPONENT = "jsp/admin/plugins/releaser/ManageComponent.jsp";
-    
+
     /** The Constant ACTION_CHANGE_COMPONENT_NEXT_RELEASE_VERSION. */
     private static final String ACTION_CHANGE_COMPONENT_NEXT_RELEASE_VERSION = "versionComponent";
-    
+
     /** The Constant ACTION_RELEASE_COMPONENT. */
     private static final String ACTION_RELEASE_COMPONENT = "releaseComponent";
 
     /** The Constant PARAMETER_ARTIFACT_ID. */
     private static final String PARAMETER_ARTIFACT_ID = "artifact_id";
-    
+
     /** The Constant PARAMETER_TWEET_MESSAGE. */
     private static final String PARAMETER_TWEET_MESSAGE = "tweet_message";
 
     // Messages
     private static final String MESSAGE_ACCESS_DENIED = "releaser.message.accesDenied";
-       
+
     /** The str search. */
     private String _strSearch;
-    
+
     /** The str current page index. */
     private String _strCurrentPageIndex;
-    
+
     /** The paginator components. */
     Paginator<Component> _paginatorComponents;
 
     /**
      * Gets the manage component.
      *
-     * @param request the request
+     * @param request
+     *            the request
      * @return the manage component
-     * @throws AccessDeniedException 
+     * @throws AccessDeniedException
      */
     @View( value = VIEW_MANAGE_COMPONENT, defaultView = true )
     public String getManageComponent( HttpServletRequest request ) throws AccessDeniedException
     {
 
-        if ( !ComponentService.IsSearchComponentAuthorized( AdminUserService.getAdminUser(request) ) )
+        if ( !ComponentService.IsSearchComponentAuthorized( AdminUserService.getAdminUser( request ) ) )
         {
             throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
         }
-        
+
         ReleaserUser user = ReleaserUtils.getReleaserUser( request, getLocale( ) );
         if ( user == null )
         {
@@ -166,7 +167,8 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
     /**
      * Do change component next release version.
      *
-     * @param request the request
+     * @param request
+     *            the request
      * @return the string
      */
     @Action( ACTION_CHANGE_COMPONENT_NEXT_RELEASE_VERSION )
@@ -196,7 +198,8 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
     /**
      * Do release component.
      *
-     * @param request the request
+     * @param request
+     *            the request
      * @return the string
      */
     @Action( ACTION_RELEASE_COMPONENT )

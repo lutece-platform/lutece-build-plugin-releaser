@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2013, Mairie de Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -73,34 +73,34 @@ import fr.paris.lutece.portal.service.util.AppPropertiesService;
  */
 public class JiraComponentService implements IJiraService
 {
-    
+
     /** The Constant PROPERTY_JIRA_SEARCH_SERVICE. */
     private static final String PROPERTY_JIRA_SEARCH_SERVICE = "releaser.component.jiraSearchQuery";
-    
+
     /** The Constant PROPERTY_JIRA_USER. */
     private static final String PROPERTY_JIRA_USER = "lutecetools.jira.user";
-    
+
     /** The Constant PROPERTY_JIRA_USER_PWD. */
     private static final String PROPERTY_JIRA_USER_PWD = "lutecetools.jira.pwd";
 
     /** The url jira server. */
     private static String URL_JIRA_SERVER;
-    
+
     /** The jira user. */
     private static String JIRA_USER;
-    
+
     /** The jira user pwd. */
     private static String JIRA_USER_PWD;
 
     /** The Constant CONSTANTE_SNAPSHOT_VERSION. */
     private static final String CONSTANTE_SNAPSHOT_VERSION = "-SNAPSHOT";
-    
+
     /** The factory. */
     private static AsynchronousJiraRestClientFactory _factory;
-    
+
     /** The auth. */
     private static BasicHttpAuthenticationHandler _auth;
-    
+
     /** The instance. */
     private static IJiraService _instance;
 
@@ -170,8 +170,10 @@ public class JiraComponentService implements IJiraService
     /**
      * Update component versions.
      *
-     * @param component the component
-     * @param commandResult the command result
+     * @param component
+     *            the component
+     * @param commandResult
+     *            the command result
      */
     /*
      * (non-Javadoc)
