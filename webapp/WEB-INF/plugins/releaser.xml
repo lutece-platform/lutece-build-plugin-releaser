@@ -24,7 +24,7 @@
             <feature-id>RELEASER_MANAGEMENT</feature-id>
             <feature-title>releaser.adminFeature.ManageReleaser.name</feature-title>
             <feature-description>releaser.adminFeature.ManageReleaser.description</feature-description>
-            <feature-level>0</feature-level>
+            <feature-level>1</feature-level>
             <feature-url>jsp/admin/plugins/releaser/ManageClusters.jsp</feature-url>
             <feature-icon-url/>
       </admin-feature>
