@@ -33,7 +33,7 @@
  */
 package fr.paris.lutece.plugins.releaser.business;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * 

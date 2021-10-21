@@ -35,7 +35,7 @@ package fr.paris.lutece.plugins.releaser.business;
 
 import javax.validation.constraints.*;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.*;
 
 import fr.paris.lutece.portal.service.rbac.RBACResource;
