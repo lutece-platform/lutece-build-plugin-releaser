@@ -207,7 +207,8 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         _modifValidated = null;
         String strSiteId = request.getParameter( PARAMETER_SITE_ID );
 
-        if ( !SiteService.IsUserAuthorized( AdminUserService.getAdminUser( request ), _site == null?strSiteId:Integer.toString(_site.getId()), SiteResourceIdService.PERMISSION_RELEASE ) )
+        if ( !SiteService.IsUserAuthorized( AdminUserService.getAdminUser( request ), _site == null ? strSiteId : Integer.toString( _site.getId( ) ),
+                SiteResourceIdService.PERMISSION_RELEASE ) )
         {
             throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
         }
