@@ -54,7 +54,7 @@ public abstract class AbstractReleaserResource implements IReleaserResource
         RepositoryType repositoryType = null;
         if ( !StringUtils.isEmpty( getScmUrl( ) ) )
         {
-            if ( getScmUrl( ).endsWith( ".git" ) )
+            if ( !getScmUrl( ).contains( "scm:svn" ) )
             {
 
                 if ( getScmUrl( ).contains( "https://github." ) )
