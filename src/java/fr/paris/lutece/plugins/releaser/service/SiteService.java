@@ -61,6 +61,7 @@ import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.util.CVSFactoryService;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
+import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
 import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
 import fr.paris.lutece.plugins.releaser.util.pom.PomUpdater;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
@@ -102,6 +103,9 @@ public class SiteService
 
     /** The Constant MESSAGE_WRONG_POM_PARENT_SITE_VERSION. */
     private static final String MESSAGE_WRONG_POM_PARENT_SITE_VERSION = "releaser.message.wrongPomParentSiteVersion";
+
+    /** The Constant MESSAGE_NOT_DEFAULT_RELEASE_BRANCH. */
+    private static final String MESSAGE_NOT_DEFAULT_RELEASE_BRANCH_FROM = "releaser.message.notDefaultReleaseBranchFrom";
 
     /**
      * Load a site from its id.
@@ -169,6 +173,7 @@ public class SiteService
         site.setNextReleaseVersion( Version.getReleaseVersion( strOriginVersion ) );
         site.setNextSnapshotVersion( Version.getNextSnapshotVersion( strOriginVersion ) );
         site.setTargetVersions( Version.getNextReleaseVersions( strOriginVersion ) );
+        site.setBranchReleaseFrom( GitUtils.DEFAULT_RELEASE_BRANCH );
 
         initComponents( site );
     }
@@ -250,11 +255,11 @@ public class SiteService
 
         for ( Component component : site.getComponents( ) )
         {
-
             ComponentService.getService( ).updateRemoteInformations( component );
             defineTargetVersion( component );
             defineNextSnapshotVersion( component );
             component.setName( ReleaserUtils.getComponentName( component.getScmDeveloperConnection( ), component.getArtifactId( ) ) );
+            component.setBranchReleaseFrom( GitUtils.DEFAULT_RELEASE_BRANCH );
         }
 
     }
@@ -422,6 +427,14 @@ public class SiteService
      */
     private static void buildReleaseComments( Component component, Locale locale )
     {
+
+        if ( !component.getBranchReleaseFrom( ).equals( GitUtils.DEFAULT_RELEASE_BRANCH ) )
+        {
+            String strComment = I18nService.getLocalizedString( MESSAGE_NOT_DEFAULT_RELEASE_BRANCH_FROM, locale );
+            component.addReleaseComment( strComment );
+
+            return;
+        }
 
         if ( !component.isProject( ) )
         {

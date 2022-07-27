@@ -266,7 +266,7 @@ public class SvnResourceService implements IVCSResourceService
 
         if ( nLastCommitId != null )
         {
-            context.setRefBranchDev( nLastCommitId.toString( ) );
+            context.setRefBranchReleaseFrom( nLastCommitId.toString( ) );
         }
         // PROGRESS 10%
         commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
@@ -352,7 +352,7 @@ public class SvnResourceService implements IVCSResourceService
         SvnUtils.update( strLocalPath, strLogin, strPassword );
         Long lastRevision = SvnUtils.getLastRevision( strLocalPath, strLogin, strPassword );
 
-        Long lastCommitBeforeRelease = context.getRefBranchDev( ) != null ? new Long( context.getRefBranchDev( ) ) : null;
+        Long lastCommitBeforeRelease = context.getRefBranchReleaseFrom( ) != null ? new Long( context.getRefBranchReleaseFrom( ) ) : null;
 
         if ( lastRevision != null && lastCommitBeforeRelease != null && lastRevision != lastCommitBeforeRelease )
         {
@@ -390,6 +390,20 @@ public class SvnResourceService implements IVCSResourceService
      */
     @Override
     public void checkoutDevelopBranch( WorkflowReleaseContext context, Locale locale )
+    {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void updateBranch( WorkflowReleaseContext context, String strBranch, Locale locale, String strMessage )
+    {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void checkoutBranch( WorkflowReleaseContext context, String strBranch, Locale locale )
     {
         // TODO Auto-generated method stub
 

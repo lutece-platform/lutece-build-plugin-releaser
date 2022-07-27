@@ -50,6 +50,7 @@ import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService;
+import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
 import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
@@ -535,6 +536,28 @@ public class ReleaserUtils
 
         return matcher2.replaceAll( "${prot}${user}:cleanpwd@" );
 
+    }
+
+    public static String getBranchReleaseFrom( WorkflowReleaseContext context )
+    {
+
+        String strBranchReleaseFrom = null;
+
+        if ( context.getSite( ) != null && context.getSite( ).getBranchReleaseFrom( ) != null )
+        {
+            strBranchReleaseFrom = context.getSite( ).getBranchReleaseFrom( );
+        }
+        else
+            if ( context.getComponent( ) != null && context.getComponent( ).getBranchReleaseFrom( ) != null )
+            {
+                strBranchReleaseFrom = context.getComponent( ).getBranchReleaseFrom( );
+            }
+            else
+            {
+                strBranchReleaseFrom = GitUtils.DEFAULT_RELEASE_BRANCH;
+            }
+
+        return strBranchReleaseFrom;
     }
 
 }

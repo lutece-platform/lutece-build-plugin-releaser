@@ -35,7 +35,6 @@ package fr.paris.lutece.plugins.releaser.business;
 
 import javax.validation.constraints.*;
 
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.*;
 
 import fr.paris.lutece.portal.service.rbac.RBACResource;
@@ -132,6 +131,12 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
 
     /** The b theme. */
     private boolean _bTheme;
+
+    /** The list of component branches. */
+    private List<String> _listBranches;
+
+    /** The branch to release. */
+    private String _strBranchReleaseFrom;
 
     /**
      * Returns the Id.
@@ -530,6 +535,26 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     public void setTheme( boolean _bTheme )
     {
         this._bTheme = _bTheme;
+    }
+
+    public List<String> getBranches( )
+    {
+        return _listBranches;
+    }
+
+    public void setBranches( List<String> listBranches )
+    {
+        _listBranches = listBranches;
+    }
+
+    public String getBranchReleaseFrom( )
+    {
+        return _strBranchReleaseFrom;
+    }
+
+    public void setBranchReleaseFrom( String _strBranchReleaseFrom )
+    {
+        this._strBranchReleaseFrom = _strBranchReleaseFrom;
     }
 
     /**

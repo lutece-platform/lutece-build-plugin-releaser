@@ -313,8 +313,10 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     public void mergeDevelopMaster( WorkflowReleaseContext context, Locale locale )
     {
 
-        if ( !context.getReleaserResource( ).getRepoType( ).equals( RepositoryType.SVN ) )
+        if ( !context.getReleaserResource( ).getRepoType( ).equals( RepositoryType.SVN )
+                && ReleaserUtils.getBranchReleaseFrom( context ).equals( GitUtils.DEFAULT_RELEASE_BRANCH ) )
         {
+
             FileRepository fLocalRepo = null;
             CommandResult commandResult = context.getCommandResult( );
             String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
@@ -344,8 +346,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                     // PROGRESS 15%
                     commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
 
-                    commandResult.getLog( ).append( "Going to merge '" + GitUtils.DEVELOP_BRANCH + "' branch on 'master' branch...\n" );
-                    MergeResult mergeResult = GitUtils.mergeRepoBranch( git, GitUtils.DEVELOP_BRANCH );
+                    commandResult.getLog( ).append( "Going to merge '" + GitUtils.DEFAULT_RELEASE_BRANCH + "' branch on 'master' branch...\n" );
+                    MergeResult mergeResult = GitUtils.mergeRepoBranch( git, GitUtils.DEFAULT_RELEASE_BRANCH );
                     if ( mergeResult.getMergeStatus( ).equals( MergeResult.MergeStatus.CHECKOUT_CONFLICT )
                             || mergeResult.getMergeStatus( ).equals( MergeResult.MergeStatus.CONFLICTING )
                             || mergeResult.getMergeStatus( ).equals( MergeResult.MergeStatus.FAILED )
@@ -362,7 +364,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                     }
                     ReleaserUtils.logEndAction( context, " Merge DEVELOP/MASTER" );
                     // BACK to Branch DEVELOP after merge
-                    GitUtils.checkoutRepoBranch( git, GitUtils.DEVELOP_BRANCH, commandResult );
+                    GitUtils.checkoutRepoBranch( git, GitUtils.DEFAULT_RELEASE_BRANCH, commandResult );
                     // PROGRESS 25%
                     commandResult.setProgressValue( commandResult.getProgressValue( ) + 10 );
 
@@ -422,18 +424,30 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
         String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
         IVCSResourceService cvsService = CVSFactoryService.getService( context.getComponent( ).getRepoType( ) );
-        // Checkout Develop before prepare
-        cvsService.checkoutDevelopBranch( context, locale );
 
         try
         {
             CommandResult commandResult = context.getCommandResult( );
             Component component = context.getComponent( );
+
+            // Checkout branch release from before prepare
+            cvsService.checkoutBranch( context, component.getBranchReleaseFrom( ), locale );
+
             String strLocalComponentPath = ReleaserUtils.getLocalPath( context );
             String strLocalComponentPomPath = ReleaserUtils.getLocalPomPath( context );
 
             String strComponentReleaseVersion = component.getTargetVersion( );
-            String strComponentReleaseTagName = component.getArtifactId( ) + "-" + component.getTargetVersion( );
+
+            String strComponentReleaseTagName = null;
+            if ( component.getBranchReleaseFrom( ).equals( GitUtils.DEFAULT_RELEASE_BRANCH ) )
+            {
+                strComponentReleaseTagName = component.getArtifactId( ) + "-" + component.getTargetVersion( );
+            }
+            else
+            {
+                strComponentReleaseTagName = component.getArtifactId( ) + "-" + component.getTargetVersion( ) + "-" + component.getBranchReleaseFrom( );
+            }
+
             String strComponentReleaseNewDeveloppmentVersion = component.getNextSnapshotVersion( );
 
             ReleaserUtils.logStartAction( context, " Release Prepare" );
@@ -449,7 +463,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
                     PluginUtils.updatePluginXMLVersion( strCoreXMLPath, strComponentReleaseVersion, commandResult );
                     // Commit Plugin xml modification version
-                    cvsService.updateDevelopBranch( context, locale, "[site-release] Update core version to " + strComponentReleaseVersion );
+                    cvsService.updateBranch( context, component.getBranchReleaseFrom( ), locale,
+                            "[site-release] Update core version to " + strComponentReleaseVersion );
                     commandResult.getLog( ).append( "Core XML updated to " + strComponentReleaseVersion + "\n" );
                     // PROGRESS 30%
                     commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
@@ -462,7 +477,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                 if ( StringUtils.isNotBlank( strAppInfoFilePath ) )
                 {
                     PluginUtils.updateAppInfoFile( strAppInfoFilePath, strComponentReleaseVersion, commandResult );
-                    cvsService.updateDevelopBranch( context, locale, "[site-release] Update AppInfo.java version" );
+                    cvsService.updateBranch( context, component.getBranchReleaseFrom( ), locale, "[site-release] Update AppInfo.java version" );
 
                 }
                 else
@@ -478,7 +493,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                 {
                     commandResult.getLog( ).append( "Updating plugin XML " + strComponentName + " to " + strComponentReleaseVersion + "\n" );
                     PluginUtils.updatePluginXMLVersion( pluginXMLPath, strComponentReleaseVersion, commandResult );
-                    cvsService.updateDevelopBranch( context, locale,
+                    cvsService.updateBranch( context, component.getBranchReleaseFrom( ), locale,
                             "[site-release] Update plugin version to " + strComponentReleaseVersion + " for " + strComponentName );
 
                     commandResult.getLog( ).append( "Plugin XML updated to " + strComponentReleaseVersion + "\n" );
@@ -490,15 +505,20 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
             MavenService.getService( ).mvnReleasePrepare( strLocalComponentPomPath, strComponentReleaseVersion, strComponentReleaseTagName,
                     strComponentReleaseNewDeveloppmentVersion, strLogin, strPassword, commandResult );
-            // Merge Master
-            cvsService.updateMasterBranch( context, locale );
-            // Checkout Develop after prepare
-            cvsService.checkoutDevelopBranch( context, locale );
+
+            // Merge Master if release from develop branch
+            if ( component.getBranchReleaseFrom( ).equals( GitUtils.DEFAULT_RELEASE_BRANCH ) )
+            {
+                cvsService.updateMasterBranch( context, locale );
+            }
+
+            // Checkout branch after prepare
+            cvsService.checkoutBranch( context, component.getBranchReleaseFrom( ), locale );
 
             // PROGRESS 50%
             commandResult.setProgressValue( commandResult.getProgressValue( ) + 20 );
 
-            // Modify plugin version on develop
+            // Modify plugin version on released branch
             if ( PluginUtils.isCore( strComponentName ) )
             {
                 // update core xml
@@ -511,7 +531,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                     PluginUtils.updatePluginXMLVersion( strCoreXMLPath, strComponentReleaseNewDeveloppmentVersion, commandResult );
 
                     // Commit Plugin xml modification version
-                    cvsService.updateDevelopBranch( context, locale, "[site-release] Update core version to " + strComponentReleaseNewDeveloppmentVersion );
+                    cvsService.updateBranch( context, component.getBranchReleaseFrom( ), locale,
+                            "[site-release] Update core version to " + strComponentReleaseNewDeveloppmentVersion );
                 }
 
                 // update appinfo.java
@@ -520,7 +541,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                 if ( StringUtils.isNotBlank( strAppInfoFilePath ) )
                 {
                     PluginUtils.updateAppInfoFile( strAppInfoFilePath, strComponentReleaseNewDeveloppmentVersion, commandResult );
-                    cvsService.updateDevelopBranch( context, locale, "[site-release] Update AppInfo.java version" );
+                    cvsService.updateBranch( context, component.getBranchReleaseFrom( ), locale, "[site-release] Update AppInfo.java version" );
                 }
                 else
                 {
@@ -536,7 +557,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                     commandResult.getLog( ).append( "Updating plugin XML " + strComponentName + " to " + strComponentReleaseNewDeveloppmentVersion + "\n" );
                     PluginUtils.updatePluginXMLVersion( pluginXMLPath, strComponentReleaseNewDeveloppmentVersion, commandResult );
                     // Commit Plugin xml modification version
-                    cvsService.updateDevelopBranch( context, locale,
+                    cvsService.updateBranch( context, component.getBranchReleaseFrom( ), locale,
                             "[site-release] Update plugin version to " + strComponentReleaseNewDeveloppmentVersion + " for " + strComponentName );
 
                     commandResult.getLog( ).append( "Plugin XML updated to " + strComponentReleaseNewDeveloppmentVersion + "\n" );

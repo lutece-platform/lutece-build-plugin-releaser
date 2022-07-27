@@ -63,7 +63,6 @@ import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.plugins.releaser.util.file.FileUtils;
 import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
 import fr.paris.lutece.portal.service.util.AppException;
-import fr.paris.lutece.portal.service.util.AppLogService;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -154,7 +153,8 @@ public class GitResourceService implements IVCSResourceService
     {
 
         Git git = null;
-        // FileRepository fLocalRepo = null;
+        String strBranchReleaseFrom = null;
+
         CommandResult commandResult = context.getCommandResult( );
         ReleaserUtils.logStartAction( context, " Clone Repository" );
         String strLocalComponentPath = ReleaserUtils.getLocalPath( context );
@@ -180,22 +180,26 @@ public class GitResourceService implements IVCSResourceService
             // PROGRESS 5%
             commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
             git = GitUtils.cloneRepo( strLocalComponentPath, context.getReleaserResource( ).getScmUrl( ), commandResult, strLogin, strLogin, strPassword );
-            // fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
-            // git = new Git( fLocalRepo );
-            GitUtils.createLocalBranch( git, GitUtils.DEVELOP_BRANCH, commandResult );
-            GitUtils.createLocalBranch( git, GitUtils.MASTER_BRANCH, commandResult );
-            context.setRefBranchDev( GitUtils.getRefBranch( git, GitUtils.DEVELOP_BRANCH, commandResult ) );
-            context.setRefBranchRelease( GitUtils.getRefBranch( git, GitUtils.MASTER_BRANCH, commandResult ) );
 
-            // String ref = git.getRepository( ).findRef( GitUtils.MASTER_BRANCH ).getName( );
-            // git.reset( ).setRef( ref ).setMode( ResetType.HARD ).call( );
-            // git.push( )
-            // .setCredentialsProvider( new UsernamePasswordCredentialsProvider( context.getReleaserUser( ).getCredential(RepositoryType.GITHUB).getLogin(),
-            // context.getReleaserUser( ).getCredential(RepositoryType.GITHUB).getPassword() ) ).setRe
-            // .call( );
+            GitUtils.createLocalBranch( git, GitUtils.MASTER_BRANCH, commandResult );
+
+            strBranchReleaseFrom = ReleaserUtils.getBranchReleaseFrom( context );
+            if ( !strBranchReleaseFrom.equals( GitUtils.DEFAULT_RELEASE_BRANCH ) )
+            {
+                GitUtils.createLocalBranch( git, strBranchReleaseFrom, commandResult );
+                context.setRefBranchReleaseFrom( GitUtils.getRefBranch( git, strBranchReleaseFrom, commandResult ) );
+            }
+            else
+            {
+                GitUtils.createLocalBranch( git, GitUtils.DEFAULT_RELEASE_BRANCH, commandResult );
+                context.setRefBranchReleaseFrom( GitUtils.getRefBranch( git, GitUtils.DEFAULT_RELEASE_BRANCH, commandResult ) );
+
+                context.setRefBranchRelease( GitUtils.getRefBranch( git, GitUtils.MASTER_BRANCH, commandResult ) );
+            }
+
             commandResult.getLog( ).append( "the repository has been successfully cloned.\n" );
-            commandResult.getLog( ).append( "Checkout branch \"" + GitUtils.DEVELOP_BRANCH + "\" ...\n" );
-            GitUtils.checkoutRepoBranch( git, GitUtils.DEVELOP_BRANCH, commandResult );
+            commandResult.getLog( ).append( "Checkout branch \"" + strBranchReleaseFrom + "\" ...\n" );
+            GitUtils.checkoutRepoBranch( git, strBranchReleaseFrom, commandResult );
             // PROGRESS 10%
             commandResult.setProgressValue( commandResult.getProgressValue( ) + 5 );
 
@@ -248,6 +252,22 @@ public class GitResourceService implements IVCSResourceService
     @Override
     public void updateDevelopBranch( WorkflowReleaseContext context, Locale locale, String strMessage )
     {
+        updateBranch( context, GitUtils.DEFAULT_RELEASE_BRANCH, locale, strMessage );
+    }
+
+    /**
+     * Update branch.
+     *
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
+     * @param strMessage
+     *            the str message
+     */
+    @Override
+    public void updateBranch( WorkflowReleaseContext context, String strBranch, Locale locale, String strMessage )
+    {
 
         String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
         String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
@@ -263,7 +283,7 @@ public class GitResourceService implements IVCSResourceService
             fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
 
             git = new Git( fLocalRepo );
-            git.checkout( ).setName( GitUtils.DEVELOP_BRANCH ).call( );
+            git.checkout( ).setName( strBranch ).call( );
             git.add( ).addFilepattern( "." ).setUpdate( true ).call( );
             git.commit( ).setCommitter( strLogin, strLogin ).setMessage( strMessage ).call( );
             git.push( ).setCredentialsProvider( new UsernamePasswordCredentialsProvider( strLogin, strPassword ) ).call( );
@@ -335,7 +355,7 @@ public class GitResourceService implements IVCSResourceService
             fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
 
             git = new Git( fLocalRepo );
-            git.checkout( ).setName( GitUtils.DEVELOP_BRANCH ).call( );
+            git.checkout( ).setName( GitUtils.DEFAULT_RELEASE_BRANCH ).call( );
             GitUtils.mergeBack( git, strLogin, strPassword, commandResult );
 
         }
@@ -406,22 +426,24 @@ public class GitResourceService implements IVCSResourceService
 
             git = new Git( fLocalRepo );
 
-            // RESET commit on develop
-            if ( !StringUtils.isEmpty( context.getRefBranchDev( ) ) )
+            // RESET commit on release branch from
+            if ( !StringUtils.isEmpty( context.getRefBranchReleaseFrom( ) ) )
             {
-                git.checkout( ).setName( GitUtils.DEVELOP_BRANCH ).call( );
-                git.reset( ).setRef( context.getRefBranchDev( ) ).setMode( ResetType.HARD ).call( );
+                git.checkout( ).setName( ReleaserUtils.getBranchReleaseFrom( context ) ).call( );
+                git.reset( ).setRef( context.getRefBranchReleaseFrom( ) ).setMode( ResetType.HARD ).call( );
                 git.push( ).setForce( true ).setCredentialsProvider( new UsernamePasswordCredentialsProvider( strLogin, strPassword ) ).call( );
 
             }
-            // Reset Commit on Master
-            if ( !StringUtils.isEmpty( context.getRefBranchRelease( ) ) )
+
+            // Reset Commit on Master (only if the releasing from develop branch)
+            if ( !StringUtils.isEmpty( context.getRefBranchRelease( ) ) && context.getRefBranchReleaseFrom( ).equals( GitUtils.DEFAULT_RELEASE_BRANCH ) )
             {
 
                 git.checkout( ).setName( GitUtils.MASTER_BRANCH ).call( );
                 git.reset( ).setRef( context.getRefBranchRelease( ) ).setMode( ResetType.HARD ).call( );
                 git.push( ).setForce( true ).setCredentialsProvider( new UsernamePasswordCredentialsProvider( strLogin, strPassword ) ).call( );
             }
+
             // Delete Tag if exist
             List<Ref> call = git.tagList( ).call( );
             String strTagName = context.getReleaserResource( ).getArtifactId( ) + "-" + context.getReleaserResource( ).getTargetVersion( );
@@ -514,6 +536,20 @@ public class GitResourceService implements IVCSResourceService
     @Override
     public void checkoutDevelopBranch( WorkflowReleaseContext context, Locale locale )
     {
+        checkoutBranch( context, GitUtils.DEFAULT_RELEASE_BRANCH, locale );
+    }
+
+    /**
+     * Checkout branch.
+     *
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
+     */
+    @Override
+    public void checkoutBranch( WorkflowReleaseContext context, String strBranch, Locale locale )
+    {
         FileRepository fLocalRepo = null;
         Git git = null;
         CommandResult commandResult = context.getCommandResult( );
@@ -528,11 +564,11 @@ public class GitResourceService implements IVCSResourceService
             fLocalRepo = new FileRepository( strLocalComponentPath + "/.git" );
 
             git = new Git( fLocalRepo );
-            git.checkout( ).setName( GitUtils.DEVELOP_BRANCH ).call( );
-            PullResult result = GitUtils.pullRepoBranch( git, GitUtils.DEVELOP_BRANCH, strLogin, strPassword );
+            git.checkout( ).setName( strBranch ).call( );
+            PullResult result = GitUtils.pullRepoBranch( git, strBranch, strLogin, strPassword );
             if ( !result.isSuccessful( ) )
             {
-                ReleaserUtils.addTechnicalError( commandResult, "error during checkout develop branch" );
+                ReleaserUtils.addTechnicalError( commandResult, "error during checkout " + strBranch + " branch" );
 
             }
 

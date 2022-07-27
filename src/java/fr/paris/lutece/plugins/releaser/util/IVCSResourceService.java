@@ -97,6 +97,18 @@ public interface IVCSResourceService
     void updateDevelopBranch( WorkflowReleaseContext context, Locale locale, String strMessage );
 
     /**
+     * Update develop branch.
+     *
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
+     * @param strMessage
+     *            the str message
+     */
+    void updateBranch( WorkflowReleaseContext context, String strBranch, Locale locale, String strMessage );
+
+    /**
      * Update master branch.
      *
      * @param context
@@ -125,5 +137,15 @@ public interface IVCSResourceService
      *            the locale
      */
     void checkoutDevelopBranch( WorkflowReleaseContext context, Locale locale );
+
+    /**
+     * Checkout branch.
+     *
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
+     */
+    void checkoutBranch( WorkflowReleaseContext context, String strBranch, Locale locale );
 
 }

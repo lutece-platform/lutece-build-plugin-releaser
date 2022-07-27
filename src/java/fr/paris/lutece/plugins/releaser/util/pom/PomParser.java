@@ -130,6 +130,7 @@ public class PomParser
             if ( model.getScm( ) != null )
             {
                 component.setScmDeveloperConnection( model.getScm( ).getDeveloperConnection( ) );
+                component.setBranchReleaseVersion( model.getVersion( ) );
 
             }
 

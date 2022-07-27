@@ -76,8 +76,8 @@ public class WorkflowReleaseContext implements Serializable
     /** The str ref branch release. */
     private String _strRefBranchRelease;
 
-    /** The str ref branch dev. */
-    private String _strRefBranchDev;
+    /** The str ref branch release From. */
+    private String _strRefBranchReleaseFrom;
 
     /**
      * Gets the id.
@@ -218,24 +218,24 @@ public class WorkflowReleaseContext implements Serializable
     }
 
     /**
-     * Gets the ref branch dev.
+     * Gets the ref branch release from.
      *
-     * @return getRefBranchDev
+     * @return getRefBranchReleaseFrom
      */
-    public String getRefBranchDev( )
+    public String getRefBranchReleaseFrom( )
     {
-        return _strRefBranchDev;
+        return _strRefBranchReleaseFrom;
     }
 
     /**
-     * Sets the ref branch dev.
+     * Sets the ref branch Release From.
      *
-     * @param _strRefBranchDev
-     *            the new ref branch dev
+     * @param _strRefBranchReleaseFrom
+     *            the new ref branch Release From
      */
-    public void setRefBranchDev( String _strRefBranchDev )
+    public void setRefBranchReleaseFrom( String _strRefBranchReleaseFrom )
     {
-        this._strRefBranchDev = _strRefBranchDev;
+        this._strRefBranchReleaseFrom = _strRefBranchReleaseFrom;
     }
 
     /**

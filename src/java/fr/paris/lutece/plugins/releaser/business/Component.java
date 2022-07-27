@@ -125,6 +125,15 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /** The str scm developer connection. */
     private String _strScmDeveloperConnection;
 
+    /** The list of component branches. */
+    private List<String> _listBranches;
+
+    /** The branch to release. */
+    private String _strBranchReleaseFrom;
+
+    /** The current branch version. */
+    private String _strBranchReleaseVersion;
+
     /**
      * Returns the ArtifactId.
      *
@@ -676,6 +685,36 @@ public class Component extends AbstractReleaserResource implements RBACResource
     public void setPermissions( HashMap<String, Boolean> permissions )
     {
         this.permissions = permissions;
+    }
+
+    public List<String> getBranches( )
+    {
+        return _listBranches;
+    }
+
+    public void setBranches( List<String> listBranches )
+    {
+        _listBranches = listBranches;
+    }
+
+    public String getBranchReleaseFrom( )
+    {
+        return _strBranchReleaseFrom;
+    }
+
+    public void setBranchReleaseFrom( String _strBranchReleaseFrom )
+    {
+        this._strBranchReleaseFrom = _strBranchReleaseFrom;
+    }
+
+    public String getBranchReleaseVersion( )
+    {
+        return _strBranchReleaseVersion;
+    }
+
+    public void setBranchReleaseVersion( String _strBranchReleaseVersion )
+    {
+        this._strBranchReleaseVersion = _strBranchReleaseVersion;
     }
 
 }

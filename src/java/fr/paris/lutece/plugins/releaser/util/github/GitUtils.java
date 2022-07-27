@@ -45,10 +45,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
+import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.PullResult;
@@ -68,6 +68,7 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
@@ -92,7 +93,7 @@ public class GitUtils
     public static final String MASTER_BRANCH = "master";
 
     /** The Constant DEVELOP_BRANCH. */
-    public static final String DEVELOP_BRANCH = "develop";
+    public static final String DEFAULT_RELEASE_BRANCH = "develop";
 
     /** The Constant CONSTANTE_REF_TAG. */
     private static final String CONSTANTE_REF_TAG = "refs/tags/";
@@ -480,7 +481,7 @@ public class GitUtils
         Ref mergedBranchRef = null;
         for ( Ref ref : call )
         {
-            if ( ref.getName( ).equals( "refs/heads/" + DEVELOP_BRANCH ) )
+            if ( ref.getName( ).equals( "refs/heads/" + DEFAULT_RELEASE_BRANCH ) )
             {
                 mergedBranchRef = ref;
                 break;
@@ -499,7 +500,7 @@ public class GitUtils
         {
 
             ReleaserUtils.addTechnicalError( commandResult,
-                    mergeResult.getMergeStatus( ).toString( ) + "\nPlease merge manually master into" + DEVELOP_BRANCH + "branch." );
+                    mergeResult.getMergeStatus( ).toString( ) + "\nPlease merge manually master into" + DEFAULT_RELEASE_BRANCH + "branch." );
         }
         else
         {
@@ -685,7 +686,7 @@ public class GitUtils
      *            the str repo url
      * @return the repo url
      */
-    private static String getRepoUrl( String strRepoUrl )
+    public static String getRepoUrl( String strRepoUrl )
     {
 
         if ( strRepoUrl != null && strRepoUrl.startsWith( "scm:git:" ) )
@@ -732,4 +733,56 @@ public class GitUtils
         return git;
     }
 
+    public static List<String> getBranchList( String repoUrl, File localRepo, CommandResult commandResult, String login, String pwd )
+    {
+        Git git = null;
+        List<String> branchNameList = null;
+
+        try
+        {
+            CredentialsProvider credential = new UsernamePasswordCredentialsProvider( login, pwd );
+
+            git = Git.cloneRepository( ).setCredentialsProvider( credential ).setURI( repoUrl ).setDirectory( localRepo ).setCloneAllBranches( true ).call( );
+
+            branchNameList = new ArrayList<String>( );
+
+            List<Ref> branchList = git.branchList( ).setListMode( ListMode.ALL ).call( );
+            if ( !branchList.isEmpty( ) )
+            {
+                for ( Ref ref : branchList )
+                {
+                    String [ ] refSplit = ref.getName( ).split( "/" );
+
+                    if ( refSplit [1].equals( "remotes" ) && refSplit [2].equals( "origin" ) )
+                    {
+                        branchNameList.add( refSplit [3] );
+                    }
+                }
+            }
+        }
+        catch( InvalidRemoteException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+            branchNameList.add( "InvalidRemoteException" );
+        }
+        catch( TransportException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+            branchNameList.add( "TransportException" );
+        }
+        catch( GitAPIException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+            branchNameList.add( "GitAPIException)" );
+        }
+        finally
+        {
+            if ( git != null )
+            {
+                git.close( );
+            }
+        }
+
+        return branchNameList;
+    }
 }

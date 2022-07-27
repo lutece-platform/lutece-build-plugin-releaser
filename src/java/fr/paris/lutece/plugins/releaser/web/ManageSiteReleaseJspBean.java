@@ -38,6 +38,7 @@ import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
+import fr.paris.lutece.plugins.releaser.service.ComponentService;
 import fr.paris.lutece.plugins.releaser.service.SiteResourceIdService;
 import fr.paris.lutece.plugins.releaser.service.SiteService;
 import fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService;
@@ -95,6 +96,9 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /** The Constant PARAMETER_VALID_RELEASE_MODIF. */
     private static final String PARAMETER_VALID_RELEASE_MODIF = "valid_release_modif_";
 
+    /** The Constant PARAMETER_RELEASE_BRANCH_NAME */
+    private static final String PARAMETER_RELEASE_BRANCH_NAME = "release_branch";
+
     /** The Constant VIEW_MANAGE_SITE_RELEASE. */
     // Views
     private static final String VIEW_MANAGE_SITE_RELEASE = "siteRelease";
@@ -110,6 +114,9 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
 
     /** The Constant VIEW_RELEASE_COMPONENT_HISTORY. */
     private static final String VIEW_RELEASE_COMPONENT_HISTORY = "releaseComponentHistory";
+
+    /** The Constant VIEW_CHANGE_BRANCH. */
+    private static final String VIEW_CHANGE_BRANCH = "changeBranch";
 
     /** The Constant ACTION_RELEASE_SITE. */
     // Actions
@@ -141,6 +148,9 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
 
     /** The Constant ACTION_CHANGE_SITE_NEXT_RELEASE_VERSION. */
     private static final String ACTION_CHANGE_SITE_NEXT_RELEASE_VERSION = "versionSite";
+
+    /** The Constant ACTION_CHANGE_BRANCH. */
+    private static final String ACTION_CHANGE_BRANCH = "doChangeBranch";
 
     /** The Constant TEMPLATE_PREPARE_SITE_RELEASE. */
     private static final String TEMPLATE_PREPARE_SITE_RELEASE = "/admin/plugins/releaser/prepare_site_release.html";
@@ -443,6 +453,7 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     @Action( ACTION_RELEASE_COMPONENT )
     public String doReleaseComponent( HttpServletRequest request )
     {
+
         String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
         AbstractJsonResponse jsonResponse = null;
         ReleaserUser user = ReleaserUtils.getReleaserUser( request, getLocale( ) );
@@ -610,6 +621,67 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         SiteService.changeNextReleaseVersion( _site );
 
         return redirect( request, JSP_MANAGE_RELEASE_SITE, PARAMETER_OPEN_SITE_VERSION, 1 );
+    }
+
+    /**
+     * Do get Branch list.
+     *
+     * @param request
+     *            the request
+     * @return the string
+     */
+    @View( value = VIEW_CHANGE_BRANCH )
+    public String getChangeBranch( HttpServletRequest request )
+    {
+        String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
+        ReleaserUser user = ReleaserUtils.getReleaserUser( request, request.getLocale( ) );
+        if ( user == null )
+        {
+            user = new ReleaserUser( );
+        }
+        ReleaserUtils.populateReleaserUser( request, user );
+        ReleaserUtils.setReleaserUser( request, user );
+
+        Component component = ComponentService.getService( ).getComponentBranchList( _site, strArtifactId, user );
+
+        return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
+    }
+
+    /**
+     * Do get Branch list.
+     *
+     * @param request
+     *            the request
+     * @return the string
+     */
+    @Action( ACTION_CHANGE_BRANCH )
+    public String doChangeBranch( HttpServletRequest request )
+    {
+
+        String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
+        String strReleaseBranchName = request.getParameter( PARAMETER_RELEASE_BRANCH_NAME );
+
+        ReleaserUser user = ReleaserUtils.getReleaserUser( request, request.getLocale( ) );
+        if ( user == null )
+        {
+            user = new ReleaserUser( );
+
+        }
+        ReleaserUtils.populateReleaserUser( request, user );
+        ReleaserUtils.setReleaserUser( request, user );
+
+        Component component = null;
+        for ( Component comp : _site.getComponents( ) )
+        {
+            if ( comp.getArtifactId( ).equals( strArtifactId ) )
+            {
+                component = comp;
+            }
+        }
+
+        component = ComponentService.getService( ).getLastBranchVersion( component, strReleaseBranchName, user );
+
+        return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
     }
 
 }

@@ -33,6 +33,7 @@
  */
 package fr.paris.lutece.plugins.releaser.service;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -47,6 +48,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.api.Git;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -54,9 +56,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.RepositoryType;
+import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
+import fr.paris.lutece.plugins.releaser.business.ReleaserUser.Credential;
+import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
+import fr.paris.lutece.plugins.releaser.util.file.FileUtils;
 import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
 import fr.paris.lutece.plugins.releaser.util.github.GithubSearchRepoItem;
 import fr.paris.lutece.plugins.releaser.util.github.GithubSearchResult;
@@ -325,7 +331,8 @@ public class ComponentService implements IComponentService
         for ( Component component : paginator.getPageItems( ) )
         {
             // Load only information on the current page
-            loadComponent( component, GitUtils.getFileContent( component.getFullName( ), "pom.xml", GitUtils.DEVELOP_BRANCH, strUserLogin, strUserPassword ),
+            loadComponent( component,
+                    GitUtils.getFileContent( component.getFullName( ), "pom.xml", component.getBranchReleaseFrom( ), strUserLogin, strUserPassword ),
                     strUserLogin, strUserPassword );
 
         }
@@ -370,14 +377,33 @@ public class ComponentService implements IComponentService
         {
             AppLogService.error( e );
         }
+
         ComponentService.getService( ).updateRemoteInformations( component );
-        component.setTargetVersions( Version.getNextReleaseVersions( component.getLastAvailableVersion( ) ) );
-        component.setTargetVersion( Version.getReleaseVersion( component.getCurrentVersion( ) ) );
+
+        if ( component.getBranchReleaseFrom( ).equals( GitUtils.DEFAULT_RELEASE_BRANCH ) )
+        {
+            component = getNextVersions( component, component.getLastAvailableVersion( ), component.getCurrentVersion( ), component.getTargetVersion( ) );
+        }
+        else
+        {
+            String strBranchReleaseCurrentVersion = component.getBranchReleaseVersion( );
+
+            component = getNextVersions( component, strBranchReleaseCurrentVersion, strBranchReleaseCurrentVersion, strBranchReleaseCurrentVersion );
+        }
+
+        return component;
+    }
+
+    private Component getNextVersions( Component component, String strLastAvailableVersion, String strCurrentVersion, String strTargetVersion )
+    {
+
+        component.setTargetVersions( Version.getNextReleaseVersions( strLastAvailableVersion ) );
+        component.setTargetVersion( Version.getReleaseVersion( strCurrentVersion ) );
 
         String strNextSnapshotVersion = null;
         try
         {
-            Version version = Version.parse( component.getTargetVersion( ) );
+            Version version = Version.parse( strTargetVersion );
             boolean bSnapshot = true;
             strNextSnapshotVersion = version.nextPatch( bSnapshot ).toString( );
         }
@@ -387,10 +413,9 @@ public class ComponentService implements IComponentService
 
         }
         component.setNextSnapshotVersion( strNextSnapshotVersion );
-        component.setLastAvailableSnapshotVersion( component.getCurrentVersion( ) );
+        component.setLastAvailableSnapshotVersion( strCurrentVersion );
 
         return component;
-
     }
 
     public boolean isErrorSnapshotComponentInformations( Component component, String strComponentPomPath )
@@ -454,6 +479,105 @@ public class ComponentService implements IComponentService
         }
 
         return false;
+    }
+
+    @Override
+    public Component getComponentBranchList( Site site, String artifactId, ReleaserUser user )
+    {
+
+        Component component = null;
+        for ( Component comp : site.getComponents( ) )
+        {
+            if ( comp.getArtifactId( ).equals( artifactId ) )
+            {
+                component = comp;
+            }
+        }
+
+        Credential credential = user.getCredential( site.getRepoType( ) );
+        String strLogin = credential.getLogin( );
+        String strPwd = credential.getPassword( );
+
+        CommandResult commandResult = new CommandResult( );
+        WorkflowReleaseContext context = new WorkflowReleaseContext( );
+        commandResult.setLog( new StringBuffer( ) );
+        context.setCommandResult( commandResult );
+        context.setComponent( component );
+
+        ReleaserUtils.logStartAction( context, " Clone Component '" + component.getName( ) + "'" );
+
+        String strLocalComponentPath = ReleaserUtils.getLocalPath( context );
+
+        String strRepoUrl = GitUtils.getRepoUrl( context.getReleaserResource( ).getScmUrl( ) );
+        File fLocalRepo = new File( strLocalComponentPath );
+        if ( fLocalRepo.exists( ) )
+        {
+            commandResult.getLog( ).append( "Local repository " + strLocalComponentPath + " exist\nCleaning Local folder...\n" );
+            if ( !FileUtils.delete( fLocalRepo, commandResult.getLog( ) ) )
+            {
+                commandResult.setError( commandResult.getLog( ).toString( ) );
+
+            }
+            commandResult.getLog( ).append( "Local repository has been cleaned\n" );
+        }
+
+        List<String> branchNameList = GitUtils.getBranchList( strRepoUrl, fLocalRepo, commandResult, strLogin, strPwd );
+        branchNameList.remove( "master" );
+        branchNameList.remove( "develop" );
+
+        component.setBranches( branchNameList );
+        context.setComponent( component );
+
+        return component;
+    }
+
+    public Component getLastBranchVersion( Component component, String branchName, ReleaserUser user )
+    {
+        String strPom = null;
+
+        // Set default release branch
+        if ( !component.getBranches( ).contains( component.getBranchReleaseFrom( ) ) )
+        {
+            component.getBranches( ).add( component.getBranchReleaseFrom( ) );
+        }
+        component.setBranchReleaseFrom( branchName );
+        int indx = component.getBranches( ).indexOf( branchName );
+        component.getBranches( ).remove( indx );
+
+        CommandResult commandResult = new CommandResult( );
+        WorkflowReleaseContext context = new WorkflowReleaseContext( );
+        commandResult.setLog( new StringBuffer( ) );
+        context.setCommandResult( commandResult );
+        context.setComponent( component );
+
+        String strLocalComponentPath = ReleaserUtils.getLocalPath( context );
+        File fLocalRepo = new File( strLocalComponentPath );
+
+        ReleaserUtils.logStartAction( context, " Get versions of branch '" + branchName + "'" );
+
+        Git git;
+        try
+        {
+            git = Git.open( fLocalRepo );
+
+            // Checkout branch
+            GitUtils.createLocalBranch( git, branchName, commandResult );
+
+            commandResult.getLog( ).append( "Checkout branch \"" + branchName + "\" ...\n" );
+            GitUtils.checkoutRepoBranch( git, branchName, commandResult );
+
+            // Fetch pom and Get last and next versions
+            strPom = FileUtils.readFile( ReleaserUtils.getLocalPomPath( context ) );
+            component = loadComponent( component, strPom, null, null );
+
+        }
+        catch( IOException e )
+        {
+
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+        }
+
+        return component;
     }
 
 }

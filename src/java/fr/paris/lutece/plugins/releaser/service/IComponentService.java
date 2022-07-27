@@ -34,15 +34,15 @@
 package fr.paris.lutece.plugins.releaser.service;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
+import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
+import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.web.util.LocalizedPaginator;
-import fr.paris.lutece.util.ReferenceList;
 import fr.paris.lutece.util.httpaccess.HttpAccessException;
 // TODO: Auto-generated Javadoc
 
@@ -214,4 +214,18 @@ public interface IComponentService
      */
     void init( );
 
+    /**
+     * Set list of all component branches
+     * 
+     * @param site
+     *            The site
+     * @param artifactId
+     *            The component artifactId
+     * @param user
+     *            The user
+     * @return
+     */
+    Component getComponentBranchList( Site site, String artifactId, ReleaserUser user );
+
+    Component getLastBranchVersion( Component component, String branchName, ReleaserUser user );
 }
