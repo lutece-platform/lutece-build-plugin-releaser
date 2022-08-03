@@ -36,6 +36,7 @@ package fr.paris.lutece.plugins.releaser.business;
 import java.util.HashMap;
 import java.util.List;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
+import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.portal.service.rbac.RBACResource;
 
@@ -129,7 +130,7 @@ public class Component extends AbstractReleaserResource implements RBACResource
     private List<String> _listBranches;
 
     /** The branch to release. */
-    private String _strBranchReleaseFrom;
+    private String _strBranchReleaseFrom=GitUtils.DEFAULT_RELEASE_BRANCH;
 
     /** The current branch version. */
     private String _strBranchReleaseVersion;

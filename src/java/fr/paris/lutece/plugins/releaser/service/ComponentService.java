@@ -380,9 +380,9 @@ public class ComponentService implements IComponentService
 
         ComponentService.getService( ).updateRemoteInformations( component );
 
-        if ( component.getBranchReleaseFrom( ).equals( GitUtils.DEFAULT_RELEASE_BRANCH ) )
+        if ( component.getBranchReleaseFrom( )!=null && component.getBranchReleaseFrom( ).equals( GitUtils.DEFAULT_RELEASE_BRANCH ) )
         {
-            component = getNextVersions( component, component.getLastAvailableVersion( ), component.getCurrentVersion( ), component.getTargetVersion( ) );
+              component = getNextVersions( component, component.getLastAvailableVersion( ), component.getCurrentVersion( ), component.getCurrentVersion() );
         }
         else
         {
