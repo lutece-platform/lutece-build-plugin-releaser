@@ -40,6 +40,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
+import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.web.util.LocalizedPaginator;
@@ -225,7 +226,7 @@ public interface IComponentService
      *            The user
      * @return
      */
-    Component getComponentBranchList( Site site, String artifactId, ReleaserUser user );
+    Component getComponentBranchList( Component component, RepositoryType repositoryType, ReleaserUser user );
 
     Component getLastBranchVersion( Component component, String branchName, ReleaserUser user );
 }

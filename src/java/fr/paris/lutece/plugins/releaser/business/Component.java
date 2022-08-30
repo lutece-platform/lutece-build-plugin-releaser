@@ -130,7 +130,7 @@ public class Component extends AbstractReleaserResource implements RBACResource
     private List<String> _listBranches;
 
     /** The branch to release. */
-    private String _strBranchReleaseFrom=GitUtils.DEFAULT_RELEASE_BRANCH;
+    private String _strBranchReleaseFrom;
 
     /** The current branch version. */
     private String _strBranchReleaseVersion;

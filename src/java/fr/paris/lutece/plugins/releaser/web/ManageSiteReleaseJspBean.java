@@ -633,22 +633,18 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     @View( value = VIEW_CHANGE_BRANCH )
     public String getChangeBranch( HttpServletRequest request )
     {
+    	
         String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
-        ReleaserUser user = ReleaserUtils.getReleaserUser( request, request.getLocale( ) );
-        if ( user == null )
-        {
-            user = new ReleaserUser( );
-        }
-        ReleaserUtils.populateReleaserUser( request, user );
-        ReleaserUtils.setReleaserUser( request, user );
-
-        Component component = ComponentService.getService( ).getComponentBranchList( _site, strArtifactId, user );
+                
+        ReleaserUser user = setReleaserUser ( request );
+        
+        Component component = ComponentService.getService( ).getComponentBranchList( getCurentComponent( strArtifactId ), _site.getRepoType( ), user );
 
         return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
     }
 
     /**
-     * Do get Branch list.
+     * Do change Branch.
      *
      * @param request
      *            the request
@@ -657,9 +653,20 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     @Action( ACTION_CHANGE_BRANCH )
     public String doChangeBranch( HttpServletRequest request )
     {
-
+    	
         String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
         String strReleaseBranchName = request.getParameter( PARAMETER_RELEASE_BRANCH_NAME );
+
+        ReleaserUser user = setReleaserUser ( request );
+        
+        Component component = ComponentService.getService( ).getLastBranchVersion( getCurentComponent( strArtifactId ), strReleaseBranchName, user );
+        
+        return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
+    }
+    
+
+    private ReleaserUser setReleaserUser ( HttpServletRequest request )
+    {
 
         ReleaserUser user = ReleaserUtils.getReleaserUser( request, request.getLocale( ) );
         if ( user == null )
@@ -670,18 +677,25 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         ReleaserUtils.populateReleaserUser( request, user );
         ReleaserUtils.setReleaserUser( request, user );
 
-        Component component = null;
-        for ( Component comp : _site.getComponents( ) )
+        return user;
+    }
+    
+    private Component getCurentComponent( String artifactId )
+    {
+    	Component component = null;
+    	
+    	if ( artifactId != null && _site != null )
         {
-            if ( comp.getArtifactId( ).equals( strArtifactId ) )
-            {
-                component = comp;
-            }
+	        for ( Component comp : _site.getComponents( ) )
+	        {
+	            if ( comp.getArtifactId( ).equals( artifactId ) )
+	            {
+	                component = comp;
+	            }
+	        }
         }
-
-        component = ComponentService.getService( ).getLastBranchVersion( component, strReleaseBranchName, user );
-
-        return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
+        
+    	return component;
     }
 
 }

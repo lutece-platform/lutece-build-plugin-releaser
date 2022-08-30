@@ -56,7 +56,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.RepositoryType;
-import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser.Credential;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
@@ -354,6 +353,7 @@ public class ComponentService implements IComponentService
                 component = new Component( );
                 component.setFullName( item.getFullName( ) );
                 component.setName( item.getName( ) );
+                component.setBranchReleaseFrom(GitUtils.DEFAULT_RELEASE_BRANCH);
                 listComponent.add( component );
             }
 
@@ -482,23 +482,14 @@ public class ComponentService implements IComponentService
     }
 
     @Override
-    public Component getComponentBranchList( Site site, String artifactId, ReleaserUser user )
+    public Component getComponentBranchList( Component component, RepositoryType repositoryType, ReleaserUser user )
     {
-
-        Component component = null;
-        for ( Component comp : site.getComponents( ) )
-        {
-            if ( comp.getArtifactId( ).equals( artifactId ) )
-            {
-                component = comp;
-            }
-        }
-
-        Credential credential = user.getCredential( site.getRepoType( ) );
+    	
+        Credential credential = user.getCredential( repositoryType );
         String strLogin = credential.getLogin( );
         String strPwd = credential.getPassword( );
-
-        CommandResult commandResult = new CommandResult( );
+        
+    	CommandResult commandResult = new CommandResult( );
         WorkflowReleaseContext context = new WorkflowReleaseContext( );
         commandResult.setLog( new StringBuffer( ) );
         context.setCommandResult( commandResult );
@@ -530,7 +521,7 @@ public class ComponentService implements IComponentService
 
         return component;
     }
-
+    
     public Component getLastBranchVersion( Component component, String branchName, ReleaserUser user )
     {
         String strPom = null;

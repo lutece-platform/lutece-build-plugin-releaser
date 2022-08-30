@@ -41,6 +41,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
+import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.service.ComponentService;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.portal.service.admin.AccessDeniedException;
@@ -68,10 +69,16 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
     /** The Constant PARAMETER_SEARCH. */
     private static final String PARAMETER_SEARCH = "search";
 
+    /** The Constant PARAMETER_RELEASE_BRANCH_NAME */
+    private static final String PARAMETER_RELEASE_BRANCH_NAME = "release_branch";
+
     /** The Constant VIEW_MANAGE_COMPONENT. */
     // Views
     private static final String VIEW_MANAGE_COMPONENT = "manageComponent";
     // Actions
+
+    /** The Constant VIEW_CHANGE_BRANCH. */
+    private static final String VIEW_CHANGE_BRANCH = "changeBranch";
 
     /** The Constant TEMPLATE_MANAGE_COMPONENT. */
     private static final String TEMPLATE_MANAGE_COMPONENT = "/admin/plugins/releaser/manage_component.html";
@@ -96,6 +103,9 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
 
     /** The Constant ACTION_RELEASE_COMPONENT. */
     private static final String ACTION_RELEASE_COMPONENT = "releaseComponent";
+
+    /** The Constant ACTION_CHANGE_BRANCH. */
+    private static final String ACTION_CHANGE_BRANCH = "doChangeBranch";
 
     /** The Constant PARAMETER_ARTIFACT_ID. */
     private static final String PARAMETER_ARTIFACT_ID = "artifact_id";
@@ -131,29 +141,27 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
         {
             throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
         }
-
-        ReleaserUser user = ReleaserUtils.getReleaserUser( request, getLocale( ) );
-        if ( user == null )
-        {
-            user = new ReleaserUser( );
-
-        }
-        ReleaserUtils.populateReleaserUser( request, user );
-        ReleaserUtils.setReleaserUser( request, user );
-
+        
+        ReleaserUser user = setReleaserUser ( request );
+        
         _strSearch = request.getParameter( PARAMETER_SEARCH ) != null ? request.getParameter( PARAMETER_SEARCH ) : _strSearch;
-        String stCurrentPageIndexOld = _strCurrentPageIndex;
-        _strCurrentPageIndex = Paginator.getPageIndex( request, Paginator.PARAMETER_PAGE_INDEX, _strCurrentPageIndex );
+        
 
-        if ( !StringUtils.isEmpty( request.getParameter( PARAMETER_SEARCH ) )
-                || ( _strCurrentPageIndex != null && !_strCurrentPageIndex.equals( stCurrentPageIndexOld ) ) )
+        if (_strSearch != null &&_paginatorComponents == null)
         {
+        	String stCurrentPageIndexOld = _strCurrentPageIndex;
+            _strCurrentPageIndex = Paginator.getPageIndex( request, Paginator.PARAMETER_PAGE_INDEX, _strCurrentPageIndex );
 
-            _paginatorComponents = ComponentService.getService( ).getSearchComponent( _strSearch, request, getLocale( ), JSP_MANAGE_COMPONENT,
-                    _strCurrentPageIndex );
+            if ( !StringUtils.isEmpty( request.getParameter( PARAMETER_SEARCH ) )
+                    || ( _strCurrentPageIndex != null && !_strCurrentPageIndex.equals( stCurrentPageIndexOld ) ) )
+            {
 
+                _paginatorComponents = ComponentService.getService( ).getSearchComponent( _strSearch, request, getLocale( ), JSP_MANAGE_COMPONENT,
+                        _strCurrentPageIndex );
+
+            }
         }
-
+        
         Map<String, Object> model = getModel( );
         model.put( MARK_SEARCH, _strSearch );
         model.put( MARK_LIST_COMPONENT, _paginatorComponents != null ? _paginatorComponents.getPageItems( ) : null );
@@ -227,6 +235,82 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
         jsonResponse = new JsonResponse( nIdContext );
 
         return JsonUtil.buildJsonResponse( jsonResponse );
+    }
+    
+    /**
+     * Do get Branch list.
+     *
+     * @param request
+     *            the request
+     * @return the string
+     */
+    @View( value = VIEW_CHANGE_BRANCH )
+    public String getChangeBranch( HttpServletRequest request )
+    {
+    	
+        String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );        
+                        
+        ReleaserUser user = setReleaserUser ( request );
+
+        Component component = ComponentService.getService( ).getComponentBranchList( getCurrentComponent( strArtifactId ), RepositoryType.GITHUB, user );
+
+        return redirectView( request, VIEW_MANAGE_COMPONENT );
+        
+    }
+
+    /**
+     * Do change Branch.
+     *
+     * @param request
+     *            the request
+     * @return the string
+     */
+    @Action( ACTION_CHANGE_BRANCH )
+    public String doChangeBranch( HttpServletRequest request )
+    {        
+
+        String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
+        String strReleaseBranchName = request.getParameter( PARAMETER_RELEASE_BRANCH_NAME );
+
+        ReleaserUser user = setReleaserUser ( request );
+        
+        Component component = ComponentService.getService( ).getLastBranchVersion( getCurrentComponent( strArtifactId ), strReleaseBranchName, user );
+
+        return redirectView( request, VIEW_MANAGE_COMPONENT );
+    }
+    
+    private ReleaserUser setReleaserUser ( HttpServletRequest request )
+    {
+
+        ReleaserUser user = ReleaserUtils.getReleaserUser( request, request.getLocale( ) );
+        if ( user == null )
+        {
+            user = new ReleaserUser( );
+
+        }
+        ReleaserUtils.populateReleaserUser( request, user );
+        ReleaserUtils.setReleaserUser( request, user );
+
+        return user;
+    }
+    
+    private Component getCurrentComponent( String artifactId )
+    {
+    	Component component = null;
+    	
+    	if ( artifactId != null && _paginatorComponents != null )
+        {
+        	for ( Component comp : _paginatorComponents.getPageItems() )
+            {
+                if ( comp.getArtifactId( ).equals( artifactId ) )
+                {
+                    component = comp;
+                    break;
+                }
+            }
+        }
+    	
+    	return component;
     }
 
 }
