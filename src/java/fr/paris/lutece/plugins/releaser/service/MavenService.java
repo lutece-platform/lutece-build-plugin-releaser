@@ -180,14 +180,16 @@ public class MavenService implements IMavenService
         request.setShowErrors( true );
         request.setShellEnvironmentInherited( true );
 
+        
         String strProxyHost = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_PROXY_HOST );
         String strProxyPort = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_PROXY_PORT );
 
         if ( !StringUtils.isEmpty( strProxyHost ) && !StringUtils.isEmpty( strProxyPort ) )
         {
             request.setMavenOpts( "-Dhttps.proxyHost=" + strProxyHost + "  -Dhttps.proxyPort=" + strProxyPort + " -Dhttp.proxyHost=" + strProxyHost
-                    + "  -Dhttp.proxyPort=" + strProxyPort + " -Dfile.encoding=UTF-8" );
+                    + "  -Dhttp.proxyPort=" + strProxyPort +" -Dhttps.nonProxyHosts='*.mdp' -Dhttp.nonProxyHosts='*.mdp'" + " -Dfile.encoding=UTF-8" );
         }
+       
         InvocationResult invocationResult = null;
         try
         {
@@ -229,9 +231,9 @@ public class MavenService implements IMavenService
      *            the command result
      * @return the string
      */
-    public String mvnReleasePerform( String strPathPom, String strUsername, String strPassword, CommandResult commandResult )
+    public String mvnReleasePerform( String strPathPom, String strUsername, String strPassword, CommandResult commandResult,boolean bPrivateRepository )
     {
-        InvocationResult invocationResult = mvnExecute( strPathPom, MavenGoals.RELEASE_PERFORM.asList( ), commandResult );
+        InvocationResult invocationResult = mvnExecute( strPathPom,bPrivateRepository? MavenGoals.RELEASE_PERFORM_PRIVATE_REPO.asList( ):MavenGoals.RELEASE_PERFORM.asList( ), commandResult );
         int nStatus = invocationResult.getExitCode( );
         System.out.println( commandResult.getLog( ).toString( ) );
         if ( nStatus != 0 )

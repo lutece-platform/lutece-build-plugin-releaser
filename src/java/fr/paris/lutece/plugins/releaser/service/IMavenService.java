@@ -92,9 +92,10 @@ public interface IMavenService
      *            the str password
      * @param commandResult
      *            the command result
+     * @param bPrivateRepository true if the perform must be push in private repository           
      * @return the string
      */
-    String mvnReleasePerform( String strPathPom, String strUsername, String strPassword, CommandResult commandResult );
+    String mvnReleasePerform( String strPathPom, String strUsername, String strPassword, CommandResult commandResult,boolean bPrivateRepository );
 
     /**
      * Inits the.

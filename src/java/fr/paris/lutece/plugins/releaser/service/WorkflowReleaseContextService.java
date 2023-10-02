@@ -603,8 +603,11 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
         try
         {
+        	
 
-            MavenService.getService( ).mvnReleasePerform( strLocalComponentPath, strLogin, strPassword, commandResult );
+        		MavenService.getService( ).mvnReleasePerform( strLocalComponentPath, strLogin, strPassword, commandResult,context.getComponent().getRepoType( ).equals(RepositoryType.GITLAB) );
+        		
+        		
 
         }
         catch( AppException ex )
@@ -848,7 +851,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             try
             {
 
-                MavenService.getService( ).mvnReleasePerform( strLocalComponentPath, strLogin, strPassword, commandResult );
+                MavenService.getService( ).mvnReleasePerform( strLocalComponentPath, strLogin, strPassword, commandResult,true );
 
             }
             catch( AppException ex )

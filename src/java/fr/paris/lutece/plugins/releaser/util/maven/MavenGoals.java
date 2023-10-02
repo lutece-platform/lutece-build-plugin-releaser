@@ -50,7 +50,10 @@ public enum MavenGoals
     /** The release prepare. */
     RELEASE_PREPARE( "release:prepare", "-DignoreSnapshots=true -DforkMode=never -Darguments=\"-Dmaven.test.skip=true\" --batch-mode" ),
     /** The release perform. */
-    RELEASE_PERFORM( "release:perform", "-Dgoals=deploy -DforkMode=never -Darguments=\"-Dmaven.test.skip=true\" --batch-mode" );
+    RELEASE_PERFORM( "release:perform", "-Dgoals=deploy -DforkMode=never -Darguments=\"-Dmaven.test.skip=true\" --batch-mode" ),
+
+	RELEASE_PERFORM_PRIVATE_REPO( "release:perform", "-Dgoals=deploy -DforkMode=never -Darguments=\"-Dmaven.test.skip=true -DaltReleaseDeploymentRepository='lutece_releases_private_repository::default::$private_repo_url'\" --batch-mode" );
+	
 
     /** The goals. */
     private List<String> _goals;
