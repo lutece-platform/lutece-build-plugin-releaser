@@ -192,7 +192,7 @@ public class MavenService implements IMavenService
         if ( !StringUtils.isEmpty( strProxyHost ) && !StringUtils.isEmpty( strProxyPort ) )
         {
             request.setMavenOpts( "-Dhttps.proxyHost=" + strProxyHost + "  -Dhttps.proxyPort=" + strProxyPort + " -Dhttp.proxyHost=" + strProxyHost
-                    + "  -Dhttp.proxyPort=" + strProxyPort +" -Dhttps.nonProxyHosts='"+strNoProxyForMaven +"' -Dhttp.nonProxyHosts='"+strNoProxyForMaven +"'" + " -Dfile.encoding=UTF-8" );
+                    + "  -Dhttp.proxyPort=" + strProxyPort +" -Dhttps.nonProxyHosts="+strNoProxyForMaven +" -Dhttp.nonProxyHosts="+strNoProxyForMaven +"" + " -Dfile.encoding=UTF-8" );
         }
        
         InvocationResult invocationResult = null;
