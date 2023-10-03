@@ -158,14 +158,21 @@ public class ConstanteUtils
     /** The Constant PROPERTY_MAVEN_LOCAL_REPOSITORY. */
     public static final String PROPERTY_MAVEN_LOCAL_REPOSITORY = "releaser.mavenLocalRepository";
 
+    /** The Constant PROPERTY_MAVEN_PRIVATE_RELEASE_DEPLOYMENT_REPOSITORY. */
+    public static final String PROPERTY_MAVEN_PRIVATE_RELEASE_DEPLOYMENT_REPOSITORY = "releaser.mavenPrivateReleaseDeploymentRepository";
+
+    
     /** The Constant PROPERTY_MAVEN_HOME_PATH. */
     public static final String PROPERTY_MAVEN_HOME_PATH = "releaser.mavenHomePath";
+    
 
     /** The Constant PROPERTY_PROXY_HOST. */
     public static final String PROPERTY_PROXY_HOST = "httpAccess.proxyHost";
 
     /** The Constant PROPERTY_PROXY_PORT. */
     public static final String PROPERTY_PROXY_PORT = "httpAccess.proxyPort";
+    /** The Constant PROPERTY_PROXY_PORT. */
+    public static final String PROPERTY_NO_PROXY_FOR_MAVEN="releaser.noProxyForMaven";
 
     /** The Constant PROPERTY_TWITTER_OAUTH_CONSUMER_KEY. */
     public static final String PROPERTY_TWITTER_OAUTH_CONSUMER_KEY = "releaser.consumerKey";
@@ -220,7 +227,7 @@ public class ConstanteUtils
 
     /** The Constant MARK_USER. */
     public static final String MARK_USER = "user";
-
+    
     /** The Constant PARAMETER_ACTION. */
     public static final String PARAMETER_ACTION = "action";
 

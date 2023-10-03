@@ -53,6 +53,7 @@ import fr.paris.lutece.plugins.releaser.util.maven.MavenUtils;
 import fr.paris.lutece.plugins.releaser.util.svn.SvnUser;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
+import fr.paris.lutece.util.string.StringUtil;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -174,7 +175,10 @@ public class MavenService implements IMavenService
 
     private synchronized InvocationResult mvnExecute( String strPathPom, List<String> goals, CommandResult commandResult )
     {
-        InvocationRequest request = new DefaultInvocationRequest( );
+       
+    	
+    	
+    	InvocationRequest request = new DefaultInvocationRequest( );
         request.setPomFile( new File( strPathPom ) );
         request.setGoals( goals );
         request.setShowErrors( true );
@@ -183,11 +187,12 @@ public class MavenService implements IMavenService
         
         String strProxyHost = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_PROXY_HOST );
         String strProxyPort = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_PROXY_PORT );
+        String strNoProxyForMaven = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_NO_PROXY_FOR_MAVEN );
 
         if ( !StringUtils.isEmpty( strProxyHost ) && !StringUtils.isEmpty( strProxyPort ) )
         {
             request.setMavenOpts( "-Dhttps.proxyHost=" + strProxyHost + "  -Dhttps.proxyPort=" + strProxyPort + " -Dhttp.proxyHost=" + strProxyHost
-                    + "  -Dhttp.proxyPort=" + strProxyPort +" -Dhttps.nonProxyHosts='*.mdp' -Dhttp.nonProxyHosts='*.mdp'" + " -Dfile.encoding=UTF-8" );
+                    + "  -Dhttp.proxyPort=" + strProxyPort +" -Dhttps.nonProxyHosts='"+strNoProxyForMaven +"' -Dhttp.nonProxyHosts='"+strNoProxyForMaven +"'" + " -Dfile.encoding=UTF-8" );
         }
        
         InvocationResult invocationResult = null;
@@ -233,7 +238,10 @@ public class MavenService implements IMavenService
      */
     public String mvnReleasePerform( String strPathPom, String strUsername, String strPassword, CommandResult commandResult,boolean bPrivateRepository )
     {
-        InvocationResult invocationResult = mvnExecute( strPathPom,bPrivateRepository? MavenGoals.RELEASE_PERFORM_PRIVATE_REPO.asList( ):MavenGoals.RELEASE_PERFORM.asList( ), commandResult );
+        
+    	
+    
+    	InvocationResult invocationResult = mvnExecute( strPathPom,bPrivateRepository && StringUtils.isNoneBlank(AppPropertiesService.getProperty(ConstanteUtils.PROPERTY_MAVEN_PRIVATE_RELEASE_DEPLOYMENT_REPOSITORY))? MavenGoals.RELEASE_PERFORM_PRIVATE_REPO.asList( ):MavenGoals.RELEASE_PERFORM.asList( ), commandResult );
         int nStatus = invocationResult.getExitCode( );
         System.out.println( commandResult.getLog( ).toString( ) );
         if ( nStatus != 0 )

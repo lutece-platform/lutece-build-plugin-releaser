@@ -36,6 +36,9 @@ package fr.paris.lutece.plugins.releaser.util.maven;
 import java.util.Arrays;
 import java.util.List;
 
+import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
+import fr.paris.lutece.portal.service.util.AppPropertiesService;
+
 // TODO: Auto-generated Javadoc
 /**
  * MavenGoals.
@@ -51,8 +54,8 @@ public enum MavenGoals
     RELEASE_PREPARE( "release:prepare", "-DignoreSnapshots=true -DforkMode=never -Darguments=\"-Dmaven.test.skip=true\" --batch-mode" ),
     /** The release perform. */
     RELEASE_PERFORM( "release:perform", "-Dgoals=deploy -DforkMode=never -Darguments=\"-Dmaven.test.skip=true\" --batch-mode" ),
-
-	RELEASE_PERFORM_PRIVATE_REPO( "release:perform", "-Dgoals=deploy -DforkMode=never -Darguments=\"-Dmaven.test.skip=true -DaltReleaseDeploymentRepository='lutece_releases_private_repository::default::$private_repo_url'\" --batch-mode" );
+    /** The release perform  in private repository. */
+	RELEASE_PERFORM_PRIVATE_REPO( "release:perform", "-Dgoals=deploy -DforkMode=never -Darguments=\"-Dmaven.test.skip=true -DaltReleaseDeploymentRepository='lutece_releases_private_repository::default::"+AppPropertiesService.getProperty(ConstanteUtils.PROPERTY_MAVEN_PRIVATE_RELEASE_DEPLOYMENT_REPOSITORY) +"'\" --batch-mode" );
 	
 
     /** The goals. */
