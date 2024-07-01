@@ -147,7 +147,7 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
         _strSearch = request.getParameter( PARAMETER_SEARCH ) != null ? request.getParameter( PARAMETER_SEARCH ) : _strSearch;
         
 
-        if (_strSearch != null &&_paginatorComponents == null)
+        if (_strSearch != null)
         {
         	String stCurrentPageIndexOld = _strCurrentPageIndex;
             _strCurrentPageIndex = Paginator.getPageIndex( request, Paginator.PARAMETER_PAGE_INDEX, _strCurrentPageIndex );
