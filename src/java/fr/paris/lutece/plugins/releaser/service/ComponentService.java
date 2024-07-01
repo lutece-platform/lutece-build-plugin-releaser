@@ -317,24 +317,29 @@ public class ComponentService implements IComponentService
         ReleaserUser user = ReleaserUtils.getReleaserUser( request, locale );
         String strUserLogin = user.getCredential( RepositoryType.GITHUB ).getLogin( );
         String strUserPassword = user.getCredential( RepositoryType.GITHUB ).getPassword( );
-        List<Component> listResult = getListComponent(
+        List<Component> listResultAll = getListComponent(
                 GitUtils.searchRepo( strSearch, ConstanteUtils.CONSTANTE_GITHUB_ORG_LUTECE_PLATFORM, strUserLogin, strUserPassword ), strUserLogin,
                 strUserPassword );
-        listResult.addAll(
+        listResultAll.addAll(
                 getListComponent( GitUtils.searchRepo( strSearch, ConstanteUtils.CONSTANTE_GITHUB_ORG_LUTECE_SECTEUR_PUBLIC, strUserLogin, strUserPassword ),
                         strUserLogin, strUserPassword ) );
 
-        LocalizedPaginator<Component> paginator = new LocalizedPaginator<Component>( listResult, nItemsPerPageLoad, strPaginateUrl,
-                LocalizedPaginator.PARAMETER_PAGE_INDEX, strCurrentPageIndex, locale );
-
-        for ( Component component : paginator.getPageItems( ) )
+        List<Component> listResult = new ArrayList<Component>();        
+        for ( Component component : listResultAll )
         {
             // Load only information on the current page
             loadComponent( component,
                     GitUtils.getFileContent( component.getFullName( ), "pom.xml", component.getBranchReleaseFrom( ), strUserLogin, strUserPassword ),
                     strUserLogin, strUserPassword );
-
+            
+            if (component.getArtifactId() != null && !component.getArtifactId().isEmpty())
+            {
+            	listResult.add(component);
+            }
         }
+        
+        LocalizedPaginator<Component> paginator = new LocalizedPaginator<Component>( listResult, nItemsPerPageLoad, strPaginateUrl,
+                LocalizedPaginator.PARAMETER_PAGE_INDEX, strCurrentPageIndex, locale );
 
         return paginator;
     }
