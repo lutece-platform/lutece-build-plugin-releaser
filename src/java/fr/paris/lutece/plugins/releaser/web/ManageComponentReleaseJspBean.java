@@ -142,26 +142,33 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
             throw new AccessDeniedException( MESSAGE_ACCESS_DENIED );
         }
         
-        ReleaserUser user = setReleaserUser ( request );
+        ReleaserUser user = setReleaserUser ( request );        
         
-        _strSearch = request.getParameter( PARAMETER_SEARCH ) != null ? request.getParameter( PARAMETER_SEARCH ) : _strSearch;
-        
-
-        if (_strSearch != null)
+        if (request.getParameter( PARAMETER_SEARCH ) != null && !request.getParameter( PARAMETER_SEARCH ).isEmpty())
         {
-        	String stCurrentPageIndexOld = _strCurrentPageIndex;
-            _strCurrentPageIndex = Paginator.getPageIndex( request, Paginator.PARAMETER_PAGE_INDEX, _strCurrentPageIndex );
+        	if ( _strSearch == null || !_strSearch.equals(request.getParameter( PARAMETER_SEARCH )))
+        	{
+        		_strSearch = request.getParameter( PARAMETER_SEARCH );
+        		
+        		String stCurrentPageIndexOld = _strCurrentPageIndex;
+                _strCurrentPageIndex = Paginator.getPageIndex( request, Paginator.PARAMETER_PAGE_INDEX, _strCurrentPageIndex );
 
-            if ( !StringUtils.isEmpty( request.getParameter( PARAMETER_SEARCH ) )
-                    || ( _strCurrentPageIndex != null && !_strCurrentPageIndex.equals( stCurrentPageIndexOld ) ) )
-            {
+                if ( !StringUtils.isEmpty( request.getParameter( PARAMETER_SEARCH ) )
+                        || ( _strCurrentPageIndex != null && !_strCurrentPageIndex.equals( stCurrentPageIndexOld ) ) )
+                {
 
-                _paginatorComponents = ComponentService.getService( ).getSearchComponent( _strSearch, request, getLocale( ), JSP_MANAGE_COMPONENT,
-                        _strCurrentPageIndex );
+                    _paginatorComponents = ComponentService.getService( ).getSearchComponent( _strSearch, request, getLocale( ), JSP_MANAGE_COMPONENT,
+                            _strCurrentPageIndex );
 
-            }
+                }
+        	}
         }
-        
+        else 
+    	{
+        	_strSearch = null;
+    		_paginatorComponents = null;
+    	}
+     
         Map<String, Object> model = getModel( );
         model.put( MARK_SEARCH, _strSearch );
         model.put( MARK_LIST_COMPONENT, _paginatorComponents != null ? _paginatorComponents.getPageItems( ) : null );
