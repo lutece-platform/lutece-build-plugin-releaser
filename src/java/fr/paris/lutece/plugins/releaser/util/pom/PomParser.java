@@ -130,6 +130,8 @@ public class PomParser
             if ( model.getScm( ) != null )
             {
                 component.setScmDeveloperConnection( model.getScm( ).getDeveloperConnection( ) );
+                component.setScmConnection(model.getScm().getConnection());
+                component.setScmUrl(model.getScm().getUrl());
                 component.setBranchReleaseVersion( model.getVersion( ) );
 
             }
@@ -162,6 +164,8 @@ public class PomParser
             if ( model.getScm( ) != null )
             {
                 component.setScmDeveloperConnection( model.getScm( ).getDeveloperConnection( ) );
+                component.setScmConnection(model.getScm().getConnection());
+                component.setScmUrl(model.getScm().getUrl());
 
             }
 

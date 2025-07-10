@@ -125,6 +125,12 @@ public class Component extends AbstractReleaserResource implements RBACResource
 
     /** The str scm developer connection. */
     private String _strScmDeveloperConnection;
+    
+    /** The str scm url. */
+    private String _strScmUrl;
+    
+    /** The str scm connection. */
+    private String _strScmConnection;
 
     /** The list of component branches. */
     private List<String> _listBranches;
@@ -465,6 +471,49 @@ public class Component extends AbstractReleaserResource implements RBACResource
     {
         this._strScmDeveloperConnection = _strScmDeveloperConnection;
     }
+    
+    /**
+     * Gets the scm connection.
+     *
+     * @return scm connection url
+     */
+    public String getScmConnection( )
+    {
+        return _strScmConnection;
+    }
+    
+    
+    /**
+     * Sets the scm connection.
+     *
+     * @param _strScmConnection
+     *            scm connection url
+     */
+    public void setScmConnection( String _strScmConnection )
+    {
+        this._strScmConnection = _strScmConnection;
+    }
+    
+    /**
+     * Gets the scm url.
+     *
+     * @return scm url
+     */
+    public String getScmUrl( )
+    {
+        return _strScmUrl;
+    }
+
+    /**
+     * Sets the scm url.
+     *
+     * @param _strScmUrl
+     *            scm developer connection url
+     */
+    public void setScmUrl( String _strScmUrl )
+    {
+        this._strScmUrl = _strScmUrl;
+    }
 
     /**
      * Checks if is snapshot version.
@@ -654,17 +703,6 @@ public class Component extends AbstractReleaserResource implements RBACResource
         this._strTweetMessage = _strTweetMessage;
     }
 
-    /**
-     * Gets the scm url.
-     *
-     * @return the scm url
-     */
-    @Override
-    public String getScmUrl( )
-    {
-        // TODO Auto-generated method stub
-        return getScmDeveloperConnection( );
-    }
 
     @Override
     public String getResourceTypeCode( )
