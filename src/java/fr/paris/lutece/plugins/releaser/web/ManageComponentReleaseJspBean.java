@@ -166,7 +166,6 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
         else 
     	{
         	_strSearch = null;
-    		_paginatorComponents = null;
     	}
      
         Map<String, Object> model = getModel( );
