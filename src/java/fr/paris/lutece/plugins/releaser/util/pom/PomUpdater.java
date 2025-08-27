@@ -245,7 +245,7 @@ public class PomUpdater
         JAXBContext jc = JAXBContext.newInstance( packageName );
         Marshaller m = jc.createMarshaller( );
         m.setProperty( Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE );
-        m.setProperty( Marshaller.JAXB_SCHEMA_LOCATION, "http://maven.apache.org/maven-v4_0_0.xsd" );
+        m.setProperty( Marshaller.JAXB_SCHEMA_LOCATION, "http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd" );
         m.marshal( element, outputStream );
     }
 
