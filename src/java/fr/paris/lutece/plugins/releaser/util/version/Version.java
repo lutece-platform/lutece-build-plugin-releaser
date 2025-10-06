@@ -56,6 +56,9 @@ public class Version implements Comparable
     /** The Constant QUALIFIER_CANDIDATE. */
     private static final String QUALIFIER_CANDIDATE = "RC";
 
+    /** The Constant QUALIFIER_BETA. */
+    private static final String QUALIFIER_BETA = "beta";
+
     /** The Constant PATTERN_NUMBER. */
     private static final String PATTERN_NUMBER = "\\d+";
 
@@ -76,6 +79,9 @@ public class Version implements Comparable
 
     /** The str qualifier radix. */
     private String _strQualifierRadix;
+
+    /** The str qualifier beta. */
+    //private String _strQualifierBeta;
 
     /** The n qualifier number. */
     private int _nQualifierNumber;
@@ -373,31 +379,72 @@ public class Version implements Comparable
      */
     public Version nextRelease( )
     {
-        int nPatch = ( isSnapshot( ) || isCandidate( ) ) ? _nPatch : _nPatch + 1;
+        int nPatch = ( isSnapshot( ) || isCandidate( ) || isBeta() ) ? _nPatch : _nPatch + 1;
         return new Version( _nMajor, _nMinor, nPatch, null );
     }
-
+    
     /**
      * Next candidate.
      *
      * @return the version
      */
     private Version nextCandidate( )
-    {
-        String strQualifier;
+    {    	
+    	String strQualifier = "";
         int nPatch = _nPatch;
-        if ( ( _strQualifierRadix != null ) && ( _strQualifierRadix.equals( "RC-" ) ) )
+    	if ( _strQualifierRadix == null )
         {
-            strQualifier = String.format( "RC-%02d", _nQualifierNumber + 1 );
-        }
-        else
-        {
-            if ( !QUALIFIER_SNAPSHOT.equals( _strQualifier ) )
+        	if ( !QUALIFIER_SNAPSHOT.equals( _strQualifier ) )
             {
                 nPatch += 1;
             }
-            strQualifier = "RC-01";
+        	strQualifier = "RC-01";
         }
+        else 
+        {
+        	 if ( _strQualifierRadix.equals( "RC-" ) )
+             {
+                 strQualifier = String.format( "RC-%02d", _nQualifierNumber + 1 );                 
+             }
+        	 else if ( _strQualifierRadix.equals( "beta-") )
+        	 {
+        		 strQualifier = "RC-01";
+        	 }
+        }
+
+        return new Version( _nMajor, _nMinor, nPatch, strQualifier );
+    }
+
+    /**
+     * Next beta.
+     *
+     * @return the version
+     */
+    
+    private Version nextBeta( )
+    {
+    	String strQualifier;
+        int nPatch = _nPatch;
+        if ( _strQualifierRadix == null )
+        {
+        	if ( !QUALIFIER_SNAPSHOT.equals( _strQualifier ) )
+            {
+                nPatch += 1;
+            }
+        	strQualifier = "beta-01";
+        }
+        else 
+        {
+        	 if ( _strQualifierRadix.equals( "beta-" ) )
+             {
+                 strQualifier = String.format( "beta-%02d", _nQualifierNumber + 1 );                 
+             }
+        	 else
+        	 {
+        		 return null;
+        	 }
+        }
+        
         return new Version( _nMajor, _nMinor, nPatch, strQualifier );
     }
 
@@ -420,7 +467,17 @@ public class Version implements Comparable
     {
         return ( _strQualifier != null ) && ( _strQualifier.startsWith( QUALIFIER_CANDIDATE ) );
     }
-
+    
+    /**
+     * Returns true if the version is qualified as Beta.
+     *
+     * @return true if the version is qualified as Beta
+     */
+    public boolean isBeta( )
+    {
+        return ( _strQualifier != null ) && ( _strQualifier.startsWith( QUALIFIER_BETA ) );
+    }
+    
     /**
      * Check if a given version is a SNAPSHOT.
      *
@@ -462,7 +519,28 @@ public class Version implements Comparable
         }
         return false;
     }
-
+    /**
+     * Check if a given version is a RELEASE BETA.
+     *
+     * @param strVersion
+     *            The version to check
+     * @return True if beta otherwise false
+     */
+    
+    public static boolean isBeta( String strVersion )
+    {
+        try
+        {
+            Version version = parse( strVersion );
+            return version.isBeta( );
+        }
+        catch( VersionParsingException ex )
+        {
+            AppLogService.error( "Error parsing version " + strVersion + " : " + ex.getMessage( ), ex );
+        }
+        return false;
+    }
+    
     /**
      * Get a list of next versions for a given version.
      *
@@ -480,6 +558,12 @@ public class Version implements Comparable
             listVersions.add( version.nextRelease( ).getVersion( ) );
             listVersions.add( version.nextMinor( false ).getVersion( ) );
             listVersions.add( version.nextMajor( false ).getVersion( ) );
+            // Not add beta version if the current version is RC
+            Version v = version.nextBeta( );
+            if (v != null)
+            {
+            	listVersions.add( v.getVersion( ) );
+            }
         }
         catch( VersionParsingException ex )
         {
@@ -502,7 +586,7 @@ public class Version implements Comparable
         {
             Version version = Version.parse( strVersion );
             boolean bSnapshot = true;
-            if ( version.isCandidate( ) )
+            if ( version.isCandidate( ) || version.isBeta() )
             {
                 strSnapshotVersion = version.snapshot( ).getVersion( );
             }
