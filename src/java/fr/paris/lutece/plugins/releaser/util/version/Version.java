@@ -389,25 +389,18 @@ public class Version implements Comparable
     {
         String strQualifier = "";
         int nPatch = _nPatch;
-        if ( _strQualifierRadix == null )
+        
+        if ( ( _strQualifierRadix != null ) && ( _strQualifierRadix.equals( QUALIFIER_CANDIDATE + "-" ) ) )
         {
-            strQualifier = String.format( "RC-%02d", _nQualifierNumber + 1 );
-        	if ( !QUALIFIER_SNAPSHOT.equals( _strQualifier ) )  
+            strQualifier = String.format( QUALIFIER_CANDIDATE + "-%02d", _nQualifierNumber + 1 );
+        }
+        else
+        {
+            if ( !QUALIFIER_SNAPSHOT.equals( _strQualifier ) )
             {
                 nPatch += 1;
             }
-        	strQualifier = "RC-01";
-        }
-        else if ( !QUALIFIER_SNAPSHOT.equals( _strQualifier ) )
-        {            
-        	 if ( _strQualifierRadix.equals( "RC-" ) )
-             {
-                 strQualifier = String.format( "RC-%02d", _nQualifierNumber + 1 );    
-             }
-        	 else if ( _strQualifierRadix.equals( "beta-") )
-        	 {
-        		 strQualifier = "RC-01";
-        	 }
+            strQualifier = QUALIFIER_CANDIDATE + "-01";
         }
         
         return new Version( _nMajor, _nMinor, nPatch, strQualifier );
@@ -422,24 +415,18 @@ public class Version implements Comparable
     {
     	String strQualifier;
         int nPatch = _nPatch;
-        if ( _strQualifierRadix == null )
+        
+        if ( ( _strQualifierRadix != null ) && ( _strQualifierRadix.equals( QUALIFIER_BETA + "-" ) ) )
         {
-        	if ( !QUALIFIER_SNAPSHOT.equals( _strQualifier ) )
+            strQualifier = String.format( QUALIFIER_BETA + "-%02d", _nQualifierNumber + 1 );
+        }
+        else
+        {
+            if ( !QUALIFIER_SNAPSHOT.equals( _strQualifier ) )
             {
                 nPatch += 1;
             }
-        	strQualifier = "beta-01";
-        }
-        else 
-        {
-        	 if ( _strQualifierRadix.equals( "beta-" ) )
-             {
-                 strQualifier = String.format( "beta-%02d", _nQualifierNumber + 1 );                 
-             }
-        	 else
-        	 {
-        		 return null;
-        	 }
+            strQualifier = QUALIFIER_BETA + "-01";
         }
         
         return new Version( _nMajor, _nMinor, nPatch, strQualifier );
@@ -537,6 +524,55 @@ public class Version implements Comparable
         }
         return false;
     }
+    /**
+     * Get a list of next versions for a given version.
+     *
+     * @param strPreviousReleaseVersion
+     *            The current version* 
+     * @param strPreviousSnapshotVersion
+     *            The current Snapshot version
+     * @return The list
+     */
+    public static List<String> getNextReleaseVersions( String strPreviousSnapshotVersion, String strPreviousReleaseVersion )
+    {
+        List<String> listVersions = new ArrayList<>( );
+        Version parseReleaseVersion;
+        try
+        {
+    		Version version = parse( strPreviousSnapshotVersion );
+    		if ( strPreviousReleaseVersion != null)
+    		{
+    			parseReleaseVersion = parse( strPreviousReleaseVersion );
+    			if ( parseReleaseVersion._strQualifierRadix != null )
+        		{
+        			version._strQualifierRadix = parseReleaseVersion._strQualifierRadix;
+        			version._nQualifierNumber = parseReleaseVersion._nQualifierNumber;
+        		}
+    		}
+    		
+    		listVersions.add( version.nextCandidate( ).getVersion( ) );
+    		listVersions.add( version.nextRelease( ).getVersion( ) );
+    		listVersions.add( version.nextMinor( false ).getVersion( ) );
+    		listVersions.add( version.nextMajor( false ).getVersion( ) );
+    		
+    		// Add beta version only if the current version is not RC
+    		if ( version._strQualifierRadix == null || !version._strQualifierRadix.equals( QUALIFIER_CANDIDATE + '-' ) )
+    		{
+    			listVersions.add( version.nextBeta( ).getVersion( ) );
+    		}
+    		
+    		if ( listVersions.contains( strPreviousReleaseVersion ) )
+    		{
+    			// TODO
+    			// ERROR : La release existe déjà
+    		} 
+        }
+        catch( VersionParsingException ex )
+        {
+            AppLogService.error( "Error parsing version " + strPreviousReleaseVersion + " : " + ex.getMessage( ), ex );
+        }
+        return listVersions;
+    }
     
     /**
      * Get a list of next versions for a given version.
@@ -550,7 +586,7 @@ public class Version implements Comparable
         List<String> listVersions = new ArrayList<>( );
         try
         {
-            Version version = parse( strPreviousReleaseVersion );
+        	Version version = parse( strPreviousReleaseVersion );
             listVersions.add( version.nextCandidate( ).getVersion( ) );
             listVersions.add( version.nextRelease( ).getVersion( ) );
             listVersions.add( version.nextMinor( false ).getVersion( ) );

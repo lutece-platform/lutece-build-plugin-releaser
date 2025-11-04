@@ -401,8 +401,16 @@ public class ComponentService implements IComponentService
 
     private Component getNextVersions( Component component, String strLastAvailableVersion, String strCurrentVersion, String strTargetVersion )
     {
-
-        component.setTargetVersions( Version.getNextReleaseVersions( strLastAvailableVersion ) );
+    	if ( component.getLastAvailableSnapshotVersion()!= null )
+    	{	
+    		component.setTargetVersions( Version.getNextReleaseVersions( strCurrentVersion, strLastAvailableVersion ) );
+    	}
+    	else
+    	{
+    		// TODO
+    		// ERROR : Pas de snapshot dans nexus --> aucun build success
+    	}
+    	
         component.setTargetVersion( Version.getReleaseVersion( strCurrentVersion ) );
 
         String strNextSnapshotVersion = null;
