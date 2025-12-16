@@ -62,6 +62,8 @@ import fr.paris.lutece.plugins.releaser.util.IVCSResourceService;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.plugins.releaser.util.file.FileUtils;
 import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
+import fr.paris.lutece.plugins.releaser.util.version.Version;
+import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
 import fr.paris.lutece.portal.service.util.AppException;
 
 // TODO: Auto-generated Javadoc
@@ -116,22 +118,50 @@ public class GitResourceService implements IVCSResourceService
         Git git = GitUtils.getGit( ReleaserUtils.getLocalPath( context ) );
         List<String> listTags = GitUtils.getTagNameList( git );
         String strLastRelease = null;
+        CommandResult commandResult = context.getCommandResult( );
+        try {
+			Version lastReleaseVersion = new Version(0, 0, 0, null);
 
-        if ( !CollectionUtils.isEmpty( listTags ) )
+			if ( !CollectionUtils.isEmpty( listTags ) )
+			{
+				for (String tag : listTags) 
+				{
+					if ( tag != null && tag.contains( "-" ) )
+			        {
+			        	String [ ] tabTag = tag.split( "-" ); 
+			        	Version tagVersion = new Version();
+			        	
+			        	if ( tag.contains( "RC" ) || tag.contains( "beta" ) )
+			            {
+			        		tagVersion = Version.parse(tabTag [tabTag.length - 3]);
+			        		tagVersion.setQualifier( tabTag [tabTag.length - 2].concat("-").concat(tabTag [tabTag.length - 1] ));
+			            }
+			        	else
+			        	{
+			        		tagVersion = Version.parse(tabTag [tabTag.length - 1]);			        			
+			        	}
+			        	
+			    		int diff = lastReleaseVersion.compareTo(tagVersion);
+			    		if (diff < 0) 
+			    		{
+			    			lastReleaseVersion = tagVersion;
+			    		}
+			           
+			        }        	
+				}
+				
+				strLastRelease = lastReleaseVersion.getVersion();
+			}
+			else
+			{
+			    strLastRelease = "";
+			}
+		} 
+        catch (VersionParsingException e) 
         {
-            strLastRelease = listTags.get( 0 );
-        }
 
-        if ( strLastRelease != null && strLastRelease.contains( "-" ) )
-        {
-
-            String [ ] tabRelease = strLastRelease.split( "-" );
-            strLastRelease = tabRelease [tabRelease.length - 1];
-        }
-        else
-        {
-            strLastRelease = "";
-        }
+            ReleaserUtils.addTechnicalError( commandResult, "Error parsing version : "  + e.getMessage( ), e );
+		}
 
         return strLastRelease;
 

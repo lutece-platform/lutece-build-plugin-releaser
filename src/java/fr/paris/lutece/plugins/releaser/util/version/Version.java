@@ -223,10 +223,31 @@ public class Version implements Comparable
         {
             return nDiff;
         }
-        nDiff = _nPatch - version.getPatch( );
+        nDiff = _nPatch - version.getPatch( );        
+        if ( nDiff != 0 )
+        {
+            return nDiff;
+        }
+        
+        if ( _strQualifierRadix != null && version._strQualifierRadix != null )
+        {
+        	if ( _strQualifierRadix.equals(version._strQualifierRadix))
+            {
+            	nDiff = _nQualifierNumber - version._nQualifierNumber;
+            }
+            else if ( _strQualifierRadix.equals(QUALIFIER_CANDIDATE))
+            {
+            	nDiff = 1;
+            }
+            else 
+            {
+            	nDiff = -1;
+            }
+        }
+        
         return nDiff;
     }
-
+    
     /**
      * Gets the version.
      *
