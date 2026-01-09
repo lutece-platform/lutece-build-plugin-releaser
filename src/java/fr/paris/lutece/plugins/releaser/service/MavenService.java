@@ -162,6 +162,14 @@ public class MavenService implements IMavenService
     // }
     //
 
+
+
+
+    private synchronized InvocationResult mvnExecute( String strPathPom, List<String> goals, CommandResult commandResult )
+    {
+        return mvnExecute( strPathPom, goals, commandResult ,null);
+    }
+
     /**
      * Launches mvn cmd
      * 
@@ -173,11 +181,19 @@ public class MavenService implements IMavenService
      *            svn bin path (ex: /home/svn/apps/subversion/bin)
      */
 
-    private synchronized InvocationResult mvnExecute( String strPathPom, List<String> goals, CommandResult commandResult )
+
+
+    
+    private synchronized InvocationResult mvnExecute( String strPathPom, List<String> goals, CommandResult commandResult ,String strTargetJdkVersion)
     {
        
-    	
-    	
+    	if(strTargetJdkVersion!=null && !strTargetJdkVersion.isEmpty()) {
+    		
+           goals.add( "toolchains:select-jdk-toolchain");
+           goals.add( "-Dtoolchain.jdk.version=["+strTargetJdkVersion+"]" );
+
+
+    	}   
     	InvocationRequest request = new DefaultInvocationRequest( );
         request.setPomFile( new File( strPathPom ) );
         request.setGoals( goals );
@@ -236,12 +252,10 @@ public class MavenService implements IMavenService
      *            the command result
      * @return the string
      */
-    public String mvnReleasePerform( String strPathPom, String strUsername, String strPassword, CommandResult commandResult,boolean bPrivateRepository )
+    public String mvnReleasePerform( String strPathPom, String strUsername, String strPassword, CommandResult commandResult,boolean bPrivateRepository ,String strTargetJdkVersion )
     {
         
-    	
-    
-    	InvocationResult invocationResult = mvnExecute( strPathPom,bPrivateRepository && StringUtils.isNoneBlank(AppPropertiesService.getProperty(ConstanteUtils.PROPERTY_MAVEN_PRIVATE_RELEASE_DEPLOYMENT_REPOSITORY))? MavenGoals.RELEASE_PERFORM_PRIVATE_REPO.asList( ):MavenGoals.RELEASE_PERFORM.asList( ), commandResult );
+    	InvocationResult invocationResult = mvnExecute( strPathPom,bPrivateRepository && StringUtils.isNoneBlank(AppPropertiesService.getProperty(ConstanteUtils.PROPERTY_MAVEN_PRIVATE_RELEASE_DEPLOYMENT_REPOSITORY))? MavenGoals.RELEASE_PERFORM_PRIVATE_REPO.asList( ):MavenGoals.RELEASE_PERFORM.asList( ), commandResult ,strTargetJdkVersion );
         int nStatus = invocationResult.getExitCode( );
         System.out.println( commandResult.getLog( ).toString( ) );
         if ( nStatus != 0 )
@@ -272,11 +286,11 @@ public class MavenService implements IMavenService
      * @return le thread
      */
     public String mvnReleasePrepare( String strPathPom, String strReleaseVersion, String strTag, String strDevelopmentVersion, String strUsername,
-            String strPassword, CommandResult commandResult )
+            String strPassword, CommandResult commandResult,String strTargetJdkVersion )
     {
         List<String> listGoals = MavenUtils.createReleasePrepare( strReleaseVersion, strTag, strDevelopmentVersion, strUsername, strPassword );
 
-        InvocationResult invocationResult = mvnExecute( strPathPom, listGoals, commandResult );
+        InvocationResult invocationResult = mvnExecute( strPathPom, listGoals, commandResult,strTargetJdkVersion );
 
         int nStatus = invocationResult.getExitCode( );
 
@@ -287,5 +301,27 @@ public class MavenService implements IMavenService
 
         return "";
     }
+
+
+@Override
+public String mvnGenerateEffectivePom( String strPathPom, String strEffectivePomPath, CommandResult commandResult )
+    {
+
+        List<String> listGoals = new ArrayList<String>( );
+        listGoals.addAll( MavenGoals.EFFECTIVE_POM.asList( ) );
+        listGoals.add( "-Doutput=" + strEffectivePomPath );
+        InvocationResult invocationResult = mvnExecute(strPathPom, listGoals, commandResult );
+       
+        int nStatus = invocationResult.getExitCode( );
+
+        if ( nStatus != 0 )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, "Error during  generated effective pom " + nStatus );
+        }
+
+        return "";
+    }
+    
+    
 
 }

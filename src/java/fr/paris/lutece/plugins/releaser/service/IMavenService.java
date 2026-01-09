@@ -79,7 +79,7 @@ public interface IMavenService
      * @return the string
      */
     String mvnReleasePrepare( String strPathPom, String strReleaseVersion, String strTag, String strDevelopmentVersion, String strUsername, String strPassword,
-            CommandResult commandResult );
+            CommandResult commandResult,String strTargetJdkVersion );
 
     /**
      * Mvn release perform.
@@ -95,10 +95,22 @@ public interface IMavenService
      * @param bPrivateRepository true if the perform must be push in private repository           
      * @return the string
      */
-    String mvnReleasePerform( String strPathPom, String strUsername, String strPassword, CommandResult commandResult,boolean bPrivateRepository );
+    String mvnReleasePerform( String strPathPom, String strUsername, String strPassword, CommandResult commandResult,boolean bPrivateRepository,String strTargetJdkVersion );
 
     /**
      * Inits the.
      */
     void init( );
+/**
+ * Mvn generate effective pom.
+ *
+ * @param strPathPom
+ *            the str path pom
+ * @param strEffectivePomPath
+ *            the str effective pom path
+ * @param commandResult
+ *            the command result
+ * @return the string
+ */
+   String mvnGenerateEffectivePom( String strPathPom, String strEffectivePomPath, CommandResult commandResult );
 }

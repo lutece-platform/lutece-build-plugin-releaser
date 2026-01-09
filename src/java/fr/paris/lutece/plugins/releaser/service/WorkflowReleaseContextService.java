@@ -69,6 +69,7 @@ import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
 import fr.paris.lutece.plugins.releaser.util.PluginUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
+import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
 import fr.paris.lutece.plugins.releaser.util.pom.PomUpdater;
 import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
@@ -435,6 +436,9 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
             String strLocalComponentPath = ReleaserUtils.getLocalPath( context );
             String strLocalComponentPomPath = ReleaserUtils.getLocalPomPath( context );
+            String StrLocalComponentPomEffectivePath = ReleaserUtils.getLocalEffectivePomPath(context);
+
+             //parse effective POM to get target JDK
 
             String strComponentReleaseVersion = component.getTargetVersion( );
 
@@ -502,9 +506,14 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
                 }
             }
+           //generate effective POM before release prepare
+            MavenService.getService( ).mvnGenerateEffectivePom(strLocalComponentPomPath, StrLocalComponentPomEffectivePath, commandResult);
+            //get jdk target Version from effective POM 
+            PomParser parser = new PomParser( );  
+            parser.parsePomPath(component, StrLocalComponentPomEffectivePath);
 
             MavenService.getService( ).mvnReleasePrepare( strLocalComponentPomPath, strComponentReleaseVersion, strComponentReleaseTagName,
-                    strComponentReleaseNewDeveloppmentVersion, strLogin, strPassword, commandResult );
+                    strComponentReleaseNewDeveloppmentVersion, strLogin, strPassword, commandResult,component.getTargetJdk() );
 
             // Merge Master if release from develop branch
             if ( component.getBranchReleaseFrom( ).equals( GitUtils.DEFAULT_RELEASE_BRANCH ) )
@@ -597,6 +606,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         ReleaserUtils.logStartAction( context, " Release Perform" );
 
         String strLocalComponentPath = ReleaserUtils.getLocalPath( context );
+        
+         
 
         // PROGRESS 75%
         commandResult.setProgressValue( commandResult.getProgressValue( ) + 10 );
@@ -605,7 +616,9 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         {
         	
 
-        		MavenService.getService( ).mvnReleasePerform( strLocalComponentPath, strLogin, strPassword, commandResult,context.getComponent().getRepoType( ).equals(RepositoryType.GITLAB) );
+        		MavenService.getService( ).mvnReleasePerform( strLocalComponentPath, strLogin, strPassword, commandResult,context.getComponent().getRepoType( ).equals(RepositoryType.GITLAB),context.getComponent().getTargetJdk() );
+            // PROGRESS 95%
+            commandResult.setProgressValue( commandResult.getProgressValue( ) + 20 );
         		
         		
 
@@ -680,7 +693,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
             MavenService.getService( ).mvnReleasePrepare( strSitePomLocalBasePath, context.getSite( ).getNextReleaseVersion( ),
                     context.getSite( ).getArtifactId( ) + "-" + context.getSite( ).getNextReleaseVersion( ), context.getSite( ).getNextSnapshotVersion( ),
-                    strLogin, strPassword, commandResult );
+                    strLogin, strPassword, commandResult,null );
 
             commandResult.getLog( ).append( "End Release prepare " + componentTyeName + " " + context.getSite( ).getNextReleaseVersion( ) + "...\n" );
 
@@ -851,7 +864,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             try
             {
 
-                MavenService.getService( ).mvnReleasePerform( strLocalComponentPath, strLogin, strPassword, commandResult,true );
+                MavenService.getService( ).mvnReleasePerform( strLocalComponentPath, strLogin, strPassword, commandResult,true,null );
 
             }
             catch( AppException ex )
