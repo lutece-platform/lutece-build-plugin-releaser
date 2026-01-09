@@ -135,6 +135,10 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /** The current branch version. */
     private String _strBranchReleaseVersion;
 
+    private String _strTargetJdk;
+
+    
+
     /**
      * Returns the ArtifactId.
      *
@@ -716,6 +720,14 @@ public class Component extends AbstractReleaserResource implements RBACResource
     public void setBranchReleaseVersion( String _strBranchReleaseVersion )
     {
         this._strBranchReleaseVersion = _strBranchReleaseVersion;
+    }
+
+    public String getTargetJdk() {
+        return _strTargetJdk;
+    }
+
+    public void setTargetJdk(String _strTargetJdk) {
+        this._strTargetJdk = _strTargetJdk;
     }
 
 }

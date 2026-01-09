@@ -40,12 +40,14 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 
 import fr.paris.lutece.plugins.releaser.business.jaxb.maven.Model;
@@ -109,6 +111,31 @@ public class PomParser
         }
     }
 
+
+
+
+    /**
+     * Parses the pom path.
+     *
+     * @param component
+     *            the component
+     * @param pomPath
+     *            the pom path
+     */   
+public void parsePomPath(Component component, String pomPath ) {
+
+
+  try {
+
+    parse(component,new FileInputStream(pomPath));
+  }
+    catch (FileNotFoundException e) {
+     AppLogService.error( e );
+    }
+
+}
+
+    
     /**
      * Parses the.
      *
@@ -127,6 +154,15 @@ public class PomParser
             component.setArtifactId( model.getArtifactId( ) );
             component.setGroupId( model.getGroupId( ) );
             component.setCurrentVersion( model.getVersion( ) );
+            if(model.getProperties() != null ){
+
+                Optional<Element> op= model.getProperties().getAny().stream().filter(x->x.getTagName().equals("targetJdk")).findFirst();
+                if(op.isPresent())
+                {
+                  component.setTargetJdk(op.get().getTextContent());
+                }   
+            
+                }
             if ( model.getScm( ) != null )
             {
                 component.setScmDeveloperConnection( model.getScm( ).getDeveloperConnection( ) );
@@ -159,12 +195,21 @@ public class PomParser
             component.setArtifactId( model.getArtifactId( ) );
             component.setGroupId( model.getGroupId( ) );
             component.setCurrentVersion( model.getVersion( ) );
+            if(model.getProperties() != null ){
+
+                Optional<Element> op= model.getProperties().getAny().stream().filter(x->x.getTagName().equals("targetJdk")).findFirst();
+                if(op.isPresent())
+                {
+                  component.setTargetJdk(op.get().getTextContent());
+                }   
+            
+          } 
             if ( model.getScm( ) != null )
             {
                 component.setScmDeveloperConnection( model.getScm( ).getDeveloperConnection( ) );
+                component.setBranchReleaseVersion( model.getVersion( ) );
 
             }
-
         }
         catch( JAXBException e )
         {

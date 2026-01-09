@@ -147,6 +147,22 @@ public class ReleaserUtils
     }
 
     /**
+     * Gets the local pom path.
+     *
+     * @param context
+     *            the context
+     * @return the local pom path
+     */
+    public static String getLocalEffectivePomPath( WorkflowReleaseContext context )
+    {
+
+        return  getLocalPomPath(context) +".effective";
+
+    }
+    
+
+
+    /**
      * Gets the local site path.
      *
      * @param site
