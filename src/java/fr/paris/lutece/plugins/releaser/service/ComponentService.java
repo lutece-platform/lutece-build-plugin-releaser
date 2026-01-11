@@ -444,19 +444,65 @@ public class ComponentService implements IComponentService
         {
             inputStream = new FileInputStream( strComponentPomPath );
             parser.parse( componentPom, inputStream );
+           
 
             if ( component != null && componentPom != null && component.getArtifactId( ).equals( componentPom.getArtifactId( ) )
-                    && component.getLastAvailableSnapshotVersion( ).equals( componentPom.getCurrentVersion( ) ) )
+                    && component.getLastAvailableSnapshotVersion( ).equals( componentPom.getCurrentVersion( ) ) 
+                    && componentPom.getScmDeveloperConnection( ) != null
+                    && component.getScmDeveloperConnection().equals(componentPom.getScmDeveloperConnection( ) ) )
+                   
             {
 
                 bError = false;
 
             }
+            
+            
+            
 
         }
         catch( FileNotFoundException e )
         {
             AppLogService.error( e );
+
+        }
+
+        return bError;
+    }
+    
+    public boolean isErrorScmMarker( Component component, String strComponentPomPath ) 
+    {
+    	
+    	boolean bError = true;
+
+        PomParser parser = new PomParser( );
+        Component componentPom = new Component( );
+
+        FileInputStream inputStream;
+        try
+        {
+        	
+            inputStream = new FileInputStream( strComponentPomPath );
+            parser.parse( componentPom, inputStream );
+            String scmUrl = componentPom.getScmDeveloperConnection( ).replaceFirst( "^scm:git:" ,  "" );
+            
+            if ( componentPom.getScmDeveloperConnection( ) != null
+            		&& componentPom.getScmConnection( ).equals(componentPom.getScmDeveloperConnection( ) ) 
+            		&& componentPom.getScmDeveloperConnection( ).startsWith( "scm:git:" )
+            		&& componentPom.getScmDeveloperConnection( ).endsWith( ".git" ) 
+            		&& componentPom.getScmUrl( ).equals( scmUrl ) ) 
+            {
+            	
+            	bError = false;
+            	
+            }
+        	
+        }
+
+        catch( FileNotFoundException e )
+        {
+           
+        	AppLogService.error( e );
 
         }
 

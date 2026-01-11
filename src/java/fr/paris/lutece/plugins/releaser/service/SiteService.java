@@ -66,6 +66,7 @@ import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
 import fr.paris.lutece.plugins.releaser.util.pom.PomUpdater;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
+import fr.paris.lutece.plugins.releaser.web.TestJGitClone;
 import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.datastore.DatastoreService;
 import fr.paris.lutece.portal.service.i18n.I18nService;
@@ -75,6 +76,7 @@ import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.util.httpaccess.HttpAccessException;
+
 
 // TODO: Auto-generated Javadoc
 /**
@@ -120,9 +122,13 @@ public class SiteService
      */
     public static Site getSite( int nSiteId, HttpServletRequest request, Locale locale )
     {
+    	//TestJGitClone jgitclone = new TestJGitClone();
+        TestJGitClone.main(null);
         Site site = SiteHome.findByPrimaryKey( nSiteId );
         String strPom = null;
         ReleaserUser user = ReleaserUtils.getReleaserUser( request, locale );
+      
+        
 
         if ( user != null )
         {
@@ -160,6 +166,10 @@ public class SiteService
 
         ReleaserUser user = ReleaserUtils.getReleaserUser( request, locale );
         Credential credential = user.getCredential( site.getRepoType( ) );
+        
+        //TestJGitClone jgitclone = new TestJGitClone();
+        TestJGitClone.main(null);
+        
 
         // Find last release in the repository
         String strLastReleaseVersion = CVSFactoryService.getService( site.getRepoType( ) ).getLastRelease( site, credential.getLogin( ),
@@ -176,6 +186,8 @@ public class SiteService
         site.setBranchReleaseFrom( GitUtils.DEFAULT_RELEASE_BRANCH );
 
         initComponents( site );
+        
+        
     }
 
     /**
