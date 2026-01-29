@@ -229,7 +229,15 @@ public class Version implements Comparable
             return nDiff;
         }
         
-        if ( _strQualifierRadix != null && version._strQualifierRadix != null )
+        if ( _strQualifierRadix == null && version._strQualifierRadix != null )
+        {
+        	nDiff = 1;
+        }        
+        else if ( _strQualifierRadix != null && version._strQualifierRadix == null )
+        {
+        	nDiff = -1;
+        }        
+        else if ( _strQualifierRadix != null && version._strQualifierRadix != null )
         {
         	if ( _strQualifierRadix.equals(version._strQualifierRadix))
             {

@@ -172,7 +172,8 @@ public class SiteService
 
         site.setNextReleaseVersion( Version.getReleaseVersion( strOriginVersion ) );
         site.setNextSnapshotVersion( Version.getNextSnapshotVersion( strOriginVersion ) );
-        site.setTargetVersions( Version.getNextReleaseVersions( strOriginVersion ) );
+        site.setTargetVersions( Version.getNextReleaseVersions( strOriginVersion, strLastReleaseVersion ) );
+
         site.setBranchReleaseFrom( GitUtils.DEFAULT_RELEASE_BRANCH );
 
         initComponents( site );
@@ -283,7 +284,7 @@ public class SiteService
             }
             else
             {
-                component.setTargetVersions( Version.getNextReleaseVersions( component.getCurrentVersion( ) ) );
+            	component.setTargetVersions( Version.getNextReleaseVersions( component.getCurrentVersion( ), component.getLastAvailableVersion( ) ) );
                 String strTargetVersion = Version.getReleaseVersion( component.getCurrentVersion( ) );
                 component.setTargetVersion( strTargetVersion );
             }

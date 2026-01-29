@@ -171,19 +171,7 @@ public class ReleaserUtils
     {
         return getLocalSitePath( site ) + File.separator + ConstanteUtils.CONSTANTE_POM_XML;
     }
-    //
-    // public static String getLocalComponentPath( String strComponentName )
-    // {
-    // String strLocaleComponentBasePath = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_LOCAL_COMPONENT_BASE_PAH );
-    //
-    // return strLocaleComponentBasePath + File.separator + strComponentName;
-    // }
-    //
-    // public static String getLocalComponentPomPath( String strComponentName )
-    // {
-    // return getLocalComponentPath( strComponentName ) + File.separator + ConstanteUtils.CONSTANTE_POM_XML;
-    // }
-
+    
     /**
      * Gets the component name.
      *
@@ -559,5 +547,27 @@ public class ReleaserUtils
 
         return strBranchReleaseFrom;
     }
+    
+    public static boolean IsVersionInRightFormat( String strVersion )
+    {   
+		String [ ] tabVer = strVersion.split( "\\." );
+		if ( tabVer.length == 3  )
+		{
+			for (int compt = 0 ; compt < tabVer.length -1 ; compt++)
+			{
+				if ( ReleaserUtils.convertStringToInt(tabVer [compt]) == -1)
+				{
+					return false;
+				}
+			}			
+		}
+		else
+		{
+			return false;
+		}			
+		
+		return true;    
+    }
+    
 
 }

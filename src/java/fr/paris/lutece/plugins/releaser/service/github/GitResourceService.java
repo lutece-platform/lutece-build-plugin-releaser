@@ -128,25 +128,41 @@ public class GitResourceService implements IVCSResourceService
 				{
 					if ( tag != null && tag.contains( "-" ) )
 			        {
-			        	String [ ] tabTag = tag.split( "-" ); 
+			        	boolean bVersionInRightFormat = false;
 			        	Version tagVersion = new Version();
+			        	String [ ] tabTag = tag.split( "-" ); 
 			        	
 			        	if ( tag.contains( "RC" ) || tag.contains( "beta" ) )
 			            {
-			        		tagVersion = Version.parse(tabTag [tabTag.length - 3]);
-			        		tagVersion.setQualifier( tabTag [tabTag.length - 2].concat("-").concat(tabTag [tabTag.length - 1] ));
+			        		String strQualifier = tabTag [tabTag.length - 2];
+			        		if ( (strQualifier.equals("RC") || strQualifier.equals("beta")) 
+			        				&& ReleaserUtils.convertStringToInt(tabTag [tabTag.length - 1]) != -1 )
+			        		{			        			
+			        			if ( ReleaserUtils.IsVersionInRightFormat (tabTag [tabTag.length - 3]) )
+				        		{
+			        				bVersionInRightFormat = true;
+				        			tagVersion = Version.parse(tabTag [tabTag.length - 3]);
+					        		tagVersion.setQualifier( strQualifier.concat("-").concat(tabTag [tabTag.length - 1] ));				         
+				        		}
+			        		}
 			            }
 			        	else
 			        	{
-			        		tagVersion = Version.parse(tabTag [tabTag.length - 1]);			        			
+			        		if ( ReleaserUtils.IsVersionInRightFormat (tabTag [tabTag.length - 1]) )
+			        		{
+			        			bVersionInRightFormat = true;
+			        			tagVersion = Version.parse(tabTag [tabTag.length - 1]);
+			        		}			        				        			
 			        	}
 			        	
-			    		int diff = lastReleaseVersion.compareTo(tagVersion);
-			    		if (diff < 0) 
-			    		{
-			    			lastReleaseVersion = tagVersion;
-			    		}
-			           
+			        	if ( bVersionInRightFormat )
+			        	{
+			        		int diff = lastReleaseVersion.compareTo(tagVersion);
+				    		if (diff < 0) 
+				    		{
+				    			lastReleaseVersion = tagVersion;
+				    		}
+			        	}
 			        }        	
 				}
 				

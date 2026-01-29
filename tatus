@@ -1,0 +1,153 @@
+[1mdiff --git a/src/java/fr/paris/lutece/plugins/releaser/service/SiteService.java b/src/java/fr/paris/lutece/plugins/releaser/service/SiteService.java[m
+[1mindex 3d84cf6..0d2dfe3 100644[m
+[1m--- a/src/java/fr/paris/lutece/plugins/releaser/service/SiteService.java[m
+[1m+++ b/src/java/fr/paris/lutece/plugins/releaser/service/SiteService.java[m
+[36m@@ -172,7 +172,8 @@[m [mpublic class SiteService[m
+ [m
+         site.setNextReleaseVersion( Version.getReleaseVersion( strOriginVersion ) );[m
+         site.setNextSnapshotVersion( Version.getNextSnapshotVersion( strOriginVersion ) );[m
+[31m-        site.setTargetVersions( Version.getNextReleaseVersions( strOriginVersion ) );[m
+[32m+[m[32m        site.setTargetVersions( Version.getNextReleaseVersions( strOriginVersion, strLastReleaseVersion ) );[m
+[32m+[m
+         site.setBranchReleaseFrom( GitUtils.DEFAULT_RELEASE_BRANCH );[m
+ [m
+         initComponents( site );[m
+[36m@@ -283,7 +284,7 @@[m [mpublic class SiteService[m
+             }[m
+             else[m
+             {[m
+[31m-                component.setTargetVersions( Version.getNextReleaseVersions( component.getCurrentVersion( ) ) );[m
+[32m+[m[41m            [m	[32mcomponent.setTargetVersions( Version.getNextReleaseVersions( component.getCurrentVersion( ), component.getLastAvailableVersion( ) ) );[m
+                 String strTargetVersion = Version.getReleaseVersion( component.getCurrentVersion( ) );[m
+                 component.setTargetVersion( strTargetVersion );[m
+             }[m
+[1mdiff --git a/src/java/fr/paris/lutece/plugins/releaser/service/github/GitResourceService.java b/src/java/fr/paris/lutece/plugins/releaser/service/github/GitResourceService.java[m
+[1mindex 13ba163..877566d 100644[m
+[1m--- a/src/java/fr/paris/lutece/plugins/releaser/service/github/GitResourceService.java[m
+[1m+++ b/src/java/fr/paris/lutece/plugins/releaser/service/github/GitResourceService.java[m
+[36m@@ -128,25 +128,41 @@[m [mpublic class GitResourceService implements IVCSResourceService[m
+ 				{[m
+ 					if ( tag != null && tag.contains( "-" ) )[m
+ 			        {[m
+[31m-			        	String [ ] tabTag = tag.split( "-" ); [m
+[32m+[m			[41m        [m	[32mboolean bVersionInRightFormat = false;[m
+ 			        	Version tagVersion = new Version();[m
+[32m+[m			[41m        [m	[32mString [ ] tabTag = tag.split( "-" );[m[41m [m
+ 			        	[m
+ 			        	if ( tag.contains( "RC" ) || tag.contains( "beta" ) )[m
+ 			            {[m
+[31m-			        		tagVersion = Version.parse(tabTag [tabTag.length - 3]);[m
+[31m-			        		tagVersion.setQualifier( tabTag [tabTag.length - 2].concat("-").concat(tabTag [tabTag.length - 1] ));[m
+[32m+[m			[41m        [m		[32mString strQualifier = tabTag [tabTag.length - 2];[m
+[32m+[m			[41m        [m		[32mif ( (strQualifier.equals("RC") || strQualifier.equals("beta"))[m[41m [m
+[32m+[m			[41m        [m				[32m&& ReleaserUtils.convertStringToInt(tabTag [tabTag.length - 1]) != -1 )[m
+[32m+[m			[41m        [m		[32m{[m[41m			        			[m
+[32m+[m			[41m        [m			[32mif ( ReleaserUtils.IsVersionInRightFormat (tabTag [tabTag.length - 3]) )[m
+[32m+[m				[41m        [m		[32m{[m
+[32m+[m			[41m        [m				[32mbVersionInRightFormat = true;[m
+[32m+[m				[41m        [m			[32mtagVersion = Version.parse(tabTag [tabTag.length - 3]);[m
+[32m+[m					[41m        [m		[32mtagVersion.setQualifier( strQualifier.concat("-").concat(tabTag [tabTag.length - 1] ));[m[41m				         [m
+[32m+[m				[41m        [m		[32m}[m
+[32m+[m			[41m        [m		[32m}[m
+ 			            }[m
+ 			        	else[m
+ 			        	{[m
+[31m-			        		tagVersion = Version.parse(tabTag [tabTag.length - 1]);			        			[m
+[32m+[m			[41m        [m		[32mif ( ReleaserUtils.IsVersionInRightFormat (tabTag [tabTag.length - 1]) )[m
+[32m+[m			[41m        [m		[32m{[m
+[32m+[m			[41m        [m			[32mbVersionInRightFormat = true;[m
+[32m+[m			[41m        [m			[32mtagVersion = Version.parse(tabTag [tabTag.length - 1]);[m
+[32m+[m			[41m        [m		[32m}[m[41m			        				        			[m
+ 			        	}[m
+ 			        	[m
+[31m-			    		int diff = lastReleaseVersion.compareTo(tagVersion);[m
+[31m-			    		if (diff < 0) [m
+[31m-			    		{[m
+[31m-			    			lastReleaseVersion = tagVersion;[m
+[31m-			    		}[m
+[31m-			           [m
+[32m+[m			[41m        [m	[32mif ( bVersionInRightFormat )[m
+[32m+[m			[41m        [m	[32m{[m
+[32m+[m			[41m        [m		[32mint diff = lastReleaseVersion.compareTo(tagVersion);[m
+[32m+[m				[41m    [m		[32mif (diff < 0)[m[41m [m
+[32m+[m				[41m    [m		[32m{[m
+[32m+[m				[41m    [m			[32mlastReleaseVersion = tagVersion;[m
+[32m+[m				[41m    [m		[32m}[m
+[32m+[m			[41m        [m	[32m}[m
+ 			        }        	[m
+ 				}[m
+ 				[m
+[1mdiff --git a/src/java/fr/paris/lutece/plugins/releaser/util/ReleaserUtils.java b/src/java/fr/paris/lutece/plugins/releaser/util/ReleaserUtils.java[m
+[1mindex 42f2dea..a92ff0e 100644[m
+[1m--- a/src/java/fr/paris/lutece/plugins/releaser/util/ReleaserUtils.java[m
+[1m+++ b/src/java/fr/paris/lutece/plugins/releaser/util/ReleaserUtils.java[m
+[36m@@ -171,19 +171,7 @@[m [mpublic class ReleaserUtils[m
+     {[m
+         return getLocalSitePath( site ) + File.separator + ConstanteUtils.CONSTANTE_POM_XML;[m
+     }[m
+[31m-    //[m
+[31m-    // public static String getLocalComponentPath( String strComponentName )[m
+[31m-    // {[m
+[31m-    // String strLocaleComponentBasePath = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_LOCAL_COMPONENT_BASE_PAH );[m
+[31m-    //[m
+[31m-    // return strLocaleComponentBasePath + File.separator + strComponentName;[m
+[31m-    // }[m
+[31m-    //[m
+[31m-    // public static String getLocalComponentPomPath( String strComponentName )[m
+[31m-    // {[m
+[31m-    // return getLocalComponentPath( strComponentName ) + File.separator + ConstanteUtils.CONSTANTE_POM_XML;[m
+[31m-    // }[m
+[31m-[m
+[32m+[m[41m    [m
+     /**[m
+      * Gets the component name.[m
+      *[m
+[36m@@ -559,5 +547,27 @@[m [mpublic class ReleaserUtils[m
+ [m
+         return strBranchReleaseFrom;[m
+     }[m
+[32m+[m[41m    [m
+[32m+[m[32m    public static boolean IsVersionInRightFormat( String strVersion )[m
+[32m+[m[32m    {[m[41m   [m
+[32m+[m		[32mString [ ] tabVer = strVersion.split( "\\." );[m
+[32m+[m		[32mif ( tabVer.length == 3  )[m
+[32m+[m		[32m{[m
+[32m+[m			[32mfor (int compt = 0 ; compt < tabVer.length -1 ; compt++)[m
+[32m+[m			[32m{[m
+[32m+[m				[32mif ( ReleaserUtils.convertStringToInt(tabVer [compt]) == -1)[m
+[32m+[m				[32m{[m
+[32m+[m					[32mreturn false;[m
+[32m+[m				[32m}[m
+[32m+[m			[32m}[m[41m			[m
+[32m+[m		[32m}[m
+[32m+[m		[32melse[m
+[32m+[m		[32m{[m
+[32m+[m			[32mreturn false;[m
+[32m+[m		[32m}[m[41m			[m
+[32m+[m[41m		[m
+[32m+[m		[32mreturn true;[m[41m    [m
+[32m+[m[32m    }[m
+[32m+[m[41m    [m
+ [m
+ }[m
+[1mdiff --git a/src/java/fr/paris/lutece/plugins/releaser/util/version/Version.java b/src/java/fr/paris/lutece/plugins/releaser/util/version/Version.java[m
+[1mindex 28e76b8..c6a5fa1 100644[m
+[1m--- a/src/java/fr/paris/lutece/plugins/releaser/util/version/Version.java[m
+[1m+++ b/src/java/fr/paris/lutece/plugins/releaser/util/version/Version.java[m
+[36m@@ -229,7 +229,15 @@[m [mpublic class Version implements Comparable[m
+             return nDiff;[m
+         }[m
+         [m
+[31m-        if ( _strQualifierRadix != null && version._strQualifierRadix != null )[m
+[32m+[m[32m        if ( _strQualifierRadix == null && version._strQualifierRadix != null )[m
+[32m+[m[32m        {[m
+[32m+[m[41m        [m	[32mnDiff = 1;[m
+[32m+[m[32m        }[m[41m        [m
+[32m+[m[32m        else if ( _strQualifierRadix != null && version._strQualifierRadix == null )[m
+[32m+[m[32m        {[m
+[32m+[m[41m        [m	[32mnDiff = -1;[m
+[32m+[m[32m        }[m[41m        [m
+[32m+[m[32m        else if ( _strQualifierRadix != null && version._strQualifierRadix != null )[m
+         {[m
+         	if ( _strQualifierRadix.equals(version._strQualifierRadix))[m
+             {[m
