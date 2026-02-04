@@ -302,9 +302,8 @@ public class MavenService implements IMavenService
         return "";
     }
 
-
-@Override
-public String mvnGenerateEffectivePom( String strPathPom, String strEffectivePomPath, CommandResult commandResult )
+    @Override
+    public String mvnGenerateEffectivePom( String strPathPom, String strEffectivePomPath, CommandResult commandResult )
     {
 
         List<String> listGoals = new ArrayList<String>( );

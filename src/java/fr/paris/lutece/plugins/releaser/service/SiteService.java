@@ -85,7 +85,7 @@ public class SiteService
 
     /** The Constant NB_POOL_REMOTE_INFORMATION. */
     private static final int NB_POOL_REMOTE_INFORMATION = 60;
-
+   
     /** The Constant MESSAGE_AVOID_SNAPSHOT. */
     private static final String MESSAGE_AVOID_SNAPSHOT = "releaser.message.avoidSnapshot";
 
@@ -106,6 +106,10 @@ public class SiteService
 
     /** The Constant MESSAGE_NOT_DEFAULT_RELEASE_BRANCH. */
     private static final String MESSAGE_NOT_DEFAULT_RELEASE_BRANCH_FROM = "releaser.message.notDefaultReleaseBranchFrom";
+
+    /** Minimum pom parent version to create docker image. */
+    public static String POM_PARENT_MIN_VERSION_TO_CREATE_DOCKET_IMAGE = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_POM_PARENT_MIN_VERSION_TO_CREATE_DOCKET_IMAGE );
+
 
     /**
      * Load a site from its id.
@@ -134,7 +138,7 @@ public class SiteService
             {
                 PomParser parser = new PomParser( );
                 parser.parse( site, strPom );
-                initSite( site, request, locale );
+                initSite( site, request, locale );                
             }
         }
         else
@@ -174,11 +178,36 @@ public class SiteService
         site.setNextSnapshotVersion( Version.getNextSnapshotVersion( strOriginVersion ) );
         site.setTargetVersions( Version.getNextReleaseVersions( strOriginVersion, strLastReleaseVersion ) );
 
-        site.setBranchReleaseFrom( GitUtils.DEFAULT_RELEASE_BRANCH );
-
+        site.setBranchReleaseFrom( GitUtils.DEFAULT_RELEASE_BRANCH );    
+		site.setCreateDckerImage(isSiteCreateDockerImage( site ) );        
+        
         initComponents( site );
     }
-
+    
+    public static boolean isSiteCreateDockerImage( Site site )
+    {
+    	try 
+        {
+        	String strPomParentVersion = site.getParentVersion();
+        	
+            if ( strPomParentVersion != null)
+            {
+            	strPomParentVersion.replace("[", "").replace("]", "");
+            	Version vPomParentVersion = Version.parse( strPomParentVersion );
+    			
+    			if (vPomParentVersion.getMajor() >= Integer.valueOf( POM_PARENT_MIN_VERSION_TO_CREATE_DOCKET_IMAGE ) )
+    			{
+    				return true;
+    			}
+            }
+			
+		} catch (VersionParsingException e) {
+			AppLogService.error( e );
+		}
+    	
+    	return false;
+    }
+        
     /**
      * Define which version between last released or current snapshot should be the origin for next release versions. Ex of cases :<br>
      * last release : 3.2.1 current : 4.0.0-SNAPSHOT -- current <br>

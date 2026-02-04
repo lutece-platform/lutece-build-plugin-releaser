@@ -109,6 +109,9 @@ public class ConstanteUtils
     /** The Constant BEAN_TWITTER_SERVICE. */
     public static final String BEAN_TWITTER_SERVICE = "releaser.twitterService";
 
+    /** The Constant BEAN_JENKINS_SERVICE. */
+    public static final String BEAN_JENKINS_SERVICE = "releaser.jenkinsService";
+
     /** The Constant PROPERTY_POM_PARENT_SITE_VERSION. */
     public static final String PROPERTY_POM_PARENT_SITE_VERSION = "releaser.pomParentSiteVersion";
 
@@ -150,6 +153,12 @@ public class ConstanteUtils
 
     /** The Constant PROPERTY_GITLAB_RELEASE_ACCOUNT_PASSWORD. */
     public static final String PROPERTY_GITLAB_RELEASE_ACCOUNT_PASSWORD = "releaser.gitlabReleaseAccount.password";
+
+    /** The Constant PROPERTY_JENKINS_RELEASE_ACCOUNT_LOGIN. */
+    public static final String PROPERTY_JENKINS_RELEASE_ACCOUNT_LOGIN = "releaser.jenkinsReleaseAccount.login";
+
+    /** The Constant PROPERTY_JENKINS_RELEASE_ACCOUNT_PASSWORD. */
+    public static final String PROPERTY_JENKINS_RELEASE_ACCOUNT_PASSWORD = "releaser.jenkinsReleaseAccount.password";
 
     /** The Constant PROPERTY_GITHUB_SEARCH_REPO_API. */
     public static final String PROPERTY_GITHUB_SEARCH_REPO_API = "releaser.githubSearchRepoApi";
@@ -204,6 +213,9 @@ public class ConstanteUtils
     /** The Constant PROPERTY_URL_JIRA_SERVICE. */
     public static final String PROPERTY_URL_JIRA_SERVICE = "releaser.urlJiraService";
 
+    /** The Constant PROPERTY_URL_JENKINS_SERVICE. */
+    public static final String PROPERTY_URL_JENKINS_SERVICE = "releaser.urlJenkinsService";
+
     /** The Constant I18_TWITTER_MESSAGE. */
     public static final String I18_TWITTER_MESSAGE = "releaser.message.twitterMessage";
 
@@ -229,6 +241,10 @@ public class ConstanteUtils
     public static final String MARK_USER = "user";
     
     /** The Constant PARAMETER_ACTION. */
-    public static final String PARAMETER_ACTION = "action";
+    public static final String PARAMETER_ACTION = "action";    
+
+    /** Minimum pom parent version to create docker image. */
+    public static final String PROPERTY_POM_PARENT_MIN_VERSION_TO_CREATE_DOCKET_IMAGE = "releaser.pomParentMinVersionToCreateDockerImage";
+
 
 }

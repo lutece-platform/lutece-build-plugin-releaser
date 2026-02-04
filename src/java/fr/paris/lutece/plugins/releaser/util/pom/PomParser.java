@@ -104,6 +104,11 @@ public class PomParser
 
                 }
             }
+            
+            if ( model.getParent().getVersion() != null )
+            {
+                site.setParentVersion( model.getParent().getVersion() );
+            }
         }
         catch( JAXBException e )
         {
@@ -122,20 +127,18 @@ public class PomParser
      * @param pomPath
      *            the pom path
      */   
-public void parsePomPath(Component component, String pomPath ) {
-
-
-  try {
-
-    parse(component,new FileInputStream(pomPath));
-  }
-    catch (FileNotFoundException e) {
-     AppLogService.error( e );
-    }
-
-}
-
-    
+	public void parsePomPath(Component component, String pomPath ) 
+	{
+	  try 
+	  {	
+	    parse(component,new FileInputStream(pomPath));
+	  }
+	  catch (FileNotFoundException e) 
+	  {
+		  AppLogService.error( e );
+	  }
+	}
+	
     /**
      * Parses the.
      *
@@ -154,8 +157,8 @@ public void parsePomPath(Component component, String pomPath ) {
             component.setArtifactId( model.getArtifactId( ) );
             component.setGroupId( model.getGroupId( ) );
             component.setCurrentVersion( model.getVersion( ) );
+            
             if(model.getProperties() != null ){
-
                 Optional<Element> op= model.getProperties().getAny().stream().filter(x->x.getTagName().equals("targetJdk")).findFirst();
                 if(op.isPresent())
                 {
@@ -229,7 +232,7 @@ public void parsePomPath(Component component, String pomPath ) {
         }
 
     }
-
+    
     /**
      * Filled site.
      *

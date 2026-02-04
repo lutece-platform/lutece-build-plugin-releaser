@@ -14,6 +14,7 @@
     <bean id="releaser.componentService" class="fr.paris.lutece.plugins.releaser.service.ComponentService" />
     <bean id="releaser.twitterService" class="fr.paris.lutece.plugins.releaser.service.TwitterService" />
     <bean id="releaser.jiraComponentService" class="fr.paris.lutece.plugins.releaser.service.JiraComponentService" />
+    <bean id="releaser.jenkinsService" class="fr.paris.lutece.plugins.releaser.service.JenkinsService" />
     <bean id="releaser.cvs.svnResourceService" class="fr.paris.lutece.plugins.releaser.service.svn.SvnResourceService" />
     <bean id="releaser.cvs.githubResourceService" class="fr.paris.lutece.plugins.releaser.service.github.GithubResourceService" />
     <bean id="releaser.cvs.gitlabResourceService" class="fr.paris.lutece.plugins.releaser.service.gitlab.GitlabResourceService" />

@@ -218,4 +218,14 @@ public interface IWorkflowReleaseContextService
      */
     void init( );
 
+    /**
+     * Create docker image.
+     *
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
+     */
+	void createDockerImage(WorkflowReleaseContext workflowReleaseContext, Locale locale);
+
 }

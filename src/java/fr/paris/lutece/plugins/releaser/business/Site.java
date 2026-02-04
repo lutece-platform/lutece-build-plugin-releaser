@@ -137,8 +137,14 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
 
     /** The branch to release. */
     private String _strBranchReleaseFrom;
+    
+    /** The pom parent version */
+    private String _strParentVersion;
+    
+    /** Is the site candidate to docker image creation */
+    private boolean _bCreateDckerImage;
 
-    /**
+	/**
      * Returns the Id.
      *
      * @return The Id
@@ -537,6 +543,15 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
         this._bTheme = _bTheme;
     }
 
+    public boolean isCreateDckerImage() 
+    {
+		return _bCreateDckerImage;
+	}
+
+	public void setCreateDckerImage(boolean _bCreateDckerImage) {
+		this._bCreateDckerImage = _bCreateDckerImage;
+	}
+
     public List<String> getBranches( )
     {
         return _listBranches;
@@ -608,5 +623,15 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
             this.permissions.putAll( permissions );
         }
     }
+
+	public String getParentVersion() 
+	{
+		return _strParentVersion;
+	}
+
+	public void setParentVersion(String _strParentVersion) 
+	{
+		this._strParentVersion = _strParentVersion;
+	}
 
 }
