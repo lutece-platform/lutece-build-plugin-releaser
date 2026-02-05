@@ -186,17 +186,21 @@ public class MavenService implements IMavenService
     
     private synchronized InvocationResult mvnExecute( String strPathPom, List<String> goals, CommandResult commandResult ,String strTargetJdkVersion)
     {
-       
+
+       List<String> goalsWithTarget=new ArrayList<>();
+       goalsWithTarget.addAll(goals);
+
     	if(strTargetJdkVersion!=null && !strTargetJdkVersion.isEmpty()) {
     		
-           goals.add( "toolchains:select-jdk-toolchain");
-           goals.add( "-Dtoolchain.jdk.version=["+strTargetJdkVersion+"]" );
+            
+           goalsWithTarget.add( "toolchains:select-jdk-toolchain");
+           goalsWithTarget.add( "-Dtoolchain.jdk.version=["+strTargetJdkVersion+"]" );
 
 
     	}   
     	InvocationRequest request = new DefaultInvocationRequest( );
         request.setPomFile( new File( strPathPom ) );
-        request.setGoals( goals );
+        request.setGoals( goalsWithTarget );
         request.setShowErrors( true );
         request.setShellEnvironmentInherited( true );
 
