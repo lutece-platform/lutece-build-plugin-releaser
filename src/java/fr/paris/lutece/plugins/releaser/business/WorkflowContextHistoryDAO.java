@@ -69,7 +69,6 @@
 package fr.paris.lutece.plugins.releaser.business;
 
 import fr.paris.lutece.portal.service.plugin.Plugin;
-import fr.paris.lutece.util.ReferenceList;
 import fr.paris.lutece.util.sql.DAOUtil;
 import java.sql.Statement;
 
@@ -82,12 +81,13 @@ import java.util.List;
 public final class WorkflowContextHistoryDAO implements IWorkflowContextHistoryDAO
 {
     // Constants
-    private static final String SQL_QUERY_SELECT = "SELECT id_wf_context,  date_begin, date_end, artifact_id,data, user_name FROM releaser_workflow_context_history WHERE id_wf_context = ?";
+    private static final String SQL_QUERY_SELECT = "SELECT id_wf_context,  date_begin, date_end, artifact_id,data, user_name FROM releaser_workflow_context_history WHERE id_wf_context = ? ";
     private static final String SQL_QUERY_INSERT = "INSERT INTO releaser_workflow_context_history (  date_begin, date_end, artifact_id,data, user_name ) VALUES ( ?, ?, ?, ?, ?) ";
     private static final String SQL_QUERY_DELETE = "DELETE FROM releaser_workflow_context_history WHERE id_wf_context = ? ";
     private static final String SQL_QUERY_UPDATE = "UPDATE releaser_workflow_context_history SET id_wf_context = ?, date_begin = ?, date_end = ?, artifact_id= ?,  data = ?, user_name = ? WHERE id_wf_context = ?";
     private static final String SQL_QUERY_SELECTALL = "SELECT id_wf_context,  date_begin, date_end, artifact_id ,data, user_name FROM releaser_workflow_context_history";
     private static final String FILTER_BY_ARTIFACT_ID = " WHERE artifact_id= ?";
+    private static final String SQL_ORDER_BY_ID=" ORDER BY id_wf_context DESC";
 
     /**
      * {@inheritDoc }
@@ -119,7 +119,7 @@ public final class WorkflowContextHistoryDAO implements IWorkflowContextHistoryD
     @Override
     public WorkflowContextHistory load( int nKey, Plugin plugin )
     {
-        try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECT, plugin ) )
+        try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECT , plugin ) )
         {
             daoUtil.setInt( 1, nKey );
             daoUtil.executeQuery( );
@@ -189,7 +189,7 @@ public final class WorkflowContextHistoryDAO implements IWorkflowContextHistoryD
     public List<WorkflowContextHistory> selectWorkflowDeployContextsList( Plugin plugin )
     {
         List<WorkflowContextHistory> workflowContextList = new ArrayList<>( );
-        try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECTALL, plugin ) )
+        try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECTALL +SQL_ORDER_BY_ID, plugin ) )
         {
             daoUtil.executeQuery( );
 
@@ -220,7 +220,7 @@ public final class WorkflowContextHistoryDAO implements IWorkflowContextHistoryD
     public List<WorkflowContextHistory> selectWorkflowDeployContextsListByArtifactId( Plugin plugin, String strArtifactId )
     {
         List<WorkflowContextHistory> workflowContextList = new ArrayList<>( );
-        try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECTALL + FILTER_BY_ARTIFACT_ID, plugin ) )
+        try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECTALL + FILTER_BY_ARTIFACT_ID + SQL_ORDER_BY_ID, plugin ) )
         {
 
             daoUtil.setString( 1, strArtifactId );

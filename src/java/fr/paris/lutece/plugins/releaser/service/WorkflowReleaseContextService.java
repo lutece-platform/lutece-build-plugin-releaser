@@ -247,6 +247,12 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
                     context = MapperJsonUtil.parse( wfHistory.getData( ), WorkflowReleaseContext.class );
                     if ( context != null )
                     {
+
+                        if(context.getCommandResult()==null)
+                        {
+                            //init ccommand Result
+                            context.setCommandResult(new CommandResult());
+                        }
                         listContext.add( context );
                     }
                 }

@@ -7,7 +7,7 @@
   </section>
   <section class="content">
   <@messages infos=infos />
-   <#list release_component_history_list?sort_by(['commandResult','dateBegin'])?reverse as release_history>
+   <#list release_component_history_list as release_history>
      <#if release_history.component??>
        <span hidden id="title-src">${release_history.component.artifactId}</span>
       <#else>
