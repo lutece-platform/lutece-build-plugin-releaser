@@ -106,6 +106,9 @@ public class SiteService
 
     /** The Constant MESSAGE_NOT_DEFAULT_RELEASE_BRANCH. */
     private static final String MESSAGE_NOT_DEFAULT_RELEASE_BRANCH_FROM = "releaser.message.notDefaultReleaseBranchFrom";
+    
+    /** The Constant MESSAGE_NOT_DEFAULT_RELEASE_BRANCH. */
+    private static final String NO_VERSION_DEFINED_IN_POM = "NO_VERSION";
 
     /** Minimum pom parent version to create docker image. */
     public static String POM_PARENT_MIN_VERSION_TO_CREATE_DOCKET_IMAGE = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_POM_PARENT_MIN_VERSION_TO_CREATE_DOCKET_IMAGE );
@@ -247,6 +250,10 @@ public class SiteService
             component.setArtifactId( dependency.getArtifactId( ) );
             component.setGroupId( dependency.getGroupId( ) );
             component.setType( dependency.getType( ) );
+            if ( dependency.getVersion() == null )
+            {
+            	dependency.setVersion( NO_VERSION_DEFINED_IN_POM );
+            }
             String currentVersion = dependency.getVersion( ).replace( "[", "" ).replace( "]", "" );
             component.setCurrentVersion( currentVersion );
             site.addComponent( component );
