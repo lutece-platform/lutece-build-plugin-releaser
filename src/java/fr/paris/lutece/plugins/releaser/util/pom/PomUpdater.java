@@ -97,12 +97,14 @@ public class PomUpdater
                 {
                     for ( Component component : site.getComponents( ) )
                     {
+                    	if ( !component.getTargetVersion( ).equals(ConstanteUtils.NO_VERSION_DEFINED_IN_POM) )
+                    	{
+                            if ( jaxDependency.getArtifactId( ).equals( component.getArtifactId( ) ) )
+                            {
+                                jaxDependency.setVersion( "[" + component.getTargetVersion( ) + "]" );
+                            }
+                    	}
 
-                        if ( jaxDependency.getArtifactId( ).equals( component.getArtifactId( ) ) )
-                        {
-
-                            jaxDependency.setVersion( "[" + component.getTargetVersion( ) + "]" );
-                        }
                     }
 
                 }

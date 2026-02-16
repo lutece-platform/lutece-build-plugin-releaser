@@ -246,5 +246,14 @@ public class ConstanteUtils
     /** Minimum pom parent version to create docker image. */
     public static final String PROPERTY_POM_PARENT_MIN_VERSION_TO_CREATE_DOCKET_IMAGE = "releaser.pomParentMinVersionToCreateDockerImage";
 
+    /** The Constant MESSAGE_NOT_DEFAULT_RELEASE_BRANCH. */
+    public static final String NO_VERSION_DEFINED_IN_POM = "NO_VERSION";
+    
+    /** The Constant DEVELOP_BRANCH FOR CORE V7. */
+    public static final String DEFAULT_RELEASE_BRANCH_CORE_V_7 = "develop_core7";    
+
+    /** The Constant MASTER_BRANCH FOR CORE V7. */
+    public static final String MASTER_BRANCH_CORE_V_7 = "master_core7";
+
 
 }
