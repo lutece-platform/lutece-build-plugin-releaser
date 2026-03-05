@@ -900,13 +900,11 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     	if (context.getSite().isCreateDckerImage())
     	{
     		CommandResult commandResult = context.getCommandResult( );
-        	ReleaserUtils.logStartAction( context, " Create docker image " );   
-        	commandResult.getLog( ).append( "Creating docker image \n" );
+        	ReleaserUtils.logStartAction( context, " Create docker image " );  
 
-        	JenkinsService.getService().TriggerPipeline( context.getReleaserResource().getScmUrl(), context.getSite().getBranchReleaseFrom() );
+        	JenkinsService.getService().TriggerPipeline( context );
         	
         	ReleaserUtils.logEndAction( context, "  Create docker image " );
-        	commandResult.getLog( ).append( "End of creating docker image \n" );
     	}
     	
     }

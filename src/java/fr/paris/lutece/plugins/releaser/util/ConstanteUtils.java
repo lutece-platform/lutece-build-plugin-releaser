@@ -162,18 +162,18 @@ public class ConstanteUtils
 
     /** The Constant PROPERTY_GITHUB_SEARCH_REPO_API. */
     public static final String PROPERTY_GITHUB_SEARCH_REPO_API = "releaser.githubSearchRepoApi";
+    
     /** The Constant PROPERTY_NB_SEARCH_ITEM_PER_PAGE_LOAD. */
     public static final String PROPERTY_GITHUB_SEARCH_REPO_API_TOKEN = "releaser.githubSearchRepoApiToken";
+    
     /** The Constant PROPERTY_MAVEN_LOCAL_REPOSITORY. */
     public static final String PROPERTY_MAVEN_LOCAL_REPOSITORY = "releaser.mavenLocalRepository";
 
     /** The Constant PROPERTY_MAVEN_PRIVATE_RELEASE_DEPLOYMENT_REPOSITORY. */
     public static final String PROPERTY_MAVEN_PRIVATE_RELEASE_DEPLOYMENT_REPOSITORY = "releaser.mavenPrivateReleaseDeploymentRepository";
-
     
     /** The Constant PROPERTY_MAVEN_HOME_PATH. */
     public static final String PROPERTY_MAVEN_HOME_PATH = "releaser.mavenHomePath";
-    
 
     /** The Constant PROPERTY_PROXY_HOST. */
     public static final String PROPERTY_PROXY_HOST = "httpAccess.proxyHost";
@@ -214,7 +214,13 @@ public class ConstanteUtils
     public static final String PROPERTY_URL_JIRA_SERVICE = "releaser.urlJiraService";
 
     /** The Constant PROPERTY_URL_JENKINS_SERVICE. */
-    public static final String PROPERTY_URL_JENKINS_SERVICE = "releaser.urlJenkinsService";
+    public static final String PROPERTY_JENKINS_BASE_URL = "releaser.JenkinsBaseUrl";
+
+    /** The Constant PROPERTY_JENKINS_PIPELINE_NAME. */
+    public static final String PROPERTY_JENKINS_PIPELINE_NAME = "releaser.JenkinsPipelineName";
+
+    /** The Constant PROPERTY_JENKINS_BUILD_TYPE. */
+    public static final String PROPERTY_JENKINS_BUILD_TYPE = "releaser.JenkinsBuildType";    
 
     /** The Constant I18_TWITTER_MESSAGE. */
     public static final String I18_TWITTER_MESSAGE = "releaser.message.twitterMessage";
