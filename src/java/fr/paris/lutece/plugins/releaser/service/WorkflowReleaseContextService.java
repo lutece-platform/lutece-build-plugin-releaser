@@ -448,17 +448,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
             String strComponentReleaseVersion = component.getTargetVersion( );
 
-            String strComponentReleaseTagName = null;
-            if ( component.getBranchReleaseFrom( ).equals( GitUtils.DEFAULT_RELEASE_BRANCH ) || 
-            		component.getBranchReleaseFrom( ).equals( ConstanteUtils.DEFAULT_RELEASE_BRANCH_CORE_V_7 ))
-            {
-                strComponentReleaseTagName = component.getArtifactId( ) + "-" + component.getTargetVersion( );
-            }
-            else
-            {
-                strComponentReleaseTagName = component.getArtifactId( ) + "-" + component.getTargetVersion( ) + "-" + component.getBranchReleaseFrom( );
-            }
-
+            String strComponentReleaseTagName = component.getArtifactId( ) + "-" + component.getTargetVersion( );
+            
             String strComponentReleaseNewDeveloppmentVersion = component.getNextSnapshotVersion( );
 
             ReleaserUtils.logStartAction( context, " Release Prepare" );
