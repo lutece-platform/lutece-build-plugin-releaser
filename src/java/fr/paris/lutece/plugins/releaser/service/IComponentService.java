@@ -41,7 +41,6 @@ import javax.servlet.http.HttpServletRequest;
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.RepositoryType;
-import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.web.util.LocalizedPaginator;
 import fr.paris.lutece.util.httpaccess.HttpAccessException;
@@ -66,6 +65,16 @@ public interface IComponentService
      *             Signals that an I/O exception has occurred.
      */
     void setRemoteInformations( Component component, boolean bCache ) throws HttpAccessException, IOException;
+
+    /**
+     * Update the remote informations when changing branch to release from.
+     *
+     * @param component
+     *            the component
+     * @param strPom
+     *            the component Pom
+     */
+    public Component updateComponentForReleaseBranchFrom ( Component component, String strPom );
 
     /**
      * Update remote informations.
@@ -181,15 +190,17 @@ public interface IComponentService
      *
      * @param component
      *            the component
+     * @param bUpdateComponent
+     *            Update component when change branch to release from
      * @param strPom
-     *            the str pom
+     *            the pom
      * @param stUser
-     *            the st user
+     *            the user
      * @param strPassword
-     *            the str password
+     *            the password
      * @return component
      */
-    Component loadComponent( Component component, String strPom, String stUser, String strPassword );
+    Component loadComponent( Component component, boolean bUpdateComponent, String strPom, String strUser, String strPassword );
 
     /**
      * Change next release version.
@@ -198,7 +209,7 @@ public interface IComponentService
      *            component
      */
     void changeNextReleaseVersion( Component component );
-
+    
     /**
      * Checks if is error snapshot component informations.
      *

@@ -741,7 +741,7 @@ public class GitUtils
         try
         {
             CredentialsProvider credential = new UsernamePasswordCredentialsProvider( login, pwd );
-
+            
             git = Git.cloneRepository( ).setCredentialsProvider( credential ).setURI( repoUrl ).setDirectory( localRepo ).setCloneAllBranches( true ).call( );
 
             branchNameList = new ArrayList<String>( );

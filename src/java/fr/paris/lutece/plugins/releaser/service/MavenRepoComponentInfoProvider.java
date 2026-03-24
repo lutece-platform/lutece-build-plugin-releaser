@@ -138,7 +138,7 @@ public final class MavenRepoComponentInfoProvider
         		AppLogService.info( "Error getting component url. No coponent found in Maven Release Repository : " );
         	}
 
-        	// Get snapshot versions and scmDeveloperConnection
+            // Get snapshot versions and scmDeveloperConnection
             String strSnapshotUrl = getAvailableUrl( PROPERTIES_SNAPSHOTS_PATH, strComponentPath );
             if ( strSnapshotUrl != null ) 
             {
@@ -158,7 +158,7 @@ public final class MavenRepoComponentInfoProvider
 	            // Get scmDeveloperConnection from Snapshot pom
 	            if ( !listSnapshotVersions.isEmpty() )
 	            getPomInfos( component, getSnapshotPomUrl( strSnapshotUrl, strArtifactId, component.getLastAvailableSnapshotVersion( ) ) );
-         }
+            }
         	else 
         	{
         		AppLogService.info( "Error getting component url. No coponent found in Maven Snapshot Repository : " );
@@ -253,7 +253,7 @@ public final class MavenRepoComponentInfoProvider
             return URL_MAVEN_PATH_PLUGINS + strArtifactId;
         }      
     }
- 
+    
     private String getMavenRepoDirectoryType( String strArtifactId, String strComponentType )
     {
         String strTypeRepo = null;
@@ -366,7 +366,7 @@ public final class MavenRepoComponentInfoProvider
             HttpAccess httpAccess = new HttpAccess( );
             Map<String, String> headersResponse = null;
             String strPom = null;
-           
+       
         	strPom = httpAccess.doGet( strPomUrl );
                       
             SAXParserFactory saxParserFactory = SAXParserFactory.newInstance( );
@@ -391,9 +391,7 @@ public final class MavenRepoComponentInfoProvider
             AppLogService.error( EXCEPTION_MESSAGE + e.getMessage( ), e );
         }
     }
-    
-    
-    
+      
     private String getPomFileName(List<String> listElement)
     {
     	String strPomFileName = null;
@@ -407,7 +405,7 @@ public final class MavenRepoComponentInfoProvider
         }
     	return strPomFileName;
     }
-    
+
     /**
      * Gets anchor list using more optimized method
      * 

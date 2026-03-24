@@ -266,7 +266,7 @@ public class Version implements Comparable
         }        
         else if ( _strQualifierRadix != null && version._strQualifierRadix == null )
         {
-        	nDiff = -1; 
+        	nDiff = -1;
         }        
                 
         return nDiff;
@@ -289,7 +289,7 @@ public class Version implements Comparable
         {
         	sbVersion.append( '-' ).append( _strQualifierRadix ).append( String.format( QUALIFIER_VERSION_FORMAT, _nQualifierNumber ) );
         }
-        
+            
         return sbVersion.toString( );
     }
 
@@ -334,7 +334,7 @@ public class Version implements Comparable
         		else if ( tabVersion[1].equals( QUALIFIER_BETA ) || tabVersion[1].equals(QUALIFIER_CANDIDATE))
         		{
                     strCurrent =  tabVersion[0];  
-                    version.setQualifierRadix( tabVersion[1] + "-");
+                    version.setQualifierRadix( tabVersion[1] + "-"); 
                     version.setQualifierNumber( Integer.parseInt( tabVersion[2] ) );		
         		}
                 

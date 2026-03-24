@@ -53,6 +53,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
+import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.service.ComponentService;
@@ -93,12 +94,12 @@ public class GitResourceService implements IVCSResourceService
         commandResult.setLog( new StringBuffer( ) );
         context.setCommandResult( commandResult );
         context.setSite( site );
+        
         doCheckoutRepository( context, strGitLogin, strGitPwd );
         strPom = FileUtils.readFile( ReleaserUtils.getLocalPomPath( context ) );
 
         return strPom;
     }
-
     /**
      * Gets the last release found in the SVN repository.
      *

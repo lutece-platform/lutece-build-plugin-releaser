@@ -57,7 +57,7 @@ public interface IVCSResourceService
      * @return the string
      */
     String fetchPom( Site site, String strLogin, String strPassword );
-
+    
     /**
      * Gets the last release.
      *
@@ -147,5 +147,6 @@ public interface IVCSResourceService
      *            the locale
      */
     void checkoutBranch( WorkflowReleaseContext context, String strBranch, Locale locale );
+
 
 }

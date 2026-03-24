@@ -56,6 +56,7 @@ import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser.Credential;
+import fr.paris.lutece.plugins.releaser.util.CVSFactoryService;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
@@ -66,6 +67,7 @@ import fr.paris.lutece.plugins.releaser.util.github.GithubSearchResult;
 import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
+import fr.paris.lutece.plugins.releaser.util.version.VersionUtils;
 import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.datastore.DatastoreService;
 import fr.paris.lutece.portal.service.rbac.RBACService;
@@ -246,6 +248,44 @@ public class ComponentService implements IComponentService
         }
     }
 
+    public Component updateComponentForReleaseBranchFrom ( Component component, String strPom )
+    {
+    	PomParser parser = new PomParser( );
+    	
+        parser.parse( component, strPom );
+        
+        try 
+        {
+			Version vSnapshotVersion = Version.parse( component.getCurrentVersion() );
+			
+			List<String> listReleaseVersion = VersionUtils.sortVersionsList( component.getReleaseVersions(), false );			
+			for (String strVersion : listReleaseVersion)
+			{
+				if (vSnapshotVersion.getMajor() == Version.parse( strVersion ).getMajor() )
+				{
+					component.setLastAvailableVersion(strVersion.toString());
+					break;
+				}	
+			}
+
+			List<String> listSnapshotVersion = VersionUtils.sortVersionsList( component.getSnapshotVersions(), false );
+			for (String strVersion : listSnapshotVersion)
+			{
+				if (vSnapshotVersion.getMajor() == Version.parse( strVersion ).getMajor() )
+				{
+					component.setLastAvailableSnapshotVersion(strVersion.toString());
+					break;
+				}	
+			}
+		} 
+        catch (VersionParsingException e) 
+        {
+			AppLogService.error( "Error parsing version, excluded from sorted list : " + component.getCurrentVersion() );
+		}
+    	
+        return component;
+    }
+   
     public LocalizedPaginator<Component> getSearchComponent( String strSearch, HttpServletRequest request, Locale locale, String strPaginateUrl,
             String strCurrentPageIndex )
     {
@@ -265,7 +305,7 @@ public class ComponentService implements IComponentService
         for ( Component component : listResultAll )
         {
             // Load only information on the current page
-            loadComponent( component,
+            loadComponent( component, false,
                     GitUtils.getFileContent( component.getFullName( ), "pom.xml", component.getBranchReleaseFrom( ), strUserLogin, strUserPassword ),
                     strUserLogin, strUserPassword );
             
@@ -304,7 +344,7 @@ public class ComponentService implements IComponentService
 
     }
 
-    public Component loadComponent( Component component, String strPom, String stUser, String strPassword )
+    public Component loadComponent( Component component, boolean bUpdateComponent, String strPom, String strUser, String strPassword )
     {
 
         PomParser parser = new PomParser( );
@@ -312,26 +352,30 @@ public class ComponentService implements IComponentService
 
         try
         {
-            ComponentService.getService( ).setRemoteInformations( component, false );
+        	if ( !bUpdateComponent )
+        	{
+        		ComponentService.getService( ).setRemoteInformations( component, false );
+        	}
+        	else
+        	{
+        		if ( component.getBranchReleaseFrom( ) != null )
+                {
+        			if ( component.getReleaseVersions() == null)
+        			{
+        				ComponentService.getService( ).setRemoteInformations( component, false );
+        			}
+        			else
+        			{
+        				ComponentService.getService( ).updateComponentForReleaseBranchFrom ( component, strPom );
+        			}
+                }
+        	}        	
 
+            component = getNextVersions( component, component.getLastAvailableVersion( ), component.getCurrentVersion( ), component.getCurrentVersion() );     	            
         }
         catch( HttpAccessException | IOException e )
         {
             AppLogService.error( e );
-        }
-
-        // Compare and update information with datastore datas
-        ComponentService.getService( ).updateRemoteInformations( component );
-
-        if ( component.getBranchReleaseFrom( ) != null && component.getBranchReleaseFrom( ).equals( GitUtils.DEFAULT_RELEASE_BRANCH ) )
-        {
-              component = getNextVersions( component, component.getLastAvailableVersion( ), component.getCurrentVersion( ), component.getCurrentVersion() );
-        }
-        else
-        {
-            String strBranchReleaseCurrentVersion = component.getBranchReleaseVersion( );
-
-            component = getNextVersions( component, strBranchReleaseCurrentVersion, strBranchReleaseCurrentVersion, strBranchReleaseCurrentVersion );
         }
 
         return component;
@@ -339,9 +383,18 @@ public class ComponentService implements IComponentService
 
     private Component getNextVersions( Component component, String strLastAvailableVersion, String strCurrentVersion, String strTargetVersion )
     {
-    	if ( component.getLastAvailableSnapshotVersion()!= null )
-    	{	
-    		component.setTargetVersions( Version.getNextReleaseVersions( strCurrentVersion, strLastAvailableVersion ) );
+    	if ( component.getLastAvailableSnapshotVersion () != null )
+    	{
+    		if ( component.getLastAvailableSnapshotVersion().equals( strCurrentVersion ) )
+    		{
+    			component.setTargetVersions( Version.getNextReleaseVersions( component.getLastAvailableSnapshotVersion(), strLastAvailableVersion ) );
+    		}
+    		else
+    		{
+    			//TODO
+    			// Message d'alerte : la version snapshot du Nexus est différente de la version dans le repo de sources
+    			// Verifier que la dernière snapshot a bien été poussée dans Nexus
+    		}
     	}
     	else
     	{
@@ -357,15 +410,14 @@ public class ComponentService implements IComponentService
             Version version = Version.parse( strTargetVersion );
             boolean bSnapshot = true;
             strNextSnapshotVersion = version.nextPatch( bSnapshot ).toString( );
+            component.setNextSnapshotVersion( strNextSnapshotVersion );
         }
         catch( VersionParsingException ex )
         {
             AppLogService.error( "Error parsing version for component " + component.getArtifactId( ) + " : " + ex.getMessage( ), ex );
 
-        }
-        component.setNextSnapshotVersion( strNextSnapshotVersion );
-        component.setLastAvailableSnapshotVersion( strCurrentVersion );
-
+        }        
+        
         return component;
     }
 
@@ -510,7 +562,7 @@ public class ComponentService implements IComponentService
 
             // Fetch pom and Get last and next versions
             strPom = FileUtils.readFile( ReleaserUtils.getLocalPomPath( context ) );
-            component = loadComponent( component, strPom, null, null );
+            component = loadComponent( component, true, strPom, null, null );
 
         }
         catch( IOException e )

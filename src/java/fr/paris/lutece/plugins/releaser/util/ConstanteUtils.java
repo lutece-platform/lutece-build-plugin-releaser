@@ -51,7 +51,7 @@ public class ConstanteUtils
     
     /** The Constant MAVEN_REPO_LUTECE_CORE **/
     public static final String MAVEN_REPO_LUTECE_CORE = "lutece-core";
-
+    
     /** The Constant DEPENDENCY_TYPE_LUTECE_CORE **/
     public static final String DEPENDENCY_TYPE_LUTECE_CORE = "lutece-core";
     
