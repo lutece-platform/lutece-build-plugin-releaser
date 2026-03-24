@@ -11,6 +11,7 @@
     <!-- services -->
     <bean id="releaser.workflowReleaseContextService" class="fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService" />
     <bean id="releaser.mavenService" class="fr.paris.lutece.plugins.releaser.service.MavenService" />
+    <bean id="releaser.MavenRepoComponentInfoProvider" class="fr.paris.lutece.plugins.releaser.service.MavenRepoComponentInfoProvider" />    
     <bean id="releaser.componentService" class="fr.paris.lutece.plugins.releaser.service.ComponentService" />
     <bean id="releaser.twitterService" class="fr.paris.lutece.plugins.releaser.service.TwitterService" />
     <bean id="releaser.jiraComponentService" class="fr.paris.lutece.plugins.releaser.service.JiraComponentService" />

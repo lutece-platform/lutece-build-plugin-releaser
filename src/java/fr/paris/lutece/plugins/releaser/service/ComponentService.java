@@ -37,7 +37,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -50,7 +49,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
@@ -75,7 +73,6 @@ import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.portal.web.util.LocalizedPaginator;
-import fr.paris.lutece.util.httpaccess.HttpAccess;
 import fr.paris.lutece.util.httpaccess.HttpAccessException;
 
 /**
@@ -85,19 +82,6 @@ public class ComponentService implements IComponentService
 {
     private ExecutorService _executor;
     private ObjectMapper _mapper;
-    private static final String PROPERTY_COMPONENT_WEBSERVICE = "releaser.component.webservice.url";
-    private static final String URL_COMPONENT_WEBSERVICE = AppPropertiesService.getProperty( PROPERTY_COMPONENT_WEBSERVICE );
-    private static final String FIELD_COMPONENT = "component";
-    private static final String FIELD_VERSION = "version";
-    private static final String FIELD_SNAPSHOT_VERSION = "snapshotVersion";
-    private static final String FIELD_ATTRIBUTES = "attributes";
-
-    private static final String FIELD_JIRA_CODE = "jiraKey";
-    private static final String FIELD_ROADMAP_URL = "jiraRoadmapUrl";
-    private static final String FIELD_CLOSED_ISSUES = "jiraFixedIssuesCount";
-    private static final String FIELD_OPENED_ISSUES = "jiraUnresolvedIssuesCount";
-    private static final String FIELD_SCM_DEVELOPER_CONNECTION = "scmDeveloperConnection";
-    private static final String RELEASE_NOT_FOUND = "Release not found";
 
     private static IComponentService _instance;
 
@@ -117,55 +101,8 @@ public class ComponentService implements IComponentService
     }
 
     public void setRemoteInformations( Component component, boolean bCache ) throws HttpAccessException, IOException
-    {
-        try
-        {
-            HttpAccess httpAccess = new HttpAccess( );
-            String strInfosJSON;
-            String strUrl = MessageFormat.format( URL_COMPONENT_WEBSERVICE, component.getArtifactId( ), bCache, component.getType( ) );
-            if ( component.getType( ) == null )
-            {
-                strUrl = strUrl.replace( "&type=null", "" );
-            }
-            strInfosJSON = httpAccess.doGet( strUrl );
-            JsonNode nodeRoot = _mapper.readTree( strInfosJSON );
-            if ( nodeRoot != null )
-            {
-                JsonNode nodeComponent = nodeRoot.path( FIELD_COMPONENT );
-                if ( nodeComponent != null )
-                {
-                    String strVersion = nodeComponent.get( FIELD_VERSION ).asText( );
-                    if ( !RELEASE_NOT_FOUND.equals( strVersion ) )
-                    {
-                        component.setLastAvailableVersion( nodeComponent.get( FIELD_VERSION ).asText( ) );
-                    }
-
-                    JsonNode jnSnapshoteVersion = nodeComponent.get( FIELD_ATTRIBUTES ).get( FIELD_SNAPSHOT_VERSION );
-                    JsonNode jnJiraCode = nodeComponent.get( FIELD_ATTRIBUTES ).get( FIELD_JIRA_CODE );
-                    JsonNode jnJiraRoadMap = nodeComponent.get( FIELD_ATTRIBUTES ).get( FIELD_ROADMAP_URL );
-                    JsonNode jnJiraCurrentVersionOpenedIssues = nodeComponent.get( FIELD_ATTRIBUTES ).get( FIELD_OPENED_ISSUES );
-                    JsonNode jnJiraCurrentVersionClosedIssues = nodeComponent.get( FIELD_ATTRIBUTES ).get( FIELD_CLOSED_ISSUES );
-                    JsonNode jnScmDeveloperConnection = nodeComponent.get( FIELD_ATTRIBUTES ).get( FIELD_SCM_DEVELOPER_CONNECTION );
-
-                    component.setLastAvailableSnapshotVersion( jnSnapshoteVersion != null ? jnSnapshoteVersion.asText( ) : null );
-                    component.setJiraCode( jnJiraCode != null ? jnJiraCode.asText( ) : null );
-                    component.setJiraRoadmapUrl( jnJiraRoadMap != null ? jnJiraRoadMap.asText( ) : null );
-                    component.setJiraCurrentVersionOpenedIssues( jnJiraCurrentVersionOpenedIssues != null ? jnJiraCurrentVersionOpenedIssues.asInt( ) : 0 );
-                    component.setJiraCurrentVersionClosedIssues( jnJiraCurrentVersionClosedIssues != null ? jnJiraCurrentVersionClosedIssues.asInt( ) : 0 );
-
-                    if ( jnScmDeveloperConnection != null && !StringUtils.isEmpty( jnScmDeveloperConnection.asText( ) )
-                            && !jnScmDeveloperConnection.asText( ).equals( "null" ) )
-                    {
-                        component.setScmDeveloperConnection( jnScmDeveloperConnection.asText( ) );
-                    }
-                }
-            }
-        }
-        catch( HttpAccessException | IOException ex )
-        {
-            AppLogService.error( "Error getting Remote informations : " + ex.getMessage( ), ex );
-        }
-
+    {        
+        MavenRepoComponentInfoProvider.getInstance( ).setComponentRemoteInformations( component );        
     }
 
     /**
@@ -383,9 +320,10 @@ public class ComponentService implements IComponentService
             AppLogService.error( e );
         }
 
+        // Compare and update information with datastore datas
         ComponentService.getService( ).updateRemoteInformations( component );
 
-        if ( component.getBranchReleaseFrom( )!=null && component.getBranchReleaseFrom( ).equals( GitUtils.DEFAULT_RELEASE_BRANCH ) )
+        if ( component.getBranchReleaseFrom( ) != null && component.getBranchReleaseFrom( ).equals( GitUtils.DEFAULT_RELEASE_BRANCH ) )
         {
               component = getNextVersions( component, component.getLastAvailableVersion( ), component.getCurrentVersion( ), component.getCurrentVersion() );
         }

@@ -137,7 +137,11 @@ public class Component extends AbstractReleaserResource implements RBACResource
 
     private String _strTargetJdk;
 
-    
+    /** The list of available release versions from Maven repository. */
+    private List<String> _listReleaseVersions;
+
+    /** The list of available snapshot versions from Maven repository. */
+    private List<String> _listSnapshotVersions;
 
     /**
      * Returns the ArtifactId.
@@ -728,6 +732,48 @@ public class Component extends AbstractReleaserResource implements RBACResource
 
     public void setTargetJdk(String _strTargetJdk) {
         this._strTargetJdk = _strTargetJdk;
+    }
+
+    /**
+     * Returns the list of available release versions from Maven repository.
+     *
+     * @return The list of release versions
+     */
+    public List<String> getReleaseVersions( )
+    {
+        return _listReleaseVersions;
+    }
+
+    /**
+     * Sets the list of available release versions from Maven repository.
+     *
+     * @param listReleaseVersions
+     *            The list of release versions
+     */
+    public void setReleaseVersions( List<String> listReleaseVersions )
+    {
+        _listReleaseVersions = listReleaseVersions;
+    }
+
+    /**
+     * Returns the list of available snapshot versions from Maven repository.
+     *
+     * @return The list of snapshot versions
+     */
+    public List<String> getSnapshotVersions( )
+    {
+        return _listSnapshotVersions;
+    }
+
+    /**
+     * Sets the list of available snapshot versions from Maven repository.
+     *
+     * @param listSnapshotVersions
+     *            The list of snapshot versions
+     */
+    public void setSnapshotVersions( List<String> listSnapshotVersions )
+    {
+        _listSnapshotVersions = listSnapshotVersions;
     }
 
 }

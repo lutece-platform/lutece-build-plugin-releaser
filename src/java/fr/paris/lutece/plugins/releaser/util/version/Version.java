@@ -202,7 +202,23 @@ public class Version implements Comparable
         _strQualifier = strQualifier;
     }
 
-    /**
+    public String getQualifierRadix() {
+		return _strQualifierRadix;
+	}
+
+	public void setQualifierRadix(String _strQualifierRadix) {
+		this._strQualifierRadix = _strQualifierRadix;
+	}
+
+	public int getQualifierNumber() {
+		return _nQualifierNumber;
+	}
+
+	public void setQualifierNumber(int _nQualifierNumber) {
+		this._nQualifierNumber = _nQualifierNumber;
+	}
+
+	/**
      * Compare to.
      *
      * @param object
@@ -229,15 +245,7 @@ public class Version implements Comparable
             return nDiff;
         }
         
-        if ( _strQualifierRadix == null && version._strQualifierRadix != null )
-        {
-        	nDiff = 1;
-        }        
-        else if ( _strQualifierRadix != null && version._strQualifierRadix == null )
-        {
-        	nDiff = -1;
-        }        
-        else if ( _strQualifierRadix != null && version._strQualifierRadix != null )
+        if ( _strQualifierRadix != null && version._strQualifierRadix != null )
         {
         	if ( _strQualifierRadix.equals(version._strQualifierRadix))
             {
@@ -252,7 +260,15 @@ public class Version implements Comparable
             	nDiff = -1;
             }
         }
-        
+        else if ( _strQualifierRadix == null && version._strQualifierRadix != null )
+        {
+        	nDiff = 1;
+        }        
+        else if ( _strQualifierRadix != null && version._strQualifierRadix == null )
+        {
+        	nDiff = -1; 
+        }        
+                
         return nDiff;
     }
     
@@ -267,15 +283,13 @@ public class Version implements Comparable
         sbVersion.append( _nMajor ).append( '.' ).append( _nMinor ).append( '.' ).append( _nPatch );
         if ( _strQualifier != null )
         {
-            if ( _strQualifierRadix != null )
-            {
-                sbVersion.append( '-' ).append( _strQualifierRadix ).append( String.format( QUALIFIER_VERSION_FORMAT, _nQualifierNumber ) );
-            }
-            else
-            {
-                sbVersion.append( '-' ).append( _strQualifier );
-            }
+        	sbVersion.append( '-' ).append( _strQualifier );
         }
+        else if ( _strQualifierRadix != null )
+        {
+        	sbVersion.append( '-' ).append( _strQualifierRadix ).append( String.format( QUALIFIER_VERSION_FORMAT, _nQualifierNumber ) );
+        }
+        
         return sbVersion.toString( );
     }
 
@@ -305,19 +319,29 @@ public class Version implements Comparable
 
         try
         {
-
-            String strCurrent = strSource != null ? strSource.trim( ) : "";
-
-            // Search for qualifier
-            int nPos = strCurrent.indexOf( '-' );
-            if ( nPos != -1 )
+        	String strCurrent = strSource != null ? strSource.trim( ) : "";
+        	
+        	// Search for qualifier
+        	String [ ] tabVersion = strSource.split( "-" ); 
+        	
+        	if ( tabVersion.length > 1 )
             {
-                version.setQualifier( strCurrent.substring( nPos + 1 ) );
-                strCurrent = strCurrent.substring( 0, nPos );
+        		if ( tabVersion[1].equals( QUALIFIER_SNAPSHOT))
+        		{
+                    strCurrent =  tabVersion[0];       	
+        			version.setQualifier( tabVersion[1] );
+        		}
+        		else if ( tabVersion[1].equals( QUALIFIER_BETA ) || tabVersion[1].equals(QUALIFIER_CANDIDATE))
+        		{
+                    strCurrent =  tabVersion[0];  
+                    version.setQualifierRadix( tabVersion[1] + "-");
+                    version.setQualifierNumber( Integer.parseInt( tabVersion[2] ) );		
+        		}
+                
             }
-
+            
             // Search for major digits
-            nPos = strCurrent.indexOf( '.' );
+            int nPos = strCurrent.indexOf( '.' );
 
             String strMajor = strCurrent.substring( 0, nPos );
             version.setMajor( ReleaserUtils.convertStringToInt( strMajor ) );

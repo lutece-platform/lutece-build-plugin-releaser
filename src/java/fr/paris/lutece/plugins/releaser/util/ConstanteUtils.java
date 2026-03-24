@@ -42,6 +42,27 @@ public class ConstanteUtils
 
     /** The Constant CONSTANTE_ID_NULL. */
     public static final int CONSTANTE_ID_NULL = -1;
+    
+    /** The Constant MAVEN_REPO_LUTECE_PLUGIN **/
+    public static final String MAVEN_REPO_LUTECE_PLUGIN = "lutece-plugin";
+    
+    /** The Constant MAVEN_REPO_LUTECE_SITE  **/
+    public static final String MAVEN_REPO_LUTECE_SITE = "lutece-site";
+    
+    /** The Constant MAVEN_REPO_LUTECE_CORE **/
+    public static final String MAVEN_REPO_LUTECE_CORE = "lutece-core";
+
+    /** The Constant DEPENDENCY_TYPE_LUTECE_CORE **/
+    public static final String DEPENDENCY_TYPE_LUTECE_CORE = "lutece-core";
+    
+    /** The Constant DEPENDENCY_TYPE_LUTECE_SITE **/
+    public static final String DEPENDENCY_TYPE_LUTECE_SITE = "lutece-site";
+
+    /** The Constant DEPENDENCY_TYPE_LUTECE_PLUGIN **/
+    public static final String DEPENDENCY_TYPE_LUTECE_PLUGIN = "lutece-plugin";
+    
+    /** The Constant TAG_LUTECE_CORE **/
+    public static final String TAG_LUTECE_CORE = "lutece-core";
 
     /** The Constant ERROR_TYPE_AUTHENTICATION_ERROR. */
     public static final String ERROR_TYPE_AUTHENTICATION_ERROR = "AUTHENTICATION_ERROR";
