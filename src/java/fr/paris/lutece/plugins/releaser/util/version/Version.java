@@ -502,7 +502,7 @@ public class Version implements Comparable
      */
     public boolean isCandidate( )
     {
-        return ( _strQualifier != null ) && ( _strQualifier.startsWith( QUALIFIER_CANDIDATE ) );
+        return ( _strQualifierRadix != null ) && ( _strQualifierRadix.startsWith( QUALIFIER_CANDIDATE ) );
     }
 
     /**
@@ -512,7 +512,7 @@ public class Version implements Comparable
      */
     public boolean isBeta( )
     {
-        return ( _strQualifier != null ) && ( _strQualifier.startsWith( QUALIFIER_BETA ) );
+        return ( _strQualifierRadix != null ) && ( _strQualifierRadix.startsWith( QUALIFIER_BETA ) );
     }
     
     /**
