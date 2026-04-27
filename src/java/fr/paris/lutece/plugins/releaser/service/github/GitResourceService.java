@@ -35,6 +35,7 @@ package fr.paris.lutece.plugins.releaser.service.github;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -118,6 +119,7 @@ public class GitResourceService implements IVCSResourceService
         context.setSite( site );
         Git git = GitUtils.getGit( ReleaserUtils.getLocalPath( context ) );
         List<String> listTags = GitUtils.getTagNameList( git );
+        List<String> listTagVersions = new ArrayList<>( );
         String strLastRelease = null;
         CommandResult commandResult = context.getCommandResult( );
         try {
@@ -125,25 +127,25 @@ public class GitResourceService implements IVCSResourceService
 
 			if ( !CollectionUtils.isEmpty( listTags ) )
 			{
-				for (String tag : listTags) 
+				for (String tag : listTags)
 				{
 					if ( tag != null && tag.contains( "-" ) )
 			        {
 			        	boolean bVersionInRightFormat = false;
 			        	Version tagVersion = new Version();
-			        	String [ ] tabTag = tag.split( "-" ); 
-			        	
+			        	String [ ] tabTag = tag.split( "-" );
+
 			        	if ( tag.contains( "RC" ) || tag.contains( "beta" ) )
 			            {
 			        		String strQualifier = tabTag [tabTag.length - 2];
-			        		if ( (strQualifier.equals("RC") || strQualifier.equals("beta")) 
+			        		if ( (strQualifier.equals("RC") || strQualifier.equals("beta"))
 			        				&& ReleaserUtils.convertStringToInt(tabTag [tabTag.length - 1]) != -1 )
-			        		{			        			
+			        		{
 			        			if ( ReleaserUtils.IsVersionInRightFormat (tabTag [tabTag.length - 3]) )
 				        		{
 			        				bVersionInRightFormat = true;
 				        			tagVersion = Version.parse(tabTag [tabTag.length - 3]);
-					        		tagVersion.setQualifier( strQualifier.concat("-").concat(tabTag [tabTag.length - 1] ));				         
+					        		tagVersion.setQualifier( strQualifier.concat("-").concat(tabTag [tabTag.length - 1] ));
 				        		}
 			        		}
 			            }
@@ -153,32 +155,35 @@ public class GitResourceService implements IVCSResourceService
 			        		{
 			        			bVersionInRightFormat = true;
 			        			tagVersion = Version.parse(tabTag [tabTag.length - 1]);
-			        		}			        				        			
+			        		}
 			        	}
-			        	
+
 			        	if ( bVersionInRightFormat )
 			        	{
+			        		listTagVersions.add( tagVersion.getVersion( ) );
 			        		int diff = lastReleaseVersion.compareTo(tagVersion);
-				    		if (diff < 0) 
+				    		if (diff < 0)
 				    		{
 				    			lastReleaseVersion = tagVersion;
 				    		}
 			        	}
-			        }        	
+			        }
 				}
-				
+
 				strLastRelease = lastReleaseVersion.getVersion();
 			}
 			else
 			{
 			    strLastRelease = "";
 			}
-		} 
-        catch (VersionParsingException e) 
+		}
+        catch (VersionParsingException e)
         {
 
             ReleaserUtils.addTechnicalError( commandResult, "Error parsing version : "  + e.getMessage( ), e );
 		}
+
+        site.setTags( listTagVersions );
 
         return strLastRelease;
 

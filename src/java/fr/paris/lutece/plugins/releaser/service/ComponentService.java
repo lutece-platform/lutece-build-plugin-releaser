@@ -42,21 +42,16 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser.Credential;
-import fr.paris.lutece.plugins.releaser.util.CVSFactoryService;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
@@ -250,39 +245,33 @@ public class ComponentService implements IComponentService
 
     public Component updateComponentForReleaseBranchFrom ( Component component, String strPom )
     {
-    	PomParser parser = new PomParser( );
-    	
-        parser.parse( component, strPom );
-        
-        try 
+    	if (strPom != null)
+    	{
+	    	PomParser parser = new PomParser( );
+	        parser.parse( component, strPom );
+    	}
+
+        try
         {
-			Version vSnapshotVersion = Version.parse( component.getCurrentVersion() );
-			
-			List<String> listReleaseVersion = VersionUtils.sortVersionsList( component.getReleaseVersions(), false );			
-			for (String strVersion : listReleaseVersion)
+			int nMajor = Version.parse( component.getCurrentVersion() ).getMajor();
+
+			String strLastRelease = VersionUtils.getLastVersionUsingMajor( component.getReleaseVersions(), nMajor );
+			if ( strLastRelease != null )
 			{
-				if (vSnapshotVersion.getMajor() == Version.parse( strVersion ).getMajor() )
-				{
-					component.setLastAvailableVersion(strVersion.toString());
-					break;
-				}	
+				component.setLastAvailableVersion( strLastRelease );
 			}
 
-			List<String> listSnapshotVersion = VersionUtils.sortVersionsList( component.getSnapshotVersions(), false );
-			for (String strVersion : listSnapshotVersion)
+			String strLastSnapshot = VersionUtils.getLastVersionUsingMajor( component.getSnapshotVersions(), nMajor );
+			if ( strLastSnapshot != null )
 			{
-				if (vSnapshotVersion.getMajor() == Version.parse( strVersion ).getMajor() )
-				{
-					component.setLastAvailableSnapshotVersion(strVersion.toString());
-					break;
-				}	
+				component.setLastAvailableSnapshotVersion( strLastSnapshot );
 			}
-		} 
-        catch (VersionParsingException e) 
+		}
+        catch (VersionParsingException e)
         {
 			AppLogService.error( "Error parsing version, excluded from sorted list : " + component.getCurrentVersion() );
 		}
-    	
+
         return component;
     }
    
@@ -340,13 +329,12 @@ public class ComponentService implements IComponentService
             }
 
         }
+        
         return listComponent;
-
     }
 
     public Component loadComponent( Component component, boolean bUpdateComponent, String strPom, String strUser, String strPassword )
     {
-
         PomParser parser = new PomParser( );
         parser.parse( component, strPom );
 
@@ -438,9 +426,7 @@ public class ComponentService implements IComponentService
             if ( component != null && componentPom != null && component.getArtifactId( ).equals( componentPom.getArtifactId( ) )
                     && component.getLastAvailableSnapshotVersion( ).equals( componentPom.getCurrentVersion( ) ) )
             {
-
                 bError = false;
-
             }
 
         }
@@ -517,14 +503,18 @@ public class ComponentService implements IComponentService
 
         List<String> branchNameList = GitUtils.getBranchList( strRepoUrl, fLocalRepo, commandResult, strLogin, strPwd );
         branchNameList.remove( "master" );
-        branchNameList.remove( "develop" );
+        // Only remove "develop" from the list if it's the current branch (displayed separately in UI)
+        if ( GitUtils.DEFAULT_RELEASE_BRANCH.equals( component.getBranchReleaseFrom( ) ) )
+        {
+            branchNameList.remove( "develop" );
+        }
 
         component.setBranches( branchNameList );
         context.setComponent( component );
 
         return component;
     }
-    
+
     public Component getLastBranchVersion( Component component, String branchName, ReleaserUser user )
     {
         String strPom = null;

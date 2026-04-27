@@ -118,6 +118,9 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /** The Constant VIEW_CHANGE_BRANCH. */
     private static final String VIEW_CHANGE_BRANCH = "changeBranch";
 
+    /** The Constant VIEW_CHANGE_SITE_BRANCH. */
+    private static final String VIEW_CHANGE_SITE_BRANCH = "changeSiteBranch";
+
     /** The Constant ACTION_RELEASE_SITE. */
     // Actions
     private static final String ACTION_RELEASE_SITE = "releaseSite";
@@ -151,6 +154,9 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
 
     /** The Constant ACTION_CHANGE_BRANCH. */
     private static final String ACTION_CHANGE_BRANCH = "doChangeBranch";
+
+    /** The Constant ACTION_CHANGE_SITE_BRANCH. */
+    private static final String ACTION_CHANGE_SITE_BRANCH = "doChangeSiteBranch";
 
     /** The Constant TEMPLATE_PREPARE_SITE_RELEASE. */
     private static final String TEMPLATE_PREPARE_SITE_RELEASE = "/admin/plugins/releaser/prepare_site_release.html";
@@ -664,6 +670,43 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
     }
     
+
+    /**
+     * Gets the site branch list.
+     *
+     * @param request
+     *            the request
+     * @return the string
+     */
+    @View( value = VIEW_CHANGE_SITE_BRANCH )
+    public String getChangeSiteBranch( HttpServletRequest request )
+    {
+        ReleaserUser user = setReleaserUser( request );
+
+        SiteService.getSiteBranchList( _site, user );
+
+        return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
+    }
+
+    /**
+     * Do change site branch.
+     *
+     * @param request
+     *            the request
+     * @return the string
+     */
+    @Action( ACTION_CHANGE_SITE_BRANCH )
+    public String doChangeSiteBranch( HttpServletRequest request )
+    {
+        String strReleaseBranchName = request.getParameter( PARAMETER_RELEASE_BRANCH_NAME );
+
+        ReleaserUser user = setReleaserUser( request );
+
+        _site = SiteService.changeSiteBranch( _site, strReleaseBranchName, user, request, getLocale( ) );
+        SiteService.buildComments( _site, getLocale( ) );
+
+        return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
+    }
 
     private ReleaserUser setReleaserUser ( HttpServletRequest request )
     {

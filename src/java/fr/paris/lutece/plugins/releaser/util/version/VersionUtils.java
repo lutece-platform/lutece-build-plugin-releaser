@@ -42,7 +42,7 @@ public class VersionUtils
     public static String getLastVersion( List<String> listVersions )
     {
     	String strLastVersion = null;
-    	
+
         if (listVersions != null && !listVersions.isEmpty() )
 		{
 			List<String> listReleaseVersions = VersionUtils.sortVersionsList(listVersions, true );
@@ -50,5 +50,39 @@ public class VersionUtils
 		}
 
         return strLastVersion.toString();
+    }
+
+    /**
+     * Find the highest version in {@code listVersions} whose major equals {@code nMajor}.
+     *
+     * @param listVersions
+     *            list of version strings (may be null or empty)
+     * @param nMajor
+     *            the major to match
+     * @return the matching version string (max for that major), or {@code null} if none found
+     */
+    public static String getLastVersionUsingMajor( List<String> listVersions, int nMajor )
+    {
+        if ( listVersions == null || listVersions.isEmpty( ) )
+        {
+            return null;
+        }
+
+        List<String> listSorted = sortVersionsList( listVersions, false );
+        for ( String strVersion : listSorted )
+        {
+            try
+            {
+                if ( Version.parse( strVersion ).getMajor( ) == nMajor )
+                {
+                    return strVersion;
+                }
+            }
+            catch ( VersionParsingException e )
+            {
+                AppLogService.error( "Error parsing version : " + strVersion );
+            }
+        }
+        return null;
     }
 }

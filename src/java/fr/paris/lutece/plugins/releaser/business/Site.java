@@ -135,6 +135,9 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /** The list of component branches. */
     private List<String> _listBranches;
 
+    /** The list of release tag versions collected from the VCS. */
+    private List<String> _listTags;
+
     /** The branch to release. */
     private String _strBranchReleaseFrom;
     
@@ -560,6 +563,16 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     public void setBranches( List<String> listBranches )
     {
         _listBranches = listBranches;
+    }
+
+    public List<String> getTags( )
+    {
+        return _listTags;
+    }
+
+    public void setTags( List<String> listTags )
+    {
+        _listTags = listTags;
     }
 
     public String getBranchReleaseFrom( )

@@ -81,6 +81,7 @@ public final class MavenRepoComponentInfoProvider
     private static final String URL_MAVEN_PATH_THEMES = AppPropertiesService.getProperty( PROPERTY_MAVEN_PATH_THEMES );
 
     private static final String RELEASE_NOT_FOUND = "Release not found";
+    private static final String SNAPSHOT_NOT_FOUND = "Snapshot not found";
     private static final String EXCEPTION_MESSAGE = "LuteceTools - MavenRepoService : Error retrieving pom infos : ";
 
     private static MavenRepoComponentInfoProvider _instance;
@@ -135,7 +136,7 @@ public final class MavenRepoComponentInfoProvider
         	}
         	else 
         	{
-        		AppLogService.info( "Error getting component url. No coponent found in Maven Release Repository : " );
+        		AppLogService.info( "Error getting component url. No component found in Maven Release Repository : " );
         	}
 
             // Get snapshot versions and scmDeveloperConnection
@@ -152,7 +153,7 @@ public final class MavenRepoComponentInfoProvider
 	            }
 	            else
 	            {
-	            	component.setLastAvailableSnapshotVersion( RELEASE_NOT_FOUND );
+	            	component.setLastAvailableSnapshotVersion( SNAPSHOT_NOT_FOUND );
 	            }
 	            
 	            // Get scmDeveloperConnection from Snapshot pom
@@ -161,7 +162,7 @@ public final class MavenRepoComponentInfoProvider
             }
         	else 
         	{
-        		AppLogService.info( "Error getting component url. No coponent found in Maven Snapshot Repository : " );
+        		AppLogService.info( "Error getting component url. No component found in Maven Snapshot Repository : " );
         	}
             
         }
