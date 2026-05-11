@@ -95,8 +95,29 @@ public class GitUtils
     /** The Constant DEVELOP_BRANCH. */
     public static final String DEFAULT_RELEASE_BRANCH = "develop";
 
+    /** The Constant DEVELOP_BRANCH — source branch of the develop/master flow, paired with MASTER_BRANCH. */
+    public static final String DEVELOP_BRANCH = "develop";
+
     /** The Constant CONSTANTE_REF_TAG. */
     private static final String CONSTANTE_REF_TAG = "refs/tags/";
+
+    /**
+     * Derive the target master* branch from a release-from branch.
+     * The develop/master flow swaps a leading {@link #DEVELOP_BRANCH} prefix with {@link #MASTER_BRANCH} :
+     * Branches that do not start with {@link #DEVELOP_BRANCH} have no master* counterpart.
+     *
+     * @param strBranchReleaseFrom
+     *            the source branch
+     * @return the target master* branch, or {@code null} if no master* merge applies
+     */
+    public static String getTargetMasterBranch( String strBranchReleaseFrom )
+    {
+        if ( strBranchReleaseFrom == null || !strBranchReleaseFrom.startsWith( DEVELOP_BRANCH ) )
+        {
+            return null;
+        }
+        return MASTER_BRANCH + strBranchReleaseFrom.substring( DEVELOP_BRANCH.length( ) );
+    }
 
     /**
      * Clone repo.
@@ -454,10 +475,14 @@ public class GitUtils
     }
 
     /**
-     * Merge back.
+     * Merge back the source branch (or the last release tag if any) into the target master branch and push.
      *
      * @param git
      *            the git
+     * @param strSourceBranch
+     *            the source branch to merge from (e.g. "develop", "develop_core7")
+     * @param strTargetMasterBranch
+     *            the target master branch to merge into (e.g. "master", "master_core7")
      * @param strUserName
      *            the str user name
      * @param strPassword
@@ -470,18 +495,19 @@ public class GitUtils
      * @throws GitAPIException
      *             the git API exception
      */
-    public static MergeResult mergeBack( Git git, String strUserName, String strPassword, CommandResult commandResult ) throws IOException, GitAPIException
+    public static MergeResult mergeBack( Git git, String strSourceBranch, String strTargetMasterBranch, String strUserName, String strPassword,
+            CommandResult commandResult ) throws IOException, GitAPIException
     {
 
         Ref tag = getTagLinkedToLastRelease( git );
 
-        git.checkout( ).setName( MASTER_BRANCH ).call( );
+        git.checkout( ).setName( strTargetMasterBranch ).call( );
         List<Ref> call = git.branchList( ).call( );
 
         Ref mergedBranchRef = null;
         for ( Ref ref : call )
         {
-            if ( ref.getName( ).equals( "refs/heads/" + DEFAULT_RELEASE_BRANCH ) )
+            if ( ref.getName( ).equals( "refs/heads/" + strSourceBranch ) )
             {
                 mergedBranchRef = ref;
                 break;
@@ -499,8 +525,8 @@ public class GitUtils
                 || mergeResult.getMergeStatus( ).equals( MergeResult.MergeStatus.NOT_SUPPORTED ) )
         {
 
-            ReleaserUtils.addTechnicalError( commandResult,
-                    mergeResult.getMergeStatus( ).toString( ) + "\nPlease merge manually master into" + DEFAULT_RELEASE_BRANCH + "branch." );
+            ReleaserUtils.addTechnicalError( commandResult, mergeResult.getMergeStatus( ).toString( ) + "\nPlease merge manually " + strSourceBranch
+                    + " into " + strTargetMasterBranch + " branch." );
         }
         else
         {
@@ -691,7 +717,8 @@ public class GitUtils
 
         if ( strRepoUrl != null && strRepoUrl.startsWith( "scm:git:" ) )
         {
-            strRepoUrl = strRepoUrl.substring( 8 );
+            strRepoUrl = strRepoUrl.substrin
+                    // master* counterpart, i.e. release-from does not start with DEVELOP_BRANCH).g( 8 );
 
         }
 

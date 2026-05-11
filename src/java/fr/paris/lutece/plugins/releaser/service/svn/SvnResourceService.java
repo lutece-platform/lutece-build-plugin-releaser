@@ -282,41 +282,6 @@ public class SvnResourceService implements IVCSResourceService
     }
 
     /**
-     * Update develop branch.
-     *
-     * @param context
-     *            the context
-     * @param locale
-     *            the locale
-     * @param strMessage
-     *            the str message
-     */
-    @Override
-    public void updateDevelopBranch( WorkflowReleaseContext context, Locale locale, String strMessage )
-    {
-
-        String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
-        String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
-        String strLocalPath = ReleaserUtils.getLocalPath( context );
-
-        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager( strLogin, strPassword );
-
-        ReleaseSvnCommitClient commitClient = new ReleaseSvnCommitClient( authManager, SVNWCUtil.createDefaultOptions( false ) );
-
-        try
-        {
-            SvnUtils.doCommit( strLocalPath, strMessage, commitClient );
-        }
-        catch( Exception e )
-        {
-
-            AppLogService.error( e );
-            ReleaserUtils.addTechnicalError( context.getCommandResult( ), e.getMessage( ), e );
-        }
-
-    }
-
-    /**
      * Update master branch.
      *
      * @param context
@@ -325,7 +290,7 @@ public class SvnResourceService implements IVCSResourceService
      *            the locale
      */
     @Override
-    public void updateMasterBranch( WorkflowReleaseContext context, Locale locale )
+    public void updateMasterBranch( WorkflowReleaseContext context, String strMasterBranch, Locale locale )
     {
         // TODO Auto-generated method stub
 
@@ -380,26 +345,27 @@ public class SvnResourceService implements IVCSResourceService
 
     }
 
-    /**
-     * Checkout develop branch.
-     *
-     * @param context
-     *            the context
-     * @param locale
-     *            the locale
-     */
-    @Override
-    public void checkoutDevelopBranch( WorkflowReleaseContext context, Locale locale )
-    {
-        // TODO Auto-generated method stub
-
-    }
-
     @Override
     public void updateBranch( WorkflowReleaseContext context, String strBranch, Locale locale, String strMessage )
     {
-        // TODO Auto-generated method stub
+        // SVN has no branch concept like git — strBranch is ignored, we just commit the working copy.
+        String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
+        String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
+        String strLocalPath = ReleaserUtils.getLocalPath( context );
 
+        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager( strLogin, strPassword );
+
+        ReleaseSvnCommitClient commitClient = new ReleaseSvnCommitClient( authManager, SVNWCUtil.createDefaultOptions( false ) );
+
+        try
+        {
+            SvnUtils.doCommit( strLocalPath, strMessage, commitClient );
+        }
+        catch( Exception e )
+        {
+            AppLogService.error( e );
+            ReleaserUtils.addTechnicalError( context.getCommandResult( ), e.getMessage( ), e );
+        }
     }
 
     @Override

@@ -134,6 +134,8 @@ public class SiteService
 
         if ( user != null )
         {
+            site.setBranchReleaseFrom( GitUtils.DEFAULT_RELEASE_BRANCH );
+            
             Credential credential = user.getCredential( site.getRepoType( ) );
 
             strPom = CVSFactoryService.getService( site.getRepoType( ) ).fetchPom( site, credential.getLogin( ), credential.getPassword( ) );
@@ -142,7 +144,7 @@ public class SiteService
             {
                 PomParser parser = new PomParser( );
                 parser.parse( site, strPom );
-                initSite( site, request, locale );                
+                initSite( site, request, locale );
             }
         }
         else
@@ -181,9 +183,8 @@ public class SiteService
         site.setNextSnapshotVersion( Version.getNextSnapshotVersion( strOriginVersion ) );
         site.setTargetVersions( Version.getNextReleaseVersions( strOriginVersion, strLastReleaseVersion ) );
 
-        site.setBranchReleaseFrom( GitUtils.DEFAULT_RELEASE_BRANCH );    
-		site.setCreateDckerImage(isSiteCreateDockerImage( site ) );        
-        
+		site.setCreateDckerImage(isSiteCreateDockerImage( site ) );
+
         initComponents( site );
     }
     
@@ -737,6 +738,7 @@ public class SiteService
                         AppLogService.error( e );
                     }
                     ComponentService.getService( ).updateRemoteInformations( component );
+                    ComponentService.getService( ).updateComponentForReleaseBranchFrom( component, null );
                     defineTargetVersion( component );
                     defineNextSnapshotVersion( component );
                     component.setName( ReleaserUtils.getComponentName( component.getScmDeveloperConnection( ), component.getArtifactId( ) ) );

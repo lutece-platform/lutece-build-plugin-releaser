@@ -513,10 +513,12 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             MavenService.getService( ).mvnReleasePrepare( strLocalComponentPomPath, strComponentReleaseVersion, strComponentReleaseTagName,
                     strComponentReleaseNewDeveloppmentVersion, strLogin, strPassword, commandResult,component.getTargetJdk() );
 
-            // Merge Master if release from develop branch
-            if ( component.getBranchReleaseFrom( ).equals( GitUtils.DEFAULT_RELEASE_BRANCH ) )
+            // Merge into the master* branch matching the release-from branch (skipped if there is no
+            // master* counterpart, i.e. release-from does not start with DEVELOP_BRANCH).
+            String strComponentMasterBranch = GitUtils.getTargetMasterBranch( component.getBranchReleaseFrom( ) );
+            if ( strComponentMasterBranch != null )
             {
-                cvsService.updateMasterBranch( context, locale );
+                cvsService.updateMasterBranch( context, strComponentMasterBranch, locale );
             }
 
             // Checkout branch after prepare
@@ -678,10 +680,11 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         commandResult.getLog( ).append( "Preparing release " + componentTyeName + "\n" );
         commandResult.getLog( ).append( "Updating pom version to " + context.getSite( ).getNextReleaseVersion( ) + "...\n" );
         commandResult.getLog( ).append( "Updating dependency version ...\n" );
+        String strSiteBranch = context.getSite( ).getBranchReleaseFrom( );
         try
         {
             PomUpdater.updateSiteBeforeTag( context.getSite( ), ReleaserUtils.getLocalPomPath( context ) );
-            cvsService.updateDevelopBranch( context, locale, "[site-release] update pom before tag" );
+            cvsService.updateBranch( context, strSiteBranch, locale, "[site-release] update pom before tag" );
 
             // PROGRESS 30%
             commandResult.setProgressValue( commandResult.getProgressValue( ) + 30 );
@@ -695,10 +698,15 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
 
             commandResult.getLog( ).append( "End Release prepare " + componentTyeName + " " + context.getSite( ).getNextReleaseVersion( ) + "...\n" );
 
-            // Merge Master
-            cvsService.updateMasterBranch( context, locale );
-            // checkout/pull develop branch after prepare
-            cvsService.checkoutDevelopBranch( context, locale );
+            // Merge into the master* branch matching the release-from branch (skipped if there is no
+            // master* counterpart, i.e. release-from does not start with DEVELOP_BRANCH).
+            String strSiteMasterBranch = GitUtils.getTargetMasterBranch( strSiteBranch );
+            if ( strSiteMasterBranch != null )
+            {
+                cvsService.updateMasterBranch( context, strSiteMasterBranch, locale );
+            }
+            // checkout/pull the release-from branch after prepare
+            cvsService.checkoutBranch( context, strSiteBranch, locale );
 
             // PROGRESS 20%
             commandResult.setProgressValue( commandResult.getProgressValue( ) + 20 );
@@ -706,7 +714,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             commandResult.getLog( ).append( "Updating pom after release prepare \n" );
 
             PomUpdater.updateSiteAfterTag( context.getSite( ), ReleaserUtils.getLocalPomPath( context ) );
-            cvsService.updateDevelopBranch( context, locale, "[site-release] update Updating pom to next development" );
+            cvsService.updateBranch( context, strSiteBranch, locale, "[site-release] update Updating pom to next development" );
             commandResult.getLog( ).append( "Pom updated\n" );
 
         }
@@ -862,7 +870,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             try
             {
 
-                MavenService.getService( ).mvnReleasePerform( strLocalComponentPath, strLogin, strPassword, commandResult,true,null );
+                MavenService.getService( ).mvnReleasePerform( strLocalComponentPath, strLogin, strPassword, commandResult,
+                        context.getSite( ).getRepoType( ).equals( RepositoryType.GITLAB ), null );
 
             }
             catch( AppException ex )

@@ -143,7 +143,6 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /** The list of available snapshot versions from Maven repository. */
     private List<String> _listSnapshotVersions;
 
-
     /**
      * Returns the ArtifactId.
      *

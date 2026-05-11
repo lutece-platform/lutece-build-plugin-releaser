@@ -85,38 +85,30 @@ public interface IVCSResourceService
     String doCheckoutRepository( WorkflowReleaseContext context, String strLogin, String strPassword );
 
     /**
-     * Update develop branch.
+     * Commit and push the local working tree on the given branch.
      *
      * @param context
      *            the context
+     * @param strBranch
+     *            the branch to update
      * @param locale
      *            the locale
      * @param strMessage
-     *            the str message
-     */
-    void updateDevelopBranch( WorkflowReleaseContext context, Locale locale, String strMessage );
-
-    /**
-     * Update develop branch.
-     *
-     * @param context
-     *            the context
-     * @param locale
-     *            the locale
-     * @param strMessage
-     *            the str message
+     *            the commit message
      */
     void updateBranch( WorkflowReleaseContext context, String strBranch, Locale locale, String strMessage );
 
     /**
-     * Update master branch.
+     * Merge the release-from branch (or the last release tag) into the given master* branch and push.
      *
      * @param context
      *            the context
+     * @param strMasterBranch
+     *            the target master* branch (e.g. "master", "master_core7")
      * @param locale
      *            the locale
      */
-    void updateMasterBranch( WorkflowReleaseContext context, Locale locale );
+    void updateMasterBranch( WorkflowReleaseContext context, String strMasterBranch, Locale locale );
 
     /**
      * Rollback release.
@@ -129,20 +121,12 @@ public interface IVCSResourceService
     void rollbackRelease( WorkflowReleaseContext context, Locale locale );
 
     /**
-     * Checkout develop branch.
+     * Checkout the given branch.
      *
      * @param context
      *            the context
-     * @param locale
-     *            the locale
-     */
-    void checkoutDevelopBranch( WorkflowReleaseContext context, Locale locale );
-
-    /**
-     * Checkout branch.
-     *
-     * @param context
-     *            the context
+     * @param strBranch
+     *            the branch to checkout
      * @param locale
      *            the locale
      */
