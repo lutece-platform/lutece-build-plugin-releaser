@@ -499,6 +499,32 @@ public class GitUtils
             CommandResult commandResult ) throws IOException, GitAPIException
     {
 
+        // Fail the release with a clear alert if the target master* branch does not exist on the remote.
+        if ( git.getRepository( ).findRef( "refs/remotes/origin/" + strTargetMasterBranch ) == null )
+        {
+            ReleaserUtils.addTechnicalError( commandResult,
+                    "Remote branch origin/" + strTargetMasterBranch + " not found. Cannot merge " + strSourceBranch + " back into "
+                            + strTargetMasterBranch + ". Please create the " + strTargetMasterBranch + " branch on the remote and retry." );
+            return null;
+        }
+
+        // JGit's checkout requires a local branch ref; cloneAllBranches only creates
+        // refs/remotes/origin/*. Create the local tracking branch on first use.
+        boolean localExists = false;
+        for ( Ref ref : git.branchList( ).call( ) )
+        {
+            if ( ref.getName( ).equals( "refs/heads/" + strTargetMasterBranch ) )
+            {
+                localExists = true;
+                break;
+            }
+        }
+        if ( !localExists )
+        {
+            git.branchCreate( ).setName( strTargetMasterBranch ).setUpstreamMode( SetupUpstreamMode.SET_UPSTREAM )
+                    .setStartPoint( "origin/" + strTargetMasterBranch ).setForce( true ).call( );
+        }
+
         Ref tag = getTagLinkedToLastRelease( git );
 
         git.checkout( ).setName( strTargetMasterBranch ).call( );
