@@ -717,9 +717,7 @@ public class GitUtils
 
         if ( strRepoUrl != null && strRepoUrl.startsWith( "scm:git:" ) )
         {
-            strRepoUrl = strRepoUrl.substrin
-                    // master* counterpart, i.e. release-from does not start with DEVELOP_BRANCH).g( 8 );
-
+            strRepoUrl = strRepoUrl.substring( 8 );
         }
 
         return strRepoUrl;
