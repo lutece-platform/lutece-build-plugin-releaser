@@ -46,6 +46,8 @@ import fr.paris.lutece.plugins.releaser.service.ComponentService;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
+import fr.paris.lutece.plugins.releaser.util.version.Version;
+import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
 import fr.paris.lutece.portal.service.admin.AccessDeniedException;
 import fr.paris.lutece.portal.service.admin.AdminUserService;
 import fr.paris.lutece.portal.service.template.AppTemplateService;
@@ -57,6 +59,7 @@ import fr.paris.lutece.portal.util.mvc.commons.annotations.View;
 import fr.paris.lutece.util.html.HtmlTemplate;
 import fr.paris.lutece.util.html.Paginator;
 import fr.paris.lutece.util.json.AbstractJsonResponse;
+import fr.paris.lutece.util.json.ErrorJsonResponse;
 import fr.paris.lutece.util.json.JsonResponse;
 import fr.paris.lutece.util.json.JsonUtil;
 
@@ -127,6 +130,9 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
 
     /** The Constant PARAMETER_SOURCE_TAG. */
     private static final String PARAMETER_SOURCE_TAG = "source_tag";
+
+    /** The Constant PARAMETER_FORCE. */
+    private static final String PARAMETER_FORCE = "force";
 
     /** The Constant MARK_COMPONENT. */
     private static final String MARK_COMPONENT = "component";
@@ -365,6 +371,29 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
             component = ComponentService.getService( ).getLastBranchVersion( component, strReleaseBranchName, user );
 
             component.setBranchReleaseFrom( strReleaseBranchName );
+
+            boolean bForce = Boolean.parseBoolean( request.getParameter( PARAMETER_FORCE ) );
+            if ( !bForce )
+            {
+                try
+                {
+                    String strTagVersionPart = strSourceTag.substring( component.getArtifactId( ).length( ) + 1 );
+                    int nTagMajor = Version.parse( strTagVersionPart ).getMajor( );
+                    int nBranchMajor = Version.parse( component.getCurrentVersion( ) ).getMajor( );
+
+                    if ( nTagMajor != nBranchMajor )
+                    {
+                        return JsonUtil.buildJsonResponse( new ErrorJsonResponse( "MAJOR_MISMATCH",
+                                "La version majeure du tag (" + nTagMajor + ") diffère de celle de la branche "
+                                        + strReleaseBranchName + " (" + nBranchMajor + ")." ) );
+                    }
+                }
+                catch( VersionParsingException e )
+                {
+                    return JsonUtil.buildJsonResponse( new ErrorJsonResponse( "VERSION_PARSE_ERROR",
+                            "Impossible de vérifier la cohérence des versions (tag / branche)." ) );
+                }
+            }
 
             fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext context =
                     new fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext( );

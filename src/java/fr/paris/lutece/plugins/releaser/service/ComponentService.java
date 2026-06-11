@@ -563,6 +563,21 @@ public class ComponentService implements IComponentService
                     }
                 }
             }
+
+            final String strArtifactId = component.getArtifactId( );
+            preReleaseTags.sort( ( t1, t2 ) -> {
+                try
+                {
+                    Version v1 = Version.parse( t1.substring( strArtifactId.length( ) + 1 ) );
+                    Version v2 = Version.parse( t2.substring( strArtifactId.length( ) + 1 ) );
+                    return v2.compareTo( v1 );
+                }
+                catch( VersionParsingException e )
+                {
+                    return 0;
+                }
+            } );
+
             component.setTags( preReleaseTags );
         }
         catch( Exception e )
