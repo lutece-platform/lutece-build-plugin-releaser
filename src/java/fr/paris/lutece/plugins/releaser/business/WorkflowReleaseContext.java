@@ -79,6 +79,9 @@ public class WorkflowReleaseContext implements Serializable
     /** The str ref branch release From. */
     private String _strRefBranchReleaseFrom;
 
+    /** Source tag for the "release from tag" workflow (e.g. "myplugin-2.0.4-beta-01"). */
+    private String _strSourceTag;
+
     /**
      * Gets the id.
      *
@@ -236,6 +239,27 @@ public class WorkflowReleaseContext implements Serializable
     public void setRefBranchReleaseFrom( String _strRefBranchReleaseFrom )
     {
         this._strRefBranchReleaseFrom = _strRefBranchReleaseFrom;
+    }
+
+    /**
+     * Gets the source tag used by the "release from tag" workflow.
+     *
+     * @return the source tag (e.g. "myplugin-2.0.4-beta-01"), or {@code null} for other workflows
+     */
+    public String getSourceTag( )
+    {
+        return _strSourceTag;
+    }
+
+    /**
+     * Sets the source tag used by the "release from tag" workflow.
+     *
+     * @param strSourceTag
+     *            the source tag
+     */
+    public void setSourceTag( String strSourceTag )
+    {
+        this._strSourceTag = strSourceTag;
     }
 
     /**

@@ -45,39 +45,39 @@ import fr.paris.lutece.util.httpaccess.HttpAccessException;
 public final class MavenRepoComponentInfoProvider
 {
     // Maven repos URLs
-	private static final String PROPERTY_MAVEN_URL_PREFIX = "lutecetools.maven.repository.url";
+	private static final String PROPERTY_MAVEN_URL_PREFIX = "releaser.maven.repository.url";
 	private static final List<String> PROPERTIES_MAVEN_URL = AppPropertiesService.getKeys( PROPERTY_MAVEN_URL_PREFIX );
 		
 	// Maven Releases Paths
-	private static final String PROPERTY_RELEASES_PATH_PREFIX = "lutecetools.maven.repository.releases";
+	private static final String PROPERTY_RELEASES_PATH_PREFIX = "releaser.maven.repository.releases";
 	private static final List<String> PROPERTIES_RELEASES_PATH = AppPropertiesService.getKeys( PROPERTY_RELEASES_PATH_PREFIX );
 	
 	// Maven Sanapshots Paths
-    private static final String PROPERTY_SNAPSHOTS_PATH_PREFIX = "lutecetools.maven.repository.snapshots";
+    private static final String PROPERTY_SNAPSHOTS_PATH_PREFIX = "releaser.maven.repository.snapshots";
 	private static final List<String> PROPERTIES_SNAPSHOTS_PATH = AppPropertiesService.getKeys( PROPERTY_SNAPSHOTS_PATH_PREFIX );
 
 	// Maven path - to see the tree structure
-    private static final String PROPERTY_MAVEN_REPO_PATH_TREE = "lutecetools.maven.repository.treestructure.path";
+    private static final String PROPERTY_MAVEN_REPO_PATH_TREE = "releaser.maven.repository.treestructure.path";
 	private static final String PATH_MAVEN_REPO_TREE = AppPropertiesService.getProperty( PROPERTY_MAVEN_REPO_PATH_TREE );
 
     // Maven path - To get file
-	private static final String PROPERTY_MAVEN_REPO_PATH_FILE = "lutecetools.maven.repository.getfile.path";
+	private static final String PROPERTY_MAVEN_REPO_PATH_FILE = "releaser.maven.repository.getfile.path";
     private static final String PATH_MAVEN_REPO_FILE = AppPropertiesService.getProperty( PROPERTY_MAVEN_REPO_PATH_FILE );	
 
     // Path Plugins
-    private static final String PROPERTY_MAVEN_PATH_PLUGINS = "lutecetools.maven.repository.path.plugins";
+    private static final String PROPERTY_MAVEN_PATH_PLUGINS = "releaser.maven.repository.path.plugins";
     private static final String URL_MAVEN_PATH_PLUGINS = AppPropertiesService.getProperty( PROPERTY_MAVEN_PATH_PLUGINS );
     
     // Path Pom site
-    private static final String PROPERTY_MAVEN_PATH_SITE_POM = "lutecetools.maven.repository.path.site-pom";
+    private static final String PROPERTY_MAVEN_PATH_SITE_POM = "releaser.maven.repository.path.site-pom";
     private static final String URL_MAVEN_PATH_SITE_POM = AppPropertiesService.getProperty( PROPERTY_MAVEN_PATH_SITE_POM );
     
     // Path Lutece core
-    private static final String PROPERTY_MAVEN_PATH_CORE = "lutecetools.maven.repository.path.core";
+    private static final String PROPERTY_MAVEN_PATH_CORE = "releaser.maven.repository.path.core";
     private static final String URL_MAVEN_PATH_CORE = AppPropertiesService.getProperty( PROPERTY_MAVEN_PATH_CORE );
     
     // Path Themes
-    private static final String PROPERTY_MAVEN_PATH_THEMES = "lutecetools.maven.repository.path.themes";
+    private static final String PROPERTY_MAVEN_PATH_THEMES = "releaser.maven.repository.path.themes";
     private static final String URL_MAVEN_PATH_THEMES = AppPropertiesService.getProperty( PROPERTY_MAVEN_PATH_THEMES );
 
     private static final String RELEASE_NOT_FOUND = "Release not found";

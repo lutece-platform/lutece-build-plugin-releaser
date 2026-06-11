@@ -43,10 +43,13 @@ import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.service.ComponentService;
+import fr.paris.lutece.plugins.releaser.util.CommandResult;
+import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.portal.service.admin.AccessDeniedException;
 import fr.paris.lutece.portal.service.admin.AdminUserService;
 import fr.paris.lutece.portal.service.template.AppTemplateService;
+import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.portal.util.mvc.admin.MVCAdminJspBean;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
@@ -80,8 +83,14 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
     /** The Constant VIEW_CHANGE_BRANCH. */
     private static final String VIEW_CHANGE_BRANCH = "changeBranch";
 
+    /** The Constant VIEW_RELEASE_FROM_TAG. */
+    private static final String VIEW_RELEASE_FROM_TAG = "releaseFromTag";
+
     /** The Constant TEMPLATE_MANAGE_COMPONENT. */
     private static final String TEMPLATE_MANAGE_COMPONENT = "/admin/plugins/releaser/manage_component.html";
+
+    /** The Constant TEMPLATE_RELEASE_FROM_TAG. */
+    private static final String TEMPLATE_RELEASE_FROM_TAG = "/admin/plugins/releaser/release_from_tag.html";
 
     /** The Constant MARK_LIST_COMPONENT. */
     private static final String MARK_LIST_COMPONENT = "list_component";
@@ -107,11 +116,20 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
     /** The Constant ACTION_CHANGE_BRANCH. */
     private static final String ACTION_CHANGE_BRANCH = "doChangeBranch";
 
+    /** The Constant ACTION_RELEASE_FROM_TAG. */
+    private static final String ACTION_RELEASE_FROM_TAG = "doReleaseFromTag";
+
     /** The Constant PARAMETER_ARTIFACT_ID. */
     private static final String PARAMETER_ARTIFACT_ID = "artifact_id";
 
     /** The Constant PARAMETER_TWEET_MESSAGE. */
     private static final String PARAMETER_TWEET_MESSAGE = "tweet_message";
+
+    /** The Constant PARAMETER_SOURCE_TAG. */
+    private static final String PARAMETER_SOURCE_TAG = "source_tag";
+
+    /** The Constant MARK_COMPONENT. */
+    private static final String MARK_COMPONENT = "component";
 
     // Messages
     private static final String MESSAGE_ACCESS_DENIED = "releaser.message.accesDenied";
@@ -273,18 +291,104 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
      */
     @Action( ACTION_CHANGE_BRANCH )
     public String doChangeBranch( HttpServletRequest request )
-    {        
+    {
 
         String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
         String strReleaseBranchName = request.getParameter( PARAMETER_RELEASE_BRANCH_NAME );
 
         ReleaserUser user = setReleaserUser ( request );
-        
+
         Component component = ComponentService.getService( ).getLastBranchVersion( getCurrentComponent( strArtifactId ), strReleaseBranchName, user );
 
         return redirectView( request, VIEW_MANAGE_COMPONENT );
     }
-    
+
+    /**
+     * Show the "release from tag" selection page (tag dropdown + branch dropdown).
+     * Clones the repo if needed and populates both lists on the component.
+     *
+     * @param request
+     *            the request
+     * @return the page html
+     */
+    @View( value = VIEW_RELEASE_FROM_TAG )
+    public String getReleaseFromTag( HttpServletRequest request )
+    {
+        String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
+        ReleaserUser user = setReleaserUser( request );
+
+        Component component = getCurrentComponent( strArtifactId );
+        if ( component != null )
+        {
+            // Branches first (clones the repo), tags reuse the same clone.
+            ComponentService.getService( ).getComponentBranchList( component, RepositoryType.GITHUB, user );
+            ComponentService.getService( ).getComponentTagList( component, RepositoryType.GITHUB, user );
+        }
+
+        Map<String, Object> model = getModel( );
+        model.put( MARK_COMPONENT, component );
+
+        HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_RELEASE_FROM_TAG, getLocale( ), model );
+        return template.getHtml( );
+    }
+
+    /**
+     * Submit the "release from tag" form : starts the dedicated workflow with the chosen
+     * source tag and develop* branch.
+     *
+     * @param request
+     *            the request
+     * @return redirect to the components view
+     */
+    @Action( ACTION_RELEASE_FROM_TAG )
+    public String doReleaseFromTag( HttpServletRequest request )
+    {
+        String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
+        String strSourceTag = request.getParameter( PARAMETER_SOURCE_TAG );
+        String strReleaseBranchName = request.getParameter( PARAMETER_RELEASE_BRANCH_NAME );
+
+        Integer nIdContext = null;
+
+        if ( StringUtils.isBlank( strSourceTag ) || StringUtils.isBlank( strReleaseBranchName ) )
+        {
+            return JsonUtil.buildJsonResponse( new JsonResponse( nIdContext ) );
+        }
+
+        ReleaserUser user = setReleaserUser( request );
+        Component component = getCurrentComponent( strArtifactId );
+        if ( component != null )
+        {
+            // Realign lastAvailableSnapshotVersion on the chosen branch's major (via
+            // updateComponentForReleaseBranchFrom). Without this, the catalog's default-branch value
+            // mismatches the cloned branch pom and TaskCheckoutRepository would abort with
+            // "The cloned component does not match the release informations".
+            component = ComponentService.getService( ).getLastBranchVersion( component, strReleaseBranchName, user );
+
+            component.setBranchReleaseFrom( strReleaseBranchName );
+
+            fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext context =
+                    new fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext( );
+            context.setComponent( component );
+            context.setReleaserUser( user );
+            context.setSourceTag( strSourceTag );
+
+            CommandResult commandResult = new CommandResult( );
+            commandResult.setLog( new StringBuffer( ) );
+            context.setCommandResult( commandResult );
+
+            fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService.getService( ).addWorkflowReleaseContext( context );
+            nIdContext = context.getId( );
+
+            int nIdWorkflow = AppPropertiesService.getPropertyInt(
+                    ConstanteUtils.PROPERTY_ID_WORKFLOW_RELEASE_FROM_TAG, ConstanteUtils.CONSTANTE_ID_NULL );
+
+            fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService.getService( ).startWorkflowReleaseContext(
+                    context, nIdWorkflow, request.getLocale( ), request, getUser( ) );
+        }
+
+        return JsonUtil.buildJsonResponse( new JsonResponse( nIdContext ) );
+    }
+
     private ReleaserUser setReleaserUser ( HttpServletRequest request )
     {
 

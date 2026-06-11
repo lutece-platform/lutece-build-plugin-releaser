@@ -56,6 +56,8 @@ public enum MavenGoals
     RELEASE_PERFORM( "release:perform", "-Dgoals=deploy -DforkMode=never -Darguments=\"-Dmaven.test.skip=true\" --batch-mode" ),
     /** The release perform  in private repository. */
 	RELEASE_PERFORM_PRIVATE_REPO( "release:perform", "-Dgoals=deploy -DforkMode=never -Darguments=\"-Dmaven.test.skip=true -DaltReleaseDeploymentRepository='lutece_releases_private_repository::default::"+AppPropertiesService.getProperty(ConstanteUtils.PROPERTY_MAVEN_PRIVATE_RELEASE_DEPLOYMENT_REPOSITORY) +"'\" --batch-mode" ),
+    /** Direct deploy, used by the "release from tag" workflow when running from a detached HEAD. */
+    DEPLOY( "clean", "deploy", "-Dmaven.test.skip=true", "--batch-mode" ),
 	/**Effective POM */
     EFFECTIVE_POM("help:effective-pom");
 

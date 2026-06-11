@@ -129,6 +129,9 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /** The list of component branches. */
     private List<String> _listBranches;
 
+    /** The list of tags (filtered to beta/RC) for the "release from tag" workflow. */
+    private List<String> _listTags;
+
     /** The branch to release. */
     private String _strBranchReleaseFrom;
 
@@ -704,6 +707,16 @@ public class Component extends AbstractReleaserResource implements RBACResource
     public void setBranches( List<String> listBranches )
     {
         _listBranches = listBranches;
+    }
+
+    public List<String> getTags( )
+    {
+        return _listTags;
+    }
+
+    public void setTags( List<String> listTags )
+    {
+        _listTags = listTags;
     }
 
     public String getBranchReleaseFrom( )

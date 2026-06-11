@@ -307,6 +307,21 @@ public class MavenService implements IMavenService
     }
 
     @Override
+    public String mvnDeploy( String strPathPom, CommandResult commandResult, String strTargetJdkVersion )
+    {
+        InvocationResult invocationResult = mvnExecute( strPathPom, MavenGoals.DEPLOY.asList( ), commandResult, strTargetJdkVersion );
+
+        int nStatus = invocationResult.getExitCode( );
+
+        if ( nStatus != 0 )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, "Error during Deploy exit code is: " + nStatus );
+        }
+
+        return "";
+    }
+
+    @Override
     public String mvnGenerateEffectivePom( String strPathPom, String strEffectivePomPath, CommandResult commandResult )
     {
 

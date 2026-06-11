@@ -502,15 +502,81 @@ public class ComponentService implements IComponentService
         }
 
         List<String> branchNameList = GitUtils.getBranchList( strRepoUrl, fLocalRepo, commandResult, strLogin, strPwd );
-        branchNameList.remove( "master" );
-        // Only remove "develop" from the list if it's the current branch (displayed separately in UI)
-        if ( GitUtils.DEFAULT_RELEASE_BRANCH.equals( component.getBranchReleaseFrom( ) ) )
-        {
-            branchNameList.remove( "develop" );
-        }
+        branchNameList.removeIf( b -> b.startsWith( GitUtils.MASTER_BRANCH ) );
 
         component.setBranches( branchNameList );
         context.setComponent( component );
+
+        return component;
+    }
+
+    /**
+     * {@inheritDoc}
+     * Lists tags whose name matches "&lt;artifactId&gt;-X.Y.Z-(beta|RC)-NN" so the
+     * "release from tag" dropdown only proposes pre-release tags eligible for stabilization.
+     */
+    @Override
+    public Component getComponentTagList( Component component, RepositoryType repositoryType, ReleaserUser user )
+    {
+        Credential credential = user.getCredential( repositoryType );
+        String strLogin = credential.getLogin( );
+        String strPwd = credential.getPassword( );
+
+        CommandResult commandResult = new CommandResult( );
+        WorkflowReleaseContext context = new WorkflowReleaseContext( );
+        commandResult.setLog( new StringBuffer( ) );
+        context.setCommandResult( commandResult );
+        context.setComponent( component );
+
+        ReleaserUtils.logStartAction( context, " List pre-release tags '" + component.getName( ) + "'" );
+
+        String strLocalComponentPath = ReleaserUtils.getLocalPath( context );
+        File fLocalRepo = new File( strLocalComponentPath );
+
+        Git git = null;
+        try
+        {
+            if ( fLocalRepo.exists( ) && new File( strLocalComponentPath + "/.git" ).exists( ) )
+            {
+                // Reuse the existing clone (likely just made by getComponentBranchList)
+                git = GitUtils.getGit( strLocalComponentPath );
+            }
+            else
+            {
+                String strRepoUrl = GitUtils.getRepoUrl( context.getReleaserResource( ).getScmUrl( ) );
+                git = Git.cloneRepository( )
+                        .setCredentialsProvider( new org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider( strLogin, strPwd ) )
+                        .setURI( strRepoUrl ).setDirectory( fLocalRepo ).setCloneAllBranches( true ).call( );
+            }
+
+            List<String> allTags = GitUtils.getTagNameList( git );
+            List<String> preReleaseTags = new ArrayList<>( );
+            if ( allTags != null )
+            {
+                String regex = "^" + java.util.regex.Pattern.quote( component.getArtifactId( ) ) + "-\\d+\\.\\d+\\.\\d+-(beta|RC)-\\d+$";
+                java.util.regex.Pattern p = java.util.regex.Pattern.compile( regex );
+                for ( String tag : allTags )
+                {
+                    if ( p.matcher( tag ).matches( ) )
+                    {
+                        preReleaseTags.add( tag );
+                    }
+                }
+            }
+            component.setTags( preReleaseTags );
+        }
+        catch( Exception e )
+        {
+            AppLogService.error( "Error listing tags for component " + component.getArtifactId( ) + " : " + e.getMessage( ), e );
+            component.setTags( new ArrayList<String>( ) );
+        }
+        finally
+        {
+            if ( git != null )
+            {
+                git.close( );
+            }
+        }
 
         return component;
     }

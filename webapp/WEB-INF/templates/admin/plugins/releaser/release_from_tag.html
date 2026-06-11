@@ -1,0 +1,135 @@
+<section class="content-header">
+    <h1>
+        <a href="jsp/admin/plugins/releaser/ManageClusters.jsp" title="#i18n{releaser.adminFeature.ManageReleaser.name}">#i18n{releaser.adminFeature.ManageReleaser.name}</a>
+        <small class="hidden-xs hidden-sm">Release depuis un tag</small>
+    </h1>
+</section>
+<section class="content">
+    <div class="app-wrapper">
+        <div class="row">
+            <div class="col-xs-12 col-sm-10 col-md-8 col-md-offset-2">
+                <div class="box box-info box-solid">
+                    <div class="box-header">
+                        <h3 class="box-title">
+                            <i class="fa fa-tag"></i> Composant : <span id="name-${component.artifactId!}">${component.name!}</span> (<span>${component.artifactId!}</span>)
+                        </h3>
+                    </div>
+                    <div class="box-body">
+                        <#if component.tags?? && component.tags?size gt 0>
+                            <form id="release_from_tag_form" action="jsp/admin/plugins/releaser/ManageComponent.jsp" method="POST">
+                                <input type="hidden" name="action" value="doReleaseFromTag" />
+                                <input type="hidden" name="artifact_id" value="${component.artifactId!}" />
+
+                                <div class="form-group">
+                                    <label for="source_tag">Tag pré-release source</label>
+                                    <select class="form-control" id="source_tag" name="source_tag" required>
+                                        <option value="">-- Sélectionner le tag --</option>
+                                        <#list component.tags as tag>
+                                            <option value="${tag}">${tag}</option>
+                                        </#list>
+                                    </select>
+                                    <p class="help-block">Seuls les tags <code>&lt;artifact&gt;-X.Y.Z-(beta|RC)-NN</code> sont proposés. La version stable cible sera dérivée automatiquement (ex. <code>2.0.4-beta-01</code> &rarr; <code>2.0.4</code>).</p>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="release_branch">Branche develop* à mettre à jour</label>
+                                    <select class="form-control" id="release_branch" name="release_branch" required>
+                                        <option value="">-- Sélectionner la branche --</option>
+                                        <#if component.branches??>
+                                            <#list component.branches as branch>
+                                                <option value="${branch}">${branch}</option>
+                                            </#list>
+                                        </#if>
+                                    </select>
+                                    <p class="help-block">La branche master* correspondante (ex. <code>develop_core7</code> &rarr; <code>master_core7</code>) est dérivée automatiquement. Si la branche choisie n'a pas de master* associée, les étapes liées à master seront ignorées.</p>
+                                </div>
+
+                                <div class="form-group">
+                                    <button type="submit" id="btn-launch-release-from-tag" class="button transition fill-orange">
+                                        <i class="fa fa-cog fa-fw"></i> Lancer la release depuis le tag
+                                    </button>
+                                    <a class="button transition border-whitish-black" href="jsp/admin/plugins/releaser/ManageComponent.jsp">
+                                        Annuler
+                                    </a>
+                                </div>
+                            </form>
+
+                            <div id="info-${component.artifactId!}" class="release-from-tag-info"></div>
+
+                            <div id="progress-wrapper-${component.artifactId!}" class="progress-wrapper">
+                                <div class="progress progress-xs progress-striped active">
+                                    <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+                                        <span class="sr-only">0% Complete</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <pre id="console_wf_log" style="display:none;height:40vh;overflow:auto;margin-top:15px;"></pre>
+                        <#else>
+                            <div class="alert alert-warning">
+                                <i class="fa fa-exclamation-triangle"></i> Aucun tag pré-release (beta ou RC) au format <code>${component.artifactId!}-X.Y.Z-(beta|RC)-NN</code> trouvé dans ce dépôt.
+                            </div>
+                            <a class="button transition border-whitish-black" href="jsp/admin/plugins/releaser/ManageComponent.jsp">
+                                Retour
+                            </a>
+                        </#if>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<link href="js/jquery/plugins/toastr/toastr.min.css" rel="stylesheet">
+<script src="js/jquery/plugins/toastr/toastr.min.js"></script>
+<script src="js/plugins/releaser/releaser.js" type="text/javascript"></script>
+<script>
+var artifactIdInProgress;
+$( function(){
+    $(".progress-wrapper").hide();
+
+    $("#release_from_tag_form").submit( function(e){
+        e.preventDefault();
+
+        var artifactId = "${component.artifactId!}";
+        var sourceTag = $("#source_tag").val();
+        var releaseBranch = $("#release_branch").val();
+
+        if ( !sourceTag || !releaseBranch ) {
+            return;
+        }
+
+        artifactIdInProgress = artifactId;
+        var progressId = "#progress-wrapper-" + artifactId;
+
+        $("#btn-launch-release-from-tag").prop("disabled", true);
+        $("#console_wf_log").html(" ").show();
+        $(progressId).show();
+
+        var params = {
+            action: 'doReleaseFromTag',
+            artifact_id: artifactId,
+            source_tag: sourceTag,
+            release_branch: releaseBranch
+        };
+
+        $.ajax({
+            url: "jsp/admin/plugins/releaser/ReleaseComponentJson.jsp?action=doReleaseFromTag",
+            type: "GET",
+            dataType: "json",
+            data: params,
+            success: function( data ) {
+                if ( data.status == 'OK' && data.result ) {
+                    callReleaseInfo( data.result, progressId, artifactId );
+                } else {
+                    $("#btn-launch-release-from-tag").prop("disabled", false);
+                    toastr["error"]( "Impossible de démarrer la release depuis le tag.", "Information" );
+                }
+            },
+            error: function() {
+                $("#btn-launch-release-from-tag").prop("disabled", false);
+                toastr["error"]( "Erreur lors du démarrage de la release depuis le tag.", "Information" );
+            }
+        });
+    });
+});
+</script>

@@ -148,6 +148,9 @@ public class ConstanteUtils
     /** The Constant PROPERTY_ID_WORKFLOW_LUTECE_SITE. */
     public static final String PROPERTY_ID_WORKFLOW_LUTECE_SITE = "releaser.idWorkflowLuteceSite";
 
+    /** The Constant PROPERTY_ID_WORKFLOW_RELEASE_FROM_TAG. */
+    public static final String PROPERTY_ID_WORKFLOW_RELEASE_FROM_TAG = "releaser.idWorkflowReleaseFromTag";
+
     /** The Constant PROPERTY_LOCAL_SITE_BASE_PAH. */
     public static final String PROPERTY_LOCAL_SITE_BASE_PAH = "releaser.localSiteBasePath";
 

@@ -240,4 +240,19 @@ public interface IComponentService
     Component getComponentBranchList( Component component, RepositoryType repositoryType, ReleaserUser user );
 
     Component getLastBranchVersion( Component component, String branchName, ReleaserUser user );
+
+    /**
+     * Clone the component repo (if needed) and populate {@code component.setTags(...)}
+     * with the pre-release tags (beta and RC) of this artifactId, used by the
+     * "release from tag" workflow.
+     *
+     * @param component
+     *            the component
+     * @param repositoryType
+     *            the repository type
+     * @param user
+     *            the releaser user
+     * @return the component (mutated)
+     */
+    Component getComponentTagList( Component component, RepositoryType repositoryType, ReleaserUser user );
 }

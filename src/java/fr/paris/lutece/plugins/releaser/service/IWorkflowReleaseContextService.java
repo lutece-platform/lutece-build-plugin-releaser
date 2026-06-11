@@ -228,4 +228,62 @@ public interface IWorkflowReleaseContextService
      */
 	void createDockerImage(WorkflowReleaseContext workflowReleaseContext, Locale locale);
 
+    /**
+     * Prepare a release starting from an existing pre-release tag : checkout the source tag
+     * in detached HEAD, set the stable version in the pom (and in plugin xml / core xml / AppInfo if core),
+     * commit, create the stable tag locally and push only the new tag to origin.
+     *
+     * @param context
+     *            the context (must carry the sourceTag)
+     * @param locale
+     *            the locale
+     */
+    void prepareReleaseFromTag( WorkflowReleaseContext context, Locale locale );
+
+    /**
+     * Deploy the artifacts of the new stable tag to Nexus, from the detached HEAD prepared by
+     * {@link #prepareReleaseFromTag}.
+     *
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
+     */
+    void deployReleaseFromTag( WorkflowReleaseContext context, Locale locale );
+
+    /**
+     * Update the master* branch counterpart with the new stable version : checkout master*,
+     * set the pom version to the stable version, commit and push. Skipped if there is no
+     * master* counterpart for the chosen develop* branch.
+     *
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
+     */
+    void updateMasterAfterReleaseFromTag( WorkflowReleaseContext context, Locale locale );
+
+    /**
+     * Bump the develop* branch to the next snapshot version : checkout develop*, compute
+     * the next patch snapshot, set the pom version, commit and push.
+     *
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
+     */
+    void bumpDevelopAfterReleaseFromTag( WorkflowReleaseContext context, Locale locale );
+
+    /**
+     * On master*, merge develop* with the "ours" strategy and push : records develop* as
+     * integrated without changing master*'s content, so the next merge will not conflict
+     * on the version line. Skipped if there is no master* counterpart.
+     *
+     * @param context
+     *            the context
+     * @param locale
+     *            the locale
+     */
+    void markDevelopIntegratedInMaster( WorkflowReleaseContext context, Locale locale );
+
 }

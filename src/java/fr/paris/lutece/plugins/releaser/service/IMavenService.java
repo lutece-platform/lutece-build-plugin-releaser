@@ -98,6 +98,21 @@ public interface IMavenService
     String mvnReleasePerform( String strPathPom, String strUsername, String strPassword, CommandResult commandResult,boolean bPrivateRepository,String strTargetJdkVersion );
 
     /**
+     * Run "mvn clean deploy" against the given pom.
+     * Used by the "release from tag" workflow to publish artifacts to Nexus directly,
+     * since release:perform cannot be used from a detached HEAD without release.properties.
+     *
+     * @param strPathPom
+     *            the path to the pom
+     * @param commandResult
+     *            the command result
+     * @param strTargetJdkVersion
+     *            the target JDK toolchain version (may be null)
+     * @return the string
+     */
+    String mvnDeploy( String strPathPom, CommandResult commandResult, String strTargetJdkVersion );
+
+    /**
      * Inits the.
      */
     void init( );

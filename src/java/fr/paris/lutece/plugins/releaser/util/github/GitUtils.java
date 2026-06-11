@@ -66,6 +66,7 @@ import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.transport.CredentialsProvider;
@@ -787,15 +788,13 @@ public class GitUtils
     public static List<String> getBranchList( String repoUrl, File localRepo, CommandResult commandResult, String login, String pwd )
     {
         Git git = null;
-        List<String> branchNameList = null;
+        List<String> branchNameList =  new ArrayList<String>( );
 
         try
         {
             CredentialsProvider credential = new UsernamePasswordCredentialsProvider( login, pwd );
             
             git = Git.cloneRepository( ).setCredentialsProvider( credential ).setURI( repoUrl ).setDirectory( localRepo ).setCloneAllBranches( true ).call( );
-
-            branchNameList = new ArrayList<String>( );
 
             List<Ref> branchList = git.branchList( ).setListMode( ListMode.ALL ).call( );
             if ( !branchList.isEmpty( ) )
@@ -835,5 +834,131 @@ public class GitUtils
         }
 
         return branchNameList;
+    }
+
+    /**
+     * Checkout a tag in detached HEAD state.
+     * Used by the "release from tag" workflow : the tag's content becomes the working tree
+     * without moving any branch label.
+     *
+     * @param git
+     *            the git
+     * @param strTagName
+     *            the tag name (without "refs/tags/" prefix)
+     * @param commandResult
+     *            the command result
+     */
+    public static void checkoutTag( Git git, String strTagName, CommandResult commandResult )
+    {
+        try
+        {
+            git.checkout( ).setName( CONSTANTE_REF_TAG + strTagName ).call( );
+        }
+        catch( GitAPIException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+        }
+    }
+
+    /**
+     * Push only a tag ref to origin, without pushing any branch.
+     * Used by the "release from tag" workflow to publish the newly created stable tag
+     * while keeping the local detached commit out of the remote.
+     *
+     * @param git
+     *            the git
+     * @param strTagName
+     *            the tag name (without "refs/tags/" prefix)
+     * @param strUserName
+     *            the str user name
+     * @param strPassword
+     *            the str password
+     * @param commandResult
+     *            the command result
+     */
+    public static void pushTagOnly( Git git, String strTagName, String strUserName, String strPassword, CommandResult commandResult )
+    {
+        try
+        {
+            String strRef = CONSTANTE_REF_TAG + strTagName;
+            git.push( ).setRemote( "origin" ).setRefSpecs( new RefSpec( strRef + ":" + strRef ) )
+                    .setCredentialsProvider( new UsernamePasswordCredentialsProvider( strUserName, strPassword ) ).call( );
+        }
+        catch( GitAPIException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+        }
+    }
+
+    /**
+     * Ensure a local tracking branch exists for {@code strBranchName}.
+     * JGit's checkout requires a local ref; a fresh clone only has {@code refs/remotes/origin/*}.
+     * If the local branch already exists, does nothing. If only the remote ref exists, creates a
+     * local tracking branch from {@code origin/<branchName>}. Fails via
+     * {@link ReleaserUtils#addTechnicalError} if neither exists.
+     *
+     * @param git
+     *            the git
+     * @param strBranchName
+     *            the branch name (without {@code refs/heads/} or {@code origin/} prefix)
+     * @param commandResult
+     *            the command result
+     */
+    public static void ensureLocalBranch( Git git, String strBranchName, CommandResult commandResult )
+    {
+        try
+        {
+            if ( git.getRepository( ).findRef( "refs/heads/" + strBranchName ) != null )
+            {
+                return;
+            }
+            if ( git.getRepository( ).findRef( "refs/remotes/origin/" + strBranchName ) == null )
+            {
+                ReleaserUtils.addTechnicalError( commandResult,
+                        "Remote branch origin/" + strBranchName + " not found. Cannot create local tracking branch." );
+                return;
+            }
+            git.branchCreate( ).setName( strBranchName ).setUpstreamMode( SetupUpstreamMode.SET_UPSTREAM )
+                    .setStartPoint( "origin/" + strBranchName ).setForce( true ).call( );
+        }
+        catch( IOException | GitAPIException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+        }
+    }
+
+    /**
+     * Merge a branch into the current branch using the "ours" strategy.
+     * Records the merge in history without changing the working tree :
+     * the next merge from the same source will treat its commits as already integrated,
+     * which prevents future conflicts on lines both branches modified independently.
+     *
+     * @param git
+     *            the git
+     * @param strBranchToMerge
+     *            the branch to mark as integrated (e.g. "develop", "develop_core7")
+     * @param strMessage
+     *            the merge commit message
+     * @param commandResult
+     *            the command result
+     * @return the merge result, or {@code null} if an error occurred
+     */
+    public static MergeResult mergeOursStrategy( Git git, String strBranchToMerge, String strMessage, CommandResult commandResult )
+    {
+        try
+        {
+            Ref refToMerge = git.getRepository( ).findRef( strBranchToMerge );
+            if ( refToMerge == null )
+            {
+                ReleaserUtils.addTechnicalError( commandResult, "Branch not found for ours-merge: " + strBranchToMerge );
+                return null;
+            }
+            return git.merge( ).setStrategy( MergeStrategy.OURS ).include( refToMerge ).setCommit( true ).setMessage( strMessage ).call( );
+        }
+        catch( IOException | GitAPIException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+            return null;
+        }
     }
 }

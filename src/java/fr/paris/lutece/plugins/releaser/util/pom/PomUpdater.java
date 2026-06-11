@@ -229,6 +229,51 @@ public class PomUpdater
     }
 
     /**
+     * Update only the project version of a pom file, without touching dependencies.
+     * Used by the "release from tag" workflow when modifying a checked-out pom on a single branch
+     * (master or develop) or in detached HEAD on the source tag.
+     *
+     * @param strPomPath
+     *            the absolute path to the pom.xml
+     * @param strNewVersion
+     *            the new version to set
+     * @throws JAXBException
+     *             the JAXB exception
+     */
+    public static void updatePomVersion( String strPomPath, String strNewVersion ) throws JAXBException
+    {
+        InputStream inputStream = null;
+        OutputStream outputStream = null;
+        try
+        {
+            inputStream = new FileInputStream( strPomPath );
+            Model model = unmarshal( Model.class, inputStream );
+            model.setVersion( strNewVersion );
+
+            outputStream = new FileOutputStream( strPomPath );
+            save( model, outputStream );
+        }
+        catch( FileNotFoundException e )
+        {
+            AppLogService.error( e );
+        }
+        finally
+        {
+            if ( outputStream != null )
+            {
+                try
+                {
+                    outputStream.close( );
+                }
+                catch( IOException ex )
+                {
+                    AppLogService.error( ex );
+                }
+            }
+        }
+    }
+
+    /**
      * Save.
      *
      * @param model

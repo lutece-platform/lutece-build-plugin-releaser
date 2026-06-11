@@ -71,6 +71,8 @@ import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
 import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
 import fr.paris.lutece.plugins.releaser.util.pom.PomUpdater;
+import fr.paris.lutece.plugins.releaser.util.version.Version;
+import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
 import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppException;
@@ -900,13 +902,282 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     	if (context.getSite().isCreateDckerImage())
     	{
     		CommandResult commandResult = context.getCommandResult( );
-        	ReleaserUtils.logStartAction( context, " Create docker image " );  
+        	ReleaserUtils.logStartAction( context, " Create docker image " );
 
         	JenkinsService.getService().TriggerPipeline( context );
-        	
+
         	ReleaserUtils.logEndAction( context, "  Create docker image " );
     	}
-    	
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void prepareReleaseFromTag( WorkflowReleaseContext context, Locale locale )
+    {
+        Component component = context.getComponent( );
+        String strComponentName = component.getArtifactId( );
+        CommandResult commandResult = context.getCommandResult( );
+        String strSourceTag = context.getSourceTag( );
+
+        String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
+        String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
+
+        ReleaserUtils.logStartAction( context, " Release from tag : prepare" );
+
+        Git git = null;
+        try
+        {
+            // Compute the stable target version from the source tag.
+            // Tag pattern : "<artifactId>-<X.Y.Z>-<qualifier>" (e.g. "myplugin-2.0.4-beta-01" → "2.0.4")
+            String strTagVersionPart = strSourceTag.substring( strComponentName.length( ) + 1 );
+            String strTargetStableVersion = Version.getReleaseVersion( strTagVersionPart );
+            String strNewStableTag = strComponentName + "-" + strTargetStableVersion;
+
+            component.setTargetVersion( strTargetStableVersion );
+
+            String strLocalComponentPath = ReleaserUtils.getLocalPath( context );
+            String strLocalComponentPomPath = ReleaserUtils.getLocalPomPath( context );
+
+            git = GitUtils.getGit( strLocalComponentPath );
+
+            // Detached HEAD on the source tag : the working tree now matches the beta content.
+            GitUtils.checkoutTag( git, strSourceTag, commandResult );
+            commandResult.getLog( ).append( "Checked out tag " + strSourceTag + " (detached HEAD)\n" );
+
+            // Update the versioned files like releasePrepareComponent does.
+            if ( PluginUtils.isCore( strComponentName ) )
+            {
+                String strCoreXMLPath = PluginUtils.getCoreXMLFile( strLocalComponentPath );
+                if ( StringUtils.isNotBlank( strCoreXMLPath ) )
+                {
+                    PluginUtils.updatePluginXMLVersion( strCoreXMLPath, strTargetStableVersion, commandResult );
+                }
+                String strAppInfoFilePath = PluginUtils.getAppInfoFile( strLocalComponentPath );
+                if ( StringUtils.isNotBlank( strAppInfoFilePath ) )
+                {
+                    PluginUtils.updateAppInfoFile( strAppInfoFilePath, strTargetStableVersion, commandResult );
+                }
+            }
+            else
+            {
+                String [ ] pluginNames = PluginUtils.getPluginXMLFile( strLocalComponentPath );
+                for ( String pluginXMLPath : pluginNames )
+                {
+                    PluginUtils.updatePluginXMLVersion( pluginXMLPath, strTargetStableVersion, commandResult );
+                }
+            }
+
+            // Update the pom version only (no dependency rewrite).
+            PomUpdater.updatePomVersion( strLocalComponentPomPath, strTargetStableVersion );
+            commandResult.getLog( ).append( "Pom version set to " + strTargetStableVersion + "\n" );
+
+            // Capture target JDK from the effective POM (needed for mvn deploy in the next task).
+            String strLocalComponentPomEffectivePath = ReleaserUtils.getLocalEffectivePomPath( context );
+            MavenService.getService( ).mvnGenerateEffectivePom( strLocalComponentPomPath, strLocalComponentPomEffectivePath, commandResult );
+            PomParser parser = new PomParser( );
+            parser.parsePomPath( component, strLocalComponentPomEffectivePath );
+
+            // Commit on the detached HEAD : the commit is orphan, only the tag will reach origin.
+            git.add( ).addFilepattern( "." ).setUpdate( true ).call( );
+            git.commit( ).setCommitter( strLogin, strLogin )
+                    .setMessage( "[release-from-tag] set version to " + strTargetStableVersion + " from " + strSourceTag ).call( );
+
+            // Create the new stable tag locally on this orphan commit.
+            git.tag( ).setName( strNewStableTag ).setMessage( "Release " + strTargetStableVersion ).call( );
+
+            // Push only the new tag : the orphan commit is reachable from the tag, no branch is moved.
+            GitUtils.pushTagOnly( git, strNewStableTag, strLogin, strPassword, commandResult );
+            commandResult.getLog( ).append( "Tag " + strNewStableTag + " pushed to origin\n" );
+        }
+        catch( JAXBException | GitAPIException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, "Error during release-from-tag prepare : " + e.getMessage( ), e );
+        }
+        finally
+        {
+            if ( git != null )
+            {
+                git.close( );
+            }
+        }
+
+        ReleaserUtils.logEndAction( context, " Release from tag : prepare" );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void deployReleaseFromTag( WorkflowReleaseContext context, Locale locale )
+    {
+        Component component = context.getComponent( );
+        CommandResult commandResult = context.getCommandResult( );
+        String strLocalComponentPomPath = ReleaserUtils.getLocalPomPath( context );
+
+        ReleaserUtils.logStartAction( context, " Release from tag : deploy" );
+
+        MavenService.getService( ).mvnDeploy( strLocalComponentPomPath, commandResult, component.getTargetJdk( ) );
+
+        ReleaserUtils.logEndAction( context, " Release from tag : deploy" );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void updateMasterAfterReleaseFromTag( WorkflowReleaseContext context, Locale locale )
+    {
+        Component component = context.getComponent( );
+        CommandResult commandResult = context.getCommandResult( );
+
+        String strMasterBranch = GitUtils.getTargetMasterBranch( component.getBranchReleaseFrom( ) );
+        if ( strMasterBranch == null )
+        {
+            commandResult.getLog( ).append( "No master* counterpart for branch " + component.getBranchReleaseFrom( )
+                    + ", skipping master version update\n" );
+            return;
+        }
+
+        IVCSResourceService cvsService = CVSFactoryService.getService( context.getReleaserResource( ).getRepoType( ) );
+        String strLocalComponentPath = ReleaserUtils.getLocalPath( context );
+        String strLocalComponentPomPath = ReleaserUtils.getLocalPomPath( context );
+        String strTargetStableVersion = component.getTargetVersion( );
+
+        ReleaserUtils.logStartAction( context, " Release from tag : update master" );
+
+        Git git = null;
+        try
+        {
+            // Create the master* local tracking branch if missing — TaskCheckoutRepository only creates
+            // the hardcoded "master" and the chosen develop*, so master_core7/etc. has no local ref yet.
+            git = GitUtils.getGit( strLocalComponentPath );
+            GitUtils.ensureLocalBranch( git, strMasterBranch, commandResult );
+        }
+        finally
+        {
+            if ( git != null )
+            {
+                git.close( );
+            }
+        }
+
+        try
+        {
+            cvsService.checkoutBranch( context, strMasterBranch, locale );
+            PomUpdater.updatePomVersion( strLocalComponentPomPath, strTargetStableVersion );
+            cvsService.updateBranch( context, strMasterBranch, locale,
+                    "[release-from-tag] update master version to " + strTargetStableVersion );
+            commandResult.getLog( ).append( "Master branch " + strMasterBranch + " set to " + strTargetStableVersion + "\n" );
+        }
+        catch( JAXBException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, "Error during master update : " + e.getMessage( ), e );
+        }
+
+        ReleaserUtils.logEndAction( context, " Release from tag : update master" );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void bumpDevelopAfterReleaseFromTag( WorkflowReleaseContext context, Locale locale )
+    {
+        Component component = context.getComponent( );
+        CommandResult commandResult = context.getCommandResult( );
+        String strDevelopBranch = component.getBranchReleaseFrom( );
+
+        IVCSResourceService cvsService = CVSFactoryService.getService( context.getReleaserResource( ).getRepoType( ) );
+        String strLocalComponentPomPath = ReleaserUtils.getLocalPomPath( context );
+
+        ReleaserUtils.logStartAction( context, " Release from tag : bump develop snapshot" );
+
+        try
+        {
+            cvsService.checkoutBranch( context, strDevelopBranch, locale );
+
+            // Next patch SNAPSHOT computed from the just-released stable version.
+            String strNextSnapshot = Version.parse( component.getTargetVersion( ) ).nextPatch( true ).getVersion( );
+
+            PomUpdater.updatePomVersion( strLocalComponentPomPath, strNextSnapshot );
+            cvsService.updateBranch( context, strDevelopBranch, locale,
+                    "[release-from-tag] bump snapshot to " + strNextSnapshot + " after release " + component.getTargetVersion( ) );
+
+            commandResult.getLog( ).append( "Develop branch " + strDevelopBranch + " bumped to " + strNextSnapshot + "\n" );
+        }
+        catch( JAXBException | VersionParsingException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, "Error during develop bump : " + e.getMessage( ), e );
+        }
+
+        ReleaserUtils.logEndAction( context, " Release from tag : bump develop snapshot" );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void markDevelopIntegratedInMaster( WorkflowReleaseContext context, Locale locale )
+    {
+        Component component = context.getComponent( );
+        CommandResult commandResult = context.getCommandResult( );
+        String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
+        String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
+
+        String strDevelopBranch = component.getBranchReleaseFrom( );
+        String strMasterBranch = GitUtils.getTargetMasterBranch( strDevelopBranch );
+        if ( strMasterBranch == null )
+        {
+            commandResult.getLog( ).append( "No master* counterpart, skipping ours-merge\n" );
+            return;
+        }
+
+        ReleaserUtils.logStartAction( context, " Release from tag : ours-merge develop into master" );
+
+        String strLocalComponentPath = ReleaserUtils.getLocalPath( context );
+        Git git = null;
+        try
+        {
+            git = GitUtils.getGit( strLocalComponentPath );
+
+            // Create the master* local tracking branch if missing (same reason as in
+            // updateMasterAfterReleaseFromTag).
+            GitUtils.ensureLocalBranch( git, strMasterBranch, commandResult );
+
+            // Switch to master* and ours-merge develop* : marks develop's commits as integrated
+            // without touching files, so the next merge from develop won't conflict on the version line.
+            GitUtils.checkoutRepoBranch( git, strMasterBranch, commandResult );
+
+            String strMessage = "[release-from-tag] mark " + strDevelopBranch + " as integrated (ours)";
+            MergeResult result = GitUtils.mergeOursStrategy( git, strDevelopBranch, strMessage, commandResult );
+
+            if ( result != null && result.getMergeStatus( ).isSuccessful( ) )
+            {
+                git.push( ).setCredentialsProvider( new UsernamePasswordCredentialsProvider( strLogin, strPassword ) ).call( );
+                commandResult.getLog( ).append( "Master branch " + strMasterBranch + " pushed (ours-merge of " + strDevelopBranch + ")\n" );
+            }
+            else
+            {
+                ReleaserUtils.addTechnicalError( commandResult,
+                        "ours-merge did not complete : " + ( result == null ? "null result" : result.getMergeStatus( ).toString( ) ) );
+            }
+        }
+        catch( GitAPIException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, "Error during ours-merge : " + e.getMessage( ), e );
+        }
+        finally
+        {
+            if ( git != null )
+            {
+                git.close( );
+            }
+        }
+
+        ReleaserUtils.logEndAction( context, " Release from tag : ours-merge develop into master" );
     }
 
 }
