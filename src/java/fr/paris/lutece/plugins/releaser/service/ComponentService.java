@@ -379,15 +379,14 @@ public class ComponentService implements IComponentService
     		}
     		else
     		{
-    			//TODO
-    			// Message d'alerte : la version snapshot du Nexus est différente de la version dans le repo de sources
-    			// Verifier que la dernière snapshot a bien été poussée dans Nexus
+    			component.setTargetVersions( Version.getNextReleaseVersions( strCurrentVersion ) );
+    			component.addReleaseComment( "La version SNAPSHOT dans Nexus est différente de celle du repo des sources" );
     		}
     	}
     	else
     	{
-    		// TODO
-    		// ERROR : Pas de snapshot dans nexus --> aucun build success
+    		component.setTargetVersions( Version.getNextReleaseVersions( strCurrentVersion ) );
+    		component.addReleaseComment( "Aucune SNAPSHOT n'a été trouvée dans Nexus" );
     	}
     	
         component.setTargetVersion( Version.getReleaseVersion( strCurrentVersion ) );
@@ -489,6 +488,14 @@ public class ComponentService implements IComponentService
         String strLocalComponentPath = ReleaserUtils.getLocalPath( context );
 
         String strRepoUrl = GitUtils.getRepoUrl( context.getReleaserResource( ).getScmUrl( ) );
+
+        if ( StringUtils.isBlank( strRepoUrl ) && StringUtils.isNotBlank( component.getFullName( ) ) )
+        {
+            String strGithubBaseUrl = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_REPOSITORY_BASE_URL );
+            strRepoUrl = strGithubBaseUrl + component.getFullName( ) + ".git";
+            commandResult.getLog( ).append( "No SCM URL found, using GitHub fullName fallback : " + strRepoUrl + "\n" );
+        }
+
         File fLocalRepo = new File( strLocalComponentPath );
         if ( fLocalRepo.exists( ) )
         {

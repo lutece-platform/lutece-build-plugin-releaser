@@ -189,7 +189,10 @@ public class ConstanteUtils
     
     /** The Constant PROPERTY_NB_SEARCH_ITEM_PER_PAGE_LOAD. */
     public static final String PROPERTY_GITHUB_SEARCH_REPO_API_TOKEN = "releaser.githubSearchRepoApiToken";
-    
+
+    /** The Constant PROPERTY_GITHUB_REPOSITORY_BASE_URL. */
+    public static final String PROPERTY_GITHUB_REPOSITORY_BASE_URL = "releaser.githubRepositoryBaseUrl";
+
     /** The Constant PROPERTY_MAVEN_LOCAL_REPOSITORY. */
     public static final String PROPERTY_MAVEN_LOCAL_REPOSITORY = "releaser.mavenLocalRepository";
 
