@@ -286,6 +286,11 @@ public class ReleaserUtils
 
         if ( commandResult != null )
         {
+            // Surface the error in the release console (and history) 
+            if ( commandResult.getLog( ) != null )
+            {
+                commandResult.getLog( ).append( "\n[ERREUR] " ).append( strError ).append( "\n" );
+            }
             commandResult.setError( strError );
             commandResult.setStatus( CommandResult.STATUS_ERROR );
             commandResult.setRunning( false );

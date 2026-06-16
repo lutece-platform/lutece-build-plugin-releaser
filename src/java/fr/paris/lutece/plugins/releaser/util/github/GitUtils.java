@@ -39,6 +39,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -104,8 +105,11 @@ public class GitUtils
 
     /**
      * Derive the target master* branch from a release-from branch.
-     * The develop/master flow swaps a leading {@link #DEVELOP_BRANCH} prefix with {@link #MASTER_BRANCH} :
-     * Branches that do not start with {@link #DEVELOP_BRANCH} have no master* counterpart.
+     * Only branches explicitly listed in the {@link ConstanteUtils#PROPERTY_MERGE_BACK_BRANCHES} configuration are
+     * merged back into a master* counterpart, built by swapping the leading {@link #DEVELOP_BRANCH} prefix with
+     * {@link #MASTER_BRANCH} (e.g. {@code develop_core7} → {@code master_core7}). Any other branch (including
+     * release/maintenance branches that merely start with "develop", e.g. {@code develop-plugin-xxx-1.0.6-branch})
+     * has no master* counterpart and is released without a merge-back.
      *
      * @param strBranchReleaseFrom
      *            the source branch
@@ -117,6 +121,14 @@ public class GitUtils
         {
             return null;
         }
+
+        String strMergeBackBranches = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_MERGE_BACK_BRANCHES, StringUtils.EMPTY );
+        List<String> listMergeBackBranches = Arrays.asList( strMergeBackBranches.split( "\\s*,\\s*" ) );
+        if ( !listMergeBackBranches.contains( strBranchReleaseFrom ) )
+        {
+            return null;
+        }
+
         return MASTER_BRANCH + strBranchReleaseFrom.substring( DEVELOP_BRANCH.length( ) );
     }
 

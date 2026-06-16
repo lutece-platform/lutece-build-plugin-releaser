@@ -193,6 +193,9 @@ public class ConstanteUtils
     /** The Constant PROPERTY_GITHUB_REPOSITORY_BASE_URL. */
     public static final String PROPERTY_GITHUB_REPOSITORY_BASE_URL = "releaser.githubRepositoryBaseUrl";
 
+    /** The Constant PROPERTY_MERGE_BACK_BRANCHES — list of release-from branches whose result must be merged back into their master* counterpart. */
+    public static final String PROPERTY_MERGE_BACK_BRANCHES = "releaser.mergeBackBranches";
+
     /** The Constant PROPERTY_MAVEN_LOCAL_REPOSITORY. */
     public static final String PROPERTY_MAVEN_LOCAL_REPOSITORY = "releaser.mavenLocalRepository";
 
