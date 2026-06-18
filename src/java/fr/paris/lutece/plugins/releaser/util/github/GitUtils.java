@@ -122,14 +122,37 @@ public class GitUtils
             return null;
         }
 
-        String strMergeBackBranches = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_MERGE_BACK_BRANCHES, StringUtils.EMPTY );
-        List<String> listMergeBackBranches = Arrays.asList( strMergeBackBranches.split( "\\s*,\\s*" ) );
-        if ( !listMergeBackBranches.contains( strBranchReleaseFrom ) )
+        if ( !isMergeBackBranch( strBranchReleaseFrom ) )
         {
             return null;
         }
 
         return MASTER_BRANCH + strBranchReleaseFrom.substring( DEVELOP_BRANCH.length( ) );
+    }
+
+    /**
+     * The configured list of release-from branches that follow a master* counterpart
+     * (property {@link ConstanteUtils#PROPERTY_MERGE_BACK_BRANCHES}, e.g. {@code develop,develop_core7,develop7.x}).
+     *
+     * @return the list of branches (never null, possibly empty)
+     */
+    public static List<String> getMergeBackBranches( )
+    {
+        String strMergeBackBranches = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_MERGE_BACK_BRANCHES, StringUtils.EMPTY );
+        return Arrays.asList( strMergeBackBranches.split( "\\s*,\\s*" ) );
+    }
+
+    /**
+     * Whether the given branch is one of the configured "follow master" branches
+     * ({@link ConstanteUtils#PROPERTY_MERGE_BACK_BRANCHES}).
+     *
+     * @param strBranch
+     *            the branch
+     * @return true if the branch is in the configured list
+     */
+    public static boolean isMergeBackBranch( String strBranch )
+    {
+        return strBranch != null && getMergeBackBranches( ).contains( strBranch );
     }
 
     /**
@@ -805,7 +828,7 @@ public class GitUtils
         try
         {
             CredentialsProvider credential = new UsernamePasswordCredentialsProvider( login, pwd );
-            
+                       
             git = Git.cloneRepository( ).setCredentialsProvider( credential ).setURI( repoUrl ).setDirectory( localRepo ).setCloneAllBranches( true ).call( );
 
             List<Ref> branchList = git.branchList( ).setListMode( ListMode.ALL ).call( );

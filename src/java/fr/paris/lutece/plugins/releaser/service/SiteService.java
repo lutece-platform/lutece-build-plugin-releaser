@@ -312,6 +312,9 @@ public class SiteService
     /**
      * Returns the appropriate branch for a component based on the site branch.
      * Special case: for lutece-core, site branch "develop_coreX" maps to "developX.x".
+     * Otherwise the site branch is propagated to the component only if it is one of the configured
+     * "follow master" branches ({@link ConstanteUtils#PROPERTY_MERGE_BACK_BRANCHES}, e.g.
+     * develop, develop_core7, develop7.x) ; if not, the component stays on the default branch.
      *
      * @param component
      *            the component
@@ -325,6 +328,11 @@ public class SiteService
         {
             String strCoreVersion = strSiteBranch.replace( "develop_core", "" );
             return "develop" + strCoreVersion + ".x";
+        }
+
+        if ( !GitUtils.isMergeBackBranch( strSiteBranch ) )
+        {
+            return GitUtils.DEFAULT_RELEASE_BRANCH;
         }
 
         return strSiteBranch;
