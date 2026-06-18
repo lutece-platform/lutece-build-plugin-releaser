@@ -377,18 +377,22 @@ public class SiteService
     private static void defineNextSnapshotVersion( Component component )
     {
         String strNextSnapshotVersion = Version.NOT_AVAILABLE;
-        try
+        // A dependency with no version pinned in the POM (NO_VERSION) is a normal case, not an error : skip parsing.
+        if ( !ConstanteUtils.NO_VERSION_DEFINED_IN_POM.equals( component.getTargetVersion( ) ) )
         {
-            Version version = Version.parse( component.getTargetVersion( ) );
-            boolean bSnapshot = true;
-            strNextSnapshotVersion = version.nextPatch( bSnapshot ).toString( );
-        }
-        catch( VersionParsingException ex )
-        {
-            AppLogService.error( "Error parsing version for component " + component.getArtifactId( ) + " : " + ex.getMessage( ), ex );
+            try
+            {
+                Version version = Version.parse( component.getTargetVersion( ) );
+                boolean bSnapshot = true;
+                strNextSnapshotVersion = version.nextPatch( bSnapshot ).toString( );
+            }
+            catch( VersionParsingException ex )
+            {
+                AppLogService.error( "Error parsing version for component " + component.getArtifactId( ) + " : " + ex.getMessage( ), ex );
 
+            }
         }
-        
+
         component.setNextSnapshotVersion( strNextSnapshotVersion );
     }
 

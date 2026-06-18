@@ -392,18 +392,26 @@ public class ComponentService implements IComponentService
         component.setTargetVersion( Version.getReleaseVersion( strCurrentVersion ) );
 
         String strNextSnapshotVersion = null;
-        try
+        // A component with no version pinned in the POM (NO_VERSION) is a normal case, not an error : skip parsing.
+        if ( ConstanteUtils.NO_VERSION_DEFINED_IN_POM.equals( strTargetVersion ) )
         {
-            Version version = Version.parse( strTargetVersion );
-            boolean bSnapshot = true;
-            strNextSnapshotVersion = version.nextPatch( bSnapshot ).toString( );
-            component.setNextSnapshotVersion( strNextSnapshotVersion );
+            component.setNextSnapshotVersion( Version.NOT_AVAILABLE );
         }
-        catch( VersionParsingException ex )
+        else
         {
-            AppLogService.error( "Error parsing version for component " + component.getArtifactId( ) + " : " + ex.getMessage( ), ex );
+            try
+            {
+                Version version = Version.parse( strTargetVersion );
+                boolean bSnapshot = true;
+                strNextSnapshotVersion = version.nextPatch( bSnapshot ).toString( );
+                component.setNextSnapshotVersion( strNextSnapshotVersion );
+            }
+            catch( VersionParsingException ex )
+            {
+                AppLogService.error( "Error parsing version for component " + component.getArtifactId( ) + " : " + ex.getMessage( ), ex );
 
-        }        
+            }
+        }
         
         return component;
     }
