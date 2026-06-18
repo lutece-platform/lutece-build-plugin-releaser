@@ -265,13 +265,16 @@ public class GitResourceService implements IVCSResourceService
         }
         catch( AppException e )
         {
-
-            if ( e.getCause( ) != null && e.getCause( ) instanceof TransportException )
+            // Only genuine auth failures are reported as AUTHENTICATION_ERROR ; other transport errors
+            // (e.g. "Packfile is truncated", "Connection timed out") are surfaced with their real message.
+            if ( e.getCause( ) instanceof TransportException && isAuthenticationError( e ) )
             {
-
                 ReleaserUtils.addTechnicalError( commandResult, ConstanteUtils.ERROR_TYPE_AUTHENTICATION_ERROR, e );
             }
-
+            else
+            {
+                ReleaserUtils.addTechnicalError( commandResult, e.getMessage( ), e );
+            }
         }
 
         finally
@@ -289,6 +292,25 @@ public class GitResourceService implements IVCSResourceService
         ReleaserUtils.logEndAction( context, " Clone Repository" );
 
         return ConstanteUtils.CONSTANTE_EMPTY_STRING;
+    }
+
+    /**
+     * Whether the given error is an actual authentication failure (HTTP 401 / not authorized), as opposed to any
+     * other transport error (truncated pack, timeout, connection reset...).
+     *
+     * @param e
+     *            the exception
+     * @return true if it looks like an authentication error
+     */
+    private boolean isAuthenticationError( Throwable e )
+    {
+        String strMessage = e.getMessage( );
+        if ( strMessage == null )
+        {
+            return false;
+        }
+        String strLower = strMessage.toLowerCase( );
+        return strLower.contains( "not authorized" ) || strLower.contains( "authentication" ) || strLower.contains( "401" );
     }
 
     /**
