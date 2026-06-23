@@ -103,6 +103,9 @@ public class GitUtils
     /** The Constant CONSTANTE_REF_TAG. */
     private static final String CONSTANTE_REF_TAG = "refs/tags/";
 
+    /** The Constant CONSTANTE_REF_HEADS. */
+    private static final String CONSTANTE_REF_HEADS = "refs/heads/";
+
     /**
      * Derive the target master* branch from a release-from branch.
      * Only branches explicitly listed in the {@link ConstanteUtils#PROPERTY_MERGE_BACK_BRANCHES} configuration are
@@ -820,6 +823,45 @@ public class GitUtils
         return git;
     }
 
+    /**
+     * List the remote branch names without cloning (git ls-remote --heads). Lightweight : no working tree,
+     * no packfile, no disk usage.
+     *
+     * @param repoUrl
+     *            the remote repository URL
+     * @param login
+     *            the credential login
+     * @param pwd
+     *            the credential password
+     * @return the list of remote branch names (e.g. "develop", "develop_core7"), empty on error
+     */
+    public static List<String> lsRemoteBranches( String repoUrl, String login, String pwd )
+    {
+        List<String> branchNameList = new ArrayList<String>( );
+        if ( StringUtils.isBlank( repoUrl ) )
+        {
+            return branchNameList;
+        }
+        try
+        {
+            Collection<Ref> refs = Git.lsRemoteRepository( ).setHeads( true ).setRemote( repoUrl )
+                    .setCredentialsProvider( new UsernamePasswordCredentialsProvider( login, pwd ) ).call( );
+            for ( Ref ref : refs )
+            {
+                String strName = ref.getName( );
+                if ( strName != null && strName.startsWith( CONSTANTE_REF_HEADS ) )
+                {
+                    branchNameList.add( strName.substring( CONSTANTE_REF_HEADS.length( ) ) );
+                }
+            }
+        }
+        catch( GitAPIException e )
+        {
+            AppLogService.error( "GitUtils - lsRemoteBranches error on " + repoUrl + " : " + e.getMessage( ), e );
+        }
+        return branchNameList;
+    }
+
     public static List<String> getBranchList( String repoUrl, File localRepo, CommandResult commandResult, String login, String pwd )
     {
         Git git = null;
@@ -828,7 +870,7 @@ public class GitUtils
         try
         {
             CredentialsProvider credential = new UsernamePasswordCredentialsProvider( login, pwd );
-                       
+            
             git = Git.cloneRepository( ).setCredentialsProvider( credential ).setURI( repoUrl ).setDirectory( localRepo ).setCloneAllBranches( true ).call( );
 
             List<Ref> branchList = git.branchList( ).setListMode( ListMode.ALL ).call( );

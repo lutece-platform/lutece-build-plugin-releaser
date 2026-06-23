@@ -105,7 +105,7 @@ public class PomParser
                 }
             }
             
-            if ( model.getParent().getVersion() != null )
+            if ( model.getParent( ) != null && model.getParent( ).getVersion( ) != null )
             {
                 site.setParentVersion( model.getParent().getVersion() );
             }

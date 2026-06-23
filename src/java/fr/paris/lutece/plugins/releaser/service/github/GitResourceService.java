@@ -206,7 +206,7 @@ public class GitResourceService implements IVCSResourceService
 
         Git git = null;
         String strBranchReleaseFrom = null;
-     
+        
         CommandResult commandResult = context.getCommandResult( );
         ReleaserUtils.logStartAction( context, " Clone Repository" );
         String strLocalComponentPath = ReleaserUtils.getLocalPath( context );

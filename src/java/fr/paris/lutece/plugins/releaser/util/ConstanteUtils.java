@@ -196,6 +196,18 @@ public class ConstanteUtils
     /** The Constant PROPERTY_MERGE_BACK_BRANCHES — list of release-from branches whose result must be merged back into their master* counterpart. */
     public static final String PROPERTY_MERGE_BACK_BRANCHES = "releaser.mergeBackBranches";
 
+    /** The Constant PROPERTY_BRANCH_DEFAULT — default release branch (latest core line). */
+    public static final String PROPERTY_BRANCH_DEFAULT = "releaser.branch.default";
+
+    /** The Constant PROPERTY_BRANCH_PARENT_MAJOR_FOR_DEFAULT — parent POM major from which components stay on the default branch. */
+    public static final String PROPERTY_BRANCH_PARENT_MAJOR_FOR_DEFAULT = "releaser.branch.parentMajorForDefaultBranch";
+
+    /** The Constant PROPERTY_BRANCH_DEVELOPMENT_FOR_LUTECE7 — branch of components (other than lutece-core) for the legacy core 7 line. */
+    public static final String PROPERTY_BRANCH_DEVELOPMENT_FOR_LUTECE7 = "releaser.branch.developmentBranchForLutece7";
+
+    /** The Constant PROPERTY_BRANCH_DEVELOPMENT_FOR_CORE7 — branch of lutece-core for the legacy core 7 line. */
+    public static final String PROPERTY_BRANCH_DEVELOPMENT_FOR_CORE7 = "releaser.branch.developmentBranchForCore7";
+
     /** The Constant PROPERTY_MAVEN_LOCAL_REPOSITORY. */
     public static final String PROPERTY_MAVEN_LOCAL_REPOSITORY = "releaser.mavenLocalRepository";
 

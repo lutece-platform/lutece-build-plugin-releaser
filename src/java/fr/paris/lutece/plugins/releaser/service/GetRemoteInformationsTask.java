@@ -34,8 +34,12 @@
 package fr.paris.lutece.plugins.releaser.service;
 
 import java.io.IOException;
+import java.util.List;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
+import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
+import fr.paris.lutece.plugins.releaser.business.RepositoryType;
+import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.util.httpaccess.HttpAccessException;
 
@@ -47,17 +51,21 @@ public class GetRemoteInformationsTask implements Runnable
 {
 
     private Component _component;
+    private ReleaserUser _user;
 
     /**
      * Instantiates a new gets the remote informations task.
      *
      * @param component
      *            the component
+     * @param user
+     *            the releaser user (used to list the component remote branches)
      */
-    public GetRemoteInformationsTask( Component component )
+    public GetRemoteInformationsTask( Component component, ReleaserUser user )
     {
 
         this._component = component;
+        this._user = user;
     }
 
     @Override
@@ -72,6 +80,29 @@ public class GetRemoteInformationsTask implements Runnable
             AppLogService.error( e );
         }
 
+        // List the remote branches (ls-remote, no clone) so the branch selection can follow the core line.
+        setRemoteBranches( );
+    }
+
+    /**
+     * Populate the component remote branch list via a lightweight ls-remote (no clone).
+     */
+    private void setRemoteBranches( )
+    {
+        RepositoryType repositoryType = _component.getRepoType( );
+        if ( _user == null || repositoryType == null || RepositoryType.SVN.equals( repositoryType ) )
+        {
+            return;
+        }
+        String strRepoUrl = GitUtils.getRepoUrl( _component.getScmUrl( ) );
+        String strLogin = _user.getCredential( repositoryType ).getLogin( );
+        String strPassword = _user.getCredential( repositoryType ).getPassword( );
+
+        List<String> branchNameList = GitUtils.lsRemoteBranches( strRepoUrl, strLogin, strPassword );
+        if ( !branchNameList.isEmpty( ) )
+        {
+            _component.setBranches( branchNameList );
+        }
     }
 
 }

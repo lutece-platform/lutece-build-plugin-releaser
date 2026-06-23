@@ -134,7 +134,7 @@ public class SiteService
 
         if ( user != null )
         {
-            site.setBranchReleaseFrom( GitUtils.DEFAULT_RELEASE_BRANCH );
+            site.setBranchReleaseFrom( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_BRANCH_DEFAULT ) );
             
             Credential credential = user.getCredential( site.getRepoType( ) );
 
@@ -185,7 +185,7 @@ public class SiteService
 
 		site.setCreateDckerImage(isSiteCreateDockerImage( site ) );
 
-        initComponents( site );
+        initComponents( site, user );
     }
     
     public static boolean isSiteCreateDockerImage( Site site )
@@ -242,7 +242,7 @@ public class SiteService
      * @param site
      *            The site
      */
-    private static void initComponents( Site site )
+    private static void initComponents( Site site, ReleaserUser user )
     {
         for ( Dependency dependency : site.getCurrentDependencies( ) )
         {        	
@@ -270,7 +270,7 @@ public class SiteService
 
         for ( Component component : site.getComponents( ) )
         {
-            futures.add( executor.submit( new GetRemoteInformationsTask( component ) ) );
+            futures.add( executor.submit( new GetRemoteInformationsTask( component, user ) ) );
         }
 
         // wait all futures stop before continue
@@ -303,39 +303,55 @@ public class SiteService
             defineNextSnapshotVersion( component );
             component.setName( ReleaserUtils.getComponentName( component.getScmDeveloperConnection( ), component.getArtifactId( ) ) );
 
-            String strBranch = site.getBranchReleaseFrom( ) != null ? site.getBranchReleaseFrom( ) : GitUtils.DEFAULT_RELEASE_BRANCH;
-            String strComponentBranch = getComponentBranch( component, strBranch );
+            String strComponentBranch = getComponentBranch( component, site );
             component.setBranchReleaseFrom( strComponentBranch );
         }
     }
 
     /**
-     * Returns the appropriate branch for a component based on the site branch.
-     * Special case: for lutece-core, site branch "develop_coreX" maps to "developX.x".
-     * Otherwise the site branch is propagated to the component only if it is one of the configured
-     * "follow master" branches ({@link ConstanteUtils#PROPERTY_MERGE_BACK_BRANCHES}, e.g.
-     * develop, develop_core7, develop7.x) ; if not, the component stays on the default branch.
+     * Returns the branch on which a component must be released, derived from the core line of the site/theme parent POM.
      *
      * @param component
      *            the component
-     * @param strSiteBranch
-     *            the site branch
-     * @return the component branch
+     * @param site
+     *            the site/theme being released (provides the parent POM version)
+     * @return the component release branch
      */
-    private static String getComponentBranch( Component component, String strSiteBranch )
+    private static String getComponentBranch( Component component, Site site )
     {
-        if ( ConstanteUtils.TAG_LUTECE_CORE.equals( component.getArtifactId( ) ) && strSiteBranch.startsWith( "develop_core" ) )
+        String strDefaultBranch = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_BRANCH_DEFAULT );
+        int nParentMajorForDefault = AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_BRANCH_PARENT_MAJOR_FOR_DEFAULT, 8 );
+
+        int nParentMajor;
+        try
         {
-            String strCoreVersion = strSiteBranch.replace( "develop_core", "" );
-            return "develop" + strCoreVersion + ".x";
+            String strParentVersion = site.getParentVersion( ) != null ? site.getParentVersion( ).replace( "[", "" ).replace( "]", "" ) : null;
+            nParentMajor = Version.parse( strParentVersion ).getMajor( );
+        }
+        catch( VersionParsingException | NullPointerException e )
+        {
+            // Parent version unknown/malformed : fall back to the default branch.
+            return strDefaultBranch;
         }
 
-        if ( !GitUtils.isMergeBackBranch( strSiteBranch ) )
+        if ( nParentMajor >= nParentMajorForDefault )
         {
-            return GitUtils.DEFAULT_RELEASE_BRANCH;
+            return strDefaultBranch;
         }
 
-        return strSiteBranch;
+        // Legacy core 7 line.
+        if ( ConstanteUtils.TAG_LUTECE_CORE.equals( component.getArtifactId( ) ) )
+        {
+            return AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_BRANCH_DEVELOPMENT_FOR_CORE7 );
+        }
+
+        String strLegacyComponentBranch = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_BRANCH_DEVELOPMENT_FOR_LUTECE7 );
+        if ( component.getBranches( ) != null && component.getBranches( ).contains( strLegacyComponentBranch ) )
+        {
+            return strLegacyComponentBranch;
+        }
+
+        return strDefaultBranch;
     }
 
     /**
@@ -969,7 +985,6 @@ public class SiteService
 
         List<String> branchNameList = GitUtils.getBranchList( strRepoUrl, fLocalRepo, commandResult, strLogin, strPwd );
         branchNameList.remove( "master" );
-        branchNameList.remove( "develop" );
 
         site.setBranches( branchNameList );
 
@@ -1056,7 +1071,7 @@ public class SiteService
                 site.setCreateDckerImage( isSiteCreateDockerImage( site ) );
 
                 // Re-initialize components from new POM dependencies
-                initComponents( site );
+                initComponents( site, user );
             }
         }
         catch( IOException e )
