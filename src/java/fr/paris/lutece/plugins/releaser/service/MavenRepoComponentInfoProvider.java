@@ -21,6 +21,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -64,22 +65,6 @@ public final class MavenRepoComponentInfoProvider
 	private static final String PROPERTY_MAVEN_REPO_PATH_FILE = "releaser.maven.repository.getfile.path";
     private static final String PATH_MAVEN_REPO_FILE = AppPropertiesService.getProperty( PROPERTY_MAVEN_REPO_PATH_FILE );	
 
-    // Path Plugins
-    private static final String PROPERTY_MAVEN_PATH_PLUGINS = "releaser.maven.repository.path.plugins";
-    private static final String URL_MAVEN_PATH_PLUGINS = AppPropertiesService.getProperty( PROPERTY_MAVEN_PATH_PLUGINS );
-    
-    // Path Pom site
-    private static final String PROPERTY_MAVEN_PATH_SITE_POM = "releaser.maven.repository.path.site-pom";
-    private static final String URL_MAVEN_PATH_SITE_POM = AppPropertiesService.getProperty( PROPERTY_MAVEN_PATH_SITE_POM );
-    
-    // Path Lutece core
-    private static final String PROPERTY_MAVEN_PATH_CORE = "releaser.maven.repository.path.core";
-    private static final String URL_MAVEN_PATH_CORE = AppPropertiesService.getProperty( PROPERTY_MAVEN_PATH_CORE );
-    
-    // Path Themes
-    private static final String PROPERTY_MAVEN_PATH_THEMES = "releaser.maven.repository.path.themes";
-    private static final String URL_MAVEN_PATH_THEMES = AppPropertiesService.getProperty( PROPERTY_MAVEN_PATH_THEMES );
-
     private static final String RELEASE_NOT_FOUND = "Release not found";
     private static final String SNAPSHOT_NOT_FOUND = "Snapshot not found";
     private static final String EXCEPTION_MESSAGE = "LuteceTools - MavenRepoService : Error retrieving pom infos : ";
@@ -110,11 +95,20 @@ public final class MavenRepoComponentInfoProvider
     public void setComponentRemoteInformations( Component component )
     {
         String strArtifactId = component.getArtifactId( );
-        String strType = getMavenRepoDirectoryType( strArtifactId, component.getType( ) );
+
+        // The Nexus path is derived from the groupId : without it the component cannot be located. Block with a clear message.
+        if ( StringUtils.isBlank( component.getGroupId( ) ) )
+        {
+            String strMessage = "Le groupId est absent pour le composant " + strArtifactId
+                    + " : impossible de le localiser dans Nexus.";
+            component.addReleaseComment( strMessage );
+            AppLogService.error( "MavenRepoComponentInfoProvider - " + strMessage );
+            return;
+        }
 
         try
         {
-            String strComponentPath = getComponentPath( strArtifactId, strType );
+            String strComponentPath = getComponentPath( component );
             
             // Get release versions
         	String strReleaseUrl = getAvailableUrl( PROPERTIES_RELEASES_PATH, strComponentPath );
@@ -239,56 +233,19 @@ public final class MavenRepoComponentInfoProvider
         return listVersions;
     }
     
-    private String getComponentPath( String strArtifactId, String strType )
+    /**
+     * Derive the Nexus tree path of a component from its groupId : in a Maven repository the path of an artifact is
+     * always {@code groupId(. -> /) / artifactId}. This generalizes the previous per-type dispatch (core/themes/plugins)
+     * and also covers any other groupId such as {@code fr.paris.lutece.tools} (e.g. lutece-site-pom). The caller
+     * guarantees a non-blank groupId (see {@link #setComponentRemoteInformations}).
+     *
+     * @param component
+     *            the component
+     * @return the Nexus tree path (e.g. "fr/paris/lutece/plugins/plugin-xxx")
+     */
+    private String getComponentPath( Component component )
     {
-        if ( ConstanteUtils.MAVEN_REPO_LUTECE_CORE.equals(strType ) )
-        {
-            return URL_MAVEN_PATH_CORE;
-        }
-        else if ( ConstanteUtils.MAVEN_REPO_LUTECE_SITE.equals( strType ) )
-        {
-            return URL_MAVEN_PATH_THEMES + strArtifactId;
-        }
-        else
-        {
-            return URL_MAVEN_PATH_PLUGINS + strArtifactId;
-        }      
-    }
-    
-    private String getMavenRepoDirectoryType( String strArtifactId, String strComponentType )
-    {
-        String strTypeRepo = null;
-        if ( strComponentType != null )
-        {
-            switch ( strComponentType )
-            {
-            case ConstanteUtils.DEPENDENCY_TYPE_LUTECE_CORE:
-
-                strTypeRepo = ConstanteUtils.MAVEN_REPO_LUTECE_CORE;
-                break;
-            case ConstanteUtils.DEPENDENCY_TYPE_LUTECE_SITE:
-
-                strTypeRepo = ConstanteUtils.MAVEN_REPO_LUTECE_SITE;
-                break;
-
-            default:
-                strTypeRepo = ConstanteUtils.MAVEN_REPO_LUTECE_PLUGIN;
-                break;
-            }
-        }
-        else
-        {
-            if ( ConstanteUtils.TAG_LUTECE_CORE.equals( strArtifactId ) )
-            {
-                strTypeRepo = ConstanteUtils.MAVEN_REPO_LUTECE_CORE;
-            }
-            else
-            {
-                strTypeRepo = ConstanteUtils.MAVEN_REPO_LUTECE_PLUGIN;
-            }
-        }
-
-        return strTypeRepo;
+        return component.getGroupId( ).replace( ".", "/" ) + "/" + component.getArtifactId( );
     }
     
     private String getPomUrl( String strDirUrl, String strArtifactId, String strVersion )
