@@ -48,6 +48,7 @@ import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.plugins.workflowcore.business.action.Action;
 import fr.paris.lutece.plugins.workflowcore.business.state.State;
 import fr.paris.lutece.portal.business.user.AdminUser;
+import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.workflow.WorkflowService;
@@ -161,14 +162,22 @@ public class ReleaseComponentTask implements Runnable
             }
 
         }
-        catch( AppException appe )
+        catch( Exception e )
         {
             if ( _wfContext.getComponent( ) != null )
             {
 
                 _wfContext.getComponent( ).setErrorLastRelease( true );
             }
-            AppLogService.error( appe );
+
+            CommandResult commandResult = _wfContext.getCommandResult( );
+            if ( commandResult != null && commandResult.getStatus( ) != CommandResult.STATUS_ERROR )
+            {
+                commandResult.setStatus( CommandResult.STATUS_ERROR );
+                commandResult.setErrorType( CommandResult.ERROR_TYPE_STOP );
+                commandResult.setError( e.getMessage( ) );
+            }
+            AppLogService.error( e );
         }
         finally
         {

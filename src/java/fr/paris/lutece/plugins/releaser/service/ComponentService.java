@@ -431,7 +431,7 @@ public class ComponentService implements IComponentService
             parser.parse( componentPom, inputStream );
 
             if ( component != null && componentPom != null && component.getArtifactId( ).equals( componentPom.getArtifactId( ) )
-                    && component.getLastAvailableSnapshotVersion( ).equals( componentPom.getCurrentVersion( ) ) )
+                    && java.util.Objects.equals( component.getLastAvailableSnapshotVersion( ), componentPom.getCurrentVersion( ) ) )
             {
                 bError = false;
             }

@@ -133,31 +133,43 @@ public final class MavenRepoComponentInfoProvider
         		AppLogService.info( "Error getting component url. No component found in Maven Release Repository : " );
         	}
 
-            // Get snapshot versions and scmDeveloperConnection
+            // Get snapshot versions and scmDeveloperConnection.
             String strSnapshotUrl = getAvailableUrl( PROPERTIES_SNAPSHOTS_PATH, strComponentPath );
-            if ( strSnapshotUrl != null ) 
+
+            // Composant absent du dépôt Nexus snapshot.
+            if ( strSnapshotUrl == null )
             {
-	            List<String> listSnapshotVersions = getVersionList( strSnapshotUrl );
-	            
-	            if ( listSnapshotVersions != null && !listSnapshotVersions.isEmpty() )
-	            {
-	            	listSnapshotVersions = VersionUtils.sortVersionsList(listSnapshotVersions, true );
-		            component.setSnapshotVersions( listSnapshotVersions );
-		            component.setLastAvailableSnapshotVersion( VersionUtils.getLastVersion( listSnapshotVersions ) );
-	            }
-	            else
-	            {
-	            	component.setLastAvailableSnapshotVersion( SNAPSHOT_NOT_FOUND );
-	            }
-	            
-	            // Get scmDeveloperConnection from Snapshot pom
-	            if ( !listSnapshotVersions.isEmpty() )
-	            getPomInfos( component, getSnapshotPomUrl( strSnapshotUrl, strArtifactId, component.getLastAvailableSnapshotVersion( ) ) );
+                component.addReleaseComment( "Le composant " + strArtifactId + " est absent du dépôt Nexus snapshot : release impossible." );
+                AppLogService.error( "MavenRepoComponentInfoProvider - Component " + strArtifactId + " not found in Maven Snapshot Repository" );
+                return;
             }
-        	else 
-        	{
-        		AppLogService.info( "Error getting component url. No component found in Maven Snapshot Repository : " );
-        	}
+
+            List<String> listSnapshotVersions = getVersionList( strSnapshotUrl );
+
+            if ( listSnapshotVersions == null || listSnapshotVersions.isEmpty( ) )
+            {
+                component.setLastAvailableSnapshotVersion( SNAPSHOT_NOT_FOUND );
+                component.addReleaseComment( "Aucune version SNAPSHOT publiée dans Nexus pour le composant " + strArtifactId + " : release impossible." );
+                AppLogService.error( "MavenRepoComponentInfoProvider - No snapshot version found in Nexus for " + strArtifactId );
+                return;
+            }
+
+            listSnapshotVersions = VersionUtils.sortVersionsList( listSnapshotVersions, true );
+            String strLastSnapshot = VersionUtils.getLastVersion( listSnapshotVersions );
+
+            // Read scmDeveloperConnection from the last snapshot pom (uses the local version).
+            getPomInfos( component, getSnapshotPomUrl( strSnapshotUrl, strArtifactId, strLastSnapshot ) );
+
+            // Balise <scm> absente du POM.
+            if ( StringUtils.isBlank( component.getScmDeveloperConnection( ) ) )
+            {
+                component.addReleaseComment( "La balise SCM est absente du POM du composant " + strArtifactId + " : release impossible." );
+                AppLogService.error( "MavenRepoComponentInfoProvider - Missing SCM tag in POM for " + strArtifactId );
+                return;
+            }
+
+            component.setSnapshotVersions( listSnapshotVersions );
+            component.setLastAvailableSnapshotVersion( strLastSnapshot );
             
         }
         catch( Exception ex )
