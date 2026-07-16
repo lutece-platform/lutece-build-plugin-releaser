@@ -664,9 +664,16 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         String strReleaseBranchName = request.getParameter( PARAMETER_RELEASE_BRANCH_NAME );
 
         ReleaserUser user = setReleaserUser ( request );
-        
-        Component component = ComponentService.getService( ).getLastBranchVersion( getCurentComponent( strArtifactId ), strReleaseBranchName, user );
-        
+
+        Component component = getCurentComponent( strArtifactId );
+
+        // The site branch list is now populated via ls-remote (no clone), so the getChangeBranch clone step is
+        // bypassed. Clone the component repository locally first, otherwise getLastBranchVersion.Git.open( ) fails
+        // with "repository not found".
+        ComponentService.getService( ).getComponentBranchList( component, _site.getRepoType( ), user );
+
+        component = ComponentService.getService( ).getLastBranchVersion( component, strReleaseBranchName, user );
+
         return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
     }
     
