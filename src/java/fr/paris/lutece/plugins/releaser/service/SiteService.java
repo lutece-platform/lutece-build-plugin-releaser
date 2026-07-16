@@ -517,7 +517,7 @@ public class SiteService
         }
 
         // Check if currentVersion matches the last available snapshot for this major
-        if ( !component.getCurrentVersion( ).equals( component.getLastAvailableSnapshotVersion( ) ) )
+        if ( component.isSnapshotVersion( ) && !component.getCurrentVersion( ).equals( component.getLastAvailableSnapshotVersion( ) ) )
         {
             String [ ] arguments = { component.getCurrentVersion( ), component.getLastAvailableSnapshotVersion( ) };
             component.addReleaseComment( I18nService.getLocalizedString( MESSAGE_SNAPSHOT_VERSION_OUTDATED, arguments, Locale.getDefault( ) ) );
