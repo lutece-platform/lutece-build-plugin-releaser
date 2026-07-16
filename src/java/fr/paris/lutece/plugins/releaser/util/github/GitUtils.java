@@ -184,7 +184,7 @@ public class GitUtils
         {
             FileRepositoryBuilder builder = new FileRepositoryBuilder( );
             File fGitDir = new File( sClonePath );
-
+           
             CloneCommand clone = Git.cloneRepository( ).setCredentialsProvider( new UsernamePasswordCredentialsProvider( strUserName, strPassword ) )
                     .setBare( false ).setCloneAllBranches( true ).setDirectory( fGitDir ).setURI( getRepoUrl( sRepoURL ) );
 
@@ -870,7 +870,7 @@ public class GitUtils
         try
         {
             CredentialsProvider credential = new UsernamePasswordCredentialsProvider( login, pwd );
-            
+
             git = Git.cloneRepository( ).setCredentialsProvider( credential ).setURI( repoUrl ).setDirectory( localRepo ).setCloneAllBranches( true ).call( );
 
             List<Ref> branchList = git.branchList( ).setListMode( ListMode.ALL ).call( );

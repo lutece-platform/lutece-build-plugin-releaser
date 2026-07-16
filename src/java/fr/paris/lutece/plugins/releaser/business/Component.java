@@ -111,6 +111,9 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /** The b error last release. */
     private boolean _bErrorLastRelease;
 
+    /** Whether releasing requires a confirmation because of a Git/Nexus version divergence (computed by ComponentService). */
+    private boolean _bReleaseConfirmationRequiredByDivergence;
+
     /** The str name. */
     private String _strName;
 
@@ -454,6 +457,27 @@ public class Component extends AbstractReleaserResource implements RBACResource
             return true;
         }
         return false;
+    }
+
+    /**
+     * Whether releasing this component requires a user confirmation because of a Git/Nexus version divergence. 
+     *
+     * @return true if a confirmation is required
+     */
+    public boolean isReleaseConfirmationRequiredByDivergence( )
+    {
+        return _bReleaseConfirmationRequiredByDivergence;
+    }
+
+    /**
+     * Sets whether releasing requires a confirmation because of a Git/Nexus version divergence.
+     *
+     * @param bReleaseConfirmationRequiredByDivergence
+     *            the value
+     */
+    public void setReleaseConfirmationRequiredByDivergence( boolean bReleaseConfirmationRequiredByDivergence )
+    {
+        _bReleaseConfirmationRequiredByDivergence = bReleaseConfirmationRequiredByDivergence;
     }
 
     /**

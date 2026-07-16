@@ -148,7 +148,7 @@
 					 </td>
 					<td>
 						<span id="release-result-${component.artifactId!}">
-						<#if component.shouldBeReleased()>
+						<#if component.shouldBeReleased() || component.isReleaseConfirmationRequiredByDivergence()>
 							<#if component.lastAvailableVersion?? >
 								<a class="button transition border-blue small" data-artifactid="${component.artifactId!}" title="Utiliser la version ${component.lastAvailableVersion} pour la release" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?action=downgradeComponent&id=${component.artifactId}' >
 									<i class="fa fa-level-up fa-fw"></i> Utiliser la version ${component.lastAvailableVersion}
@@ -364,6 +364,23 @@
   </div>
 </div>
 
+<div class="modal fade" id="modalVersionDivergenceSite" tabindex="-1" role="dialog" aria-labelledby="modalVersionDivergenceSiteLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="modalVersionDivergenceSiteLabel"><i class="fa fa-exclamation-triangle text-warning"></i> Divergence de version Git / Nexus</h4>
+      </div>
+      <div class="modal-body">
+        <p id="site_version_divergence_message"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Annuler</button>
+        <button type="button" id="btn-force-release-divergence-site" class="button transition small fill-orange">Forcer la release</button>
+      </div>
+    </div>
+  </div>
+</div>
 <@modalAuth modId="modalReleaseSVN" type=repo_type_svn formActionUrl="jsp/admin/plugins/releaser/ManageClusters.jsp" formSubmitName="action_releaseSite"   />
 <@modalAuth modId="modalReleaseGITLAB" type=repo_type_gitlab formActionUrl="jsp/admin/plugins/releaser/ManageClusters.jsp" formSubmitName="action_releaseSite" />
 <@modalAuth modId="modalReleaseGITHUB" type=repo_type_github formActionUrl="jsp/admin/plugins/releaser/ManageClusters.jsp" formSubmitName="action_releaseSite"  />
@@ -412,10 +429,17 @@ var artifactIdInProgress;
         $( ".releaseComponent form" ).submit(function( e )
         {	event.preventDefault();
            var artifactid=$(this).find(".release-id").val();
-           $( ".releaseComponent").modal('hide'); 
-           releaseComponent($(this),artifactid);
+           $( ".releaseComponent").modal('hide');
+           releaseComponent($(this),artifactid,false);
          }
         );
+
+        $("#btn-force-release-divergence-site").click( function(){
+            $("#modalVersionDivergenceSite").modal("hide");
+            if ( pendingDivergenceForm ) {
+                releaseComponent( pendingDivergenceForm, pendingDivergenceArtifactId, true );
+            }
+        });
         
         
 		
@@ -424,8 +448,11 @@ var artifactIdInProgress;
 		</#if>
 	});
     
-    function releaseComponent(form,artifactId)
-    
+    var pendingDivergenceForm;
+    var pendingDivergenceArtifactId;
+
+    function releaseComponent(form,artifactId,force)
+
     {
     
         $("#console_wf_log").html(" ");
@@ -436,7 +463,7 @@ var artifactIdInProgress;
 		    var post_url = form.attr("action"); //get form action url
 			var request_method = form.attr("method"); //get form GET/POST method
 			var form_data = form.serialize()
-			+ '&action=releaseComponent';
+			+ '&action=releaseComponent&force=' + (force ? 'true' : 'false');
 			$.ajax({
 				url: post_url,
 				type: request_method,
@@ -446,7 +473,15 @@ var artifactIdInProgress;
 					if (data.status == 'OK') {
 						callReleaseInfo(data.result,progressId,artifactId);
 						$( "#view_log_btn_"+artifactId).attr("data-context_release_id",data.result);
-					} else if ( data.status == 'ERROR'  ) {
+					} else if ( data.status == 'ERROR' && data.errorCode == 'VERSION_DIVERGENCE' ) {
+						$( progressId ).hide();
+						pendingDivergenceForm = form;
+						pendingDivergenceArtifactId = artifactId;
+						$("#site_version_divergence_message").text( data.message );
+						$("#modalVersionDivergenceSite").modal("show");
+					} else if ( data.status == 'ERROR' ) {
+						$( progressId ).hide();
+						toastr["error"]( data.message ? data.message : "Impossible de démarrer la release.", "Information" );
 					}
 				}
 			});

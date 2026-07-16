@@ -117,6 +117,42 @@ public interface IComponentService
     int release( Component component, Locale locale, AdminUser user, HttpServletRequest request );
 
     /**
+     * Whether the branch POM version and the last Nexus snapshot are both valid snapshots but differ.
+     *
+     * @param component
+     *            the component
+     * @return true if a real Git/Nexus snapshot version divergence is detected
+     */
+    boolean isVersionDivergence( Component component );
+
+    /**
+     * Divergence on a merge-back branch : systematic block, no confirmation.
+     *
+     * @param component
+     *            the component
+     * @return true if the divergence must block the release systematically
+     */
+    boolean isReleaseBlockedByDivergence( Component component );
+
+    /**
+     * Divergence on a branch with no master* counterpart, on an otherwise releasable component : release allowed after confirmation.
+     *
+     * @param component
+     *            the component
+     * @return true if the divergence requires a confirmation before releasing
+     */
+    boolean isReleaseConfirmationRequiredByDivergence( Component component );
+
+    /**
+     * Human-readable description of the Git/Nexus version divergence.
+     *
+     * @param component
+     *            the component
+     * @return the divergence description
+     */
+    String getVersionDivergenceMessage( Component component );
+
+    /**
      * Checks if is git component.
      *
      * @param component

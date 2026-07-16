@@ -681,14 +681,23 @@ public class SiteService
      *            the request
      * @return the int
      */
-    public static int releaseComponent( Site site, String strArtifactId, Locale locale, AdminUser user, HttpServletRequest request )
+    public static int releaseComponent( Site site, String strArtifactId, Locale locale, AdminUser user, HttpServletRequest request, boolean bForce )
     {
         for ( Component component : site.getComponents( ) )
         {
-            if ( component.getArtifactId( ).equals( strArtifactId ) && component.shouldBeReleased( ) )
+            if ( component.getArtifactId( ).equals( strArtifactId ) )
             {
-                // Release component
-                return ComponentService.getService( ).release( component, locale, user, request );
+                if ( component.shouldBeReleased( ) )
+                {
+                    // Release component
+                    return ComponentService.getService( ).release( component, locale, user, request );
+                }
+                // Confirmed Git/Nexus divergence on a non merge-back branch : the release is otherwise valid, force it.
+                if ( bForce && ComponentService.getService( ).isReleaseConfirmationRequiredByDivergence( component ) )
+                {
+                    return ComponentService.getService( ).release( component, locale, user, request, true );
+                }
+                break;
             }
         }
         return ConstanteUtils.CONSTANTE_ID_NULL;

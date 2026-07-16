@@ -416,6 +416,99 @@ public class ComponentService implements IComponentService
         return component;
     }
 
+    /**
+     * Whether the branch POM version and the last Nexus snapshot are both valid snapshots but differ. 
+     *
+     * @param component
+     *            the component
+     * @return true if a real Git/Nexus snapshot version divergence is detected
+     */
+    public boolean isVersionDivergence( Component component )
+    {
+        String strGitSnapshot = component.getCurrentVersion( );
+        String strNexusSnapshot = component.getLastAvailableSnapshotVersion( );
+        return isSnapshotSafe( strGitSnapshot ) && isSnapshotSafe( strNexusSnapshot )
+                && !strGitSnapshot.equals( strNexusSnapshot );
+    }
+
+    /**
+     * Whether the version parses to a SNAPSHOT, returning false (WITHOUT logging) for the non-version values that are
+     * expected here : null, {@code NO_VERSION}, "Snapshot not found" sentinel... Unlike {@link Version#isSnapshot(String)},
+     * which logs those at ERROR level and would pollute the logs on every site-preparation render.
+     *
+     * @param strVersion
+     *            the version string
+     * @return true if it parses to a SNAPSHOT version
+     */
+    private boolean isSnapshotSafe( String strVersion )
+    {
+        if ( StringUtils.isBlank( strVersion ) )
+        {
+            return false;
+        }
+        try
+        {
+            return Version.parse( strVersion ).isSnapshot( );
+        }
+        catch( VersionParsingException e )
+        {
+            return false;
+        }
+    }
+
+    /**
+     * All the conditions required to release a component EXCEPT the Nexus/Git version match.
+     *
+     * @param component
+     *            the component
+     * @return true if the component is otherwise releasable, ignoring any Git/Nexus divergence
+     */
+    private boolean isReleasableIgnoringDivergence( Component component )
+    {
+        return component.isProject( ) && component.isSnapshotVersion( ) && component.getTargetVersion( ) != null
+                && !Version.isSnapshot( component.getTargetVersion( ) ) && !component.isTheme( ) && !component.isDowngrade( );
+    }
+
+    /**
+     * Divergence on a merge-back branch (see {@link GitUtils#isMergeBackBranch(String)}) : the branch follows a master*
+     * counterpart, so the release is blocked outright, without confirmation.
+     *
+     * @param component
+     *            the component
+     * @return true if the divergence must block the release systematically
+     */
+    public boolean isReleaseBlockedByDivergence( Component component )
+    {
+        return isVersionDivergence( component ) && GitUtils.isMergeBackBranch( component.getBranchReleaseFrom( ) );
+    }
+
+    /**
+     * Divergence on a branch that has no master* counterpart, on an otherwise releasable component : the release is
+     * allowed after an explicit user confirmation.
+     *
+     * @param component
+     *            the component
+     * @return true if the divergence requires a confirmation before releasing
+     */
+    public boolean isReleaseConfirmationRequiredByDivergence( Component component )
+    {
+        return isVersionDivergence( component ) && !GitUtils.isMergeBackBranch( component.getBranchReleaseFrom( ) )
+                && isReleasableIgnoringDivergence( component );
+    }
+
+    /**
+     * Readable description of the Git/Nexus version divergence, for user-facing messages.
+     *
+     * @param component
+     *            the component
+     * @return the divergence description
+     */
+    public String getVersionDivergenceMessage( Component component )
+    {
+        return "La version du POM de la branche « " + component.getBranchReleaseFrom( ) + " » (" + component.getCurrentVersion( )
+                + ") diffère de la dernière version SNAPSHOT publiée dans Nexus (" + component.getLastAvailableSnapshotVersion( ) + ").";
+    }
+
     public boolean isErrorSnapshotComponentInformations( Component component, String strComponentPomPath )
     {
 

@@ -81,6 +81,9 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /** The Constant PARAMETER_ARTIFACT_ID. */
     private static final String PARAMETER_ARTIFACT_ID = "id";
 
+    /** The Constant PARAMETER_FORCE. */
+    private static final String PARAMETER_FORCE = "force";
+
     /** The Constant PARAMETER_ID_CONTEXT. */
     private static final String PARAMETER_ID_CONTEXT = "id_context";
 
@@ -247,6 +250,17 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
 
                 return redirect( request, JSP_MANAGE_CLUSTERS + "?action=releaseSite&error=" + e.getMessage( ) + "&" + PARAMETER_SITE_ID + "=" + strSiteId );
 
+            }
+        }
+
+        // Evaluer la divergence Git/Nexus juste avant l'affichage, pour décider
+        // si le bouton « Releaser » doit être proposé (avec confirmation) sur un composant divergent.
+        if ( _site != null && _site.getComponents( ) != null )
+        {
+            for ( Component component : _site.getComponents( ) )
+            {
+                component.setReleaseConfirmationRequiredByDivergence(
+                        ComponentService.getService( ).isReleaseConfirmationRequiredByDivergence( component ) );
             }
         }
 
@@ -461,6 +475,7 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     {
 
         String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
+        boolean bForce = Boolean.parseBoolean( request.getParameter( PARAMETER_FORCE ) );
         AbstractJsonResponse jsonResponse = null;
         ReleaserUser user = ReleaserUtils.getReleaserUser( request, getLocale( ) );
         if ( user == null )
@@ -470,7 +485,31 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         }
         ReleaserUtils.populateReleaserUser( request, user );
         ReleaserUtils.setReleaserUser( request, user );
-        Integer nidContext = SiteService.releaseComponent( _site, strArtifactId, getLocale( ), getUser( ), request );
+
+        // Git/Nexus version divergence : blocked on merge-back branches, released on confirmation otherwise.
+        if ( _site != null && _site.getComponents( ) != null )
+        {
+            for ( Component component : _site.getComponents( ) )
+            {
+                if ( component.getArtifactId( ).equals( strArtifactId ) )
+                {
+                    if ( ComponentService.getService( ).isReleaseBlockedByDivergence( component ) )
+                    {
+                        return JsonUtil.buildJsonResponse( new ErrorJsonResponse( "VERSION_DIVERGENCE_BLOCKED",
+                                ComponentService.getService( ).getVersionDivergenceMessage( component )
+                                        + " Cette branche suit une branche master (merge-back) : la release est bloquée tant que les versions ne sont pas alignées." ) );
+                    }
+                    if ( ComponentService.getService( ).isReleaseConfirmationRequiredByDivergence( component ) && !bForce )
+                    {
+                        return JsonUtil.buildJsonResponse( new ErrorJsonResponse( "VERSION_DIVERGENCE",
+                                ComponentService.getService( ).getVersionDivergenceMessage( component ) + " Forcer la release quand même ?" ) );
+                    }
+                    break;
+                }
+            }
+        }
+
+        Integer nidContext = SiteService.releaseComponent( _site, strArtifactId, getLocale( ), getUser( ), request, bForce );
         jsonResponse = new JsonResponse( nidContext );
         if ( ReleaserUtils.getReleaserUser( request, getLocale( ) ) == null )
         {

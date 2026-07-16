@@ -245,6 +245,7 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
     {
         String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
         String strTweetMessage = request.getParameter( PARAMETER_TWEET_MESSAGE );
+        boolean bForce = Boolean.parseBoolean( request.getParameter( PARAMETER_FORCE ) );
 
         AbstractJsonResponse jsonResponse = null;
         Integer nIdContext = null;
@@ -256,6 +257,19 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
             {
                 if ( component.getArtifactId( ) != null && component.getArtifactId( ).equals( strArtifactId ) )
                 {
+                    // Git/Nexus version divergence : blocked on merge-back branches, released on confirmation otherwise.
+                    if ( ComponentService.getService( ).isReleaseBlockedByDivergence( component ) )
+                    {
+                        return JsonUtil.buildJsonResponse( new ErrorJsonResponse( "VERSION_DIVERGENCE_BLOCKED",
+                                ComponentService.getService( ).getVersionDivergenceMessage( component )
+                                        + " Cette branche suit une branche master (merge-back) : la release est bloquée tant que les versions ne sont pas alignées." ) );
+                    }
+                    if ( ComponentService.getService( ).isReleaseConfirmationRequiredByDivergence( component ) && !bForce )
+                    {
+                        return JsonUtil.buildJsonResponse( new ErrorJsonResponse( "VERSION_DIVERGENCE",
+                                ComponentService.getService( ).getVersionDivergenceMessage( component ) + " Forcer la release quand même ?" ) );
+                    }
+
                     component.setTweetMessage( strTweetMessage );
                     nIdContext = ComponentService.getService( ).release( component, getLocale( ), getUser( ), request, true );
                     break;
@@ -373,8 +387,22 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
             component.setBranchReleaseFrom( strReleaseBranchName );
 
             boolean bForce = Boolean.parseBoolean( request.getParameter( PARAMETER_FORCE ) );
+
+            // Git/Nexus version divergence : blocked on merge-back branches, confirmed otherwise.
+            if ( ComponentService.getService( ).isReleaseBlockedByDivergence( component ) )
+            {
+                return JsonUtil.buildJsonResponse( new ErrorJsonResponse( "VERSION_DIVERGENCE_BLOCKED",
+                        ComponentService.getService( ).getVersionDivergenceMessage( component )
+                                + " Cette branche suit une branche master (merge-back) : la release est bloquée tant que les versions ne sont pas alignées." ) );
+            }
+
             if ( !bForce )
             {
+                if ( ComponentService.getService( ).isReleaseConfirmationRequiredByDivergence( component ) )
+                {
+                    return JsonUtil.buildJsonResponse( new ErrorJsonResponse( "VERSION_DIVERGENCE",
+                            ComponentService.getService( ).getVersionDivergenceMessage( component ) + " Forcer la release quand même ?" ) );
+                }
                 try
                 {
                     String strTagVersionPart = strSourceTag.substring( component.getArtifactId( ).length( ) + 1 );
