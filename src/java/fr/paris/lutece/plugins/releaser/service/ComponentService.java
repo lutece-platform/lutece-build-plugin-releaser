@@ -711,6 +711,9 @@ public class ComponentService implements IComponentService
     {
         String strPom = null;
 
+        // Reset the release comments
+        component.resetComments( );
+
         // Set default release branch
         if ( !component.getBranches( ).contains( component.getBranchReleaseFrom( ) ) )
         {
