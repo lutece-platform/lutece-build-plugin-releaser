@@ -182,6 +182,9 @@ public class SiteService
         site.setNextReleaseVersion( Version.getReleaseVersion( strOriginVersion ) );
         site.setNextSnapshotVersion( Version.getNextSnapshotVersion( strOriginVersion ) );
         site.setTargetVersions( Version.getNextReleaseVersions( strOriginVersion, strLastReleaseVersion ) );
+        // Align the cycling index with the default next release version, otherwise the first click
+        // to change the version lands back on the value already displayed (off-by-one).
+        site.setTargetVersionIndex( Math.max( 0, site.getTargetVersions( ).indexOf( site.getNextReleaseVersion( ) ) ) );
 
 		site.setCreateDckerImage(isSiteCreateDockerImage( site ) );
 
@@ -376,6 +379,8 @@ public class SiteService
             	component.setTargetVersions( Version.getNextReleaseVersions( component.getCurrentVersion( ), component.getLastAvailableVersion( ) ) );
                 String strTargetVersion = Version.getReleaseVersion( component.getCurrentVersion( ) );
                 component.setTargetVersion( strTargetVersion );
+                // Align the cycling index with the default target version (off-by-one on first click).
+                component.setTargetVersionIndex( Math.max( 0, component.getTargetVersions( ).indexOf( strTargetVersion ) ) );
             }
         }
         else
@@ -1076,7 +1081,7 @@ public class SiteService
                 site.setNextReleaseVersion( Version.getReleaseVersion( strOriginVersion ) );
                 site.setNextSnapshotVersion( Version.getNextSnapshotVersion( strOriginVersion ) );
                 site.setTargetVersions( Version.getNextReleaseVersions( strOriginVersion, strLastReleaseVersion ) );
-                site.setTargetVersionIndex( 0 );
+                site.setTargetVersionIndex( Math.max( 0, site.getTargetVersions( ).indexOf( site.getNextReleaseVersion( ) ) ) );
                 site.setCreateDckerImage( isSiteCreateDockerImage( site ) );
 
                 // Re-initialize components from new POM dependencies

@@ -390,6 +390,9 @@ public class ComponentService implements IComponentService
     	}
     	
         component.setTargetVersion( Version.getReleaseVersion( strCurrentVersion ) );
+        // Align the cycling index with the default target version, otherwise the first click
+        // on "Modifier la version" lands back on the value already displayed (off-by-one).
+        component.setTargetVersionIndex( Math.max( 0, component.getTargetVersions( ).indexOf( component.getTargetVersion( ) ) ) );
 
         String strNextSnapshotVersion = null;
         // A component with no version pinned in the POM (NO_VERSION) is a normal case, not an error : skip parsing.
