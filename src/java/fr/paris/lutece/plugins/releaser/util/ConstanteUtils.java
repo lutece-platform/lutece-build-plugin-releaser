@@ -85,12 +85,6 @@ public class ConstanteUtils
     /** The Constant CONSTANTE_RELEASE_CONTEXT_PREFIX. */
     public static final String CONSTANTE_RELEASE_CONTEXT_PREFIX = "release_context_";
 
-    /** The Constant CONSTANTE_LAST_RELEASE_VERSION_PREFIX. */
-    public static final String CONSTANTE_LAST_RELEASE_VERSION_PREFIX = "last_release_version_";
-
-    /** The Constant CONSTANTE_LAST_RELEASE_NEXT_SNPASHOT_VERSION_PREFIX. */
-    public static final String CONSTANTE_LAST_RELEASE_NEXT_SNPASHOT_VERSION_PREFIX = "last_release_next_snapshot_version_";
-
     /** The Constant CONSTANTE_COMPONENT_PROJECT_PREFIX. */
     public static final String CONSTANTE_COMPONENT_PROJECT_PREFIX = "component_project_prefix_";
 

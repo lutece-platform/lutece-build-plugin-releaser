@@ -64,7 +64,6 @@ import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
 import fr.paris.lutece.plugins.releaser.util.version.VersionUtils;
 import fr.paris.lutece.portal.business.user.AdminUser;
-import fr.paris.lutece.portal.service.datastore.DatastoreService;
 import fr.paris.lutece.portal.service.rbac.RBACService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppLogService;
@@ -100,53 +99,6 @@ public class ComponentService implements IComponentService
     public void setRemoteInformations( Component component, boolean bCache ) throws HttpAccessException, IOException
     {        
         MavenRepoComponentInfoProvider.getInstance( ).setComponentRemoteInformations( component );        
-    }
-
-    /**
-     * Returns the LastAvailableVersion
-     * 
-     * @return The LastAvailableVersion
-     */
-    public String getLastReleaseVersion( String strArtifactId )
-    {
-
-        return DatastoreService.getDataValue( ReleaserUtils.getLastReleaseVersionDataKey( strArtifactId ), null );
-
-    }
-
-    /**
-     * set the LastAvailableVersion
-     * 
-     * set The LastAvailableVersion
-     */
-    public void setLastReleaseVersion( String strArtifactId, String strVersion )
-    {
-
-        DatastoreService.setDataValue( ReleaserUtils.getLastReleaseVersionDataKey( strArtifactId ), strVersion );
-
-    }
-
-    /**
-     * Returns the LastAvailableVersion
-     * 
-     * @return The LastAvailableVersion
-     */
-    public String getLastReleaseNextSnapshotVersion( String strArtifactId )
-    {
-
-        return DatastoreService.getDataValue( ReleaserUtils.getLastReleaseNextSnapshotVersionDataKey( strArtifactId ), null );
-
-    }
-
-    /**
-     * set the LastAvailableVersion
-     * 
-     * set The LastAvailableVersion
-     */
-    public void setLastReleaseNextSnapshotVersion( String strArtifactId, String strVersion )
-    {
-
-        DatastoreService.setDataValue( ReleaserUtils.getLastReleaseNextSnapshotVersionDataKey( strArtifactId ), strVersion );
     }
 
     @Override
@@ -190,57 +142,6 @@ public class ComponentService implements IComponentService
         _mapper = new ObjectMapper( );
         _executor = Executors.newFixedThreadPool( AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_THREAD_RELEASE_POOL_MAX_SIZE, 10 ) );
 
-    }
-
-    @Override
-    public void updateRemoteInformations( Component component )
-    {
-        String strLastReleaseVersion = ComponentService.getService( ).getLastReleaseVersion( component.getArtifactId( ) );
-        String strLastReleaseNextSnapshotVersion = ComponentService.getService( ).getLastReleaseNextSnapshotVersion( component.getArtifactId( ) );
-        if ( component.getLastAvailableVersion( ) == null )
-        {
-            component.setLastAvailableVersion( strLastReleaseVersion );
-        }
-
-        if ( component.getLastAvailableSnapshotVersion( ) == null )
-        {
-            component.setLastAvailableSnapshotVersion( strLastReleaseNextSnapshotVersion );
-        }
-
-        if ( component.getLastAvailableVersion( ) != null && strLastReleaseVersion != null )
-        {
-            try
-            {
-                Version vLastReleaseVersion = Version.parse( strLastReleaseVersion );
-                Version vLastAvailableVersion = Version.parse( component.getLastAvailableVersion( ) );
-                if ( vLastReleaseVersion.compareTo( vLastAvailableVersion ) > 0 )
-                {
-                    component.setLastAvailableVersion( strLastReleaseVersion );
-                }
-
-            }
-            catch( VersionParsingException e )
-            {
-                AppLogService.error( e );
-            }
-        }
-        if ( component.getLastAvailableSnapshotVersion( ) != null && strLastReleaseNextSnapshotVersion != null )
-        {
-            try
-            {
-                Version vLastReleaseNextSnapshotVersionVersion = Version.parse( strLastReleaseNextSnapshotVersion );
-                Version vLastAvailableSnapshotVersion = Version.parse( component.getLastAvailableSnapshotVersion( ) );
-                if ( vLastReleaseNextSnapshotVersionVersion.compareTo( vLastAvailableSnapshotVersion ) > 0 )
-                {
-                    component.setLastAvailableSnapshotVersion( strLastReleaseNextSnapshotVersion );
-                }
-
-            }
-            catch( VersionParsingException e )
-            {
-                AppLogService.error( e );
-            }
-        }
     }
 
     public Component updateComponentForReleaseBranchFrom ( Component component, String strPom )

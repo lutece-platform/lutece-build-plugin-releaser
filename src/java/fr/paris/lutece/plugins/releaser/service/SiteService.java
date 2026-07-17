@@ -298,8 +298,6 @@ public class SiteService
 
         for ( Component component : site.getComponents( ) )
         {
-            ComponentService.getService( ).updateRemoteInformations( component );
-            
             ComponentService.getService( ).updateComponentForReleaseBranchFrom(component, null);
 
             defineTargetVersion( component );
@@ -779,7 +777,6 @@ public class SiteService
                     {
                         AppLogService.error( e );
                     }
-                    ComponentService.getService( ).updateRemoteInformations( component );
                     ComponentService.getService( ).updateComponentForReleaseBranchFrom( component, null );
                     defineTargetVersion( component );
                     defineNextSnapshotVersion( component );

@@ -82,30 +82,6 @@ public class ReleaserUtils
     }
 
     /**
-     * Gets the last release version data key.
-     *
-     * @param strArtifactId
-     *            the str artifact id
-     * @return the last release version data key
-     */
-    public static String getLastReleaseVersionDataKey( String strArtifactId )
-    {
-        return ConstanteUtils.CONSTANTE_LAST_RELEASE_VERSION_PREFIX + strArtifactId;
-    }
-
-    /**
-     * Gets the last release next snapshot version data key.
-     *
-     * @param strArtifactId
-     *            the str artifact id
-     * @return the last release next snapshot version data key
-     */
-    public static String getLastReleaseNextSnapshotVersionDataKey( String strArtifactId )
-    {
-        return ConstanteUtils.CONSTANTE_LAST_RELEASE_NEXT_SNPASHOT_VERSION_PREFIX + strArtifactId;
-    }
-
-    /**
      * Gets the local path.
      *
      * @param context

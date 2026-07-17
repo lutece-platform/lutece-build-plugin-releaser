@@ -77,14 +77,6 @@ public interface IComponentService
     public Component updateComponentForReleaseBranchFrom ( Component component, String strPom );
 
     /**
-     * Update remote informations.
-     *
-     * @param component
-     *            the component
-     */
-    void updateRemoteInformations( Component component );
-
-    /**
      * Release.
      *
      * @param component
@@ -160,48 +152,6 @@ public interface IComponentService
      * @return boolean
      */
     boolean isGitComponent( Component component );
-
-    /**
-     * Returns the LastAvailableVersion.
-     *
-     * @param strArtifactId
-     *            the str artifact id
-     * @return The LastAvailableVersion
-     */
-
-    String getLastReleaseVersion( String strArtifactId );
-
-    /**
-     * set the LastAvailableVersion
-     * 
-     * set The LastAvailableVersion.
-     *
-     * @param strArtifactId
-     *            the str artifact id
-     * @param strVersion
-     *            the str version
-     */
-
-    void setLastReleaseVersion( String strArtifactId, String strVersion );
-
-    /**
-     * Returns the LastAvailableVersion.
-     *
-     * @param strArtifactId
-     *            the str artifact id
-     * @return The LastAvailableVersion
-     */
-    String getLastReleaseNextSnapshotVersion( String strArtifactId );
-
-    /**
-     * setLastReleaseNextSnapshotVersion.
-     *
-     * @param strArtifactId
-     *            the str artifact id
-     * @param strVersion
-     *            the str version
-     */
-    void setLastReleaseNextSnapshotVersion( String strArtifactId, String strVersion );
 
     /**
      * Gets the search component.

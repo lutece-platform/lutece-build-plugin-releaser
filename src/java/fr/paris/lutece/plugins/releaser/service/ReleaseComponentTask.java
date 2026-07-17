@@ -148,12 +148,8 @@ public class ReleaseComponentTask implements Runnable
                 if ( _wfContext.getComponent( ) != null )
                 {
 
-                    // Save in database the release and the next snapshot version
-                    ComponentService.getService( ).setLastReleaseVersion( _wfContext.getComponent( ).getArtifactId( ),
-                            _wfContext.getComponent( ).getTargetVersion( ) );
+                    // Reflect the release and the next snapshot version on the in-memory component
                     _wfContext.getComponent( ).setLastAvailableVersion( _wfContext.getComponent( ).getTargetVersion( ) );
-                    ComponentService.getService( ).setLastReleaseNextSnapshotVersion( _wfContext.getComponent( ).getArtifactId( ),
-                            _wfContext.getComponent( ).getNextSnapshotVersion( ) );
                     _wfContext.getComponent( ).setLastAvailableSnapshotVersion( _wfContext.getComponent( ).getNextSnapshotVersion( ) );
 
                 }
