@@ -107,7 +107,7 @@ public class Version implements Comparable
         _nMajor = nMajor;
         _nMinor = nMinor;
         _nPatch = nPatch;
-        _strQualifier = strQualifier;
+        setQualifier( strQualifier );
     }
 
     /**
@@ -191,32 +191,37 @@ public class Version implements Comparable
      */
     public void setQualifier( String strQualifier )
     {
+        _strQualifier = null;
+        _strQualifierRadix = null;
+        _nQualifierNumber = 0;
+
+        if ( strQualifier == null )
+        {
+            return;
+        }
+
         Pattern pattern = Pattern.compile( PATTERN_NUMBER );
         Matcher matcher = pattern.matcher( strQualifier );
         if ( matcher.find( ) )
         {
+            // RC / beta : cache the kind (radix, "RC"/"beta") and number for compareTo / next*,
+            // and store the qualifier with the number normalized on 2 digits ("RC-01")
             String strNumber = matcher.group( );
             _nQualifierNumber = Integer.parseInt( strNumber );
-            _strQualifierRadix = strQualifier.substring( 0, strQualifier.indexOf( strNumber ) );
+            String strRadix = strQualifier.substring( 0, strQualifier.indexOf( strNumber ) );
+            if ( strRadix.endsWith( "-" ) )
+            {
+                strRadix = strRadix.substring( 0, strRadix.length( ) - 1 );
+            }
+            _strQualifierRadix = strRadix;
+            _strQualifier = strRadix + "-" + String.format( QUALIFIER_VERSION_FORMAT, _nQualifierNumber );
         }
-        _strQualifier = strQualifier;
+        else
+        {
+            // SNAPSHOT (or any other non-numbered qualifier)
+            _strQualifier = strQualifier;
+        }
     }
-
-    public String getQualifierRadix() {
-		return _strQualifierRadix;
-	}
-
-	public void setQualifierRadix(String _strQualifierRadix) {
-		this._strQualifierRadix = _strQualifierRadix;
-	}
-
-	public int getQualifierNumber() {
-		return _nQualifierNumber;
-	}
-
-	public void setQualifierNumber(int _nQualifierNumber) {
-		this._nQualifierNumber = _nQualifierNumber;
-	}
 
 	/**
      * Compare to.
@@ -285,11 +290,7 @@ public class Version implements Comparable
         {
         	sbVersion.append( '-' ).append( _strQualifier );
         }
-        else if ( _strQualifierRadix != null )
-        {
-        	sbVersion.append( '-' ).append( _strQualifierRadix ).append( String.format( QUALIFIER_VERSION_FORMAT, _nQualifierNumber ) );
-        }
-            
+
         return sbVersion.toString( );
     }
 
@@ -333,9 +334,8 @@ public class Version implements Comparable
         		}
         		else if ( tabVersion[1].equals( QUALIFIER_BETA ) || tabVersion[1].equals(QUALIFIER_CANDIDATE))
         		{
-                    strCurrent =  tabVersion[0];  
-                    version.setQualifierRadix( tabVersion[1] + "-"); 
-                    version.setQualifierNumber( Integer.parseInt( tabVersion[2] ) );		
+                    strCurrent =  tabVersion[0];
+                    version.setQualifier( tabVersion[1] + "-" + tabVersion[2] );
         		}
                 
             }
@@ -443,7 +443,7 @@ public class Version implements Comparable
         String strQualifier = "";
         int nPatch = _nPatch;
         
-        if ( ( _strQualifierRadix != null ) && ( _strQualifierRadix.equals( QUALIFIER_CANDIDATE + "-" ) ) )
+        if ( ( _strQualifierRadix != null ) && ( _strQualifierRadix.equals( QUALIFIER_CANDIDATE ) ) )
         {
             strQualifier = String.format( QUALIFIER_CANDIDATE + "-%02d", _nQualifierNumber + 1 );
         }
@@ -469,7 +469,7 @@ public class Version implements Comparable
     	String strQualifier;
         int nPatch = _nPatch;
         
-        if ( ( _strQualifierRadix != null ) && ( _strQualifierRadix.equals( QUALIFIER_BETA + "-" ) ) )
+        if ( ( _strQualifierRadix != null ) && ( _strQualifierRadix.equals( QUALIFIER_BETA ) ) )
         {
             strQualifier = String.format( QUALIFIER_BETA + "-%02d", _nQualifierNumber + 1 );
         }
@@ -609,7 +609,7 @@ public class Version implements Comparable
     		listVersions.add( version.nextMajor( false ).getVersion( ) );
     		
     		// Add beta version only if the current version is not RC
-    		if ( version._strQualifierRadix == null || !version._strQualifierRadix.equals( QUALIFIER_CANDIDATE + '-' ) )
+    		if ( version._strQualifierRadix == null || !version._strQualifierRadix.equals( QUALIFIER_CANDIDATE ) )
     		{
     			listVersions.add( version.nextBeta( ).getVersion( ) );
     		}

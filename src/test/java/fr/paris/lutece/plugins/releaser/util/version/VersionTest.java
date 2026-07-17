@@ -77,6 +77,50 @@ public class VersionTest
         System.out.println( result.getVersion( ) );
     }
 
+    /**
+     * A qualifier built through the constructor must be represented exactly like
+     * the same qualifier obtained through parse : same displayed version, same
+     * SNAPSHOT / candidate / beta flags, and equal ordering. This guards against
+     * the constructor and parse diverging on the qualifier representation.
+     */
+    @Test
+    public void testConstructorParseConsistency( ) throws VersionParsingException
+    {
+        // Release candidate
+        Version vCandidate = new Version( 2, 2, 6, "RC-01" );
+        assertEquals( "2.2.6-RC-01", vCandidate.getVersion( ) );
+        assertTrue( vCandidate.isCandidate( ) );
+        assertFalse( vCandidate.isSnapshot( ) );
+        assertFalse( vCandidate.isBeta( ) );
+        assertEquals( 0, vCandidate.compareTo( Version.parse( "2.2.6-RC-01" ) ) );
+
+        // Beta
+        Version vBeta = new Version( 2, 2, 6, "beta-02" );
+        assertEquals( "2.2.6-beta-02", vBeta.getVersion( ) );
+        assertTrue( vBeta.isBeta( ) );
+        assertFalse( vBeta.isSnapshot( ) );
+        assertFalse( vBeta.isCandidate( ) );
+        assertEquals( 0, vBeta.compareTo( Version.parse( "2.2.6-beta-02" ) ) );
+
+        // Snapshot
+        Version vSnapshot = new Version( 2, 2, 6, "SNAPSHOT" );
+        assertEquals( "2.2.6-SNAPSHOT", vSnapshot.getVersion( ) );
+        assertTrue( vSnapshot.isSnapshot( ) );
+        assertFalse( vSnapshot.isCandidate( ) );
+        assertFalse( vSnapshot.isBeta( ) );
+
+        // Stable release
+        Version vRelease = new Version( 2, 2, 6, null );
+        assertEquals( "2.2.6", vRelease.getVersion( ) );
+        assertFalse( vRelease.isSnapshot( ) );
+        assertFalse( vRelease.isCandidate( ) );
+        assertFalse( vRelease.isBeta( ) );
+
+        // Ordering : RC > beta, and a pre-release is lower than the stable release
+        assertTrue( vCandidate.compareTo( vBeta ) > 0 );
+        assertTrue( vCandidate.compareTo( vRelease ) < 0 );
+    }
+
     @Test
     public void testGetNextReleaseVersions( )
     {
