@@ -94,9 +94,13 @@ public class GetRemoteInformationsTask implements Runnable
         {
             return;
         }
+        
         String strRepoUrl = GitUtils.getRepoUrl( _component.getScmUrl( ) );
-        String strLogin = _user.getCredential( repositoryType ).getLogin( );
-        String strPassword = _user.getCredential( repositoryType ).getPassword( );
+        
+        // No authentication in Github for getting branches list.
+        ReleaserUser.Credential credential = _user.getCredential( repositoryType );
+        String strLogin = ( credential != null ) ? credential.getLogin( ) : "";
+        String strPassword = ( credential != null ) ? credential.getPassword( ) : "";
 
         List<String> branchNameList = GitUtils.lsRemoteBranches( strRepoUrl, strLogin, strPassword );
         if ( !branchNameList.isEmpty( ) )
