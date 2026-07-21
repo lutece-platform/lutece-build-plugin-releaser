@@ -427,8 +427,10 @@ public class ComponentService implements IComponentService
             inputStream = new FileInputStream( strComponentPomPath );
             parser.parse( componentPom, inputStream );
 
+            // Accept the branch POM version too : a confirmed Git/Nexus divergence is a legitimate mismatch.
             if ( component != null && componentPom != null && component.getArtifactId( ).equals( componentPom.getArtifactId( ) )
-                    && java.util.Objects.equals( component.getLastAvailableSnapshotVersion( ), componentPom.getCurrentVersion( ) ) )
+                    && ( java.util.Objects.equals( component.getLastAvailableSnapshotVersion( ), componentPom.getCurrentVersion( ) )
+                            || java.util.Objects.equals( component.getCurrentVersion( ), componentPom.getCurrentVersion( ) ) ) )
             {
                 bError = false;
             }
