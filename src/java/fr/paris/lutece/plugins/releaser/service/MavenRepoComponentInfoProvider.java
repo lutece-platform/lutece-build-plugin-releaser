@@ -167,6 +167,9 @@ public final class MavenRepoComponentInfoProvider
                 return;
             }
 
+            // Infos bugtracker : URL de roadmap, ou commentaire informatif si projet manquant.
+            BugtrackerService.getService( ).populateBugtrackerInfo( component );
+
             component.setSnapshotVersions( listSnapshotVersions );
             component.setLastAvailableSnapshotVersion( strLastSnapshot );
             

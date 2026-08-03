@@ -106,8 +106,8 @@ public class ConstanteUtils
     /** The Constant BEAN_SVN_SERVICE. */
     public static final String BEAN_SVN_SERVICE = "releaser.svnService";
 
-    /** The Constant BEAN_JIRA_SERVICE. */
-    public static final String BEAN_JIRA_SERVICE = "releaser.jiraComponentService";
+    /** The Constant BEAN_BUGTRACKER_SERVICE. */
+    public static final String BEAN_BUGTRACKER_SERVICE = "releaser.bugtrackerService";
 
     /** The Constant BEAN_SVN_RESOURCE_SERVICE. */
     public static final String BEAN_SVN_RESOURCE_SERVICE = "releaser.cvs.svnResourceService";
@@ -187,6 +187,9 @@ public class ConstanteUtils
     /** The Constant PROPERTY_GITHUB_REPOSITORY_BASE_URL. */
     public static final String PROPERTY_GITHUB_REPOSITORY_BASE_URL = "releaser.githubRepositoryBaseUrl";
 
+    /** The Constant PROPERTY_GITHUB_REPO_API. */
+    public static final String PROPERTY_GITHUB_REPO_API = "releaser.githubRepoApi";
+
     /** The Constant PROPERTY_MERGE_BACK_BRANCHES — list of release-from branches whose result must be merged back into their master* counterpart. */
     public static final String PROPERTY_MERGE_BACK_BRANCHES = "releaser.mergeBackBranches";
 
@@ -246,8 +249,35 @@ public class ConstanteUtils
     /** The Constant PROPERTY_NB_SEARCH_ITEM_PER_PAGE_LOAD. */
     public static final String PROPERTY_NB_SEARCH_ITEM_PER_PAGE_LOAD = "releaser.nbSearchItemPerPageLoad";
 
-    /** The Constant PROPERTY_URL_JIRA_SERVICE. */
-    public static final String PROPERTY_URL_JIRA_SERVICE = "releaser.urlJiraService";
+    /** The Constant PROPERTY_URL_BUGTRACKER_SERVICE. */
+    public static final String PROPERTY_URL_BUGTRACKER_SERVICE = "releaser.bugtracker.url";
+
+    /** The Constant PROPERTY_BUGTRACKER_API_KEY. */
+    public static final String PROPERTY_BUGTRACKER_API_KEY = "releaser.bugtracker.apiKey";
+
+    /** The Constant PROPERTY_BUGTRACKER_SOURCES_CF_ID. */
+    public static final String PROPERTY_BUGTRACKER_SOURCES_CF_ID = "releaser.bugtracker.sourcesCustomFieldId";
+
+    /** The Constant PROPERTY_BUGTRACKER_PROJECTS_CACHE_TTL. */
+    public static final String PROPERTY_BUGTRACKER_PROJECTS_CACHE_TTL = "releaser.bugtracker.projectsCacheTtlMinutes";
+
+    /** The Constant PROPERTY_BUGTRACKER_ISSUE_COUNTERS_ENABLED. */
+    public static final String PROPERTY_BUGTRACKER_ISSUE_COUNTERS_ENABLED = "releaser.bugtracker.issueCountersEnabled";
+
+    /** The Constant PROPERTY_BUGTRACKER_COUNTERS_CACHE_TTL. */
+    public static final String PROPERTY_BUGTRACKER_COUNTERS_CACHE_TTL = "releaser.bugtracker.countersCacheTtlMinutes";
+
+    /** The Constant PARAMETER_CREATE_BUGTRACKER_PROJECT. */
+    public static final String PARAMETER_CREATE_BUGTRACKER_PROJECT = "create_bugtracker_project";
+
+    /** The Constant PARAMETER_BUGTRACKER_PROJECT_DESCRIPTION. */
+    public static final String PARAMETER_BUGTRACKER_PROJECT_DESCRIPTION = "bugtracker_project_description";
+
+    /** The Constant PARAMETER_BUGTRACKER_PROJECT_PUBLIC. */
+    public static final String PARAMETER_BUGTRACKER_PROJECT_PUBLIC = "bugtracker_project_public";
+
+    /** The Constant PARAMETER_SKIP_BUGTRACKER_CREATE. */
+    public static final String PARAMETER_SKIP_BUGTRACKER_CREATE = "skip_bugtracker_create";
 
     /** The Constant PROPERTY_URL_JENKINS_SERVICE. */
     public static final String PROPERTY_JENKINS_BASE_URL = "releaser.JenkinsBaseUrl";

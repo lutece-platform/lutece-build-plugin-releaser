@@ -14,7 +14,7 @@
     <bean id="releaser.MavenRepoComponentInfoProvider" class="fr.paris.lutece.plugins.releaser.service.MavenRepoComponentInfoProvider" />    
     <bean id="releaser.componentService" class="fr.paris.lutece.plugins.releaser.service.ComponentService" />
     <bean id="releaser.twitterService" class="fr.paris.lutece.plugins.releaser.service.TwitterService" />
-    <bean id="releaser.jiraComponentService" class="fr.paris.lutece.plugins.releaser.service.JiraComponentService" />
+    <bean id="releaser.bugtrackerService" class="fr.paris.lutece.plugins.releaser.service.RedmineComponentService" />
     <bean id="releaser.jenkinsService" class="fr.paris.lutece.plugins.releaser.service.JenkinsService" />
     <bean id="releaser.cvs.svnResourceService" class="fr.paris.lutece.plugins.releaser.service.svn.SvnResourceService" />
     <bean id="releaser.cvs.githubResourceService" class="fr.paris.lutece.plugins.releaser.service.github.GithubResourceService" />

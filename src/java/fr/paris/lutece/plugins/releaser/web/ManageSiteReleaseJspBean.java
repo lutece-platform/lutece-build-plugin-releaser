@@ -39,6 +39,7 @@ import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.service.ComponentService;
+import fr.paris.lutece.plugins.releaser.service.BugtrackerService;
 import fr.paris.lutece.plugins.releaser.service.SiteResourceIdService;
 import fr.paris.lutece.plugins.releaser.service.SiteService;
 import fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService;
@@ -59,6 +60,7 @@ import fr.paris.lutece.util.json.ErrorJsonResponse;
 import fr.paris.lutece.util.json.JsonResponse;
 import fr.paris.lutece.util.json.JsonUtil;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -493,6 +495,13 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
             {
                 if ( component.getArtifactId( ).equals( strArtifactId ) )
                 {
+                    // GitHub write permission : fail fast, before launching anything.
+                    String strPermissionError = ReleaserUtils.checkGithubWritePermission( component, user );
+                    if ( strPermissionError != null )
+                    {
+                        return JsonUtil.buildJsonResponse( new ErrorJsonResponse( "NO_WRITE_PERMISSION", strPermissionError ) );
+                    }
+
                     if ( ComponentService.getService( ).isReleaseBlockedByDivergence( component ) )
                     {
                         return JsonUtil.buildJsonResponse( new ErrorJsonResponse( "VERSION_DIVERGENCE_BLOCKED",
@@ -503,6 +512,16 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
                     {
                         return JsonUtil.buildJsonResponse( new ErrorJsonResponse( "VERSION_DIVERGENCE",
                                 ComponentService.getService( ).getVersionDivergenceMessage( component ) + " Forcer la release quand même ?" ) );
+                    }
+                    // Bugtracker prerequisites (the service ignores components out of the bugtracker scope).
+                    ErrorJsonResponse bugtrackerError = BugtrackerService.getService( ).prepareReleaseInBugtracker( component, bForce,
+                            Boolean.parseBoolean( request.getParameter( ConstanteUtils.PARAMETER_CREATE_BUGTRACKER_PROJECT ) ),
+                            Boolean.parseBoolean( request.getParameter( ConstanteUtils.PARAMETER_SKIP_BUGTRACKER_CREATE ) ),
+                            request.getParameter( ConstanteUtils.PARAMETER_BUGTRACKER_PROJECT_DESCRIPTION ),
+                            Boolean.parseBoolean( request.getParameter( ConstanteUtils.PARAMETER_BUGTRACKER_PROJECT_PUBLIC ) ) );
+                    if ( bugtrackerError != null )
+                    {
+                        return JsonUtil.buildJsonResponse( bugtrackerError );
                     }
                     break;
                 }
@@ -571,6 +590,37 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
             }
 
         }
+
+        // GitHub write permission : fail fast on every GitHub resource to release, before launching the batch.
+        if ( _site != null )
+        {
+            List<String> listPermissionErrors = new ArrayList<>( );
+            String strSiteError = ReleaserUtils.checkGithubWritePermission( _site, user );
+            if ( strSiteError != null )
+            {
+                listPermissionErrors.add( strSiteError );
+            }
+            if ( _site.getComponents( ) != null )
+            {
+                for ( Component component : _site.getComponents( ) )
+                {
+                    String strError = component.shouldBeReleased( ) ? ReleaserUtils.checkGithubWritePermission( component, user ) : null;
+                    if ( strError != null && !listPermissionErrors.contains( strError ) )
+                    {
+                        listPermissionErrors.add( strError );
+                    }
+                }
+            }
+            if ( !listPermissionErrors.isEmpty( ) )
+            {
+                for ( String strError : listPermissionErrors )
+                {
+                    addError( strError );
+                }
+                return redirectView( request, VIEW_CONFIRM_RELEASE_SITE );
+            }
+        }
+
         _mapReleaseSiteContext = SiteService.releaseSite( _site, getLocale( ), getUser( ), request );
 
         return redirectView( request, VIEW_RELEASE_SITE_RESULT );

@@ -45,6 +45,7 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.artifact.versioning.ComparableVersion;
 
+import fr.paris.lutece.plugins.releaser.business.IReleaserResource;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.Site;
@@ -545,6 +546,44 @@ public class ReleaserUtils
         return strBranchReleaseFrom;
     }
     
+    /**
+     * Checks that the user credentials grant the GitHub write (push) permission required to release a resource.
+     * Only applies to GitHub resources : returns null for the other repository types.
+     *
+     * @param resource
+     *            the resource to release (site or component)
+     * @param user
+     *            the releaser user holding the session credentials
+     * @return an error message to send back to the user, or null if the release can proceed
+     */
+    public static String checkGithubWritePermission( IReleaserResource resource, ReleaserUser user )
+    {
+        if ( !RepositoryType.GITHUB.equals( resource.getRepoType( ) ) )
+        {
+            return null;
+        }
+
+        // The permission check is blocking : a missing configuration must be reported, not mistaken for a permission denial.
+        if ( StringUtils.isBlank( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_REPO_API ) ) )
+        {
+            AppLogService.error( "Releaser : the property " + ConstanteUtils.PROPERTY_GITHUB_REPO_API
+                    + " is missing or empty : unable to check the GitHub write permission." );
+            return "La vérification des droits d'écriture GitHub est mal configurée (propriété " + ConstanteUtils.PROPERTY_GITHUB_REPO_API
+                    + " absente ou vide) : release impossible. Contactez l'administrateur.";
+        }
+
+        String strFullName = GitUtils.getRepoFullName( resource.getScmUrl( ) );
+        ReleaserUser.Credential credential = ( user != null ) ? user.getCredential( RepositoryType.GITHUB ) : null;
+
+        if ( credential == null || !GitUtils.hasWritePermission( strFullName, credential.getLogin( ), credential.getPassword( ) ) )
+        {
+            return "Vous n'avez pas les droits d'écriture sur le repo GitHub " + strFullName
+                    + " : release impossible. Vérifiez votre compte et votre token GitHub.";
+        }
+
+        return null;
+    }
+
     public static boolean IsVersionInRightFormat( String strVersion )
     {   
 		String [ ] tabVer = strVersion.split( "\\." );

@@ -16,7 +16,7 @@
         <componentName>releaser</componentName>
         <jiraProjectName>RELEASER</jiraProjectName>
         <jiraComponentId />
-        <jiraVersion>3.0.0</jiraVersion>
+        <redmineVersion>4.0.0.rc1</redmineVersion>
     </properties>
  
     <repositories>
@@ -29,10 +29,6 @@
          <repository>
              <id>jgit-repository</id>
              <url>https://repo.eclipse.org/content/groups/releases/</url>
-        </repository>
-        <repository>
-                <id>atlassian-public-repository2</id>
-                <url>https://packages.atlassian.com/mvn/maven-atlassian-external/</url>
         </repository>
    </repositories>
     <dependencies>
@@ -89,23 +85,13 @@
              <version>[3.1.0,3.1.3)</version>
              <type>lutece-plugin</type>
         </dependency>
-	<!-- Jira -->
-	<!-- https://mvnrepository.com/artifact/com.atlassian.fugue/fugue -->
-	<dependency>
-	    <groupId>com.atlassian.fugue</groupId>
-	    <artifactId>fugue</artifactId>
-	    <version>2.2.1</version>
-    </dependency>
-
-	
-	
+		<!-- Redmine (bugtracker) -->
 		<dependency>
-			<groupId>com.atlassian.jira</groupId>
-			<artifactId>jira-rest-java-client-core</artifactId>
-			<version>${jiraVersion}</version>
+			<groupId>com.taskadapter</groupId>
+			<artifactId>redmine-java-api</artifactId>
+			<version>${redmineVersion}</version>
 		</dependency>
-		
-	       
+
     </dependencies>
     <build>
         <plugins>

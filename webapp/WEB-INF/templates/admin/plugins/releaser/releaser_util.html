@@ -57,6 +57,98 @@
 </#macro>
 
 
+<#macro releaseComments comments maxLength=110 >
+	<#list comments as strComment>
+		<div class="release-comment">
+			<i class="fa fa-info-circle text-info"></i>
+			<#if strComment?length gt maxLength>
+				${strComment[0..*maxLength]}&hellip;
+				<a href="#" class="release-comment-more" data-toggle="modal" data-target="#modalReleaseComment" data-comment="${strComment?html}" title="Afficher le message complet"><i class="fa fa-search-plus"></i></a>
+			<#else>
+				${strComment}
+			</#if>
+		</div>
+	</#list>
+</#macro>
+
+
+<#macro releaseCommentModal >
+<div class="modal fade" id="modalReleaseComment" tabindex="-1" role="dialog" aria-labelledby="modalReleaseCommentLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="modalReleaseCommentLabel"><i class="fa fa-info-circle text-info"></i> Information</h4>
+      </div>
+      <div class="modal-body">
+        <p id="release_comment_full"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+$( function(){
+    $(document).on( "click", ".release-comment-more", function( e ){
+        e.preventDefault();
+        $("#release_comment_full").text( $(this).data("comment") );
+    });
+});
+</script>
+</#macro>
+
+
+<#macro modalBugtrackerDown suffix='' >
+<div class="modal fade" id="modalBugtrackerDown${suffix}" tabindex="-1" role="dialog" aria-labelledby="modalBugtrackerDown${suffix}Label">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="modalBugtrackerDown${suffix}Label"><i class="fa fa-exclamation-triangle text-danger"></i> Bugtracker Redmine injoignable</h4>
+      </div>
+      <div class="modal-body">
+        <p id="bugtracker_down_message${suffix}"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Annuler</button>
+        <button type="button" id="btn-continue-bugtracker-down${suffix}" class="button transition small fill-orange">Continuer sans Redmine</button>
+      </div>
+    </div>
+  </div>
+</div>
+</#macro>
+
+
+<#macro modalCreateBugtrackerProject suffix='' >
+<div class="modal fade" id="modalCreateBugtrackerProject${suffix}" tabindex="-1" role="dialog" aria-labelledby="modalCreateBugtrackerProject${suffix}Label">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="modalCreateBugtrackerProject${suffix}Label"><i class="fa fa-plus-circle text-info"></i> Cr&eacute;ation du projet Redmine</h4>
+      </div>
+      <div class="modal-body">
+        <p id="create_bugtracker_message${suffix}"></p>
+        <div class="form-group">
+          <label for="bugtracker_project_description${suffix}">Description du projet</label>
+          <textarea id="bugtracker_project_description${suffix}" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="checkbox">
+          <label><input type="checkbox" id="bugtracker_project_public${suffix}" checked> Projet public</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Annuler</button>
+        <button type="button" id="btn-create-bugtracker-project${suffix}" class="button transition small fill-blue">Cr&eacute;er le projet et releaser</button>
+      </div>
+    </div>
+  </div>
+</div>
+</#macro>
+
+
 <#macro formAuthCredential type >
 	 <fieldset>
                 <legend><i class="fa fa-handshake-o"></i> #i18n{releaser.manage_clusters.modalAuthLegend${type.name()}}</legend>

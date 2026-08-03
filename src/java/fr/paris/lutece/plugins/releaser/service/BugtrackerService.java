@@ -33,28 +33,38 @@
  */
 package fr.paris.lutece.plugins.releaser.service;
 
-import fr.paris.lutece.plugins.releaser.business.Component;
-import fr.paris.lutece.plugins.releaser.util.CommandResult;
+import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
+import fr.paris.lutece.portal.service.spring.SpringContextService;
 
 /**
- * IJiraService.
+ * Access point to the bugtracker service : returns the implementation configured in the Spring context.
  */
-public interface IJiraService
+public final class BugtrackerService
 {
 
-    /**
-     * Inits the.
-     */
-    public abstract void init( );
+    /** The instance. */
+    private static IBugtrackerService _instance;
+
+    private BugtrackerService( )
+    {
+    }
 
     /**
-     * Update component versions.
+     * Gets the service.
      *
-     * @param component
-     *            comment
-     * @param commandResult
-     *            commandResult
+     * @return the service
      */
-    public abstract void updateComponentVersions( Component component, CommandResult commandResult );
+    public static synchronized IBugtrackerService getService( )
+    {
+        if ( _instance == null )
+        {
+            // Local variable so a failed init leaves _instance null (retried on next call) and
+            // no thread can ever see a not-yet-initialized instance.
+            IBugtrackerService instance = SpringContextService.getBean( ConstanteUtils.BEAN_BUGTRACKER_SERVICE );
+            instance.init( );
+            _instance = instance;
+        }
 
+        return _instance;
+    }
 }

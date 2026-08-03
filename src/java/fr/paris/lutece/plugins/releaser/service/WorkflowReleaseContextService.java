@@ -758,23 +758,23 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     }
 
     /**
-     * Update jira versions.
+     * Update bugtracker versions.
      *
      * @param context
      *            the context
      * @param locale
      *            the locale
      */
-    public void updateJiraVersions( WorkflowReleaseContext context, Locale locale )
+    public void updateBugtrackerVersions( WorkflowReleaseContext context, Locale locale )
     {
 
         CommandResult commandResult = context.getCommandResult( );
 
-        ReleaserUtils.logStartAction( context, " Update Jira Versions" );
+        ReleaserUtils.logStartAction( context, " Update Bugtracker Versions" );
 
-        JiraComponentService.getService( ).updateComponentVersions( context.getComponent( ), commandResult );
+        BugtrackerService.getService( ).updateComponentVersions( context.getComponent( ), commandResult );
 
-        ReleaserUtils.logEndAction( context, " Update Jira Versions" );
+        ReleaserUtils.logEndAction( context, " Update Bugtracker Versions" );
 
     }
 

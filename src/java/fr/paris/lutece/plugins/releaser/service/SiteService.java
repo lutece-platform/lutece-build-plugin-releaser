@@ -519,6 +519,9 @@ public class SiteService
             return;
         }
 
+        // Infos bugtracker : URL de roadmap, ou commentaire informatif si projet manquant (re-posé après chaque reset).
+        BugtrackerService.getService( ).populateBugtrackerInfo( component );
+
         // Check if currentVersion matches the last available snapshot for this major
         if ( component.isSnapshotVersion( ) && !component.getCurrentVersion( ).equals( component.getLastAvailableSnapshotVersion( ) ) )
         {

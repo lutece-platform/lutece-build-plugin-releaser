@@ -1,3 +1,4 @@
+<#include "releaser_util.html" />
 <section class="content-header">
     <h1>
         <a href="jsp/admin/plugins/releaser/ManageClusters.jsp" title="#i18n{releaser.adminFeature.ManageReleaser.name}">#i18n{releaser.adminFeature.ManageReleaser.name}</a>
@@ -33,7 +34,7 @@
                                   <th>Artifact</th>
                                   <th>Infos Release</th>				  
 					  			  <th>Branche à releaser</th>
-                                  <th><i class="fa fa-bug"></i> JIRA</th>
+                                  <th><i class="fa fa-bug"></i> Redmine</th>
                                   <th>Version</th>
                                   <th>Version cible</th>
                                   <th>Prochaine version</th>
@@ -49,9 +50,7 @@
                                     <strong> ${component.name!} - <span id="name-${component.artifactId!}">${component.artifactId!}</span></strong>
                                 </td>
                                 <td id="info-${component.artifactId!}">
-                                    <#if component.releaseComment! !=''>
-                                        <i class="fa fa-info-circle text-info"></i> ${component.releaseComment!''}
-                                    </#if>
+                                    <@releaseComments comments=component.releaseComments />
                                     <div id="progress-wrapper-${component.artifactId!}" class="progress-wrapper">
                                         <div class="progress progress-xs progress-striped active">
                                             <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
@@ -86,14 +85,19 @@
 								</td>
                                 
                                 <td>
-                                    <a href="${component.jiraRoadmapUrl!}">
-                                        <span class="label label-success">${component.jiraCurrentVersionClosedIssues}</span>
-                                        <#if component.jiraCurrentVersionOpenedIssues = 0 >
-                                            <span class="label label-success">${component.jiraCurrentVersionOpenedIssues}</span>
-                                        <#else>
-                                            <span class="label label-danger">${component.jiraCurrentVersionOpenedIssues}</span>
+                                    <#if component.bugtrackerRoadmapUrl?has_content>
+                                    <a href="${component.bugtrackerRoadmapUrl}" target="_blank" title="Roadmap Redmine">
+                                        Roadmap
+                                        <#if component.bugtrackerCurrentVersionClosedIssues gte 0>
+                                            <span class="label label-success">${component.bugtrackerCurrentVersionClosedIssues}</span>
+                                            <#if component.bugtrackerCurrentVersionOpenedIssues = 0 >
+                                                <span class="label label-success">${component.bugtrackerCurrentVersionOpenedIssues}</span>
+                                            <#else>
+                                                <span class="label label-danger">${component.bugtrackerCurrentVersionOpenedIssues}</span>
+                                            </#if>
                                         </#if>
                                     </a>
+                                    </#if>
                                 </td>
                                 <td>
                                     <strong class="button transition fill-lightblue small">${component.currentVersion!}</strong>
@@ -177,6 +181,10 @@
     </div>
   </div>
 </div>
+
+<@modalBugtrackerDown />
+<@modalCreateBugtrackerProject />
+<@releaseCommentModal />
 <!-- <script src="js/plugins/releaser/notify.min.js" type="text/javascript"></script> -->
 <link href="js/jquery/plugins/toastr/toastr.min.css" rel="stylesheet">
 <script src="js/jquery/plugins/toastr/toastr.min.js"></script>       
@@ -185,7 +193,7 @@
 var artifactIdInProgress;
 var pendingForceArtifactId;
 
-function launchRelease( artifactId, force ) {
+function launchRelease( artifactId, force, bugtracker ) {
     $("#console_wf_log").html(" ");
     $("#btn-upgrade-version-"+artifactId).hide();
     var progressId="#progress-wrapper-" + artifactId;
@@ -197,6 +205,14 @@ function launchRelease( artifactId, force ) {
             tweet_message: $("#tweet_message_"+artifactId).val(),
             force: force
     };
+    if ( bugtracker && bugtracker.create ) {
+        params.create_bugtracker_project = true;
+        params.bugtracker_project_description = bugtracker.description;
+        params.bugtracker_project_public = bugtracker.isPublic;
+    }
+    if ( bugtracker && bugtracker.skip ) {
+        params.skip_bugtracker_create = true;
+    }
     $.ajax({
         url: "jsp/admin/plugins/releaser/ReleaseComponentJson.jsp?action=releaseComponent",
         type: "GET",
@@ -212,6 +228,22 @@ function launchRelease( artifactId, force ) {
                 pendingForceArtifactId = artifactId;
                 $("#version_divergence_message").text( data.message );
                 $("#modalVersionDivergence").modal("show");
+            }
+            else if ( data.status == 'ERROR' && data.errorCode == 'BUGTRACKER_DOWN' ) {
+                $( progressId ).hide();
+                pendingForceArtifactId = artifactId;
+                $("#bugtracker_down_message").text( data.message );
+                $("#modalBugtrackerDown").modal("show");
+            }
+            else if ( data.status == 'ERROR' && data.errorCode == 'NO_BUGTRACKER_PROJECT' ) {
+                $( progressId ).hide();
+                pendingForceArtifactId = artifactId;
+                $("#create_bugtracker_message").text( data.message );
+                $("#modalCreateBugtrackerProject").modal("show");
+            }
+            else if ( data.status == 'ERROR' && data.errorCode == 'BUGTRACKER_CREATE_FAILED' ) {
+                toastr["warning"]( data.message, "Redmine" );
+                launchRelease( artifactId, true, { skip: true } );
             }
             else if ( data.status == 'ERROR' ) {
                 $( progressId ).hide();
@@ -242,6 +274,24 @@ $( function(){
         $("#modalVersionDivergence").modal("hide");
         if ( pendingForceArtifactId ) {
             launchRelease( pendingForceArtifactId, true );
+        }
+    });
+
+    $("#btn-continue-bugtracker-down").click( function(){
+        $("#modalBugtrackerDown").modal("hide");
+        if ( pendingForceArtifactId ) {
+            launchRelease( pendingForceArtifactId, true );
+        }
+    });
+
+    $("#btn-create-bugtracker-project").click( function(){
+        $("#modalCreateBugtrackerProject").modal("hide");
+        if ( pendingForceArtifactId ) {
+            launchRelease( pendingForceArtifactId, true, {
+                create: true,
+                description: $("#bugtracker_project_description").val(),
+                isPublic: $("#bugtracker_project_public").is(":checked")
+            });
         }
     });
 });

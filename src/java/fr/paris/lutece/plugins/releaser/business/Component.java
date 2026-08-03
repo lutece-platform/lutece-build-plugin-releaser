@@ -84,17 +84,14 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /** The b is project. */
     private boolean _bIsProject;
 
-    /** The str jira code. */
-    private String _strJiraCode;
+    /** The str bugtracker roadmap url. */
+    private String _strBugtrackerRoadmapUrl;
 
-    /** The str jira roadmap url. */
-    private String _strJiraRoadmapUrl;
+    /** The n bugtracker current version closed issues (-1 = unknown). */
+    private int _nBugtrackerCurrentVersionClosedIssues = -1;
 
-    /** The n jira current version closed issues. */
-    private int _nJiraCurrentVersionClosedIssues;
-
-    /** The n jira current version opened issues. */
-    private int _nJiraCurrentVersionOpenedIssues;
+    /** The n bugtracker current version opened issues (-1 = unknown). */
+    private int _nBugtrackerCurrentVersionOpenedIssues = -1;
 
     /** The list target versions. */
     private List<String> _listTargetVersions;
@@ -318,87 +315,66 @@ public class Component extends AbstractReleaserResource implements RBACResource
     }
 
     /**
-     * Returns the JiraCode.
+     * Returns the BugtrackerRoadmapUrl.
      *
-     * @return The JiraCode
+     * @return The BugtrackerRoadmapUrl
      */
-    public String getJiraCode( )
+    public String getBugtrackerRoadmapUrl( )
     {
-        return _strJiraCode;
+        return _strBugtrackerRoadmapUrl;
     }
 
     /**
-     * Sets the JiraCode.
+     * Sets the BugtrackerRoadmapUrl.
      *
-     * @param strJiraCode
-     *            The JiraCode
+     * @param strBugtrackerRoadmapUrl
+     *            The BugtrackerRoadmapUrl
      */
-    public void setJiraCode( String strJiraCode )
+    public void setBugtrackerRoadmapUrl( String strBugtrackerRoadmapUrl )
     {
-        _strJiraCode = strJiraCode;
+        _strBugtrackerRoadmapUrl = strBugtrackerRoadmapUrl;
     }
 
     /**
-     * Returns the JiraRoadmapUrl.
+     * Returns the BugtrackerCurrentVersionClosedIssues.
      *
-     * @return The JiraRoadmapUrl
+     * @return The BugtrackerCurrentVersionClosedIssues
      */
-    public String getJiraRoadmapUrl( )
+    public int getBugtrackerCurrentVersionClosedIssues( )
     {
-        return _strJiraRoadmapUrl;
+        return _nBugtrackerCurrentVersionClosedIssues;
     }
 
     /**
-     * Sets the JiraRoadmapUrl.
+     * Sets the BugtrackerCurrentVersionClosedIssues.
      *
-     * @param strJiraRoadmapUrl
-     *            The JiraRoadmapUrl
+     * @param nBugtrackerCurrentVersionClosedIssues
+     *            The BugtrackerCurrentVersionClosedIssues
      */
-    public void setJiraRoadmapUrl( String strJiraRoadmapUrl )
+    public void setBugtrackerCurrentVersionClosedIssues( int nBugtrackerCurrentVersionClosedIssues )
     {
-        _strJiraRoadmapUrl = strJiraRoadmapUrl;
+        _nBugtrackerCurrentVersionClosedIssues = nBugtrackerCurrentVersionClosedIssues;
     }
 
     /**
-     * Returns the JiraCurrentVersionClosedIssues.
+     * Returns the BugtrackerCurrentVersionOpenedIssues.
      *
-     * @return The JiraCurrentVersionClosedIssues
+     * @return The BugtrackerCurrentVersionOpenedIssues
      */
-    public int getJiraCurrentVersionClosedIssues( )
+    public int getBugtrackerCurrentVersionOpenedIssues( )
     {
-        return _nJiraCurrentVersionClosedIssues;
+        return _nBugtrackerCurrentVersionOpenedIssues;
     }
 
     /**
-     * Sets the JiraCurrentVersionClosedIssues.
+     * Sets the BugtrackerCurrentVersionOpenedIssues.
      *
-     * @param nJiraCurrentVersionClosedIssues
-     *            The JiraCurrentVersionClosedIssues
+     * @param nBugtrackerCurrentVersionOpenedIssues
+     *            The BugtrackerCurrentVersionOpenedIssues
      */
-    public void setJiraCurrentVersionClosedIssues( int nJiraCurrentVersionClosedIssues )
+    public void setBugtrackerCurrentVersionOpenedIssues( int nBugtrackerCurrentVersionOpenedIssues )
     {
-        _nJiraCurrentVersionClosedIssues = nJiraCurrentVersionClosedIssues;
-    }
-
-    /**
-     * Returns the JiraCurrentVersionOpenedIssues.
-     *
-     * @return The JiraCurrentVersionOpenedIssues
-     */
-    public int getJiraCurrentVersionOpenedIssues( )
-    {
-        return _nJiraCurrentVersionOpenedIssues;
-    }
-
-    /**
-     * Sets the JiraCurrentVersionOpenedIssues.
-     *
-     * @param nJiraCurrentVersionOpenedIssues
-     *            The JiraCurrentVersionOpenedIssues
-     */
-    public void setJiraCurrentVersionOpenedIssues( int nJiraCurrentVersionOpenedIssues )
-    {
-        _nJiraCurrentVersionOpenedIssues = nJiraCurrentVersionOpenedIssues;
+        _nBugtrackerCurrentVersionOpenedIssues = nBugtrackerCurrentVersionOpenedIssues;
     }
 
     /**

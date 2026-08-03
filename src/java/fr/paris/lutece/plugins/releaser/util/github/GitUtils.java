@@ -76,6 +76,8 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.portal.service.util.AppLogService;
@@ -787,6 +789,62 @@ public class GitUtils
 
         return strRepoUrl;
 
+    }
+
+    /**
+     * Extracts the "owner/repo" full name from a repository URL (scm:git: prefix, .git suffix and trailing slash accepted).
+     *
+     * @param strRepoUrl
+     *            the repository URL
+     * @return the full name, or null if it cannot be extracted
+     */
+    public static String getRepoFullName( String strRepoUrl )
+    {
+        String strUrl = getRepoUrl( strRepoUrl );
+
+        if ( StringUtils.isBlank( strUrl ) )
+        {
+            return null;
+        }
+        strUrl = StringUtils.removeEnd( StringUtils.removeEnd( strUrl.trim( ), "/" ), ".git" );
+        String [ ] tabSegments = strUrl.split( "/" );
+
+        return ( tabSegments.length >= 2 ) ? tabSegments [tabSegments.length - 2] + "/" + tabSegments [tabSegments.length - 1] : null;
+    }
+
+    /**
+     * Checks that the given credentials grant push (write) permission on a GitHub repository.
+     *
+     * @param strFullName
+     *            the repository full name (owner/repo)
+     * @param strUserName
+     *            the GitHub login
+     * @param strPassword
+     *            the GitHub token
+     * @return true if the authenticated user can push to the repository
+     */
+    public static boolean hasWritePermission( String strFullName, String strUserName, String strPassword )
+    {
+        if ( StringUtils.isBlank( strFullName ) || StringUtils.isBlank( strUserName ) || StringUtils.isBlank( strPassword ) )
+        {
+            return false;
+        }
+
+        String strUrl = MessageFormat.format( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_REPO_API ), strFullName );
+
+        try
+        {
+            HttpAccess httpAccess = new HttpAccess( );
+            String strResponse = httpAccess.doGet( strUrl, new BasicAuthorizationAuthenticator( strUserName, strPassword ), null );
+
+            return new ObjectMapper( ).readTree( strResponse ).path( "permissions" ).path( "push" ).asBoolean( false );
+        }
+        catch( Exception ex )
+        {
+            // 401 (invalid token), 404 (no access) or unexpected payload : no write permission.
+            AppLogService.info( "Releaser : unable to verify GitHub write permission on " + strFullName + " : " + ex.getMessage( ) );
+            return false;
+        }
     }
 
     /**

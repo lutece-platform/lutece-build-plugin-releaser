@@ -179,14 +179,14 @@ public interface IWorkflowReleaseContextService
     void sendTweet( WorkflowReleaseContext context, Locale locale );
 
     /**
-     * Update jira versions.
+     * Update bugtracker versions.
      *
      * @param context
      *            the context
      * @param locale
      *            the locale
      */
-    void updateJiraVersions( WorkflowReleaseContext context, Locale locale );
+    void updateBugtrackerVersions( WorkflowReleaseContext context, Locale locale );
 
     /**
      * Start release in progress.

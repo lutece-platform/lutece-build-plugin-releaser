@@ -43,6 +43,7 @@ import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.service.ComponentService;
+import fr.paris.lutece.plugins.releaser.service.BugtrackerService;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
@@ -257,6 +258,14 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
             {
                 if ( component.getArtifactId( ) != null && component.getArtifactId( ).equals( strArtifactId ) )
                 {
+                    // GitHub write permission : fail fast, before launching anything.
+                    String strPermissionError = ReleaserUtils.checkGithubWritePermission( component,
+                            ReleaserUtils.getReleaserUser( request, getLocale( ) ) );
+                    if ( strPermissionError != null )
+                    {
+                        return JsonUtil.buildJsonResponse( new ErrorJsonResponse( "NO_WRITE_PERMISSION", strPermissionError ) );
+                    }
+
                     // Git/Nexus version divergence : blocked on merge-back branches, released on confirmation otherwise.
                     if ( ComponentService.getService( ).isReleaseBlockedByDivergence( component ) )
                     {
@@ -268,6 +277,17 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
                     {
                         return JsonUtil.buildJsonResponse( new ErrorJsonResponse( "VERSION_DIVERGENCE",
                                 ComponentService.getService( ).getVersionDivergenceMessage( component ) + " Forcer la release quand même ?" ) );
+                    }
+
+                    // Bugtracker prerequisites (the service ignores components out of the bugtracker scope).
+                    ErrorJsonResponse bugtrackerError = BugtrackerService.getService( ).prepareReleaseInBugtracker( component, bForce,
+                            Boolean.parseBoolean( request.getParameter( ConstanteUtils.PARAMETER_CREATE_BUGTRACKER_PROJECT ) ),
+                            Boolean.parseBoolean( request.getParameter( ConstanteUtils.PARAMETER_SKIP_BUGTRACKER_CREATE ) ),
+                            request.getParameter( ConstanteUtils.PARAMETER_BUGTRACKER_PROJECT_DESCRIPTION ),
+                            Boolean.parseBoolean( request.getParameter( ConstanteUtils.PARAMETER_BUGTRACKER_PROJECT_PUBLIC ) ) );
+                    if ( bugtrackerError != null )
+                    {
+                        return JsonUtil.buildJsonResponse( bugtrackerError );
                     }
 
                     component.setTweetMessage( strTweetMessage );

@@ -12,9 +12,7 @@
 
 
 <span class="info-box-number">
-					  <#if site.releaseComment! !=''>
-							<i class="fa fa-info-circle text-info"></i> ${site.releaseComment!''}
-						</#if>
+					  <@releaseComments comments=site.releaseComments />
 					</span>		 
 
 	<div class="app-wrapper app-cluster">
@@ -77,7 +75,7 @@
 					  <th>Artifact</th>
 					  <th>Infos Release</th>					  
 					  <th>Branche à releaser</th>
-					  <th><i class="fa fa-bug"></i> JIRA</th>
+					  <th><i class="fa fa-bug"></i> Redmine</th>
 					  <th>Version</th>
 					  <th>Version cible</th>
 					  <th>Prochaine version</th>
@@ -92,9 +90,7 @@
 						<strong id="name-${component.artifactId!}">${component.artifactId!}</strong>
 					</td>
 					<td id="info-${component.artifactId!}">
-						<#if component.releaseComment! !=''>
-							<i class="fa fa-info-circle text-info"></i> ${component.releaseComment!''}
-						</#if>
+						<@releaseComments comments=component.releaseComments />
 						<div id="progress-wrapper-${component.artifactId!}" class="progress-wrapper clearfix">
 							<div class="progress progress-xs progress-striped active">
 								<div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
@@ -128,14 +124,19 @@
                         </#if>
 					</td>
 					<td>
-						<a href="${component.jiraRoadmapUrl!}">
-							<span class="label label-success">${component.jiraCurrentVersionClosedIssues}</span>
-							<#if component.jiraCurrentVersionOpenedIssues = 0 >
-								<span class="label label-success">${component.jiraCurrentVersionOpenedIssues}</span>
-							<#else>
-								<span class="label label-danger">${component.jiraCurrentVersionOpenedIssues}</span>
+						<#if component.bugtrackerRoadmapUrl?has_content>
+						<a href="${component.bugtrackerRoadmapUrl}" target="_blank" title="Roadmap Redmine">
+							Roadmap
+							<#if component.bugtrackerCurrentVersionClosedIssues gte 0>
+								<span class="label label-success">${component.bugtrackerCurrentVersionClosedIssues}</span>
+								<#if component.bugtrackerCurrentVersionOpenedIssues = 0 >
+									<span class="label label-success">${component.bugtrackerCurrentVersionOpenedIssues}</span>
+								<#else>
+									<span class="label label-danger">${component.bugtrackerCurrentVersionOpenedIssues}</span>
+								</#if>
 							</#if>
 						</a>
+						</#if>
                     </td>
 					<td>
                         <strong class="button transition fill-lightblue small">${component.currentVersion}</strong>
@@ -208,7 +209,7 @@
 					<tr>
 					  <th>Artifact</th>
 					  <th>Infos Release</th>
-					  <th><i class="fa fa-bug"></i> JIRA</th>
+					  <th><i class="fa fa-bug"></i> Redmine</th>
 					  <th>Version</th>
 					  <th>Version cible</th>
 					  <th>Prochaine version</th>
@@ -223,20 +224,22 @@
 						  <strong>${component.artifactId!}</strong>
 						</td> 
 						<td>
-						  <#if component.releaseComment! !=''>
-							<i class="fa fa-info-circle text-info"></i> ${component.releaseComment!''}
-						  </#if>
+						  <@releaseComments comments=component.releaseComments />
 						</td> 
 						<td>
-							JIRA
-							<a href="${component.jiraRoadmapUrl!}">
-							  <span class="label label-success">${component.jiraCurrentVersionClosedIssues!}</span>
-							  <#if component.jiraCurrentVersionOpenedIssues = 0 >
-								<span class="label label-success">${component.jiraCurrentVersionOpenedIssues!}</span>
-							  <#else>
-								<span class="label label-danger">${component.jiraCurrentVersionOpenedIssues!}</span>
+						  <#if component.bugtrackerRoadmapUrl?has_content>
+							<a href="${component.bugtrackerRoadmapUrl}" target="_blank" title="Roadmap Redmine">
+							  Roadmap
+							  <#if component.bugtrackerCurrentVersionClosedIssues gte 0>
+								<span class="label label-success">${component.bugtrackerCurrentVersionClosedIssues!}</span>
+								<#if component.bugtrackerCurrentVersionOpenedIssues = 0 >
+								  <span class="label label-success">${component.bugtrackerCurrentVersionOpenedIssues!}</span>
+								<#else>
+								  <span class="label label-danger">${component.bugtrackerCurrentVersionOpenedIssues!}</span>
+								</#if>
 							  </#if>
 							 </a>
+						  </#if>
 						</td>
 						<td>
 							<strong class="button transition fill-lightblue small">${component.currentVersion!}</strong>
@@ -381,6 +384,9 @@
     </div>
   </div>
 </div>
+<@modalBugtrackerDown suffix='Site' />
+<@modalCreateBugtrackerProject suffix='Site' />
+<@releaseCommentModal />
 <@modalAuth modId="modalReleaseSVN" type=repo_type_svn formActionUrl="jsp/admin/plugins/releaser/ManageClusters.jsp" formSubmitName="action_releaseSite"   />
 <@modalAuth modId="modalReleaseGITLAB" type=repo_type_gitlab formActionUrl="jsp/admin/plugins/releaser/ManageClusters.jsp" formSubmitName="action_releaseSite" />
 <@modalAuth modId="modalReleaseGITHUB" type=repo_type_github formActionUrl="jsp/admin/plugins/releaser/ManageClusters.jsp" formSubmitName="action_releaseSite"  />
@@ -440,6 +446,24 @@ var artifactIdInProgress;
                 releaseComponent( pendingDivergenceForm, pendingDivergenceArtifactId, true );
             }
         });
+
+        $("#btn-continue-bugtracker-downSite").click( function(){
+            $("#modalBugtrackerDownSite").modal("hide");
+            if ( pendingDivergenceForm ) {
+                releaseComponent( pendingDivergenceForm, pendingDivergenceArtifactId, true );
+            }
+        });
+
+        $("#btn-create-bugtracker-projectSite").click( function(){
+            $("#modalCreateBugtrackerProjectSite").modal("hide");
+            if ( pendingDivergenceForm ) {
+                releaseComponent( pendingDivergenceForm, pendingDivergenceArtifactId, true, {
+                    create: true,
+                    description: $("#bugtracker_project_descriptionSite").val(),
+                    isPublic: $("#bugtracker_project_publicSite").is(":checked")
+                });
+            }
+        });
         
         
 		
@@ -451,19 +475,27 @@ var artifactIdInProgress;
     var pendingDivergenceForm;
     var pendingDivergenceArtifactId;
 
-    function releaseComponent(form,artifactId,force)
+    function releaseComponent(form,artifactId,force,bugtracker)
 
     {
-    
+
         $("#console_wf_log").html(" ");
         $("#btn-upgrade-version-"+artifactId).hide();
 			var progressId="#progress-wrapper-" + artifactId;
 		     $( progressId ).toggle();
-		     
+
 		    var post_url = form.attr("action"); //get form action url
 			var request_method = form.attr("method"); //get form GET/POST method
 			var form_data = form.serialize()
 			+ '&action=releaseComponent&force=' + (force ? 'true' : 'false');
+			if ( bugtracker && bugtracker.create ) {
+				form_data += '&create_bugtracker_project=true'
+				+ '&bugtracker_project_description=' + encodeURIComponent( bugtracker.description )
+				+ '&bugtracker_project_public=' + (bugtracker.isPublic ? 'true' : 'false');
+			}
+			if ( bugtracker && bugtracker.skip ) {
+				form_data += '&skip_bugtracker_create=true';
+			}
 			$.ajax({
 				url: post_url,
 				type: request_method,
@@ -479,6 +511,21 @@ var artifactIdInProgress;
 						pendingDivergenceArtifactId = artifactId;
 						$("#site_version_divergence_message").text( data.message );
 						$("#modalVersionDivergenceSite").modal("show");
+					} else if ( data.status == 'ERROR' && data.errorCode == 'BUGTRACKER_DOWN' ) {
+						$( progressId ).hide();
+						pendingDivergenceForm = form;
+						pendingDivergenceArtifactId = artifactId;
+						$("#bugtracker_down_messageSite").text( data.message );
+						$("#modalBugtrackerDownSite").modal("show");
+					} else if ( data.status == 'ERROR' && data.errorCode == 'NO_BUGTRACKER_PROJECT' ) {
+						$( progressId ).hide();
+						pendingDivergenceForm = form;
+						pendingDivergenceArtifactId = artifactId;
+						$("#create_bugtracker_messageSite").text( data.message );
+						$("#modalCreateBugtrackerProjectSite").modal("show");
+					} else if ( data.status == 'ERROR' && data.errorCode == 'BUGTRACKER_CREATE_FAILED' ) {
+						toastr["warning"]( data.message, "Redmine" );
+						releaseComponent( form, artifactId, true, { skip: true } );
 					} else if ( data.status == 'ERROR' ) {
 						$( progressId ).hide();
 						toastr["error"]( data.message ? data.message : "Impossible de démarrer la release.", "Information" );
