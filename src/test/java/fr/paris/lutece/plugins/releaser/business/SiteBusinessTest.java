@@ -47,8 +47,6 @@ public class SiteBusinessTest extends LuteceTestCase
     private final static String NAME2 = "Name2";
     private final static String DESCRIPTION1 = "Description1";
     private final static String DESCRIPTION2 = "Description2";
-    private final static String JIRAKEY1 = "JiraKey1";
-    private final static String JIRAKEY2 = "JiraKey2";
 
     public void testBusiness( )
     {
@@ -59,7 +57,6 @@ public class SiteBusinessTest extends LuteceTestCase
         site.setScmUrl( SCMURL1 );
         site.setName( NAME1 );
         site.setDescription( DESCRIPTION1 );
-        site.setJiraKey( JIRAKEY1 );
 
         // Create test
         SiteHome.create( site );
@@ -69,7 +66,6 @@ public class SiteBusinessTest extends LuteceTestCase
         assertEquals( siteStored.getScmUrl( ), site.getScmUrl( ) );
         assertEquals( siteStored.getName( ), site.getName( ) );
         assertEquals( siteStored.getDescription( ), site.getDescription( ) );
-        assertEquals( siteStored.getJiraKey( ), site.getJiraKey( ) );
 
         // Update test
         site.setArtifactId( ARTIFACTID2 );
@@ -77,7 +73,6 @@ public class SiteBusinessTest extends LuteceTestCase
         site.setScmUrl( SCMURL2 );
         site.setName( NAME2 );
         site.setDescription( DESCRIPTION2 );
-        site.setJiraKey( JIRAKEY2 );
         SiteHome.update( site );
         siteStored = SiteHome.findByPrimaryKey( site.getId( ) );
         assertEquals( siteStored.getArtifactId( ), site.getArtifactId( ) );
@@ -85,7 +80,6 @@ public class SiteBusinessTest extends LuteceTestCase
         assertEquals( siteStored.getScmUrl( ), site.getScmUrl( ) );
         assertEquals( siteStored.getName( ), site.getName( ) );
         assertEquals( siteStored.getDescription( ), site.getDescription( ) );
-        assertEquals( siteStored.getJiraKey( ), site.getJiraKey( ) );
 
         // List test
         SiteHome.getSitesList( );

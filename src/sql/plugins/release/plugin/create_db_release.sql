@@ -11,7 +11,6 @@ id_cluster int(11) default '0' NOT NULL,
 scm_url varchar(255) default '' NOT NULL,
 name varchar(50) default '' NOT NULL,
 description varchar(255) default '' NOT NULL,
-jira_key varchar(50) default '',
 is_theme SMALLINT DEFAULT 0,
 PRIMARY KEY (id_site)
 );

@@ -9,14 +9,12 @@ public class SaxPomHandler extends DefaultHandler
     private static final String TAG_PARENT = "parent";
     private static final String TAG_VERSION = "version";
     private static final String TAG_ARTIFACT_ID = "artifactId";
-    private static final String TAG_JIRA = "jiraProjectName";
     private static final String TAG_SCM = "scm";
     private static final String TAG_URL = "url";
     private static final String TAG_CONNECTION = "connection";
     private static final String TAG_DEVELOPPER_CONNECTION = "developerConnection";
     private String _strParentPomVersion;
     private String _strCoreVersion;
-    private String _strJiraKey;
     private StringBuilder _sbScmUrl = new StringBuilder( );
     private StringBuilder _sbScmConnection = new StringBuilder( );
     private StringBuilder _sbScmDeveloperConnection = new StringBuilder( );
@@ -25,7 +23,6 @@ public class SaxPomHandler extends DefaultHandler
     private boolean _bVersion;
     private boolean _bArtifactId;
     private boolean _bCore;
-    private boolean _bJira;
     private boolean _bSCM;
     private boolean _bURL;
     private boolean _bConnection;
@@ -49,16 +46,6 @@ public class SaxPomHandler extends DefaultHandler
     public String getCoreVersion( )
     {
         return _strCoreVersion;
-    }
-
-    /**
-     * Returns JIRA key
-     * 
-     * @return The JIRA key
-     */
-    public String getJiraKey( )
-    {
-        return _strJiraKey;
     }
 
     /**
@@ -112,14 +99,9 @@ public class SaxPomHandler extends DefaultHandler
                     _bArtifactId = true;
                 }
                 else
-                    if ( qName.equalsIgnoreCase( TAG_JIRA ) )
+                    if ( qName.equalsIgnoreCase( TAG_SCM ) )
                     {
-                        _bJira = true;
-                    }
-                    else
-                        if ( qName.equalsIgnoreCase( TAG_SCM ) )
-                        {
-                            _bSCM = true;
+                        _bSCM = true;
                         }
                         else
                             if ( qName.equalsIgnoreCase( TAG_URL ) )
@@ -159,14 +141,9 @@ public class SaxPomHandler extends DefaultHandler
                     _bArtifactId = false;
                 }
                 else
-                    if ( qName.equalsIgnoreCase( TAG_JIRA ) )
+                    if ( qName.equalsIgnoreCase( TAG_SCM ) )
                     {
-                        _bJira = false;
-                    }
-                    else
-                        if ( qName.equalsIgnoreCase( TAG_SCM ) )
-                        {
-                            _bSCM = false;
+                        _bSCM = false;
                         }
                         else
                             if ( qName.equalsIgnoreCase( TAG_URL ) )
@@ -207,14 +184,9 @@ public class SaxPomHandler extends DefaultHandler
                     _strCoreVersion = new String( ch, start, length );
                 }
                 else
-                    if ( _bJira )
+                    if ( _bSCM && _bURL )
                     {
-                        _strJiraKey = new String( ch, start, length );
-                    }
-                    else
-                        if ( _bSCM && _bURL )
-                        {
-                            _sbScmUrl.append( new String( ch, start, length ) );
+                        _sbScmUrl.append( new String( ch, start, length ) );
                         }
                         else
                             if ( _bSCM && _bConnection )

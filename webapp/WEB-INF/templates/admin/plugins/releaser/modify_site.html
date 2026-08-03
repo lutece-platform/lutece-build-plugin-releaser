@@ -31,9 +31,6 @@
                 <@formGroup labelKey='#i18n{releaser.modify_site.labelScmUrl}' helpKey='#i18n{releaser.modify_site.labelScmUrl.help}' mandatory=true>
                         <@input type='text' name='scm_url' value='${site.scmUrl}' />
                 </@formGroup>
-                <@formGroup labelKey='#i18n{releaser.modify_site.labelJiraKey}' helpKey='#i18n{releaser.modify_site.labelJiraKey.help}' >
-                        <@input type='text' name='jira_key' value='${site.jiraKey}' />
-                </@formGroup>
                   <@formGroup labelKey='#i18n{releaser.modify_site.labelIsTheme}' helpKey='#i18n{releaser.modify_site.labelIsTheme.help}' >
                         <@checkBox  name='theme' id='theme' labelKey='' labelFor='theme' orientation='vertical' value='true'  name='theme'  checked=site.theme />
                    </@formGroup>

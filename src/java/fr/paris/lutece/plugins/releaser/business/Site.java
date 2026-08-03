@@ -92,10 +92,6 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     @Size( max = 255, message = "#i18n{releaser.validation.site.Description.size}" )
     private String _strDescription;
 
-    /** The str jira key. */
-    @Size( max = 50, message = "#i18n{releaser.validation.site.JiraKey.size}" )
-    private String _strJiraKey;
-
     /** The str tag information. */
     private String _strTagInformation;
 
@@ -271,27 +267,6 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     public void setDescription( String strDescription )
     {
         _strDescription = strDescription;
-    }
-
-    /**
-     * Returns the JiraKey.
-     *
-     * @return The JiraKey
-     */
-    public String getJiraKey( )
-    {
-        return _strJiraKey;
-    }
-
-    /**
-     * Sets the JiraKey.
-     *
-     * @param strJiraKey
-     *            The JiraKey
-     */
-    public void setJiraKey( String strJiraKey )
-    {
-        _strJiraKey = strJiraKey;
     }
 
     /**
