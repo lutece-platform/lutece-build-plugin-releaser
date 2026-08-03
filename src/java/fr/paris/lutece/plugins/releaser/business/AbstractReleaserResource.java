@@ -33,6 +33,9 @@
  */
 package fr.paris.lutece.plugins.releaser.business;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -42,7 +45,7 @@ import org.apache.commons.lang3.StringUtils;
 public abstract class AbstractReleaserResource implements IReleaserResource
 {
 
-    private String _strReleaseComment;
+    private List<String> _listReleaseComments = new ArrayList<>( );
 
     /**
      * {@inheritDoc}
@@ -80,31 +83,34 @@ public abstract class AbstractReleaserResource implements IReleaserResource
     }
 
     /**
+     * Returns the release comments list
+     *
+     * @return The release comments
+     */
+    public List<String> getReleaseComments( )
+    {
+        return _listReleaseComments;
+    }
+
+    /**
      * Returns the ReleaseComment
-     * 
+     *
      * @return The ReleaseComment
      */
     public String getReleaseComment( )
     {
-        return _strReleaseComment;
+        return _listReleaseComments.isEmpty( ) ? null : String.join( "<br>\n", _listReleaseComments );
     }
 
     /**
      * Sets the ReleaseComment
-     * 
+     *
      * @param strReleaseComment
      *            The ReleaseComment
      */
     public void addReleaseComment( String strReleaseComment )
     {
-        if ( _strReleaseComment != null )
-        {
-            _strReleaseComment = _strReleaseComment + "<br>\n" + strReleaseComment;
-        }
-        else
-        {
-            _strReleaseComment = strReleaseComment;
-        }
+        _listReleaseComments.add( strReleaseComment );
     }
 
     /**
@@ -112,7 +118,7 @@ public abstract class AbstractReleaserResource implements IReleaserResource
      */
     public void resetComments( )
     {
-        _strReleaseComment = null;
+        _listReleaseComments.clear( );
     }
 
 }
