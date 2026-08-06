@@ -218,6 +218,23 @@ public class ReleaserUtils
      */
     public static void addInfoError( CommandResult commandResult, String strError, Exception e )
     {
+        addInfoError( commandResult, strError, strError, e );
+    }
+
+    /**
+     * Adds the info error, with a short variant shown in the release info column.
+     *
+     * @param commandResult
+     *            the command result
+     * @param strError
+     *            the full error, appended to the release log
+     * @param strShortError
+     *            the short error, shown in the release info column
+     * @param e
+     *            the e
+     */
+    public static void addInfoError( CommandResult commandResult, String strError, String strShortError, Exception e )
+    {
 
         if ( e != null )
         {
@@ -230,7 +247,18 @@ public class ReleaserUtils
 
         if ( commandResult != null )
         {
-            commandResult.setError( strError );
+            if ( commandResult.getLog( ) != null )
+            {
+                commandResult.getLog( ).append( "\n[AVERTISSEMENT] " ).append( strError ).append( "\n" );
+            }
+            if ( StringUtils.isNotBlank( commandResult.getError( ) ) )
+            {
+                commandResult.setError( commandResult.getError( ) + "<br>" + strShortError );
+            }
+            else
+            {
+                commandResult.setError( strShortError );
+            }
             commandResult.setStatus( CommandResult.STATUS_ERROR );
             commandResult.setErrorType( CommandResult.ERROR_TYPE_INFO );
         }

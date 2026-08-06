@@ -55,6 +55,7 @@ import com.taskadapter.redmineapi.bean.CustomField;
 import com.taskadapter.redmineapi.bean.Issue;
 import com.taskadapter.redmineapi.bean.Project;
 import com.taskadapter.redmineapi.bean.Version;
+import com.taskadapter.redmineapi.internal.Transport;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.RepositoryType;
@@ -96,6 +97,7 @@ public class RedmineComponentService implements IBugtrackerService
     private IssueManager _issueManager;
     private ProjectManager _projectManager;
     private UserManager _userManager;
+    private Transport _transport;
 
     /** Projects index : normalized repository URL -> project reference. Null until first successful build. */
     private volatile Map<String, ProjectRef> _mapProjectsByRepoUrl;
@@ -155,6 +157,7 @@ public class RedmineComponentService implements IBugtrackerService
         _issueManager = redmineManager.getIssueManager( );
         _projectManager = redmineManager.getProjectManager( );
         _userManager = redmineManager.getUserManager( );
+        _transport = redmineManager.getTransport( );
     }
 
     /**
@@ -452,6 +455,7 @@ public class RedmineComponentService implements IBugtrackerService
     @Override
     public synchronized void updateComponentVersions( Component component, CommandResult commandResult )
     {
+        String strStep = null;
         try
         {
             // GitHub and GitLab components may be tracked in Redmine ; the others are out of the bugtracker scope.
@@ -494,15 +498,22 @@ public class RedmineComponentService implements IBugtrackerService
 
             Project project = _projectManager.getProjectByKey( strProjectKey );
             int nProjectId = project.getId( );
+            commandResult.getLog( ).append( "Mise à jour Redmine du projet " + strProjectKey + "...\n" );
 
             // 1. Create the next open version (N+1) if it does not exist yet.
             Version newVersion = null;
             if ( !StringUtils.isEmpty( strNewVersion ) )
             {
+                strStep = "création de la version " + strNewVersion;
                 newVersion = findVersionByName( nProjectId, strNewVersion );
                 if ( newVersion == null )
                 {
-                    newVersion = _projectManager.createVersion( new Version( ).setProjectId( nProjectId ).setName( strNewVersion ) );
+                    newVersion = new Version( _transport, nProjectId, strNewVersion ).create( );
+                    commandResult.getLog( ).append( "Version " + strNewVersion + " créée (ouverte)\n" );
+                }
+                else
+                {
+                    commandResult.getLog( ).append( "Version " + strNewVersion + " déjà existante\n" );
                 }
             }
 
@@ -514,30 +525,97 @@ public class RedmineComponentService implements IBugtrackerService
                 // 3. Move the still-open issues of the released version onto the new one.
                 if ( newVersion != null )
                 {
+                    strStep = "déplacement des tickets ouverts vers la version " + strNewVersion;
+                    int nMovedIssues = 0;
                     for ( Issue issue : fetchOpenIssuesForVersion( nProjectId, currentVersion.getId( ) ) )
                     {
                         issue.setTargetVersion( newVersion );
-                        _issueManager.update( issue );
+                        issue.setTransport( _transport );
+                        executeUpdate( issue::update );
+                        nMovedIssues++;
                     }
+                    commandResult.getLog( ).append( nMovedIssues + " ticket(s) ouvert(s) déplacé(s) vers la version " + strNewVersion + "\n" );
                 }
 
                 // 4. Close the released version (rename to the release name if needed).
+                strStep = "fermeture de la version " + currentVersion.getName( );
                 if ( !StringUtils.isEmpty( strReleaseVersionName ) && !strReleaseVersionName.equals( currentVersion.getName( ) ) )
                 {
                     currentVersion.setName( strReleaseVersionName );
                 }
                 currentVersion.setStatus( Version.STATUS_CLOSED );
                 currentVersion.setDueDate( new Date( ) );
-                _projectManager.update( currentVersion );
+                executeUpdate( ( ) -> _projectManager.update( currentVersion ) );
+                commandResult.getLog( ).append( "Version " + currentVersion.getName( ) + " fermée\n" );
             }
         }
         catch( RedmineException ex )
         {
-            ReleaserUtils.addInfoError( commandResult, "Error updating Redmine version : " + ex.getMessage( ), ex );
+            ReleaserUtils.addInfoError( commandResult, buildRedmineUpdateFailureMessage( strStep, ex ), buildRedmineUpdateFailureShortMessage( strStep ), ex );
         }
         catch( Exception ex )
         {
-            ReleaserUtils.addInfoError( commandResult, "Error using Redmine API : " + ex.getMessage( ), ex );
+            ReleaserUtils.addInfoError( commandResult, buildRedmineUpdateFailureMessage( strStep, ex ), buildRedmineUpdateFailureShortMessage( strStep ), ex );
+        }
+    }
+
+    /**
+     * Builds the user-facing message of a failed Redmine update (the release itself succeeded).
+     *
+     * @param strStep
+     *            the failing step, or {@code null} if the update failed before the first step
+     * @param ex
+     *            the failure cause
+     * @return the message
+     */
+    private static String buildRedmineUpdateFailureMessage( String strStep, Exception ex )
+    {
+        String strCause = StringUtils.isNotBlank( ex.getMessage( ) ) ? ex.getMessage( ) : ex.getClass( ).getSimpleName( );
+        String strAtStep = ( strStep != null ) ? " à l'étape « " + strStep + " »" : "";
+
+        return "La release s'est bien déroulée mais la mise à jour Redmine a échoué" + strAtStep + " (" + strCause
+                + "). Vérifier et compléter manuellement dans Redmine : version N+1, déplacement des tickets ouverts, fermeture de la version releasée.";
+    }
+
+    /**
+     * Builds the short variant of the failure message, for the release info column.
+     *
+     * @param strStep
+     *            the failing step, or {@code null}
+     * @return the short message
+     */
+    private static String buildRedmineUpdateFailureShortMessage( String strStep )
+    {
+        return "Mise à jour Redmine échouée" + ( ( strStep != null ) ? " : " + strStep : "" ) + " (voir les logs)";
+    }
+
+    /** A Redmine update call (PUT). */
+    @FunctionalInterface
+    private interface RedmineUpdate
+    {
+        void run( ) throws RedmineException;
+    }
+
+    /**
+     * Runs a Redmine update, tolerating the empty 204 response the client fails to parse (the update did succeed).
+     *
+     * @param update
+     *            the update call
+     * @throws RedmineException
+     *             if the Redmine call fails
+     */
+    private static void executeUpdate( RedmineUpdate update ) throws RedmineException
+    {
+        try
+        {
+            update.run( );
+        }
+        catch( IllegalArgumentException ex )
+        {
+            if ( !"Entity may not be null".equals( ex.getMessage( ) ) )
+            {
+                throw ex;
+            }
         }
     }
 
