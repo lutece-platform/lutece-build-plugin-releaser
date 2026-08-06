@@ -479,9 +479,10 @@ public class RedmineComponentService implements IBugtrackerService
 
             if ( strProjectKey == null )
             {
-                // GitLab component not tracked in Redmine : expected case, silent skip.
+                // GitLab component not tracked in Redmine : expected case, informative skip.
                 if ( RepositoryType.GITLAB.equals( repoType ) )
                 {
+                    commandResult.getLog( ).append( "Aucun projet Redmine associé à ce composant : pas de mise à jour du bugtracker.\n\n" );
                     AppLogService.info( "Releaser : no Redmine project for GitLab component " + component.getArtifactId( ) + " : tracker update skipped." );
                     return;
                 }
@@ -546,7 +547,7 @@ public class RedmineComponentService implements IBugtrackerService
                 currentVersion.setStatus( Version.STATUS_CLOSED );
                 currentVersion.setDueDate( new Date( ) );
                 executeUpdate( ( ) -> _projectManager.update( currentVersion ) );
-                commandResult.getLog( ).append( "Version " + currentVersion.getName( ) + " fermée\n" );
+                commandResult.getLog( ).append( "Version " + currentVersion.getName( ) + " fermée\n\n" );
             }
         }
         catch( RedmineException ex )
