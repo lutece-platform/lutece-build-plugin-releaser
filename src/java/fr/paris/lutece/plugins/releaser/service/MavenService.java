@@ -225,7 +225,7 @@ public class MavenService implements IMavenService
             {
                 public void consumeLine( String strLine )
                 {
-                    sbLog.append( strLine + "\n" );
+                    sbLog.append( maskCredentials( strLine ) + "\n" );
                 }
             } );
 
@@ -241,6 +241,12 @@ public class MavenService implements IMavenService
         }
 
         return invocationResult;
+    }
+
+    /** Masks the password of user:password@host URLs and of -Dpassword arguments. */
+    private static String maskCredentials( String strLine )
+    {
+        return strLine.replaceAll( ":[^:@/\\s]+@", ":********@" ).replaceAll( "(-Dpassword=)\\S+", "$1********" );
     }
 
     /**
