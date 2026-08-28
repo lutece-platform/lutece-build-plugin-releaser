@@ -46,7 +46,6 @@ import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser.Credential;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
-import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.test.LuteceTestCase;
 
@@ -70,58 +69,6 @@ public class WorkflowReleaseContextServiceTest extends LuteceTestCase
         System.out.println( context.getCommandResult( ).getLog( ).toString( ) );
 
         ReleaserUtils.stopCommandResult( context );
-
-    }
-
-    @Ignore
-    @Test
-    public void testReleaseSiteSvn( ) throws IOException
-    {
-
-        WorkflowReleaseContext context = initContextServiceTest( this.getResourcesDir( ), this.getClass( ).getCanonicalName( ), RepositoryType.SVN, true );
-
-        try
-        {
-
-            ReleaserUtils.startCommandResult( context );
-
-            WorkflowReleaseContextService.getService( ).checkoutRepository( context, Locale.FRENCH );
-
-            WorkflowReleaseContextService.getService( ).releasePrepareSite( context, Locale.FRENCH );
-
-            System.out.println( context.getCommandResult( ).getLog( ).toString( ) );
-
-            ReleaserUtils.stopCommandResult( context );
-        }
-        catch( AppException e )
-        {
-            System.out.println( context.getCommandResult( ).toString( ) );
-        }
-    }
-
-    @Ignore
-    @Test
-    public void testReleaseComponentSvn( ) throws IOException
-    {
-
-        WorkflowReleaseContext context = initContextServiceTest( this.getResourcesDir( ), this.getClass( ).getCanonicalName( ), RepositoryType.SVN, false );
-        try
-        {
-
-            ReleaserUtils.startCommandResult( context );
-
-            WorkflowReleaseContextService.getService( ).checkoutRepository( context, Locale.FRENCH );
-            WorkflowReleaseContextService.getService( ).releasePrepareComponent( context, Locale.FRENCH );
-            WorkflowReleaseContextService.getService( ).releasePerformComponent( context, Locale.FRENCH );
-
-            System.out.println( context.getCommandResult( ).getLog( ).toString( ) );
-
-            ReleaserUtils.stopCommandResult( context );
-        }
-        catch( AppException e )
-        {
-            System.out.println( context.getCommandResult( ).toString( ) );
-        }
 
     }
 
@@ -158,22 +105,6 @@ public class WorkflowReleaseContextServiceTest extends LuteceTestCase
 
     }
 
-    @Ignore
-    @Test
-    public void testPrepareComponentSvn( ) throws IOException
-    {
-
-        WorkflowReleaseContext context = initContextServiceTest( this.getResourcesDir( ), this.getClass( ).getCanonicalName( ), RepositoryType.SVN, false );
-
-        ReleaserUtils.startCommandResult( context );
-
-        WorkflowReleaseContextService.getService( ).checkoutRepository( context, Locale.FRENCH );
-        WorkflowReleaseContextService.getService( ).releasePrepareComponent( context, Locale.FRENCH );
-
-        ReleaserUtils.stopCommandResult( context );
-
-    }
-
     public static WorkflowReleaseContext initContextServiceTest( String strRessourceDir, String strClassName, RepositoryType repotype, boolean bSite )
             throws IOException
     {
@@ -197,15 +128,7 @@ public class WorkflowReleaseContextServiceTest extends LuteceTestCase
         component.setLastAvailableSnapshotVersion( strReleaserCurrentVersion );
         component.setCurrentVersion( strReleaserCurrentVersion );
 
-        if ( repotype.equals( RepositoryType.SVN ) )
-        {
-            component.setName( strArtifactId );
-        }
-        else
-        {
-
-            component.setName( ReleaserUtils.getComponentName( strScmDevelopperConnection, strArtifactId ) );
-        }
+        component.setName( ReleaserUtils.getComponentName( strScmDevelopperConnection, strArtifactId ) );
 
         ReleaserUser user = new ReleaserUser( );
 

@@ -30,9 +30,9 @@
       	  <script>
       	  
       	$( function(){
-      			var pathElem="#modalRelease${site.getRepoType().name()!} .release-id";
+      			var pathElem="#modalRelease${(site.getRepoType().name())!} .release-id";
       			 $(pathElem).val(${site.id});
-      	    	 $("#modalRelease${site.getRepoType().name()!}").modal();
+      	    	 $("#modalRelease${(site.getRepoType().name())!}").modal();
       	});
       	  
       	  </script>
@@ -103,7 +103,7 @@
                             <div class="col-xs-4 col-sm-4">
 	                            <#if site.permissions.releaseSitePermission>
 	                                <#if !is_application_account>
-	                                    <button class="button border-green btn-release-site" data-id-site="${site.id}" data-repo-type="${site.getRepoType().name()!}" title="Releaser" data-toggle="modal" data-target="#modalRelease${site.getRepoType().name()!}">
+	                                    <button class="button border-green btn-release-site" data-id-site="${site.id}" data-repo-type="${(site.getRepoType().name())!}" title="Releaser" data-toggle="modal" data-target="#modalRelease${(site.getRepoType().name())!}">
 	                                        <i class="fa fa-cog" aria-hidden="true"></i>
 	                                        <span class="hidden-xs"><#if !site.theme>Releaser<#else>Releaser le theme</#if></span>
 	                                    </button>
@@ -139,7 +139,6 @@
   </#list>
 </div>
 
-<@modalAuth modId="modalReleaseSVN" type=repo_type_svn formActionUrl="jsp/admin/plugins/releaser/ManageClusters.jsp" formSubmitName="action_releaseSite" />
 <@modalAuth modId="modalReleaseGITLAB" type=repo_type_gitlab formActionUrl="jsp/admin/plugins/releaser/ManageClusters.jsp" formSubmitName="action_releaseSite"  />
 <@modalAuth modId="modalReleaseGITHUB" type=repo_type_github formActionUrl="jsp/admin/plugins/releaser/ManageClusters.jsp" formSubmitName="action_releaseComponent"/>
 

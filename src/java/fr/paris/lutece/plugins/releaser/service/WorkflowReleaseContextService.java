@@ -322,8 +322,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     public void mergeDevelopMaster( WorkflowReleaseContext context, Locale locale )
     {
 
-        if ( !context.getReleaserResource( ).getRepoType( ).equals( RepositoryType.SVN )
-                && ReleaserUtils.getBranchReleaseFrom( context ).equals( GitUtils.DEFAULT_RELEASE_BRANCH ) )
+        if ( ReleaserUtils.getBranchReleaseFrom( context ).equals( GitUtils.DEFAULT_RELEASE_BRANCH ) )
         {
 
             FileRepository fLocalRepo = null;

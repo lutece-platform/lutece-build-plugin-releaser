@@ -19,8 +19,6 @@
 	<input type="hidden" name="GITLAB_account_password" id="releaseSite_GITLAB_account_password"  value="">
 	<input type="hidden" name="GITHUB_account_login"  id="releaseSite_GITHUB_account_login" value="">
 	<input type="hidden" name="GITHUB_account_password" id="releaseSite_GITHUB_account_password"  value="">
-	<input type="hidden" name="SVN_account_login"  id="releaseSite_SVN_account_login" value="">
-	<input type="hidden" name="SVN_account_password" id="releaseSite_SVN_account_password"  value="">
 		
 		
 		
@@ -162,7 +160,7 @@
 	</div>
 </div>
 </section>
-<@modalAuthMulti modId="modalReleaseSiteAuth" typeGithub=repo_type_github!'' typeGitlab=repo_type_gitlab!'' typeSvn=repo_type_svn!'' formActionUrl="jsp/admin/plugins/releaser/ManageSiteRelease.jsp" formSubmitName="action_doConfirmReleaseSite" modClass="confirmReleaseSite"   />
+<@modalAuthMulti modId="modalReleaseSiteAuth" typeGithub=repo_type_github!'' typeGitlab=repo_type_gitlab!'' formActionUrl="jsp/admin/plugins/releaser/ManageSiteRelease.jsp" formSubmitName="action_doConfirmReleaseSite" modClass="confirmReleaseSite"   />
 
 <link href="js/jquery/plugins/toastr/toastr.min.css" rel="stylesheet">
 <script src="js/jquery/plugins/toastr/toastr.min.js"></script>
@@ -194,9 +192,6 @@ $(function() {
 	     $("#GITLAB_account_password").length?$("#releaseSite_GITLAB_account_password").val($("#GITLAB_account_password").val()):$("#releaseSite_GITLAB_account_password").val("");
 	     $("#GITHUB_account_login").length?$("#releaseSite_GITHUB_account_login").val($("#GITHUB_account_login").val()):$("#releaseSite_GITHUB_account_login").val("");
 	     $("#GITHUB_account_password").length?$("#releaseSite_GITHUB_account_password").val($("#GITHUB_account_password").val()):$("#releaseSite_GITHUB_account_password").val("");
-	     $("#SVN_account_login").length?$("#releaseSite_SVN_account_login").val($("#SVN_account_login").val()):$("#releaseSite_SVN_account_login").val("");
-	     $("#SVN_account_password").length?$("#releaseSite_SVN_account_password").val($("#SVN_account_password").val()):$("#releaseSite_SVN_account_password").val("");
-	     
 	     $("#release_site").submit();	     	 
 	    
 	    	}

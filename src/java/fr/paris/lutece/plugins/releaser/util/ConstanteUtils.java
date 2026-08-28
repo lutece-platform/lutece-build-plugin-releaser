@@ -103,14 +103,8 @@ public class ConstanteUtils
     /** The Constant BEAN_MAVEN_SERVICE. */
     public static final String BEAN_MAVEN_SERVICE = "releaser.mavenService";
 
-    /** The Constant BEAN_SVN_SERVICE. */
-    public static final String BEAN_SVN_SERVICE = "releaser.svnService";
-
     /** The Constant BEAN_BUGTRACKER_SERVICE. */
     public static final String BEAN_BUGTRACKER_SERVICE = "releaser.bugtrackerService";
-
-    /** The Constant BEAN_SVN_RESOURCE_SERVICE. */
-    public static final String BEAN_SVN_RESOURCE_SERVICE = "releaser.cvs.svnResourceService";
 
     /** The Constant BEAN_GITHUB_RESOURCE_SERVICE. */
     public static final String BEAN_GITHUB_RESOURCE_SERVICE = "releaser.cvs.githubResourceService";
@@ -153,12 +147,6 @@ public class ConstanteUtils
 
     /** The Constant PROPERTY_APPLICATION_ACCOUNT_ENABLE. */
     public static final String PROPERTY_APPLICATION_ACCOUNT_ENABLE = "releaser.applicationAccountEnable";
-
-    /** The Constant PROPERTY_SVN_RELEASE_ACCOUNT_LOGIN. */
-    public static final String PROPERTY_SVN_RELEASE_ACCOUNT_LOGIN = "releaser.svnReleaseAccount.login";
-
-    /** The Constant PROPERTY_SVN_RELEASE_ACCOUNT_PASSWORD. */
-    public static final String PROPERTY_SVN_RELEASE_ACCOUNT_PASSWORD = "releaser.svnReleaseAccount.password";
 
     /** The Constant PROPERTY_GITHUB_RELEASE_ACCOUNT_LOGIN. */
     public static final String PROPERTY_GITHUB_RELEASE_ACCOUNT_LOGIN = "releaser.githubReleaseAccount.login";
@@ -306,8 +294,6 @@ public class ConstanteUtils
     /** The Constant MARK_REPO_TYPE_GITLAB. */
     public static final String MARK_REPO_TYPE_GITLAB = "repo_type_gitlab";
 
-    /** The Constant MARK_REPO_TYPE_SVN. */
-    public static final String MARK_REPO_TYPE_SVN = "repo_type_svn";
 
     /** The Constant MARK_USER. */
     public static final String MARK_USER = "user";

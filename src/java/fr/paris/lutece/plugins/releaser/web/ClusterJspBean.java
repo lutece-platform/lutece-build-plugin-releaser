@@ -174,7 +174,6 @@ public class ClusterJspBean extends ManageSitesJspBean
         model.put( MARK_IS_APPLICATION_ACCOUNT, ReleaserUtils.isApplicationAccountEnable( ) );
         model.put( ConstanteUtils.MARK_REPO_TYPE_GITHUB, RepositoryType.GITHUB );
         model.put( ConstanteUtils.MARK_REPO_TYPE_GITLAB, RepositoryType.GITLAB );
-        model.put( ConstanteUtils.MARK_REPO_TYPE_SVN, RepositoryType.SVN );
         model.put( MARK_IS_ADD_CLUSTER_AUTHORIZED, ClusterService.IsAddClusterAuthorized( adminUser ) );
         model.put( MARK_IS_SEARCH_COMPONENT_AUTHORIZED, ComponentService.IsSearchComponentAuthorized( adminUser ) );
         if ( request.getParameter( PARAMETER_ID_SITE_ERROR ) != null )

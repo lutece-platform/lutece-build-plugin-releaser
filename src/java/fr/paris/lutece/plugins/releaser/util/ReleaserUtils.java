@@ -442,9 +442,6 @@ public class ReleaserUtils
             releaserUser.addCredential( RepositoryType.GITLAB,
                     releaserUser.new Credential( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITLAB_RELEASE_ACCOUNT_LOGIN ),
                             ConstanteUtils.PROPERTY_GITLAB_RELEASE_ACCOUNT_PASSWORD ) );
-            releaserUser.addCredential( RepositoryType.SVN,
-                    releaserUser.new Credential( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_SVN_RELEASE_ACCOUNT_LOGIN ),
-                            ConstanteUtils.PROPERTY_GITLAB_RELEASE_ACCOUNT_PASSWORD ) );
 
         }
         else

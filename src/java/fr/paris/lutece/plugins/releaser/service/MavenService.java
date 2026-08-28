@@ -50,7 +50,6 @@ import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.plugins.releaser.util.maven.MavenGoals;
 import fr.paris.lutece.plugins.releaser.util.maven.MavenUtils;
-import fr.paris.lutece.plugins.releaser.util.svn.SvnUser;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.util.string.StringUtil;
@@ -106,38 +105,6 @@ public class MavenService implements IMavenService
     }
 
     /**
-     * Mvn site assembly.
-     *
-     * @param strSiteName
-     *            the str site name
-     * @param strTagName
-     *            the str tag name
-     * @param strMavenProfile
-     *            the str maven profile
-     * @param user
-     *            the user
-     * @param commandResult
-     *            the command result
-     */
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fr.paris.lutece.plugins.deployment.service.IMavenService#mvnSiteAssembly(java.lang.String, fr.paris.lutece.plugins.deployment.business.Environment,
-     * fr.paris.lutece.plugins.deployment.business.MavenUser)
-     */
-    public void mvnSiteAssembly( String strSiteName, String strTagName, String strMavenProfile, SvnUser user, CommandResult commandResult )
-    {
-        // String strSiteLocalBasePath = ReleaserUtils.getLocalSitePath( strSiteName );
-
-        List<String> listGoals = MavenGoals.LUTECE_SITE_ASSEMBLY.asList( );
-        List<String> listGoalsProfile = new ArrayList<String>( );
-        listGoalsProfile.addAll( listGoals );
-        listGoalsProfile.add( "-P " + strMavenProfile );
-        listGoalsProfile.add( "-U" );
-        // mvnExecute( strTagName, strSiteLocalBasePath, listGoalsProfile, commandResult );
-    }
-
-    /**
      * Transforme la liste en chaine, pour passer l'argument � la ligne de commande.
      *
      * @param strPathPom
@@ -172,13 +139,11 @@ public class MavenService implements IMavenService
 
     /**
      * Launches mvn cmd
-     * 
+     *
      * @param strPluginName
      *            plugin name (ex: plugin-ods)
      * @param goals
      *            maven goals
-     * @param strSVNBinPath
-     *            svn bin path (ex: /home/svn/apps/subversion/bin)
      */
 
 

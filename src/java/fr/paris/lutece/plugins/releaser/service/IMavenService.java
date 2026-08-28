@@ -34,7 +34,6 @@
 package fr.paris.lutece.plugins.releaser.service;
 
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
-import fr.paris.lutece.plugins.releaser.util.svn.SvnUser;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -42,22 +41,6 @@ import fr.paris.lutece.plugins.releaser.util.svn.SvnUser;
  */
 public interface IMavenService
 {
-
-    /**
-     * mvnReleasePrepare.
-     *
-     * @param strSiteName
-     *            the str site name
-     * @param strTagName
-     *            the str tag name
-     * @param strMavenProfile
-     *            the str maven profile
-     * @param user
-     *            the user
-     * @param commandResult
-     *            the command result
-     */
-    void mvnSiteAssembly( String strSiteName, String strTagName, String strMavenProfile, SvnUser user, CommandResult commandResult );
 
     /**
      * Mvn release prepare.

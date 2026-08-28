@@ -369,7 +369,7 @@ public class RedmineComponentService implements IBugtrackerService
     public ErrorJsonResponse prepareReleaseInBugtracker( Component component, boolean bForce, boolean bCreateProject, boolean bSkipCreate,
             String strDescription, boolean bPublic )
     {
-        // Out of the bugtracker scope (SVN, no scm) : nothing to check.
+        // Out of the bugtracker scope (unsupported repo, no scm) : nothing to check.
         RepositoryType repoType = component.getRepoType( );
         if ( !RepositoryType.GITHUB.equals( repoType ) && !RepositoryType.GITLAB.equals( repoType ) )
         {

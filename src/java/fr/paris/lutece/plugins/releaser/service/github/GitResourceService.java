@@ -70,7 +70,7 @@ import fr.paris.lutece.portal.service.util.AppException;
 
 // TODO: Auto-generated Javadoc
 /**
- * SvnSiteService.
+ * GitResourceService.
  */
 public class GitResourceService implements IVCSResourceService
 {
@@ -102,7 +102,7 @@ public class GitResourceService implements IVCSResourceService
         return strPom;
     }
     /**
-     * Gets the last release found in the SVN repository.
+     * Gets the last release found in the Git repository.
      *
      * @param site
      *            the site

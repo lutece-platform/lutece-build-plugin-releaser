@@ -167,6 +167,15 @@ public final class MavenRepoComponentInfoProvider
                 return;
             }
 
+            // Dépôt non supporté (ni GitHub ni GitLab).
+            if ( component.getRepoType( ) == null )
+            {
+                component.addReleaseComment( "Le dépôt du composant " + strArtifactId + " n'est ni GitHub ni GitLab : release impossible." );
+                AppLogService.error( "MavenRepoComponentInfoProvider - Unsupported repository for " + strArtifactId + " : "
+                        + component.getScmDeveloperConnection( ) );
+                return;
+            }
+
             // Infos bugtracker : URL de roadmap, ou commentaire informatif si projet manquant.
             BugtrackerService.getService( ).populateBugtrackerInfo( component );
 

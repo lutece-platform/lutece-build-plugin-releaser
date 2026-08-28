@@ -54,31 +54,19 @@ public abstract class AbstractReleaserResource implements IReleaserResource
     public RepositoryType getRepoType( )
     {
 
-        RepositoryType repositoryType = null;
         if ( !StringUtils.isEmpty( getScmUrl( ) ) )
         {
-            if ( !getScmUrl( ).contains( "scm:svn" ) )
+            if ( getScmUrl( ).contains( "https://github." ) )
             {
-
-                if ( getScmUrl( ).contains( "https://github." ) )
-                {
-                    repositoryType = RepositoryType.GITHUB;
-
-                }
-                else
-                {
-                    repositoryType = RepositoryType.GITLAB;
-                }
-
+                return RepositoryType.GITHUB;
             }
-            else
+            if ( getScmUrl( ).contains( "gitlab" ) )
             {
-                repositoryType = RepositoryType.SVN;
-
+                return RepositoryType.GITLAB;
             }
-
         }
-        return repositoryType;
+        // Unsupported repository or missing scm.
+        return null;
 
     }
 

@@ -271,7 +271,6 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         model.put( MARK_OPEN_SITE_VERSION, request.getParameter( PARAMETER_OPEN_SITE_VERSION ) );
         model.put( ConstanteUtils.MARK_REPO_TYPE_GITHUB, RepositoryType.GITHUB );
         model.put( ConstanteUtils.MARK_REPO_TYPE_GITLAB, RepositoryType.GITLAB );
-        model.put( ConstanteUtils.MARK_REPO_TYPE_SVN, RepositoryType.SVN );
         model.put( ConstanteUtils.MARK_USER, ReleaserUtils.getReleaserUser( request, getLocale( ) ) );
 
         HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_PREPARE_SITE_RELEASE, getLocale( ), model );
@@ -319,12 +318,6 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         {
             model.put( ConstanteUtils.MARK_REPO_TYPE_GITLAB, RepositoryType.GITLAB );
         }
-        if ( _site.getRepoType( ).equals( RepositoryType.SVN )
-                || _site.getComponents( ).stream( ).anyMatch( x -> x.shouldBeReleased( ) && RepositoryType.SVN.equals( x.getRepoType( ) ) ) )
-        {
-            model.put( ConstanteUtils.MARK_REPO_TYPE_SVN, RepositoryType.SVN );
-        }
-
         model.put( MARK_SITE, _site );
         model.put( MARK_MODIF_VALIDATED, _modifValidated );
         model.put( ConstanteUtils.MARK_USER, ReleaserUtils.getReleaserUser( request, getLocale( ) ) );

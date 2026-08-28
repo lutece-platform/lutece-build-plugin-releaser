@@ -102,15 +102,16 @@ public class RedmineComponentServiceTest
 
         assertEquals( RepositoryType.GITLAB, componentWithScm( "scm:git:https://dev.lutece.paris.fr/gitlab/bild/u06/site-releaser.git" ).getRepoType( ) );
 
-        assertEquals( RepositoryType.SVN, componentWithScm( "scm:svn:https://dev.lutece.paris.fr/svn/lutece/portal/trunk" ).getRepoType( ) );
+        // Unsupported repository (legacy SVN) : no repo type.
+        assertNull( componentWithScm( "scm:svn:https://dev.lutece.paris.fr/svn/lutece/portal/trunk" ).getRepoType( ) );
 
         assertNull( componentWithScm( null ).getRepoType( ) );
         assertNull( componentWithScm( "" ).getRepoType( ) );
     }
 
     /**
-     * Test of the prepareReleaseInBugtracker scope guard : SVN or scm-less components are out of the bugtracker
-     * scope and must be ignored without any Redmine access (the service is deliberately NOT initialized here).
+     * Test of the prepareReleaseInBugtracker scope guard : unsupported-repo or scm-less components are out of the
+     * bugtracker scope and must be ignored without any Redmine access (the service is deliberately NOT initialized here).
      */
     @Test
     public void testPrepareReleaseInBugtrackerOutOfScope( )

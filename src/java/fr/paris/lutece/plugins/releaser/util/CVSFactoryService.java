@@ -35,6 +35,7 @@ package fr.paris.lutece.plugins.releaser.util;
 
 import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
+import fr.paris.lutece.portal.service.util.AppException;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -42,9 +43,6 @@ import fr.paris.lutece.portal.service.spring.SpringContextService;
  */
 public class CVSFactoryService
 {
-
-    /** The svn service. */
-    private static IVCSResourceService _svnService;
 
     /** The gitlab service. */
     private static IVCSResourceService _gitlabService;
@@ -66,7 +64,6 @@ public class CVSFactoryService
     private static void init( )
     {
 
-        _svnService = SpringContextService.getBean( ConstanteUtils.BEAN_SVN_RESOURCE_SERVICE );
         _gitlabService = SpringContextService.getBean( ConstanteUtils.BEAN_GITLAB_RESOURCE_SERVICE );
         _githubService = SpringContextService.getBean( ConstanteUtils.BEAN_GITHUB_RESOURCE_SERVICE );
 
@@ -82,22 +79,22 @@ public class CVSFactoryService
     public static IVCSResourceService getService( RepositoryType repositoryType )
     {
 
-        if ( _svnService == null || _gitlabService == null || _githubService == null )
+        if ( _gitlabService == null || _githubService == null )
         {
             init( );
         }
 
-        if ( repositoryType.equals( RepositoryType.GITHUB ) )
+        if ( RepositoryType.GITHUB.equals( repositoryType ) )
         {
             return _githubService;
         }
-        else
-            if ( repositoryType.equals( RepositoryType.GITLAB ) )
-            {
-                return _gitlabService;
-            }
+        if ( RepositoryType.GITLAB.equals( repositoryType ) )
+        {
+            return _gitlabService;
+        }
 
-        return _svnService;
+        // Unsupported repository : fail with an explicit error on every action path.
+        throw new AppException( "Dépôt non supporté (seuls GitHub et GitLab sont gérés) : type=" + repositoryType );
 
     }
 

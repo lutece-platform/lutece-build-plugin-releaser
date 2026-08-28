@@ -42,6 +42,5 @@ import java.io.Serializable;
 public enum RepositoryType implements Serializable
 {
     GITHUB,
-    GITLAB,
-    SVN
+    GITLAB
 }

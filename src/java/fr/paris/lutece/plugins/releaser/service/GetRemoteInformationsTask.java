@@ -90,7 +90,7 @@ public class GetRemoteInformationsTask implements Runnable
     private void setRemoteBranches( )
     {
         RepositoryType repositoryType = _component.getRepoType( );
-        if ( _user == null || repositoryType == null || RepositoryType.SVN.equals( repositoryType ) )
+        if ( _user == null || repositoryType == null )
         {
             return;
         }

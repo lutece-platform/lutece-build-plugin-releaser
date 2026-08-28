@@ -23,7 +23,7 @@
 </#macro>
 
 
-<#macro modalAuthMulti  modId  typeGithub  typeGitlab typeSvn  formActionUrl formSubmitName modClass='' > 
+<#macro modalAuthMulti  modId  typeGithub  typeGitlab  formActionUrl formSubmitName modClass='' >
 	<div class="modal fade ${modClass}" id="${modId}" tabindex="-1" role="dialog" aria-labelledby="modalReleaseLabel">
     <div class="modal-dialog vlogin" role="document">
         <@tform name='release' class='form' action='${formActionUrl}'>
@@ -39,10 +39,7 @@
 	           </#if>
 	            <#if typeGitlab?has_content>
 	    			<@formAuthCredential type=typeGitlab />
-	           </#if>  
-	          <#if typeSvn?has_content>
-	    			<@formAuthCredential type=typeSvn />
-	           </#if>  
+	           </#if>
 	       </div>
 	        
 	   
