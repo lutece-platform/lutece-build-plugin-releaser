@@ -72,7 +72,7 @@ public interface IVCSResourceService
     String getLastRelease( Site site, String strLogin, String strPassword );
 
     /**
-     * Do checkout repository.
+     * Do clone repository.
      *
      * @param context
      *            the context
@@ -82,7 +82,7 @@ public interface IVCSResourceService
      *            the str password
      * @return the string
      */
-    String doCheckoutRepository( WorkflowReleaseContext context, String strLogin, String strPassword );
+    String doCloneRepository( WorkflowReleaseContext context, String strLogin, String strPassword );
 
     /**
      * Commit and push the local working tree on the given branch.

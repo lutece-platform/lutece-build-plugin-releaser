@@ -400,7 +400,7 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
         {
             // Realign lastAvailableSnapshotVersion on the chosen branch's major (via
             // updateComponentForReleaseBranchFrom). Without this, the catalog's default-branch value
-            // mismatches the cloned branch pom and TaskCheckoutRepository would abort with
+            // mismatches the cloned branch pom and TaskCloneRepository would abort with
             // "The cloned component does not match the release informations".
             component = ComponentService.getService( ).getLastBranchVersion( component, strReleaseBranchName, user );
 

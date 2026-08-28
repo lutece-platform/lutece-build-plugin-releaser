@@ -61,7 +61,7 @@ public class WorkflowReleaseContextServiceTest extends LuteceTestCase
 
         ReleaserUtils.startCommandResult( context );
 
-        WorkflowReleaseContextService.getService( ).checkoutRepository( context, Locale.FRENCH );
+        WorkflowReleaseContextService.getService( ).cloneRepository( context, Locale.FRENCH );
         WorkflowReleaseContextService.getService( ).mergeDevelopMaster( context, Locale.FRENCH );
 
         WorkflowReleaseContextService.getService( ).releasePrepareSite( context, Locale.FRENCH );
@@ -81,7 +81,7 @@ public class WorkflowReleaseContextServiceTest extends LuteceTestCase
 
         ReleaserUtils.startCommandResult( context );
 
-        WorkflowReleaseContextService.getService( ).checkoutRepository( context, Locale.FRENCH );
+        WorkflowReleaseContextService.getService( ).cloneRepository( context, Locale.FRENCH );
         WorkflowReleaseContextService.getService( ).mergeDevelopMaster( context, Locale.FRENCH );
         WorkflowReleaseContextService.getService( ).releasePrepareComponent( context, Locale.FRENCH );
         WorkflowReleaseContextService.getService( ).releasePerformComponent( context, Locale.FRENCH );
@@ -99,7 +99,7 @@ public class WorkflowReleaseContextServiceTest extends LuteceTestCase
 
         ReleaserUtils.startCommandResult( context );
 
-        WorkflowReleaseContextService.getService( ).checkoutRepository( context, Locale.FRENCH );
+        WorkflowReleaseContextService.getService( ).cloneRepository( context, Locale.FRENCH );
 
         ReleaserUtils.stopCommandResult( context );
 

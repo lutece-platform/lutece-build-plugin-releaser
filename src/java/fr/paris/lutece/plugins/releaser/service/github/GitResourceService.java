@@ -96,7 +96,7 @@ public class GitResourceService implements IVCSResourceService
         context.setCommandResult( commandResult );
         context.setSite( site );
         
-        doCheckoutRepository( context, strGitLogin, strGitPwd );
+        doCloneRepository( context, strGitLogin, strGitPwd );
         strPom = FileUtils.readFile( ReleaserUtils.getLocalPomPath( context ) );
 
         return strPom;
@@ -190,7 +190,7 @@ public class GitResourceService implements IVCSResourceService
     }
 
     /**
-     * Do checkout repository.
+     * Do clone repository.
      *
      * @param context
      *            the context
@@ -201,7 +201,7 @@ public class GitResourceService implements IVCSResourceService
      * @return the string
      */
     @Override
-    public String doCheckoutRepository( WorkflowReleaseContext context, String strLogin, String strPassword )
+    public String doCloneRepository( WorkflowReleaseContext context, String strLogin, String strPassword )
     {
 
         Git git = null;

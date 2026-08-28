@@ -109,14 +109,14 @@ public interface IWorkflowReleaseContextService
     int getIdWorkflow( WorkflowReleaseContext context );
 
     /**
-     * Checkout repository.
+     * Clone repository.
      *
      * @param context
      *            the context
      * @param locale
      *            the locale
      */
-    void checkoutRepository( WorkflowReleaseContext context, Locale locale );
+    void cloneRepository( WorkflowReleaseContext context, Locale locale );
 
     /**
      * Merge develop master.

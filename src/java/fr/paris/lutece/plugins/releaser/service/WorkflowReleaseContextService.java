@@ -633,25 +633,25 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     }
 
     /**
-     * Checkout repository.
+     * Clone repository.
      *
      * @param context
      *            the context
      * @param locale
      *            the locale
      */
-    public void checkoutRepository( WorkflowReleaseContext context, Locale locale )
+    public void cloneRepository( WorkflowReleaseContext context, Locale locale )
     {
         CommandResult commandResult = context.getCommandResult( );
         String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
         String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
 
-        ReleaserUtils.logStartAction( context, " checkout resource" );
-        CVSFactoryService.getService( context.getReleaserResource( ).getRepoType( ) ).doCheckoutRepository( context, strLogin, strPassword );
+        ReleaserUtils.logStartAction( context, " clone resource" );
+        CVSFactoryService.getService( context.getReleaserResource( ).getRepoType( ) ).doCloneRepository( context, strLogin, strPassword );
         // PROGRESS 30%
         commandResult.setProgressValue( commandResult.getProgressValue( ) + 30 );
 
-        ReleaserUtils.logEndAction( context, " checkout resource" );
+        ReleaserUtils.logEndAction( context, " clone resource" );
 
     }
 
@@ -1050,7 +1050,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         Git git = null;
         try
         {
-            // Create the master* local tracking branch if missing — TaskCheckoutRepository only creates
+            // Create the master* local tracking branch if missing — TaskCloneRepository only creates
             // the hardcoded "master" and the chosen develop*, so master_core7/etc. has no local ref yet.
             git = GitUtils.getGit( strLocalComponentPath );
             GitUtils.ensureLocalBranch( git, strMasterBranch, commandResult );
