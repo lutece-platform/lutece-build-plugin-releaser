@@ -115,8 +115,6 @@ public class ConstanteUtils
     /** The Constant BEAN_COMPONENT_SERVICE. */
     public static final String BEAN_COMPONENT_SERVICE = "releaser.componentService";
 
-    /** The Constant BEAN_TWITTER_SERVICE. */
-    public static final String BEAN_TWITTER_SERVICE = "releaser.twitterService";
 
     /** The Constant BEAN_JENKINS_SERVICE. */
     public static final String BEAN_JENKINS_SERVICE = "releaser.jenkinsService";
@@ -210,26 +208,6 @@ public class ConstanteUtils
     /** The Constant PROPERTY_PROXY_PORT. */
     public static final String PROPERTY_NO_PROXY_FOR_MAVEN="releaser.noProxyForMaven";
 
-    /** The Constant PROPERTY_TWITTER_OAUTH_CONSUMER_KEY. */
-    public static final String PROPERTY_TWITTER_OAUTH_CONSUMER_KEY = "releaser.consumerKey";
-
-    /** The Constant PROPERTY_TWITTER_OAUTH_CONSUMER_SECRET. */
-    public static final String PROPERTY_TWITTER_OAUTH_CONSUMER_SECRET = "releaser.consumerSecret";
-
-    /** The Constant PROPERTY_TWITTER_OAUTH_ACCESS_TOKEN. */
-    public static final String PROPERTY_TWITTER_OAUTH_ACCESS_TOKEN = "releaser.accessToken";
-
-    /** The Constant PROPERTY_TWITTER_OAUTH_ACCESS_TOKEN_SECRET. */
-    public static final String PROPERTY_TWITTER_OAUTH_ACCESS_TOKEN_SECRET = "releaser.accessTokenSecret";
-
-    /** The Constant PROPERTY_TWITTER_OAUTH_REQUEST_TOKEN_URL. */
-    public static final String PROPERTY_TWITTER_OAUTH_REQUEST_TOKEN_URL = "releaser.requestTokenURL";
-
-    /** The Constant PROPERTY_TWITTER_OAUTH_AUTHORIZATION_URL. */
-    public static final String PROPERTY_TWITTER_OAUTH_AUTHORIZATION_URL = "releaser.authorizationURL";
-
-    /** The Constant PROPERTY_TWITTER_OAUTH_ACCESSTOKEN_URL. */
-    public static final String PROPERTY_TWITTER_OAUTH_ACCESSTOKEN_URL = "releaser.accessTokenURL";
 
     /** The Constant PROPERTY_THREAD_RELEASE_POOL_MAX_SIZE. */
     public static final String PROPERTY_THREAD_RELEASE_POOL_MAX_SIZE = "releaser.threadReleasePoolMaxSize";
@@ -276,8 +254,6 @@ public class ConstanteUtils
     /** The Constant PROPERTY_JENKINS_BUILD_TYPE. */
     public static final String PROPERTY_JENKINS_BUILD_TYPE = "releaser.JenkinsBuildType";    
 
-    /** The Constant I18_TWITTER_MESSAGE. */
-    public static final String I18_TWITTER_MESSAGE = "releaser.message.twitterMessage";
 
     /** The Constant CONSTANTE_TYPE_LUTECE_SITE. */
     public static final String CONSTANTE_TYPE_LUTECE_SITE = "lutece-site";

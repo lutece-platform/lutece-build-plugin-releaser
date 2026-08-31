@@ -169,16 +169,6 @@ public interface IWorkflowReleaseContextService
     void releasePerformSite( WorkflowReleaseContext context, Locale locale );
 
     /**
-     * Send tweet.
-     *
-     * @param context
-     *            the context
-     * @param locale
-     *            the locale
-     */
-    void sendTweet( WorkflowReleaseContext context, Locale locale );
-
-    /**
      * Update bugtracker versions.
      *
      * @param context

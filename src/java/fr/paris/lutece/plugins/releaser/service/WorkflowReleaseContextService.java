@@ -736,27 +736,6 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     }
 
     /**
-     * Send tweet.
-     *
-     * @param context
-     *            the context
-     * @param locale
-     *            the locale
-     */
-    public void sendTweet( WorkflowReleaseContext context, Locale locale )
-    {
-
-        CommandResult commandResult = context.getCommandResult( );
-
-        ReleaserUtils.logStartAction( context, " send Tweet" );
-
-        TwitterService.getService( ).sendTweet( context.getComponent( ).getTweetMessage( ), commandResult );
-
-        ReleaserUtils.logEndAction( context, " send Tweet" );
-
-    }
-
-    /**
      * Update bugtracker versions.
      *
      * @param context

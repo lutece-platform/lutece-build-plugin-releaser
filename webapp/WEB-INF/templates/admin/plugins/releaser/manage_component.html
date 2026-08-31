@@ -38,7 +38,6 @@
                                   <th>Version</th>
                                   <th>Version cible</th>
                                   <th>Prochaine version</th>
-                                  <th><i class="fa fa-twitter"></i> Tweet</th>
                                   <th>Actions</th>
                                 </tr>
                             </thead>    
@@ -107,14 +106,6 @@
                                 </td>
                                 <td>
                                     <span class="button transition fill-lightblue small"><#if component.isSnapshotVersion()>${component.nextSnapshotVersion!}<#else>${component.targetVersion!}</#if></span>
-                                </td>
-                                <td>
-                                    <#assign defaultTweetMessage="${component.name} ${component.targetVersion} released #LuteceCMS #LutecePortal"/>
-                                    <#if component.tweetMessage?has_content>
-                                        <textarea  id="tweet_message_${component.artifactId!}" name="tweet_message_${component.artifactId!}"  min=2 max=140 >${component.tweetMessage!}</textarea>
-                                    <#else>
-                                        <textarea id="tweet_message_${component.artifactId!}" name="tweet_message_${component.artifactId!}"  min=2 max=140>${defaultTweetMessage!}</textarea>
-                                    </#if>
                                 </td>
                                 <td>
                                    <span id="release-result-${component.artifactId!}">
@@ -202,7 +193,6 @@ function launchRelease( artifactId, force, bugtracker ) {
     var params = {
             action: 'releaseComponent',
             artifact_id: artifactId,
-            tweet_message: $("#tweet_message_"+artifactId).val(),
             force: force
     };
     if ( bugtracker && bugtracker.create ) {

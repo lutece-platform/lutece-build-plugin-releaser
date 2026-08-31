@@ -120,8 +120,6 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /** The str full name. */
     private String _strFullName;
 
-    /** The str tweet message. */
-    private String _strTweetMessage;
 
     /** The str scm developer connection. */
     private String _strScmDeveloperConnection;
@@ -644,26 +642,6 @@ public class Component extends AbstractReleaserResource implements RBACResource
         this._strFullName = strFullName;
     }
 
-    /**
-     * Gets the tweet message.
-     *
-     * @return getTweetMessage
-     */
-    public String getTweetMessage( )
-    {
-        return _strTweetMessage;
-    }
-
-    /**
-     * Sets the tweet message.
-     *
-     * @param _strTweetMessage
-     *            the new tweet message
-     */
-    public void setTweetMessage( String _strTweetMessage )
-    {
-        this._strTweetMessage = _strTweetMessage;
-    }
 
     /**
      * Gets the scm url.

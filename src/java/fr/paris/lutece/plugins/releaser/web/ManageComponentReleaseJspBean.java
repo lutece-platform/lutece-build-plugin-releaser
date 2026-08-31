@@ -126,8 +126,6 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
     /** The Constant PARAMETER_ARTIFACT_ID. */
     private static final String PARAMETER_ARTIFACT_ID = "artifact_id";
 
-    /** The Constant PARAMETER_TWEET_MESSAGE. */
-    private static final String PARAMETER_TWEET_MESSAGE = "tweet_message";
 
     /** The Constant PARAMETER_SOURCE_TAG. */
     private static final String PARAMETER_SOURCE_TAG = "source_tag";
@@ -245,7 +243,6 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
     public String doReleaseComponent( HttpServletRequest request )
     {
         String strArtifactId = request.getParameter( PARAMETER_ARTIFACT_ID );
-        String strTweetMessage = request.getParameter( PARAMETER_TWEET_MESSAGE );
         boolean bForce = Boolean.parseBoolean( request.getParameter( PARAMETER_FORCE ) );
 
         AbstractJsonResponse jsonResponse = null;
@@ -290,7 +287,6 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
                         return JsonUtil.buildJsonResponse( bugtrackerError );
                     }
 
-                    component.setTweetMessage( strTweetMessage );
                     nIdContext = ComponentService.getService( ).release( component, getLocale( ), getUser( ), request, true );
                     break;
                 }

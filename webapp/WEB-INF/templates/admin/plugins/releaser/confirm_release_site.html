@@ -54,7 +54,6 @@
 					  <th>Version</th>
 					  <th>Version cible</th>
 					  <th>Prochaine version</th>
-					  <th><i class="fa fa-twitter"></i> Tweet</th>
 					  <th class="text-center">Actions</th>
 					</tr>
 				</thead>	
@@ -82,16 +81,6 @@
 									${component.targetVersion!}
 								</#if>
 							</span>
-						</td>
-						<td>
-				 <#assign defaultTweetMessage="${component.name} ${component.targetVersion} released #LuteceCMS #LutecePortal"/>
-                            <#if component.shouldBeReleased()>
-                                <#if component.tweetMessage?has_content>
-                                    <textarea  name="tweet_message_${component.artifactId!}"  min=2 max=140 >${component.tweetMessage}</textarea>
-                               <#else>
-                                 <textarea name="tweet_message_${component.artifactId!}"  min=2 max=140>${defaultTweetMessage}</textarea>
-                               </#if>
-							</#if>
 						</td>
 						<td class="text-center">
 							<input id="valid_release_modif_${component.artifactId!}" name="valid_release_modif_${component.artifactId!}" <#if !component.shouldBeReleased()>checked</#if><#if modif_validated[component.artifactId]??&& modif_validated[component.artifactId]>checked</#if> value="true" type="checkbox">

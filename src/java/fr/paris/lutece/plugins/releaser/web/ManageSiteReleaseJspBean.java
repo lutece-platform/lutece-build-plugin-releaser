@@ -95,8 +95,6 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
     /** The Constant PARAMETER_OPEN_SITE_VERSION. */
     private static final String PARAMETER_OPEN_SITE_VERSION = "open_site_version";
 
-    /** The Constant PARAMETER_TWEET_MESSAGE. */
-    private static final String PARAMETER_TWEET_MESSAGE = "tweet_message_";
 
     /** The Constant PARAMETER_VALID_RELEASE_MODIF. */
     private static final String PARAMETER_VALID_RELEASE_MODIF = "valid_release_modif_";
@@ -552,7 +550,6 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         ReleaserUtils.setReleaserUser( request, user );
 
         String strCheckedReleaseInfo = null;
-        String strTweetMessage = null;
 
         if ( _site != null && _site.getComponents( ) != null )
         {
@@ -566,8 +563,6 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
             {
 
                 strCheckedReleaseInfo = request.getParameter( PARAMETER_VALID_RELEASE_MODIF + component.getArtifactId( ) );
-                strTweetMessage = request.getParameter( PARAMETER_TWEET_MESSAGE + component.getArtifactId( ) );
-                component.setTweetMessage( strTweetMessage );
                 _modifValidated.put( component.getArtifactId( ), strCheckedReleaseInfo != null && strCheckedReleaseInfo.equals( Boolean.TRUE.toString( ) ) );
 
             }
