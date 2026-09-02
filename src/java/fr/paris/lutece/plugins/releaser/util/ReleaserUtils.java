@@ -51,7 +51,7 @@ import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService;
-import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
+import fr.paris.lutece.plugins.releaser.util.git.GitUtils;
 import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;

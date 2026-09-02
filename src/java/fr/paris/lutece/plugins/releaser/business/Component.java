@@ -36,7 +36,7 @@ package fr.paris.lutece.plugins.releaser.business;
 import java.util.HashMap;
 import java.util.List;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
-import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
+import fr.paris.lutece.plugins.releaser.util.git.GitUtils;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.portal.service.rbac.RBACResource;
 

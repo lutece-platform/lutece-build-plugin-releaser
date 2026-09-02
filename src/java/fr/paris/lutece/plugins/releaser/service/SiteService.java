@@ -59,7 +59,7 @@ import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
 import fr.paris.lutece.plugins.releaser.util.CVSFactoryService;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
-import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
+import fr.paris.lutece.plugins.releaser.util.git.GitUtils;
 import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
 import fr.paris.lutece.plugins.releaser.util.pom.PomUpdater;
 import fr.paris.lutece.plugins.releaser.util.version.Version;

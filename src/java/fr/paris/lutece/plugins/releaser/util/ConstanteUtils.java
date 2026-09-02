@@ -106,11 +106,8 @@ public class ConstanteUtils
     /** The Constant BEAN_BUGTRACKER_SERVICE. */
     public static final String BEAN_BUGTRACKER_SERVICE = "releaser.bugtrackerService";
 
-    /** The Constant BEAN_GITHUB_RESOURCE_SERVICE. */
-    public static final String BEAN_GITHUB_RESOURCE_SERVICE = "releaser.cvs.githubResourceService";
-
-    /** The Constant BEAN_GITLAB_RESOURCE_SERVICE. */
-    public static final String BEAN_GITLAB_RESOURCE_SERVICE = "releaser.cvs.gitlabResourceService";
+    /** The Constant BEAN_GIT_RESOURCE_SERVICE. */
+    public static final String BEAN_GIT_RESOURCE_SERVICE = "releaser.cvs.gitResourceService";
 
     /** The Constant BEAN_COMPONENT_SERVICE. */
     public static final String BEAN_COMPONENT_SERVICE = "releaser.componentService";

@@ -31,7 +31,7 @@
  *
  * License 1.0
  */
-package fr.paris.lutece.plugins.releaser.service.github;
+package fr.paris.lutece.plugins.releaser.service.git;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,7 +63,7 @@ import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.IVCSResourceService;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.plugins.releaser.util.file.FileUtils;
-import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
+import fr.paris.lutece.plugins.releaser.util.git.GitUtils;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
 import fr.paris.lutece.portal.service.util.AppException;

@@ -31,7 +31,7 @@
  *
  * License 1.0
  */
-package fr.paris.lutece.plugins.releaser.util.github;
+package fr.paris.lutece.plugins.releaser.util.git;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 

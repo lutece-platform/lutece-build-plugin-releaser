@@ -68,7 +68,7 @@ import fr.paris.lutece.plugins.releaser.util.IVCSResourceService;
 import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
 import fr.paris.lutece.plugins.releaser.util.PluginUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
-import fr.paris.lutece.plugins.releaser.util.github.GitUtils;
+import fr.paris.lutece.plugins.releaser.util.git.GitUtils;
 import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
 import fr.paris.lutece.plugins.releaser.util.pom.PomUpdater;
 import fr.paris.lutece.plugins.releaser.util.version.Version;

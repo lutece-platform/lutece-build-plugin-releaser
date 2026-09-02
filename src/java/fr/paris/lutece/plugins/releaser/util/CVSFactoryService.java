@@ -44,28 +44,14 @@ import fr.paris.lutece.portal.service.util.AppException;
 public class CVSFactoryService
 {
 
-    /** The gitlab service. */
-    private static IVCSResourceService _gitlabService;
-
-    /** The github service. */
-    private static IVCSResourceService _githubService;
+    /** The git service. */
+    private static IVCSResourceService _gitService;
 
     /**
      * Instantiates a new CVS factory service.
      */
     public CVSFactoryService( )
     {
-
-    }
-
-    /**
-     * Inits the.
-     */
-    private static void init( )
-    {
-
-        _gitlabService = SpringContextService.getBean( ConstanteUtils.BEAN_GITLAB_RESOURCE_SERVICE );
-        _githubService = SpringContextService.getBean( ConstanteUtils.BEAN_GITHUB_RESOURCE_SERVICE );
 
     }
 
@@ -79,18 +65,14 @@ public class CVSFactoryService
     public static IVCSResourceService getService( RepositoryType repositoryType )
     {
 
-        if ( _gitlabService == null || _githubService == null )
+        if ( _gitService == null )
         {
-            init( );
+            _gitService = SpringContextService.getBean( ConstanteUtils.BEAN_GIT_RESOURCE_SERVICE );
         }
 
-        if ( RepositoryType.GITHUB.equals( repositoryType ) )
+        if ( RepositoryType.GITHUB.equals( repositoryType ) || RepositoryType.GITLAB.equals( repositoryType ) )
         {
-            return _githubService;
-        }
-        if ( RepositoryType.GITLAB.equals( repositoryType ) )
-        {
-            return _gitlabService;
+            return _gitService;
         }
 
         // Unsupported repository : fail with an explicit error on every action path.
