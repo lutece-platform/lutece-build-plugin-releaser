@@ -47,6 +47,9 @@ public abstract class AbstractReleaserResource implements IReleaserResource
 
     private List<String> _listReleaseComments = new ArrayList<>( );
 
+    /** Blocking anomaly message : survives comment resets. */
+    private String _strBlockingReleaseComment;
+
     /**
      * {@inheritDoc}
      */
@@ -102,11 +105,40 @@ public abstract class AbstractReleaserResource implements IReleaserResource
     }
 
     /**
-     * Reset comments
+     * Reset comments. The blocking comment, if any, is kept.
      */
     public void resetComments( )
     {
         _listReleaseComments.clear( );
+        if ( _strBlockingReleaseComment != null )
+        {
+            _listReleaseComments.add( _strBlockingReleaseComment );
+        }
+    }
+
+    /**
+     * Sets the blocking release comment and adds it to the displayed comments.
+     *
+     * @param strComment
+     *            the blocking comment
+     */
+    public void setBlockingReleaseComment( String strComment )
+    {
+        _strBlockingReleaseComment = strComment;
+        if ( strComment != null && !_listReleaseComments.contains( strComment ) )
+        {
+            _listReleaseComments.add( strComment );
+        }
+    }
+
+    /**
+     * Returns the blocking release comment.
+     *
+     * @return the blocking comment, or null if none
+     */
+    public String getBlockingReleaseComment( )
+    {
+        return _strBlockingReleaseComment;
     }
 
 }

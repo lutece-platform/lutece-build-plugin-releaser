@@ -513,6 +513,12 @@ public class SiteService
      */
     private static void buildReleaseComments( Component component, Locale locale )
     {
+        // A blocking anomaly owns the display : no misleading comments after it.
+        if ( component.getBlockingReleaseComment( ) != null )
+        {
+            return;
+        }
+
         if ( ConstanteUtils.NO_VERSION_DEFINED_IN_POM.equals( component.getCurrentVersion( ) ) )
         {
             component.addReleaseComment( I18nService.getLocalizedString( MESSAGE_NO_VERSION_IN_SITE_POM, locale ) );

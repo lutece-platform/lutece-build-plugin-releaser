@@ -476,6 +476,20 @@ public class ComponentService implements IComponentService
         return false;
     }
 
+    /**
+     * Returns the human-readable cause of a missing repository URL : the blocking anomaly if known, a generic message otherwise.
+     *
+     * @param component
+     *            the component
+     * @return the cause
+     */
+    private static String getMissingRepoUrlCause( Component component )
+    {
+        return ( component.getBlockingReleaseComment( ) != null )
+                ? StringUtils.removeEnd( component.getBlockingReleaseComment( ), " : release impossible." ) + "."
+                : "URL du dépôt introuvable.";
+    }
+
     @Override
     public Component getComponentBranchList( Component component, RepositoryType repositoryType, ReleaserUser user )
     {
@@ -501,6 +515,14 @@ public class ComponentService implements IComponentService
             String strGithubBaseUrl = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_REPOSITORY_BASE_URL );
             strRepoUrl = strGithubBaseUrl + component.getFullName( ) + ".git";
             commandResult.getLog( ).append( "No SCM URL found, using GitHub fullName fallback : " + strRepoUrl + "\n" );
+        }
+
+        // No usable repository URL : abort instead of cloning an empty URI.
+        if ( StringUtils.isBlank( strRepoUrl ) )
+        {
+            commandResult.getLog( ).append( "No repository URL available : branch list aborted.\n" );
+            component.addReleaseComment( "Changement de branche impossible : " + getMissingRepoUrlCause( component ) );
+            return component;
         }
 
         File fLocalRepo = new File( strLocalComponentPath );
@@ -558,6 +580,13 @@ public class ComponentService implements IComponentService
             else
             {
                 String strRepoUrl = GitUtils.getRepoUrl( context.getReleaserResource( ).getScmUrl( ) );
+
+                // No usable repository URL : abort instead of cloning an empty URI.
+                if ( StringUtils.isBlank( strRepoUrl ) )
+                {
+                    component.addReleaseComment( "Lecture des tags impossible : " + getMissingRepoUrlCause( component ) );
+                    return component;
+                }
                 git = Git.cloneRepository( )
                         .setCredentialsProvider( new org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider( strLogin, strPwd ) )
                         .setURI( strRepoUrl ).setDirectory( fLocalRepo ).setCloneAllBranches( true ).call( );

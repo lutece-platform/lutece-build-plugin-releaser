@@ -98,9 +98,8 @@ public final class MavenRepoComponentInfoProvider
         // The Nexus path is derived from the groupId : without it the component cannot be located. Block with a clear message.
         if ( StringUtils.isBlank( component.getGroupId( ) ) )
         {
-            String strMessage = "Le groupId est absent pour le composant " + strArtifactId
-                    + " : impossible de le localiser dans Nexus.";
-            component.addReleaseComment( strMessage );
+            String strMessage = "Le groupId est absent : composant introuvable dans Nexus.";
+            component.setBlockingReleaseComment( strMessage );
             AppLogService.error( "MavenRepoComponentInfoProvider - " + strMessage );
             return;
         }
@@ -138,7 +137,7 @@ public final class MavenRepoComponentInfoProvider
             // Composant absent du dépôt Nexus snapshot.
             if ( strSnapshotUrl == null )
             {
-                component.addReleaseComment( "Le composant " + strArtifactId + " est absent du dépôt Nexus snapshot : release impossible." );
+                component.setBlockingReleaseComment( "Composant absent du dépôt Nexus snapshot : release impossible." );
                 AppLogService.error( "MavenRepoComponentInfoProvider - Component " + strArtifactId + " not found in Maven Snapshot Repository" );
                 return;
             }
@@ -148,7 +147,7 @@ public final class MavenRepoComponentInfoProvider
             if ( listSnapshotVersions == null || listSnapshotVersions.isEmpty( ) )
             {
                 component.setLastAvailableSnapshotVersion( SNAPSHOT_NOT_FOUND );
-                component.addReleaseComment( "Aucune version SNAPSHOT publiée dans Nexus pour le composant " + strArtifactId + " : release impossible." );
+                component.setBlockingReleaseComment( "Aucune version SNAPSHOT publiée dans Nexus : release impossible." );
                 AppLogService.error( "MavenRepoComponentInfoProvider - No snapshot version found in Nexus for " + strArtifactId );
                 return;
             }
@@ -162,7 +161,7 @@ public final class MavenRepoComponentInfoProvider
             // Balise <scm> absente du POM.
             if ( StringUtils.isBlank( component.getScmDeveloperConnection( ) ) )
             {
-                component.addReleaseComment( "La balise SCM est absente du POM du composant " + strArtifactId + " : release impossible." );
+                component.setBlockingReleaseComment( "La balise SCM est absente du POM : release impossible." );
                 AppLogService.error( "MavenRepoComponentInfoProvider - Missing SCM tag in POM for " + strArtifactId );
                 return;
             }
@@ -170,7 +169,7 @@ public final class MavenRepoComponentInfoProvider
             // Dépôt non supporté (ni GitHub ni GitLab).
             if ( component.getRepoType( ) == null )
             {
-                component.addReleaseComment( "Le dépôt du composant " + strArtifactId + " n'est ni GitHub ni GitLab : release impossible." );
+                component.setBlockingReleaseComment( "Le dépôt n'est ni GitHub ni GitLab : release impossible." );
                 AppLogService.error( "MavenRepoComponentInfoProvider - Unsupported repository for " + strArtifactId + " : "
                         + component.getScmDeveloperConnection( ) );
                 return;
