@@ -335,7 +335,8 @@ public class Version implements Comparable
         		else if ( tabVersion[1].equals( QUALIFIER_BETA ) || tabVersion[1].equals(QUALIFIER_CANDIDATE))
         		{
                     strCurrent =  tabVersion[0];
-                    version.setQualifier( tabVersion[1] + "-" + tabVersion[2] );
+                    // Legacy versions may carry a bare qualifier without number (e.g. "2.0.21-beta")
+                    version.setQualifier( ( tabVersion.length > 2 ) ? tabVersion[1] + "-" + tabVersion[2] : tabVersion[1] );
         		}
                 
             }

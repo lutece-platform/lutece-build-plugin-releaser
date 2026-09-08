@@ -46,6 +46,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import org.apache.commons.lang3.StringUtils;
 import javax.servlet.http.HttpServletRequest;import javax.xml.bind.JAXBException;
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.Dependency;
@@ -170,9 +172,9 @@ public class SiteService
         ReleaserUser user = ReleaserUtils.getReleaserUser( request, locale );
         Credential credential = user.getCredential( site.getRepoType( ) );
 
-        // Find last release in the repository
-        String strLastReleaseVersion = CVSFactoryService.getService( site.getRepoType( ) ).getLastRelease( site, credential.getLogin( ),
-                credential.getPassword( ) );
+        // Find last release in the repository (may be empty for a site never released : normalize to null)
+        String strLastReleaseVersion = StringUtils.trimToNull( CVSFactoryService.getService( site.getRepoType( ) ).getLastRelease( site,
+                credential.getLogin( ), credential.getPassword( ) ) );
         site.setLastReleaseVersion( strLastReleaseVersion );
 
         // To find next releases

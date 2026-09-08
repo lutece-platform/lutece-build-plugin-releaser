@@ -75,6 +75,12 @@ public class VersionTest
         result = Version.parse( strSource );
         assertEquals( "12.10.0-RC-01", result.getVersion( ) );
         System.out.println( result.getVersion( ) );
+
+        // Legacy bare qualifier without number (e.g. old Nexus artifacts)
+        strSource = "2.0.21-beta";
+        result = Version.parse( strSource );
+        assertEquals( "2.0.21-beta", result.getVersion( ) );
+        System.out.println( result.getVersion( ) );
     }
 
     /**
