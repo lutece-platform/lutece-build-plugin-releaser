@@ -497,6 +497,16 @@ public class RedmineComponentService implements IBugtrackerService
             String strReleaseVersionName = component.getTargetVersion( );
             String strNewVersion = component.getNextSnapshotVersion( ).replace( CONSTANTE_SNAPSHOT_VERSION, "" );
 
+            // Beta / RC : the development of the current version goes on, its Redmine version must stay open and untouched.
+            if ( isIntermediateRelease( strCurrentVersion, strReleaseVersionName, strNewVersion ) )
+            {
+                commandResult.getLog( ).append( "Release intermédiaire " + strReleaseVersionName + " : la version Redmine " + strCurrentVersion
+                        + " reste ouverte, pas de mise à jour du bugtracker.\n\n" );
+                AppLogService.info( "Releaser : intermediate release " + strReleaseVersionName + " of " + component.getArtifactId( )
+                        + " : Redmine version " + strCurrentVersion + " kept open." );
+                return;
+            }
+
             Project project = _projectManager.getProjectByKey( strProjectKey );
             int nProjectId = project.getId( );
             commandResult.getLog( ).append( "Mise à jour Redmine du projet " + strProjectKey + "...\n" );
@@ -558,6 +568,29 @@ public class RedmineComponentService implements IBugtrackerService
         {
             ReleaserUtils.addInfoError( commandResult, buildRedmineUpdateFailureMessage( strStep, ex ), buildRedmineUpdateFailureShortMessage( strStep ), ex );
         }
+    }
+
+    /**
+     * Whether a release leaves the version in development unchanged : a beta or release candidate, or any release whose next development
+     * version is the current one. Closing or renaming the Redmine version would then be wrong.
+     *
+     * @param strCurrentVersion
+     *            the version in development, without snapshot qualifier
+     * @param strReleaseVersion
+     *            the released version
+     * @param strNewVersion
+     *            the next development version, without snapshot qualifier
+     * @return true for an intermediate release
+     */
+    static boolean isIntermediateRelease( String strCurrentVersion, String strReleaseVersion, String strNewVersion )
+    {
+        if ( strCurrentVersion != null && strCurrentVersion.equals( strNewVersion ) )
+        {
+            return true;
+        }
+
+        return strReleaseVersion != null && ( fr.paris.lutece.plugins.releaser.util.version.Version.isCandidate( strReleaseVersion )
+                || fr.paris.lutece.plugins.releaser.util.version.Version.isBeta( strReleaseVersion ) );
     }
 
     /**

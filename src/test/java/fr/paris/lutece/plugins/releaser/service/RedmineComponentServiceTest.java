@@ -113,6 +113,27 @@ public class RedmineComponentServiceTest
      * Test of the prepareReleaseInBugtracker scope guard : unsupported-repo or scm-less components are out of the
      * bugtracker scope and must be ignored without any Redmine access (the service is deliberately NOT initialized here).
      */
+    /**
+     * A beta or RC release, or any release keeping the same development version, must leave the Redmine version open and untouched.
+     */
+    @Test
+    public void testIsIntermediateRelease( )
+    {
+        // Beta : 7.1.10-SNAPSHOT released as 7.1.10-beta-02, development goes on in 7.1.10-SNAPSHOT
+        assertTrue( RedmineComponentService.isIntermediateRelease( "7.1.10", "7.1.10-beta-02", "7.1.10" ) );
+
+        // Release candidate
+        assertTrue( RedmineComponentService.isIntermediateRelease( "7.1.10", "7.1.10-RC-01", "7.1.10" ) );
+
+        // Stable release : 7.1.10 closed, 7.1.11 opened
+        assertFalse( RedmineComponentService.isIntermediateRelease( "7.1.10", "7.1.10", "7.1.11" ) );
+
+        // Defensive : same development version before and after, whatever the release name
+        assertTrue( RedmineComponentService.isIntermediateRelease( "7.1.10", "7.1.10", "7.1.10" ) );
+
+        assertFalse( RedmineComponentService.isIntermediateRelease( "7.1.10", null, "7.1.11" ) );
+    }
+
     @Test
     public void testPrepareReleaseInBugtrackerOutOfScope( )
     {
