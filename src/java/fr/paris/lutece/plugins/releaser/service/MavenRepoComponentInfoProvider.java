@@ -154,6 +154,8 @@ public final class MavenRepoComponentInfoProvider
 
             listSnapshotVersions = VersionUtils.sortVersionsList( listSnapshotVersions, true );
             String strLastSnapshot = VersionUtils.getLastVersion( listSnapshotVersions );
+            component.setSnapshotVersions( listSnapshotVersions );
+            component.setLastAvailableSnapshotVersion( strLastSnapshot );
 
             // Read scmDeveloperConnection from the last snapshot pom (uses the local version).
             getPomInfos( component, getSnapshotPomUrl( strSnapshotUrl, strArtifactId, strLastSnapshot ) );
@@ -177,10 +179,6 @@ public final class MavenRepoComponentInfoProvider
 
             // Infos bugtracker : URL de roadmap, ou commentaire informatif si projet manquant.
             BugtrackerService.getService( ).populateBugtrackerInfo( component );
-
-            component.setSnapshotVersions( listSnapshotVersions );
-            component.setLastAvailableSnapshotVersion( strLastSnapshot );
-            
         }
         catch( Exception ex )
         {

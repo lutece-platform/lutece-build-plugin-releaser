@@ -486,6 +486,12 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
             {
                 if ( component.getArtifactId( ).equals( strArtifactId ) )
                 {
+                    // Blocking anomaly (missing SCM, not in Nexus...) : refuse before launching anything.
+                    if ( component.getBlockingReleaseComment( ) != null )
+                    {
+                        return JsonUtil.buildJsonResponse( new ErrorJsonResponse( "RELEASE_BLOCKED", component.getBlockingReleaseComment( ) ) );
+                    }
+
                     // GitHub write permission : fail fast, before launching anything.
                     String strPermissionError = ReleaserUtils.checkGithubWritePermission( component, user );
                     if ( strPermissionError != null )

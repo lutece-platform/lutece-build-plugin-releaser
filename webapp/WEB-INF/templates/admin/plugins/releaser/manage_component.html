@@ -109,9 +109,15 @@
                                 </td>
                                 <td>
                                    <span id="release-result-${component.artifactId!}">
+                                      <#if component.blockingReleaseComment??>
+                                      <span class="button transition border-orange small disabled" title="${component.blockingReleaseComment?html}" style="opacity:0.5;cursor:not-allowed;">
+                                        <i class="fa fa-ban fa-fw"></i> Releaser
+                                      </span>
+                                      <#else>
                                       <a class="button transition border-orange small btn-release" data-artifactid="${component.artifactId!}" title="Releaser le composant" href='jsp/admin/plugins/releaser/ManageComponent.jsp?action=versionComponent&artifact_id=${component.artifactId!}' >
                                         <i class="fa fa-cog fa-fw"></i> Releaser
                                       </a>
+                                      </#if>
                                    </span>
                                     <a id="histo-${component.artifactId!}" class="button transition border-blue small btn-release-history"  title="Visualiser l'historique des releases" href='jsp/admin/plugins/releaser/ManageSiteRelease.jsp?view=releaseComponentHistory&id=${component.artifactId!}' target="_blank">
                                       <i class="fa fa-cog fa-fw"></i> Historique
