@@ -487,6 +487,18 @@ public class Version implements Comparable
     }
 
     /**
+     * Returns true if both versions share the same major.minor.patch, whatever the qualifier.
+     *
+     * @param version
+     *            the version to compare with
+     * @return true if major, minor and patch are identical
+     */
+    private boolean hasSameBase( Version version )
+    {
+        return _nMajor == version._nMajor && _nMinor == version._nMinor && _nPatch == version._nPatch;
+    }
+
+    /**
      * Returns true if the version is qualified as Snapshot.
      *
      * @return true if the version is qualified as Snapshot
@@ -597,7 +609,7 @@ public class Version implements Comparable
     		if ( strPreviousReleaseVersion != null)
     		{
     			parseReleaseVersion = parse( strPreviousReleaseVersion );
-    			if ( parseReleaseVersion._strQualifierRadix != null )
+    			if ( parseReleaseVersion._strQualifierRadix != null && parseReleaseVersion.hasSameBase( version ) )
         		{
         			version._strQualifierRadix = parseReleaseVersion._strQualifierRadix;
         			version._nQualifierNumber = parseReleaseVersion._nQualifierNumber;

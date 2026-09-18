@@ -169,4 +169,29 @@ public class VersionTest
 
     }
 
+    /**
+     * The qualifier number of the last release is continued only when it belongs to the same major.minor.patch.
+     */
+    @Test
+    public void testGetNextReleaseVersionsWithLastRelease( )
+    {
+        List<String> listVersions = Version.getNextReleaseVersions( "4.0.0-SNAPSHOT", "3.0.13-beta-02" );
+        assertEquals( "4.0.0-RC-01", listVersions.get( 0 ) );
+        assertEquals( "4.0.0", listVersions.get( 1 ) );
+        assertTrue( listVersions.contains( "4.0.0-beta-01" ) );
+        assertFalse( listVersions.contains( "4.0.0-beta-03" ) );
+
+        listVersions = Version.getNextReleaseVersions( "4.0.0-SNAPSHOT", "3.0.13-RC-02" );
+        assertEquals( "4.0.0-RC-01", listVersions.get( 0 ) );
+        assertTrue( listVersions.contains( "4.0.0-beta-01" ) );
+
+        listVersions = Version.getNextReleaseVersions( "4.0.0-SNAPSHOT", "4.0.0-beta-02" );
+        assertEquals( "4.0.0-RC-01", listVersions.get( 0 ) );
+        assertTrue( listVersions.contains( "4.0.0-beta-03" ) );
+
+        listVersions = Version.getNextReleaseVersions( "4.0.0-SNAPSHOT", "4.0.0-RC-02" );
+        assertEquals( "4.0.0-RC-03", listVersions.get( 0 ) );
+        assertFalse( listVersions.contains( "4.0.0-beta-01" ) );
+    }
+
 }
