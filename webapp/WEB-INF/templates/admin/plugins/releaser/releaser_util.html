@@ -54,6 +54,23 @@
 </#macro>
 
 
+<#macro keepScrollPosition >
+<script>
+$( function(){
+    var strKey = "releaser-scroll-" + window.location.pathname;
+    var strSaved = null;
+    try { strSaved = window.sessionStorage.getItem( strKey ); } catch( e ) { }
+    if ( strSaved !== null ) {
+        try { window.sessionStorage.removeItem( strKey ); } catch( e ) { }
+        window.scrollTo( 0, parseInt( strSaved, 10 ) );
+    }
+    $( document ).on( "click", "a.button, a.btn, button[type=submit]", function(){
+        try { window.sessionStorage.setItem( strKey, window.pageYOffset ); } catch( e ) { }
+    });
+});
+</script>
+</#macro>
+
 <#macro releaseComments comments maxLength=110 >
 	<#list comments as strComment>
 		<div class="release-comment">
