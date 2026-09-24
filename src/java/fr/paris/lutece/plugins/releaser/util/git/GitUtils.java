@@ -539,22 +539,59 @@ public class GitUtils
     public static MergeResult mergeBack( Git git, String strSourceBranch, String strTargetMasterBranch, String strUserName, String strPassword,
             CommandResult commandResult ) throws IOException, GitAPIException
     {
+        Ref refToMerge = getTagLinkedToLastRelease( git );
+        if ( refToMerge == null )
+        {
+            refToMerge = git.getRepository( ).findRef( CONSTANTE_REF_HEADS + strSourceBranch );
+        }
+        return mergeIntoMaster( git, refToMerge, strTargetMasterBranch, strUserName, strPassword, commandResult );
+    }
 
-        // Fail the release with a clear alert if the target master* branch does not exist on the remote.
+    /**
+     * Merges a reference (a release tag, or a branch) into the target master branch and pushes it. The remote master branch must exist ; the
+     * local tracking branch is created on first use, as the clone only creates the remote refs. The release from tag merges its stable tag this
+     * way, so that master never carries a commit of its own and the next merge back from develop stays clean.
+     *
+     * @param git
+     *            the git
+     * @param refToMerge
+     *            the tag or branch to merge
+     * @param strTargetMasterBranch
+     *            the target master branch to merge into (e.g. "master", "master_core7")
+     * @param strUserName
+     *            the str user name
+     * @param strPassword
+     *            the str password
+     * @param commandResult
+     *            the command result
+     * @return the merge result, or null when the merge could not be attempted
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     * @throws GitAPIException
+     *             the git API exception
+     */
+    public static MergeResult mergeIntoMaster( Git git, Ref refToMerge, String strTargetMasterBranch, String strUserName, String strPassword,
+            CommandResult commandResult ) throws IOException, GitAPIException
+    {
+        if ( refToMerge == null )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, "Nothing to merge into " + strTargetMasterBranch + " : reference not found." );
+            return null;
+        }
+        String strMerged = Repository.shortenRefName( refToMerge.getName( ) );
+
         if ( git.getRepository( ).findRef( "refs/remotes/origin/" + strTargetMasterBranch ) == null )
         {
             ReleaserUtils.addTechnicalError( commandResult,
-                    "Remote branch origin/" + strTargetMasterBranch + " not found. Cannot merge " + strSourceBranch + " back into "
-                            + strTargetMasterBranch + ". Please create the " + strTargetMasterBranch + " branch on the remote and retry." );
+                    "Remote branch origin/" + strTargetMasterBranch + " not found. Cannot merge " + strMerged + " into " + strTargetMasterBranch
+                            + ". Please create the " + strTargetMasterBranch + " branch on the remote and retry." );
             return null;
         }
 
-        // JGit's checkout requires a local branch ref; cloneAllBranches only creates
-        // refs/remotes/origin/*. Create the local tracking branch on first use.
         boolean localExists = false;
         for ( Ref ref : git.branchList( ).call( ) )
         {
-            if ( ref.getName( ).equals( "refs/heads/" + strTargetMasterBranch ) )
+            if ( ref.getName( ).equals( CONSTANTE_REF_HEADS + strTargetMasterBranch ) )
             {
                 localExists = true;
                 break;
@@ -566,34 +603,15 @@ public class GitUtils
                     .setStartPoint( "origin/" + strTargetMasterBranch ).setForce( true ).call( );
         }
 
-        Ref tag = getTagLinkedToLastRelease( git );
-
         git.checkout( ).setName( strTargetMasterBranch ).call( );
-        List<Ref> call = git.branchList( ).call( );
-
-        Ref mergedBranchRef = null;
-        for ( Ref ref : call )
-        {
-            if ( ref.getName( ).equals( "refs/heads/" + strSourceBranch ) )
-            {
-                mergedBranchRef = ref;
-                break;
-            }
-        }
-
-        if ( tag != null )
-        {
-            mergedBranchRef = tag;
-        }
-        MergeResult mergeResult = git.merge( ).include( mergedBranchRef ).call( );
+        MergeResult mergeResult = git.merge( ).include( refToMerge ).call( );
         if ( mergeResult.getMergeStatus( ).equals( MergeResult.MergeStatus.CHECKOUT_CONFLICT )
                 || mergeResult.getMergeStatus( ).equals( MergeResult.MergeStatus.CONFLICTING )
                 || mergeResult.getMergeStatus( ).equals( MergeResult.MergeStatus.FAILED )
                 || mergeResult.getMergeStatus( ).equals( MergeResult.MergeStatus.NOT_SUPPORTED ) )
         {
-
-            ReleaserUtils.addTechnicalError( commandResult, mergeResult.getMergeStatus( ).toString( ) + "\nPlease merge manually " + strSourceBranch
-                    + " into " + strTargetMasterBranch + " branch." );
+            ReleaserUtils.addTechnicalError( commandResult,
+                    mergeResult.getMergeStatus( ).toString( ) + "\nPlease merge manually " + strMerged + " into " + strTargetMasterBranch + " branch." );
         }
         else
         {
@@ -601,7 +619,6 @@ public class GitUtils
             commandResult.getLog( ).append( mergeResult.getMergeStatus( ) );
         }
         return mergeResult;
-
     }
 
     /**

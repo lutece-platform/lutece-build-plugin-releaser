@@ -242,9 +242,9 @@ public interface IWorkflowReleaseContextService
     void deployReleaseFromTag( WorkflowReleaseContext context, Locale locale );
 
     /**
-     * Update the master* branch counterpart with the new stable version : checkout master*,
-     * set the pom version to the stable version, commit and push. Skipped if there is no
-     * master* counterpart for the chosen develop* branch.
+     * Merge the stable tag of the release into the master* branch counterpart and push, exactly as the classic release does : master* never
+     * carries a commit of its own, so the next merge back from develop* stays clean. Skipped if there is no master* counterpart for the chosen
+     * develop* branch.
      *
      * @param context
      *            the context
@@ -265,15 +265,14 @@ public interface IWorkflowReleaseContextService
     void bumpDevelopAfterReleaseFromTag( WorkflowReleaseContext context, Locale locale );
 
     /**
-     * On master*, merge develop* with the "ours" strategy and push : records develop* as
-     * integrated without changing master*'s content, so the next merge will not conflict
-     * on the version line. Skipped if there is no master* counterpart.
+     * On develop*, merge the stable tag of the release with the "ours" strategy and push : records the release commit as an ancestor of
+     * develop* without changing its content, so that the next merge back into master* has the release as common base and stays clean.
      *
      * @param context
      *            the context
      * @param locale
      *            the locale
      */
-    void markDevelopIntegratedInMaster( WorkflowReleaseContext context, Locale locale );
+    void markReleaseIntegratedInDevelop( WorkflowReleaseContext context, Locale locale );
 
 }

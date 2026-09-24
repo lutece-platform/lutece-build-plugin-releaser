@@ -51,6 +51,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
@@ -1015,24 +1016,35 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         if ( strMasterBranch == null )
         {
             commandResult.getLog( ).append( "No master* counterpart for branch " + component.getBranchReleaseFrom( )
-                    + ", skipping master version update\n" );
+                    + ", skipping master update\n" );
             return;
         }
 
-        IVCSResourceService cvsService = CVSFactoryService.getService( context.getReleaserResource( ).getRepoType( ) );
+        String strLogin = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getLogin( );
+        String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
         String strLocalComponentPath = ReleaserUtils.getLocalPath( context );
-        String strLocalComponentPomPath = ReleaserUtils.getLocalPomPath( context );
-        String strTargetStableVersion = component.getTargetVersion( );
+        String strStableTag = component.getArtifactId( ) + "-" + component.getTargetVersion( );
 
-        ReleaserUtils.logStartAction( context, " Release from tag : update master" );
+        ReleaserUtils.logStartAction( context, " Release from tag : merge " + strStableTag + " into " + strMasterBranch );
 
         Git git = null;
         try
         {
-            // Create the master* local tracking branch if missing — TaskCloneRepository only creates
-            // the hardcoded "master" and the chosen develop*, so master_core7/etc. has no local ref yet.
             git = GitUtils.getGit( strLocalComponentPath );
-            GitUtils.ensureLocalBranch( git, strMasterBranch, commandResult );
+            Ref refStableTag = git.getRepository( ).findRef( "refs/tags/" + strStableTag );
+            if ( refStableTag == null )
+            {
+                ReleaserUtils.addTechnicalError( commandResult, "Tag " + strStableTag + " not found : cannot merge it into " + strMasterBranch );
+            }
+            else
+            {
+                GitUtils.mergeIntoMaster( git, refStableTag, strMasterBranch, strLogin, strPassword, commandResult );
+                commandResult.getLog( ).append( "\nMaster branch " + strMasterBranch + " merged with " + strStableTag + " and pushed\n" );
+            }
+        }
+        catch( IOException | GitAPIException e )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, "Error during master update : " + e.getMessage( ), e );
         }
         finally
         {
@@ -1042,20 +1054,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             }
         }
 
-        try
-        {
-            cvsService.checkoutBranch( context, strMasterBranch, locale );
-            PomUpdater.updatePomVersion( strLocalComponentPomPath, strTargetStableVersion );
-            cvsService.updateBranch( context, strMasterBranch, locale,
-                    "[release-from-tag] update master version to " + strTargetStableVersion );
-            commandResult.getLog( ).append( "Master branch " + strMasterBranch + " set to " + strTargetStableVersion + "\n" );
-        }
-        catch( JAXBException e )
-        {
-            ReleaserUtils.addTechnicalError( commandResult, "Error during master update : " + e.getMessage( ), e );
-        }
-
-        ReleaserUtils.logEndAction( context, " Release from tag : update master" );
+        ReleaserUtils.logEndAction( context, " Release from tag : merge " + strStableTag + " into " + strMasterBranch );
     }
 
     /**
@@ -1098,7 +1097,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
      * {@inheritDoc}
      */
     @Override
-    public void markDevelopIntegratedInMaster( WorkflowReleaseContext context, Locale locale )
+    public void markReleaseIntegratedInDevelop( WorkflowReleaseContext context, Locale locale )
     {
         Component component = context.getComponent( );
         CommandResult commandResult = context.getCommandResult( );
@@ -1106,36 +1105,24 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         String strPassword = context.getReleaserUser( ).getCredential( context.getReleaserResource( ).getRepoType( ) ).getPassword( );
 
         String strDevelopBranch = component.getBranchReleaseFrom( );
-        String strMasterBranch = GitUtils.getTargetMasterBranch( strDevelopBranch );
-        if ( strMasterBranch == null )
-        {
-            commandResult.getLog( ).append( "No master* counterpart, skipping ours-merge\n" );
-            return;
-        }
+        String strStableTag = component.getArtifactId( ) + "-" + component.getTargetVersion( );
 
-        ReleaserUtils.logStartAction( context, " Release from tag : ours-merge develop into master" );
+        ReleaserUtils.logStartAction( context, " Release from tag : ours-merge " + strStableTag + " into " + strDevelopBranch );
 
         String strLocalComponentPath = ReleaserUtils.getLocalPath( context );
         Git git = null;
         try
         {
             git = GitUtils.getGit( strLocalComponentPath );
+            GitUtils.checkoutRepoBranch( git, strDevelopBranch, commandResult );
 
-            // Create the master* local tracking branch if missing (same reason as in
-            // updateMasterAfterReleaseFromTag).
-            GitUtils.ensureLocalBranch( git, strMasterBranch, commandResult );
-
-            // Switch to master* and ours-merge develop* : marks develop's commits as integrated
-            // without touching files, so the next merge from develop won't conflict on the version line.
-            GitUtils.checkoutRepoBranch( git, strMasterBranch, commandResult );
-
-            String strMessage = "[release-from-tag] mark " + strDevelopBranch + " as integrated (ours)";
-            MergeResult result = GitUtils.mergeOursStrategy( git, strDevelopBranch, strMessage, commandResult );
+            String strMessage = "[release-from-tag] mark " + strStableTag + " as integrated in " + strDevelopBranch + " (ours)";
+            MergeResult result = GitUtils.mergeOursStrategy( git, strStableTag, strMessage, commandResult );
 
             if ( result != null && result.getMergeStatus( ).isSuccessful( ) )
             {
                 git.push( ).setCredentialsProvider( new UsernamePasswordCredentialsProvider( strLogin, strPassword ) ).call( );
-                commandResult.getLog( ).append( "Master branch " + strMasterBranch + " pushed (ours-merge of " + strDevelopBranch + ")\n" );
+                commandResult.getLog( ).append( "Develop branch " + strDevelopBranch + " pushed (ours-merge of " + strStableTag + ")\n" );
             }
             else
             {
@@ -1155,7 +1142,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             }
         }
 
-        ReleaserUtils.logEndAction( context, " Release from tag : ours-merge develop into master" );
+        ReleaserUtils.logEndAction( context, " Release from tag : ours-merge " + strStableTag + " into " + strDevelopBranch );
     }
 
 }
