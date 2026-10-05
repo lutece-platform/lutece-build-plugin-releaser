@@ -215,6 +215,39 @@ public class ConstanteUtils
     /** The Constant PROPERTY_BRANCH_DEVELOPMENT_FOR_CORE7 — branch of lutece-core for the legacy core 7 line. */
     public static final String PROPERTY_BRANCH_DEVELOPMENT_FOR_CORE7 = "releaser.branch.developmentBranchForCore7";
 
+    /** The Constant PROPERTY_PLATFORM_GROUP_ID_PREFIX — groupId prefix of the Lutece artifacts referenced by a platform aggregate POM. */
+    public static final String PROPERTY_PLATFORM_GROUP_ID_PREFIX = "releaser.platform.groupIdPrefix";
+
+    /** The Constant PROPERTY_PLATFORM_VERSION_PROPERTY_PREFIX — prefix of the version properties of the lutece-platform POM. */
+    public static final String PROPERTY_PLATFORM_VERSION_PROPERTY_PREFIX = "releaser.platform.versionPropertyPrefix";
+
+    /** The Constant PROPERTY_PLATFORM_VERSION_PROPERTY_SUFFIX — suffix of the version properties of the lutece-platform POM. */
+    public static final String PROPERTY_PLATFORM_VERSION_PROPERTY_SUFFIX = "releaser.platform.versionPropertySuffix";
+
+    /** The Constant PROPERTY_PLATFORM_BOM_PATH — path of the bill of materials POM inside the lutece-platform clone. */
+    public static final String PROPERTY_PLATFORM_BOM_PATH = "releaser.platform.bomPath";
+
+    /** The Constant PROPERTY_PLATFORM_ARTIFACT_ID_ALIASES — "propertyName:artifactId" pairs when a version property does not follow the artifactId. */
+    public static final String PROPERTY_PLATFORM_ARTIFACT_ID_ALIASES = "releaser.platform.artifactIdAliases";
+
+    /** The Constant PROPERTY_PLATFORM_JENKINS_STEP_JOB — Jenkins job path of the generic step pipeline (components then aggregate). */
+    public static final String PROPERTY_PLATFORM_JENKINS_STEP_JOB = "releaser.platform.jenkins.stepJob";
+
+    /** The Constant PROPERTY_PLATFORM_JENKINS_PLATFORM_JOB — Jenkins job path of the existing lutece-platform release pipeline (step 5). */
+    public static final String PROPERTY_PLATFORM_JENKINS_PLATFORM_JOB = "releaser.platform.jenkins.platformJob";
+
+    /** The Constant PROPERTY_PLATFORM_JENKINS_PLATFORM_JOB_BY_BRANCH — true when the platform job is a multibranch pipeline : the release branch is appended as a sub-job. */
+    public static final String PROPERTY_PLATFORM_JENKINS_PLATFORM_JOB_BY_BRANCH = "releaser.platform.jenkins.platformJobByBranch";
+
+    /** The Constant CONSTANTE_PLATFORM_PIPELINE_PARAMETER_PREFIX — Datastore key segment of a pipeline parameter chosen for a platform step. */
+    public static final String CONSTANTE_PLATFORM_PIPELINE_PARAMETER_PREFIX = "param_";
+
+    /** The Constant CONSTANTE_PLATFORM_COMPONENT_PROJECT_PREFIX — Datastore key prefix of the "to be released" flag of a platform step component. */
+    public static final String CONSTANTE_PLATFORM_COMPONENT_PROJECT_PREFIX = "platform_component_project_prefix_";
+
+    /** The Constant CONSTANTE_PLATFORM_LOCAL_PATH_PREFIX — prefix of the local clone directory of a platform aggregate. */
+    public static final String CONSTANTE_PLATFORM_LOCAL_PATH_PREFIX = "platform-";
+
     /** The Constant PROPERTY_MAVEN_LOCAL_REPOSITORY. */
     public static final String PROPERTY_MAVEN_LOCAL_REPOSITORY = "releaser.mavenLocalRepository";
 

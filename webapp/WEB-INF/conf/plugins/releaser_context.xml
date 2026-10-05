@@ -19,6 +19,7 @@
     <bean id="releaser.bugtrackerService" class="fr.paris.lutece.plugins.releaser.service.RedmineComponentService" />
     <bean id="releaser.jenkinsService" class="fr.paris.lutece.plugins.releaser.service.JenkinsService" />
     <bean id="releaser.cvs.gitResourceService" class="fr.paris.lutece.plugins.releaser.service.git.GitResourceService" />
+    <bean id="releaser.platformReleaseStartUpService" class="fr.paris.lutece.plugins.releaser.service.platform.PlatformReleaseStartUpService" />
    
 
 </beans>
