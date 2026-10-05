@@ -787,6 +787,15 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     }
 
     /**
+     * {@inheritDoc }
+     */
+    @Override
+    public void execute( Runnable task )
+    {
+        _executor.execute( task );
+    }
+
+    /**
      * Start release in progress.
      *
      * @param strArtifactId

@@ -209,6 +209,14 @@ public interface IWorkflowReleaseContextService
     void init( );
 
     /**
+     * Runs a task on the release thread pool.
+     *
+     * @param task
+     *            the task
+     */
+    void execute( Runnable task );
+
+    /**
      * Create docker image.
      *
      * @param context
