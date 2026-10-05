@@ -135,10 +135,10 @@ public class GitResourceService implements IVCSResourceService
 			        	Version tagVersion = new Version();
 			        	String [ ] tabTag = tag.split( "-" );
 
-			        	if ( tag.contains( "RC" ) || tag.contains( "beta" ) )
+			        	if ( tag.contains( ConstanteUtils.QUALIFIER_VERSION_RC ) || tag.contains( ConstanteUtils.QUALIFIER_VERSION_BETA ) )
 			            {
 			        		String strQualifier = tabTag [tabTag.length - 2];
-			        		if ( (strQualifier.equals("RC") || strQualifier.equals("beta"))
+			        		if ( (strQualifier.equals( ConstanteUtils.QUALIFIER_VERSION_RC ) || strQualifier.equals( ConstanteUtils.QUALIFIER_VERSION_BETA ))
 			        				&& ReleaserUtils.convertStringToInt(tabTag [tabTag.length - 1]) != -1 )
 			        		{
 			        			if ( ReleaserUtils.IsVersionInRightFormat (tabTag [tabTag.length - 3]) )

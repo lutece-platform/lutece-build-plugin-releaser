@@ -37,14 +37,20 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.CloneCommand;
@@ -65,10 +71,13 @@ import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.RefSpec;
@@ -718,6 +727,116 @@ public class GitUtils
     }
 
     /**
+     * Reads a file of a repository on a branch without a working copy : the raw content service of GitHub, Git itself for any other host.
+     *
+     * @param strScmUrl
+     *            the SCM URL of the repository
+     * @param strBranch
+     *            the branch
+     * @param strPathFile
+     *            the file path in the repository
+     * @param strUserName
+     *            the user login
+     * @param strPassword
+     *            the user password or token
+     * @return the file content, null when it cannot be read
+     */
+    public static String getRemoteFileContent( String strScmUrl, String strBranch, String strPathFile, String strUserName, String strPassword )
+    {
+        String strRepoUrl = getRepoUrl( strScmUrl );
+        if ( StringUtils.isBlank( strRepoUrl ) || StringUtils.isBlank( strBranch ) )
+        {
+            return null;
+        }
+        String strRepoPath = strRepoUrl.replaceFirst( "\\.git$", "" );
+        String strGithubBaseUrl = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_REPOSITORY_BASE_URL, "https://github.com/" );
+        if ( strRepoPath.startsWith( strGithubBaseUrl ) )
+        {
+            return StringUtils.trimToNull( getFileContent( strRepoPath.substring( strGithubBaseUrl.length( ) ), strPathFile, strBranch, strUserName, strPassword ) );
+        }
+
+        return readFileWithGit( strRepoUrl, strBranch, strPathFile, strUserName, strPassword );
+    }
+
+    /**
+     * Reads a file of a branch through Git itself, with the same credentials as a clone : a bare clone of that single branch in a temporary
+     * directory, deleted afterwards. Slower than a raw content service but independent of any API token scope.
+     *
+     * @param strRepoUrl
+     *            the repository URL
+     * @param strBranch
+     *            the branch
+     * @param strPathFile
+     *            the file path in the repository
+     * @param strUserName
+     *            the user login
+     * @param strPassword
+     *            the user password or token
+     * @return the file content, null when the branch or the file does not exist or the repository cannot be read
+     */
+    private static String readFileWithGit( String strRepoUrl, String strBranch, String strPathFile, String strUserName, String strPassword )
+    {
+        Path tempDir = null;
+        String strRef = CONSTANTE_REF_HEADS + strBranch;
+        try
+        {
+            tempDir = Files.createTempDirectory( "releaser-read-" );
+            try ( Git git = Git.cloneRepository( ).setURI( strRepoUrl ).setDirectory( tempDir.toFile( ) ).setBare( true ).setBranch( strRef )
+                    .setBranchesToClone( Collections.singletonList( strRef ) ).setCloneAllBranches( false )
+                    .setCredentialsProvider( new UsernamePasswordCredentialsProvider( strUserName, strPassword ) ).call( );
+                    RevWalk revWalk = new RevWalk( git.getRepository( ) ) )
+            {
+                ObjectId objectId = git.getRepository( ).resolve( strRef );
+                if ( objectId == null )
+                {
+                    return null;
+                }
+                RevCommit commit = revWalk.parseCommit( objectId );
+                try ( TreeWalk treeWalk = TreeWalk.forPath( git.getRepository( ), strPathFile, commit.getTree( ) ) )
+                {
+                    if ( treeWalk == null )
+                    {
+                        return null;
+                    }
+
+                    return new String( git.getRepository( ).open( treeWalk.getObjectId( 0 ) ).getBytes( ), StandardCharsets.UTF_8 );
+                }
+            }
+        }
+        catch( GitAPIException | IOException e )
+        {
+            AppLogService.error( "GitUtils - unable to read " + strPathFile + " of " + strRepoUrl + " on branch " + strBranch + " : " + e.getMessage( ) );
+            return null;
+        }
+        finally
+        {
+            deleteDirectory( tempDir );
+        }
+    }
+
+    /**
+     * Deletes a temporary directory and its content.
+     *
+     * @param directory
+     *            the directory, null tolerated
+     */
+    private static void deleteDirectory( Path directory )
+    {
+        if ( directory == null )
+        {
+            return;
+        }
+        try ( Stream<Path> paths = Files.walk( directory ) )
+        {
+            paths.sorted( Comparator.reverseOrder( ) ).forEach( path -> path.toFile( ).delete( ) );
+        }
+        catch( IOException e )
+        {
+            AppLogService.error( "GitUtils - unable to delete " + directory, e );
+        }
+    }
+
+    /**
      * Gets the tag linked to last release.
      *
      * @param git
@@ -912,6 +1031,24 @@ public class GitUtils
      */
     public static List<String> lsRemoteBranches( String repoUrl, String login, String pwd )
     {
+        return lsRemoteBranches( repoUrl, login, pwd, null );
+    }
+
+    /**
+     * Lists the branches of a remote repository, and gives the caller the reason when the listing fails.
+     *
+     * @param repoUrl
+     *            the repository URL
+     * @param login
+     *            the login
+     * @param pwd
+     *            the password or token
+     * @param sbError
+     *            receives the error message when the listing fails, null when the caller does not care
+     * @return the branch names, empty when the listing fails
+     */
+    public static List<String> lsRemoteBranches( String repoUrl, String login, String pwd, StringBuilder sbError )
+    {
         List<String> branchNameList = new ArrayList<String>( );
         if ( StringUtils.isBlank( repoUrl ) )
         {
@@ -933,8 +1070,30 @@ public class GitUtils
         catch( GitAPIException e )
         {
             AppLogService.error( "GitUtils - lsRemoteBranches error on " + repoUrl + " : " + e.getMessage( ), e );
+            if ( sbError != null )
+            {
+                sbError.append( StringUtils.defaultString( e.getMessage( ) ) );
+            }
         }
         return branchNameList;
+    }
+
+    /**
+     * Whether a Git error message denotes refused or missing credentials rather than a network or repository problem.
+     *
+     * @param strMessage
+     *            the error message, null tolerated
+     * @return true for an authentication failure
+     */
+    public static boolean isAuthenticationError( String strMessage )
+    {
+        if ( strMessage == null )
+        {
+            return false;
+        }
+        String strLower = strMessage.toLowerCase( );
+
+        return strLower.contains( "not authorized" ) || strLower.contains( "authentication" ) || strLower.contains( "401" );
     }
 
     public static List<String> getBranchList( String repoUrl, File localRepo, CommandResult commandResult, String login, String pwd )

@@ -64,6 +64,21 @@ public class ConstanteUtils
     /** The Constant TAG_LUTECE_CORE **/
     public static final String TAG_LUTECE_CORE = "lutece-core";
 
+    /** Thread pool size used to fetch the remote informations of an aggregate's components. */
+    public static final int NB_POOL_REMOTE_INFORMATION = 60;
+
+    /** The Constant QUALIFIER_VERSION_SNAPSHOT — Maven qualifier of a development version. */
+    public static final String QUALIFIER_VERSION_SNAPSHOT = "SNAPSHOT";
+
+    /** The Constant QUALIFIER_VERSION_RC — radix of a release candidate version qualifier (RC-01). */
+    public static final String QUALIFIER_VERSION_RC = "RC";
+
+    /** The Constant QUALIFIER_VERSION_BETA — radix of a beta version qualifier (beta-01). */
+    public static final String QUALIFIER_VERSION_BETA = "beta";
+
+    /** The Constant QUALIFIER_VERSION_NUMBER_FORMAT — format of the number of a RC / beta version qualifier. */
+    public static final String QUALIFIER_VERSION_NUMBER_FORMAT = "%02d";
+
     /** The Constant ERROR_TYPE_AUTHENTICATION_ERROR. */
     public static final String ERROR_TYPE_AUTHENTICATION_ERROR = "AUTHENTICATION_ERROR";
 
@@ -115,6 +130,9 @@ public class ConstanteUtils
 
     /** The Constant BEAN_JENKINS_SERVICE. */
     public static final String BEAN_JENKINS_SERVICE = "releaser.jenkinsService";
+
+    /** The Constant PLUGIN_NAME. */
+    public static final String PLUGIN_NAME = "releaser";
 
     /** The Constant PROPERTY_POM_PARENT_SITE_VERSION. */
     public static final String PROPERTY_POM_PARENT_SITE_VERSION = "releaser.pomParentSiteVersion";

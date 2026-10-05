@@ -50,6 +50,122 @@ public abstract class AbstractReleaserResource implements IReleaserResource
     /** Blocking anomaly message : survives comment resets. */
     private String _strBlockingReleaseComment;
 
+    /** Parent POM of the resource as declared on its branch */
+    private String _strPomParentGroupId;
+    private String _strPomParentArtifactId;
+    private String _strPomParentVersion;
+
+    /** Last version of the parent POM, set only when newer than the declared one */
+    private String _strLatestPomParentVersion;
+
+    /** Parent POM version chosen for the release, null to keep the declared one */
+    private String _strTargetPomParentVersion;
+
+    /**
+     * Returns the groupId of the parent POM declared on the branch.
+     *
+     * @return the parent groupId, null when unknown
+     */
+    public String getPomParentGroupId( )
+    {
+        return _strPomParentGroupId;
+    }
+
+    /**
+     * Sets the groupId of the parent POM declared on the branch.
+     *
+     * @param strPomParentGroupId
+     *            the parent groupId
+     */
+    public void setPomParentGroupId( String strPomParentGroupId )
+    {
+        _strPomParentGroupId = strPomParentGroupId;
+    }
+
+    /**
+     * Returns the artifactId of the parent POM declared on the branch.
+     *
+     * @return the parent artifactId, null when unknown
+     */
+    public String getPomParentArtifactId( )
+    {
+        return _strPomParentArtifactId;
+    }
+
+    /**
+     * Sets the artifactId of the parent POM declared on the branch.
+     *
+     * @param strPomParentArtifactId
+     *            the parent artifactId
+     */
+    public void setPomParentArtifactId( String strPomParentArtifactId )
+    {
+        _strPomParentArtifactId = strPomParentArtifactId;
+    }
+
+    /**
+     * Returns the version of the parent POM declared on the branch.
+     *
+     * @return the parent version, null when unknown
+     */
+    public String getPomParentVersion( )
+    {
+        return _strPomParentVersion;
+    }
+
+    /**
+     * Sets the version of the parent POM declared on the branch.
+     *
+     * @param strPomParentVersion
+     *            the parent version
+     */
+    public void setPomParentVersion( String strPomParentVersion )
+    {
+        _strPomParentVersion = strPomParentVersion;
+    }
+
+    /**
+     * Returns the last version of the parent POM, when newer than the declared one.
+     *
+     * @return the proposed parent version, null when the declared one is up to date or unknown
+     */
+    public String getLatestPomParentVersion( )
+    {
+        return _strLatestPomParentVersion;
+    }
+
+    /**
+     * Sets the last version of the parent POM.
+     *
+     * @param strLatestPomParentVersion
+     *            the proposed parent version
+     */
+    public void setLatestPomParentVersion( String strLatestPomParentVersion )
+    {
+        _strLatestPomParentVersion = strLatestPomParentVersion;
+    }
+
+    /**
+     * Returns the parent POM version chosen for the release.
+     *
+     * @return the chosen version, null to keep the declared one
+     */
+    public String getTargetPomParentVersion( )
+    {
+        return _strTargetPomParentVersion;
+    }
+
+    /**
+     * Sets the parent POM version chosen for the release.
+     *
+     * @param strTargetPomParentVersion
+     *            the chosen version, null to keep the declared one
+     */
+    public void setTargetPomParentVersion( String strTargetPomParentVersion )
+    {
+        _strTargetPomParentVersion = strTargetPomParentVersion;
+    }
+
     /**
      * {@inheritDoc}
      */

@@ -127,6 +127,9 @@ public class Component extends AbstractReleaserResource implements RBACResource
     /** The list of component branches. */
     private List<String> _listBranches;
 
+    /** The error of the remote branch listing, null when it succeeded. */
+    private String _strRemoteError;
+
     /** The list of tags (filtered to beta/RC) for the "release from tag" workflow. */
     private List<String> _listTags;
 
@@ -685,6 +688,27 @@ public class Component extends AbstractReleaserResource implements RBACResource
     public void setBranches( List<String> listBranches )
     {
         _listBranches = listBranches;
+    }
+
+    /**
+     * Returns the error of the remote branch listing.
+     *
+     * @return the error message, null when the listing succeeded or was not attempted
+     */
+    public String getRemoteError( )
+    {
+        return _strRemoteError;
+    }
+
+    /**
+     * Sets the error of the remote branch listing.
+     *
+     * @param strRemoteError
+     *            the error message
+     */
+    public void setRemoteError( String strRemoteError )
+    {
+        _strRemoteError = strRemoteError;
     }
 
     public List<String> getTags( )

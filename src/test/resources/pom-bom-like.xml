@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>fr.paris.lutece.starters</groupId>
+        <artifactId>lutece-parent</artifactId>
+        <version>8.0.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>lutece-bom</artifactId>
+    <version>${lutece.lutece-bom.version}</version>
+    <packaging>pom</packaging>
+
+    <properties>
+        <lutece.core.groupId>fr.paris.lutece</lutece.core.groupId>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>${lutece.core.groupId}</groupId>
+                <artifactId>lutece-core</artifactId>
+                <version>${lutece.core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>fr.paris.lutece.plugins</groupId>
+                <artifactId>library-lucene</artifactId>
+                <version>${lutece.library-lucene.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>fr.paris.lutece.plugins</groupId>
+                <artifactId>plugin-forms</artifactId>
+                <version>${lutece.plugin-forms.version}</version>
+                <type>lutece-plugin</type>
+            </dependency>
+            <dependency>
+                <groupId>fr.paris.lutece.plugins</groupId>
+                <artifactId>module-workflow-forms</artifactId>
+                <version>${lutece.module-workflow-forms.version}</version>
+                <type>lutece-plugin</type>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>

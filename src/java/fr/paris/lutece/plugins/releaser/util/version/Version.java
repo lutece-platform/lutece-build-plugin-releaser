@@ -33,6 +33,7 @@
  */
 package fr.paris.lutece.plugins.releaser.util.version;
 
+import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import java.util.regex.Matcher;
@@ -51,19 +52,19 @@ public class Version implements Comparable
     public static final String NOT_AVAILABLE = "Not available";
 
     /** The Constant QUALIFIER_SNAPSHOT. */
-    private static final String QUALIFIER_SNAPSHOT = "SNAPSHOT";
+    private static final String QUALIFIER_SNAPSHOT = ConstanteUtils.QUALIFIER_VERSION_SNAPSHOT;
 
     /** The Constant QUALIFIER_CANDIDATE. */
-    private static final String QUALIFIER_CANDIDATE = "RC";
+    private static final String QUALIFIER_CANDIDATE = ConstanteUtils.QUALIFIER_VERSION_RC;
 
     /** The Constant QUALIFIER_BETA. */
-    private static final String QUALIFIER_BETA = "beta";
+    private static final String QUALIFIER_BETA = ConstanteUtils.QUALIFIER_VERSION_BETA;
 
     /** The Constant PATTERN_NUMBER. */
     private static final String PATTERN_NUMBER = "\\d+";
 
     /** The Constant QUALIFIER_VERSION_FORMAT. */
-    private static final String QUALIFIER_VERSION_FORMAT = "%02d";
+    private static final String QUALIFIER_VERSION_FORMAT = ConstanteUtils.QUALIFIER_VERSION_NUMBER_FORMAT;
 
     /** The n major. */
     private int _nMajor;

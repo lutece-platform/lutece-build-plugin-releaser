@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>fr.paris.lutece.tools</groupId>
+        <artifactId>lutece-global-pom</artifactId>
+        <version>8.0.1-SNAPSHOT</version>
+    </parent>
+    <groupId>fr.paris.lutece.starters</groupId>
+    <artifactId>lutece-parent</artifactId>
+    <version>8.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>lutece-bom</module>
+        <module>forms-starter</module>
+    </modules>
+
+    <properties>
+        <lutece.deploy.skip>false</lutece.deploy.skip>
+        <lutece.forms-starter.version>8.0.0-SNAPSHOT</lutece.forms-starter.version>
+        <lutece.lutece-bom.version>8.0.0-SNAPSHOT</lutece.lutece-bom.version>
+        <lutece.core.version>8.0.2-SNAPSHOT</lutece.core.version>
+        <lutece.library-lucene.version>6.0.0</lutece.library-lucene.version>
+        <lutece.plugin-forms.version>4.2.0-SNAPSHOT</lutece.plugin-forms.version>
+        <lutece.module-workflow-forms.version>${lutece.plugin-forms.version}</lutece.module-workflow-forms.version>
+        <lutece.version>ignored</lutece.version>
+    </properties>
+</project>

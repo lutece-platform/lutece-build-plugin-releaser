@@ -44,6 +44,7 @@ public class Dependency
     private String _strGroupId;
     private String _strArtifactId;
     private String _strVersion;
+    private String _strVersionProperty;
     private String _strType;
 
     /**
@@ -128,6 +129,27 @@ public class Dependency
     public void setVersion( String strVersion )
     {
         _strVersion = strVersion;
+    }
+
+    /**
+     * Returns the name of the POM property holding the version, null when the version is written in the declaration
+     *
+     * @return The version property name
+     */
+    public String getVersionProperty( )
+    {
+        return _strVersionProperty;
+    }
+
+    /**
+     * Sets the name of the POM property holding the version
+     *
+     * @param strVersionProperty
+     *            The version property name
+     */
+    public void setVersionProperty( String strVersionProperty )
+    {
+        _strVersionProperty = strVersionProperty;
     }
 
     /**

@@ -28,7 +28,9 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
+import fr.paris.lutece.plugins.releaser.business.Dependency;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
+import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
 import fr.paris.lutece.plugins.releaser.util.pom.SaxPomHandler;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
@@ -159,6 +161,13 @@ public final class MavenRepoComponentInfoProvider
 
             // Read scmDeveloperConnection from the last snapshot pom (uses the local version).
             getPomInfos( component, getSnapshotPomUrl( strSnapshotUrl, strArtifactId, strLastSnapshot ) );
+
+            // The parent must come from the current snapshot when Nexus has another one : it tells the core version of that line.
+            String strCurrentVersion = component.getCurrentVersion( );
+            if ( strCurrentVersion != null && !strCurrentVersion.equals( strLastSnapshot ) && listSnapshotVersions.contains( strCurrentVersion ) )
+            {
+                getPomParent( component, getSnapshotPomUrl( strSnapshotUrl, strArtifactId, strCurrentVersion ) );
+            }
 
             // Balise <scm> absente du POM.
             if ( StringUtils.isBlank( component.getScmDeveloperConnection( ) ) )
@@ -354,20 +363,57 @@ public final class MavenRepoComponentInfoProvider
             
             
             component.setScmDeveloperConnection( handler.getScmDeveloperConnection( ) );
-            //component.setParentPomVersion( handler.getParentPomVersion( ) );
-            //component.setCoreVersion( handler.getCoreVersion( ) );
-            
+            setPomParent( component, strPom );
+
         }
         catch ( HttpAccessException e )
         {
-            AppLogService.error( 
-            		"\n*** ERROR *** Error reading pom for component " + component.getArtifactId( ) 
+            AppLogService.error(
+            		"\n*** ERROR *** Error reading pom for component " + component.getArtifactId( )
             		+ EXCEPTION_MESSAGE + e.getMessage( ) );
         }
         catch ( IOException | SAXException | ParserConfigurationException e )
         {
             AppLogService.error( EXCEPTION_MESSAGE + e.getMessage( ), e );
         }
+    }
+
+    /**
+     * Reads the parent of a pom published in Nexus. On failure the parent is reset : an unknown parent is better than the one of another line.
+     *
+     * @param component
+     *            the component
+     * @param strPomUrl
+     *            the pom URL
+     */
+    private void getPomParent( Component component, String strPomUrl )
+    {
+        try
+        {
+            setPomParent( component, new HttpAccess( ).doGet( strPomUrl ) );
+        }
+        catch ( HttpAccessException e )
+        {
+            setPomParent( component, null );
+            AppLogService.error( "\n*** ERROR *** Error reading pom " + strPomUrl + " for the parent of component " + component.getArtifactId( )
+                    + EXCEPTION_MESSAGE + e.getMessage( ) );
+        }
+    }
+
+    /**
+     * Records the parent declared in a pom.
+     *
+     * @param component
+     *            the component
+     * @param strPom
+     *            the pom content, null to reset the parent
+     */
+    private void setPomParent( Component component, String strPom )
+    {
+        Dependency parent = strPom != null ? new PomParser( ).parseParent( strPom ) : null;
+        component.setPomParentGroupId( parent != null ? parent.getGroupId( ) : null );
+        component.setPomParentArtifactId( parent != null ? parent.getArtifactId( ) : null );
+        component.setPomParentVersion( parent != null ? parent.getVersion( ) : null );
     }
       
     private String getPomFileName(List<String> listElement)
