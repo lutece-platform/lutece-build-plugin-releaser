@@ -1,0 +1,54 @@
+<#include "../releaser_util.html" />
+
+<section class="content-header">
+	<h1>
+		<a href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp" title="#i18n{releaser.adminFeature.ManagePlatformRelease.name}">#i18n{releaser.adminFeature.ManagePlatformRelease.name}</a>
+		<small class="hidden-xs hidden-sm">#i18n{releaser.manage_step_definitions.title}</small>
+	</h1>
+</section>
+<section class="content">
+<div class="app-wrapper app-cluster">
+<@messages infos=infos />
+<@messages errors=errors />
+<div class="box box-info box-solid">
+	<div class="box-header">
+		<h3 class="box-title"><i class="fa fa-cog"></i> #i18n{releaser.manage_step_definitions.title}</h3>
+		<div class="box-tools">
+			<a class="button transition border-blue small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp" title="#i18n{releaser.platform_release.buttonBack}">
+				<i class="fa fa-arrow-left fa-fw"></i> #i18n{releaser.platform_release.buttonBack}
+			</a>
+		</div>
+	</div>
+	<@tform name='step_definitions' action='jsp/admin/plugins/releaser/ManagePlatformRelease.jsp'>
+	<div class="box-body table-responsive no-padding">
+		<p class="text-muted" style="padding:10px;"><i class="fa fa-info-circle"></i> #i18n{releaser.manage_step_definitions.help}</p>
+		<table class="table table-hover">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>#i18n{releaser.manage_step_definitions.columnCode}</th>
+					<th>#i18n{releaser.manage_step_definitions.columnName}</th>
+					<th>#i18n{releaser.manage_step_definitions.columnScmUrl}</th>
+				</tr>
+			</thead>
+			<tbody>
+			<#list step_definitions as definition>
+				<tr>
+					<td><strong>${definition.stepNumber}</strong></td>
+					<td><code>${definition.code}</code></td>
+					<td><input type="text" class="form-control" name="name_${definition.stepNumber}" id="name_${definition.stepNumber}" value="${definition.name!}" maxlength="100" required></td>
+					<td><input type="url" class="form-control" name="scm_url_${definition.stepNumber}" id="scm_url_${definition.stepNumber}" value="${definition.scmUrl!}" maxlength="255" required></td>
+				</tr>
+			</#list>
+			</tbody>
+		</table>
+	</div>
+	<div class="box-footer text-right">
+		<button type="submit" class="button transition small fill-blue" name="action_saveStepDefinitions">
+			<i class="fa fa-save fa-fw"></i> #i18n{releaser.manage_step_definitions.buttonSave}
+		</button>
+	</div>
+	</@tform>
+</div>
+</div>
+</section>

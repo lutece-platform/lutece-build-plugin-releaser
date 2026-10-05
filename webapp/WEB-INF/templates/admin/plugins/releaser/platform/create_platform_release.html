@@ -1,0 +1,50 @@
+<div class="cards">
+  <section class="row">
+    <div class="col-xs-12 col-sm-3 col-md-2 cards-info">
+		<h1><i class="fa fa-rocket fa-4x"></i></h1>
+    </div>
+	<div class="xs-12 col-sm-9 col-md-10">
+		<div class="row">
+			<div class="col-xs-12 col-sm-offset-2 col-sm-6 col-md-offset-2 col-md-6 col-lg-offset-2 col-lg-6">
+				<h3>#i18n{releaser.create_platform_release.title}</h3>
+			</div>
+		</div>
+		<@tform name='create_platform_release' action='jsp/admin/plugins/releaser/ManagePlatformRelease.jsp'>
+			<@messages errors=errors />
+			<@formGroup labelKey='#i18n{releaser.create_platform_release.labelName}' helpKey='#i18n{releaser.create_platform_release.labelName.help}' mandatory=true>
+				<@input type='text' name='name' value='${platform_release.name!\'\'}' />
+			</@formGroup>
+			<@formGroup labelKey='#i18n{releaser.create_platform_release.labelReleaseType}' helpKey='#i18n{releaser.create_platform_release.labelReleaseType.help}' mandatory=true>
+				<select name="release_type" id="release_type" class="form-control">
+					<option value="" class="text-muted" style="color:#999;" <#if !platform_release.releaseType??>selected</#if>>&lt;#i18n{releaser.create_platform_release.selectReleaseType}&gt;</option>
+					<#list release_types as type>
+						<option value="${type}" <#if platform_release.releaseType?? && platform_release.releaseType == type>selected</#if>>#i18n{releaser.platform_release.type.${type}}</option>
+					</#list>
+				</select>
+			</@formGroup>
+			<@formGroup labelKey='#i18n{releaser.create_platform_release.labelCoreMajor}' helpKey='#i18n{releaser.create_platform_release.labelCoreMajor.help}' mandatory=true>
+				<select name="core_major" id="core_major" class="form-control">
+					<option value="" class="text-muted" style="color:#999;" <#if platform_release.coreMajor == 0>selected</#if>>&lt;#i18n{releaser.create_platform_release.selectCoreMajor}&gt;</option>
+					<#list core_majors as major>
+						<option value="${major}" <#if platform_release.coreMajor == major>selected</#if>>Core ${major}</option>
+					</#list>
+				</select>
+				<#list core_majors as major>
+				<p class="help-block core-branches" id="core-branches-${major}"<#if platform_release.coreMajor != major> style="display:none"</#if>>#i18n{releaser.create_platform_release.branches}
+					<#list core_branches[major?string]?keys as code><br>${code} : <strong>${core_branches[major?string][code]}</strong></#list>
+				</p>
+				</#list>
+			</@formGroup>
+			<@actionButtons button1Name="action_createPlatformRelease" button2Name="view_managePlatformReleases"/>
+			<script>
+			$(function() {
+				$("#core_major").change( function(){
+					$(".core-branches").hide();
+					$("#core-branches-" + $(this).val()).show();
+				});
+			});
+			</script>
+		</@tform>
+	</div>
+  </section>
+</div>

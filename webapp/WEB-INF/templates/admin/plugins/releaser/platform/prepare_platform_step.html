@@ -1,0 +1,425 @@
+<#include "../releaser_util.html" />
+<#macro pomVersionRow decision artifact label releaseStep useAction cancelAction paramName formName inputId>
+	<div class="form-group">
+		<label class="col-sm-3 control-label">${label}</label>
+		<div class="col-sm-9">
+			<p class="form-control-static">
+				<strong class="button transition <#if decision.blocked>fill-red<#else>fill-lightblue</#if> small">${decision.current!}</strong>
+				<small class="text-muted">${artifact}</small>
+				<#if decision.target??>
+					<i class="fa fa-long-arrow-right"></i> <strong class="button transition fill-green small">${decision.target}</strong>
+					<em class="text-muted">#i18n{releaser.prepare_platform_step.pomVersionWillBeSetLabel}</em>
+				<#elseif decision.kept>
+					<em class="text-muted">#i18n{releaser.prepare_platform_step.pomVersionKeptLabel} ${decision.expected!}</em>
+				<#elseif decision.blocked && decision.expectedReleased>
+					<em class="text-danger">#i18n{releaser.prepare_platform_step.pomVersionNotReleased} ${releaseStep} : ${decision.expected!}</em>
+				<#elseif decision.blocked && decision.expected??>
+					<em class="text-danger">#i18n{releaser.prepare_platform_step.pomVersionNotLatest} ${pipeline_parameters["LUTECE_MAJOR"]} (${decision.expected})</em>
+				<#elseif decision.blocked>
+					<em class="text-danger">#i18n{releaser.prepare_platform_step.pomVersionWrongCoreLabel} ${pipeline_parameters["LUTECE_MAJOR"]}</em>
+				</#if>
+			</p>
+			<#if decision.target?? || decision.kept>
+			<p>
+				<a class="button transition border-lightblue small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=${cancelAction}" title="#i18n{releaser.prepare_platform_step.buttonChangePomVersionHelp}"><i class="fa fa-undo fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonChangePomVersion}</a>
+			</p>
+			<#elseif decision.blocked>
+			<p>
+				<#if decision.expectedReleased>
+					<a class="button transition border-orange small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=${useAction}&${paramName}=${decision.expected!}" title="#i18n{releaser.prepare_platform_step.buttonFixPomVersionHelp}"><i class="fa fa-wrench fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonFixPomVersion} ${artifact} ${decision.expected!}</a>
+				<#else>
+					<#if decision.keepAllowed>
+					<a class="button transition border-lightblue small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=${useAction}&${paramName}=keep" title="#i18n{releaser.prepare_platform_step.buttonKeepPomVersionHelp}"><i class="fa fa-check fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonKeepPomVersion}</a>
+					</#if>
+					<#if decision.expected??>
+					<a class="button transition border-orange small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=${useAction}&${paramName}=${decision.expected}" title="#i18n{releaser.prepare_platform_step.buttonUseLatestPomVersionHelp}"><i class="fa fa-arrow-up fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonUseLatestPomVersion} ${decision.expected}</a>
+					</#if>
+					<a id="btn-${inputId}" class="button transition border-orange small" href="#" onclick="document.getElementById('${inputId}').style.display='block';this.style.display='none';return false;" title="#i18n{releaser.prepare_platform_step.buttonCustomPomVersionHelp}"><i class="fa fa-pencil fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonCustomPomVersion}</a>
+				</#if>
+			</p>
+			<#if !decision.expectedReleased>
+			<div id="${inputId}" style="display:none">
+				<@tform name=formName class='form-inline' action='jsp/admin/plugins/releaser/ManagePlatformRelease.jsp'>
+					<input type="hidden" name="action" value="${useAction}">
+					<input type="text" name="${paramName}" class="form-control input-sm" size="14" placeholder="#i18n{releaser.prepare_platform_step.customPomVersionPlaceholder}">
+					<button type="submit" class="button transition border-orange small" title="#i18n{releaser.prepare_platform_step.buttonUseCustomPomVersionHelp}"><i class="fa fa-check fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonUseCustomPomVersion}</button>
+				</@tform>
+			</div>
+			</#if>
+			</#if>
+		</div>
+	</div>
+</#macro>
+<#macro parentCell resource actions=true>
+	<#if resource.pomParentArtifactId??>
+		<small class="text-muted">${resource.pomParentArtifactId}</small><br>
+		<#if resource.targetPomParentVersion??>
+			<strong class="button transition fill-green small" title="#i18n{releaser.prepare_platform_step.parentUpgradedHelp}">${resource.pomParentVersion!} &rarr; ${resource.targetPomParentVersion}</strong>
+			<#if actions>
+			<a class="button transition border-red small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=cancelParentUpgrade&artifact_id=${resource.artifactId}" title="#i18n{releaser.prepare_platform_step.buttonKeepParentHelp}"><i class="fa fa-undo fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonKeepParent}</a>
+			</#if>
+		<#else>
+			<strong class="button transition fill-lightblue small">${resource.pomParentVersion!}</strong>
+			<#if resource.latestPomParentVersion??>
+				<#if actions>
+				<a class="button transition border-blue small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=upgradeParent&artifact_id=${resource.artifactId}" title="#i18n{releaser.prepare_platform_step.buttonUpgradeParentHelp}"><i class="fa fa-level-up fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonUpgradeParent} ${resource.latestPomParentVersion}</a>
+				<#else>
+				<span class="text-warning" title="#i18n{releaser.prepare_platform_step.parentOutdatedHelp}"><i class="fa fa-arrow-up"></i> ${resource.latestPomParentVersion}</span>
+				</#if>
+			</#if>
+		</#if>
+	<#else>
+		<span class="text-muted">-</span>
+	</#if>
+</#macro>
+
+<section class="content-header">
+	<h1>
+		<a href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?view=platformRelease&id=${platform_release.id}" title="${platform_release.name}">${platform_release.name}</a>
+		<small class="hidden-xs hidden-sm">#i18n{releaser.prepare_platform_step.title} ${step.stepNumber} - ${step_definition.name}</small>
+	</h1>
+</section>
+<section class="content">
+<div class="app-wrapper app-cluster">
+	<#if !site.blockingReleaseComment??>
+	<button type="button" id="btn-dry-run-step" class="floating-button btn-release-history-bg" title="#i18n{releaser.prepare_platform_step.buttonDryRun}">
+		<i class="fa fa-flask fa-fw"></i>
+	</button>
+	<button type="button" id="btn-launch-step" class="floating-button btn-release-site-bg" title="#i18n{releaser.prepare_platform_step.buttonLaunch}">
+		<i class="fa fa-rocket fa-fw"></i>
+	</button>
+	</#if>
+	<@tform name='launch_step' class='hidden' action='jsp/admin/plugins/releaser/ManagePlatformRelease.jsp'>
+		<input type="hidden" name="action" value="launchStep">
+		<input type="hidden" name="dry_run" id="dry_run" value="false">
+		<input type="hidden" name="release_target" id="launch_release_target" value="">
+		<input type="hidden" name="allow_snapshot_dependencies" id="launch_allow_snapshot_dependencies" value="">
+	</@tform>
+<@messages infos=infos />
+<@messages errors=errors />
+
+<div class="row">
+	<div class="col-md-12">
+		<div class="box box-warning box-solid">
+			<div class="box-header">
+				<h3 class="box-title">
+					<i class="fa fa-cube"></i> #i18n{releaser.prepare_platform_step.aggregate} <strong>${site.artifactId!} [${site.version!}]</strong>
+					<span class="label label-info">#i18n{releaser.platform_release.type.${release_type}}</span>
+				</h3>
+				<div class="box-tools">
+					<a class="button transition border-lightblue small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?view=prepareStep&id=${platform_release.id}&step=${step.stepNumber}&reload=1" title="#i18n{releaser.prepare_platform_step.buttonReloadHelp}">
+						<i class="fa fa-refresh fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonReload}
+					</a>
+					<a class="button transition border-blue small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?view=platformRelease&id=${platform_release.id}" title="#i18n{releaser.platform_release.buttonBack}">
+						<i class="fa fa-arrow-left fa-fw"></i> #i18n{releaser.platform_release.buttonBack}
+					</a>
+				</div>
+			</div>
+			<div class="box-body table-responsive no-padding">
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th>Artifact</th>
+							<th>Infos Release</th>
+							<th>#i18n{releaser.prepare_platform_step.branch}</th>
+							<#if step_code.executor != "PLATFORM_PIPELINE"><th>#i18n{releaser.prepare_platform_step.parent}</th></#if>
+							<th>#i18n{releaser.prepare_platform_step.lastRelease}</th>
+							<th>#i18n{releaser.prepare_platform_step.targetVersion}</th>
+							<th>#i18n{releaser.prepare_platform_step.nextSnapshot}</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><strong>${site.artifactId!}</strong><br><small class="text-muted">${site.groupId!}</small></td>
+							<td><@releaseComments comments=site.releaseComments /></td>
+							<td>
+								<#if site.branches?? && site.branches?size gt 0>
+								<div class="dropdown" style="display:inline-block"><button class="btn btn-warning btn-sm dropdown-toggle" type="button" data-toggle="dropdown" title="#i18n{releaser.prepare_platform_step.buttonChangeBranchHelp}"><i class="fa fa-code-fork fa-fw"></i> ${site.branchReleaseFrom!} <span class="caret"></span></button><ul class="dropdown-menu"><li><a style="color:#333;">${site.branchReleaseFrom!}</a></li><#list site.branches as branch><li><a style="color:#333;" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=changeStepBranch&release_branch=${branch}">${branch}</a></li></#list></ul></div>
+								<#else>
+								<strong class="button transition fill-lightblue small">${site.branchReleaseFrom!}</strong>
+								</#if>
+							</td>
+							<#if step_code.executor != "PLATFORM_PIPELINE"><td><@parentCell resource=site /></td></#if>
+							<td><strong class="button transition fill-lightblue small">${site.lastReleaseVersion!'n/a'}</strong></td>
+							<td><strong id="aggregate-target" class="button transition fill-lightblue small">${site.nextReleaseVersion!}</strong></td>
+							<td><strong class="button transition fill-lightblue small">${site.nextSnapshotVersion!}</strong></td>
+							<td>
+								<a class="button transition border-lightblue small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=changeAggregateVersion" title="#i18n{releaser.prepare_platform_step.buttonChangeVersionHelp}">
+									<i class="fa fa-code-fork fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonChangeVersion}
+								</a>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+
+<#if step_code.executor == "PLATFORM_PIPELINE">
+<div class="row">
+	<div class="col-md-12">
+		<div class="box box-primary box-solid">
+			<div class="box-header">
+				<h3 class="box-title"><i class="fa fa-sliders"></i> #i18n{releaser.prepare_platform_step.pipelineParameters}</h3>
+			</div>
+			<div class="form-horizontal">
+				<div class="box-body">
+					<div class="form-group">
+						<label class="col-sm-3 control-label">#i18n{releaser.prepare_platform_step.coreMajor}</label>
+						<div class="col-sm-4"><p class="form-control-static"><strong class="button transition fill-lightblue small">Core ${pipeline_parameters["LUTECE_MAJOR"]}</strong></p></div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-3 control-label">#i18n{releaser.prepare_platform_step.releaseBranch}</label>
+						<div class="col-sm-4"><p class="form-control-static"><strong class="button transition fill-lightblue small">${site.branchReleaseFrom!}</strong></p></div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-3 control-label">#i18n{releaser.prepare_platform_step.masterBranch}</label>
+						<div class="col-sm-4"><p class="form-control-static"><#if master_branch??><strong class="button transition fill-lightblue small">${master_branch}</strong><#else><em>#i18n{releaser.prepare_platform_step.masterBranchNone}</em></#if></p></div>
+					</div>
+					<#if site.coreVersionDecision??>
+					<@pomVersionRow decision=site.coreVersionDecision artifact="lutece-core" label="#i18n{releaser.prepare_platform_step.coreVersionInPom}" releaseStep=3 useAction="useCoreVersion" cancelAction="cancelCoreVersion" paramName="core_version" formName="custom_core_version" inputId="custom-core-version" />
+					</#if>
+					<#if site.parentVersionDecision??>
+					<@pomVersionRow decision=site.parentVersionDecision artifact=site.pomParentArtifactId! label="#i18n{releaser.prepare_platform_step.parentVersionInPom}" releaseStep=((site.pomParentArtifactId!) == "lutece-global-pom")?then(1, 2) useAction="useParentVersion" cancelAction="cancelParentVersion" paramName="parent_version" formName="custom_parent_version" inputId="custom-parent-version" />
+					</#if>
+					<div class="form-group">
+						<label class="col-sm-3 control-label" for="release_target">#i18n{releaser.prepare_platform_step.releaseTarget}</label>
+						<div class="col-sm-4">
+							<select name="release_target" id="release_target" class="form-control">
+								<option value="all" <#if pipeline_parameters["RELEASE_TARGET"] == "all">selected</#if>>#i18n{releaser.prepare_platform_step.releaseTargetAll}</option>
+								<#list site.modules![] as module>
+									<option value="${module}" <#if pipeline_parameters["RELEASE_TARGET"] == module>selected</#if>>${module}</option>
+								</#list>
+							</select>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-offset-3 col-sm-9">
+							<div class="checkbox">
+								<input type="checkbox" id="allow_snapshot_dependencies" name="allow_snapshot_dependencies" value="true" <#if pipeline_parameters["ALLOW_SNAPSHOT_DEPENDENCIES"] == "true">checked</#if>>
+								<label for="allow_snapshot_dependencies">#i18n{releaser.prepare_platform_step.allowSnapshotDependencies}</label>
+								<p class="help-block">#i18n{releaser.prepare_platform_step.allowSnapshotDependenciesHelp}</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</#if>
+
+<#if step_code.componentSource != "NONE">
+<div class="row">
+	<div class="col-md-12">
+		<div class="box box-info box-solid">
+			<div class="box-header">
+				<h3 class="box-title"><i class="fa fa-puzzle-piece"></i> #i18n{releaser.prepare_platform_step.componentsToRelease}</h3>
+				<div class="box-tools">
+					<#assign has_parent_upgrades = (site.latestPomParentVersion?? && !site.targetPomParentVersion??)>
+					<#list site.components as c><#if c.project && c.latestPomParentVersion?? && !c.targetPomParentVersion??><#assign has_parent_upgrades = true></#if></#list>
+					<#if has_parent_upgrades>
+					<a class="btn btn-info btn-sm" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=upgradeAllParents" title="#i18n{releaser.prepare_platform_step.buttonUpgradeAllParentsHelp}">
+						<i class="fa fa-level-up fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonUpgradeAllParents}
+					</a>
+					</#if>
+				</div>
+			</div>
+			<div class="box-body table-responsive no-padding">
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th>Artifact</th>
+							<th>Infos Release</th>
+							<th>Branche &agrave; releaser</th>
+							<th>#i18n{releaser.prepare_platform_step.bugtracker}</th>
+							<th>#i18n{releaser.prepare_platform_step.parent}</th>
+							<th>Version</th>
+							<th>Version cible</th>
+							<th>Prochaine version</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+					<#list site.components as component>
+					<#if component.project>
+						<tr>
+							<td><strong>${component.artifactId!}</strong><br><small class="text-muted">${component.groupId!}</small></td>
+							<td><@releaseComments comments=component.releaseComments /></td>
+							<td><strong class="button transition fill-lightblue small">${component.branchReleaseFrom!}</strong></td>
+							<td><@bugtrackerCell component=component emptyDash=true /></td>
+							<td><@parentCell resource=component /></td>
+							<td><strong class="button transition fill-lightblue small">${component.currentVersion!}</strong></td>
+							<td><strong class="button transition fill-lightblue small">${component.targetVersion!}</strong></td>
+							<td><span class="button transition fill-lightblue small"><#if component.isSnapshotVersion()>${component.nextSnapshotVersion!}<#else>${component.targetVersion!}</#if></span></td>
+							<td>
+								<#if !component.blockingReleaseComment?? && component.isSnapshotVersion() && !component.downgrade>
+									<a class="button transition border-lightblue small" title="Modifier la version pour la release" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=changeComponentVersion&artifact_id=${component.artifactId}">
+										<i class="fa fa-code-fork fa-fw"></i> Modifier la version
+									</a>
+									<#if component.lastAvailableVersion??>
+										<a class="button transition border-blue small" title="Utiliser la version ${component.lastAvailableVersion} au lieu de releaser" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=downgradeComponent&artifact_id=${component.artifactId}">
+											<i class="fa fa-level-up fa-fw"></i> Utiliser la version ${component.lastAvailableVersion}
+										</a>
+									</#if>
+									<#if latest_snapshot_candidates?seq_contains(component.artifactId)>
+										<a class="button transition border-blue small" title="#i18n{releaser.prepare_platform_step.buttonReleaseLatestSnapshotHelp}" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=useLatestSnapshot&artifact_id=${component.artifactId}">
+											<i class="fa fa-forward fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonReleaseLatestSnapshot} ${component.lastAvailableSnapshotVersion}
+										</a>
+									</#if>
+								</#if>
+								<#if component.downgrade && component.lastAvailableVersion??>
+									<a class="button transition border-red small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=cancelDowngradeComponent&artifact_id=${component.artifactId}">
+										<i class="fa fa-minus-circle fa-fw"></i> Ne plus utiliser la version ${component.lastAvailableVersion}
+									</a>
+								</#if>
+								<#if latest_snapshot_components?seq_contains(component.artifactId)>
+									<a class="button transition border-red small" title="#i18n{releaser.prepare_platform_step.buttonCancelLatestSnapshotHelp}" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=cancelLatestSnapshot&artifact_id=${component.artifactId}">
+										<i class="fa fa-undo fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonCancelLatestSnapshot}
+									</a>
+								</#if>
+								<a class="button transition border-red small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=toggleComponent&artifact_id=${component.artifactId}" title="#i18n{releaser.prepare_platform_step.buttonRemoveComponentHelp}">
+									<i class="fa fa-minus-circle"></i> #i18n{releaser.prepare_platform_step.buttonRemoveComponent}
+								</a>
+							</td>
+						</tr>
+					</#if>
+					</#list>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<div class="box box-default box-solid">
+			<div class="box-header">
+				<h3 class="box-title"><i class="fa fa-puzzle-piece"></i> #i18n{releaser.prepare_platform_step.otherComponents}</h3>
+				<div class="box-tools">
+					<#assign has_project_components = false>
+					<#list site.components as c><#if c.project><#assign has_project_components = true><#break></#if></#list>
+					<#if has_selectable_snapshots>
+					<a class="btn btn-warning btn-sm" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=selectSnapshotComponents" title="#i18n{releaser.prepare_platform_step.buttonAddAllSnapshotsHelp}">
+						<i class="fa fa-plus-circle fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonAddAllSnapshots}
+					</a>
+					<#elseif has_project_components>
+					<a class="btn btn-danger btn-sm" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=deselectSnapshotComponents" title="#i18n{releaser.prepare_platform_step.buttonRemoveAllSnapshotsHelp}">
+						<i class="fa fa-minus-circle fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonRemoveAllSnapshots}
+					</a>
+					</#if>
+				</div>
+			</div>
+			<div class="box-body table-responsive no-padding">
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th>Artifact</th>
+							<th>Infos Release</th>
+							<th>#i18n{releaser.prepare_platform_step.bugtracker}</th>
+							<th>#i18n{releaser.prepare_platform_step.parent}</th>
+							<th>Version</th>
+							<th>Version cible</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+					<#list site.components as component>
+					<#if !component.project>
+						<tr>
+							<td><strong>${component.artifactId!}</strong><br><small class="text-muted">${component.groupId!}</small></td>
+							<td>
+								<@releaseComments comments=component.releaseComments />
+							</td>
+							<td><@bugtrackerCell component=component emptyDash=true /></td>
+							<td><@parentCell resource=component actions=false /></td>
+							<td><strong class="button transition fill-lightblue small">${component.currentVersion!}</strong></td>
+							<td><strong class="button transition fill-lightblue small">${component.targetVersion!}</strong></td>
+							<td>
+								<#if !component.blockingReleaseComment?? && component.isSnapshotVersion() && component.currentVersion == component.targetVersion>
+									<a class="button transition border-green small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=toggleComponent&artifact_id=${component.artifactId}" title="#i18n{releaser.prepare_platform_step.buttonAddComponentHelp}">
+										<i class="fa fa-plus-circle fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonAddComponent}
+									</a>
+								</#if>
+								<#if !component.blockingReleaseComment?? && !component.isSnapshotVersion() && component.lastAvailableVersion?? && component.lastAvailableVersion != component.targetVersion && !component.upgrade>
+									<a class="button transition border-blue small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=upgradeComponent&artifact_id=${component.artifactId}" title="Utiliser la version ${component.lastAvailableVersion}">
+										<i class="fa fa-check-circle-o fa-fw"></i> Utiliser la version ${component.lastAvailableVersion}
+									</a>
+								</#if>
+								<#if !component.blockingReleaseComment?? && component.upgrade && component.lastAvailableVersion??>
+									<a class="button transition border-red small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=cancelUpgradeComponent&artifact_id=${component.artifactId}">
+										<i class="fa fa-minus-circle fa-fw"></i> Ne plus utiliser la version ${component.lastAvailableVersion}
+									</a>
+								</#if>
+							</td>
+						</tr>
+					</#if>
+					</#list>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+</#if>
+</div>
+</section>
+<#if open_auth_missing!false>
+<div class="modal fade" id="modalAuthPlatform" tabindex="-1" role="dialog" aria-labelledby="modalAuthPlatformLabel">
+	<div class="modal-dialog vlogin" role="document">
+		<@tform name='authenticate_platform' class='form' action='jsp/admin/plugins/releaser/ManagePlatformRelease.jsp'>
+		<input type="hidden" name="id" value="${platform_release.id}">
+		<input type="hidden" name="step" value="${step.stepNumber}">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="modalAuthPlatformLabel"><i class="fa fa-address-card-o"></i> Information d'authentification</h4>
+			</div>
+			<div class="modal-body">
+				<#list auth_messages![] as strMessage>
+					<div class="alert alert-warning"><i class="fa fa-warning"></i> ${strMessage}</div>
+				</#list>
+				<p class="help-block">#i18n{releaser.prepare_platform_step.missingCredentials}</p>
+				<#if repo_type_github?has_content><@formAuthCredential type=repo_type_github /></#if>
+				<#if repo_type_gitlab?has_content><@formAuthCredential type=repo_type_gitlab /></#if>
+			</div>
+			<div class="modal-footer">
+				<button type="submit" class="button transition small fill-blue" name="action_authenticate">Ok</button>
+				<button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Fermer</button>
+			</div>
+		</div>
+		</@tform>
+	</div>
+</div>
+</#if>
+<@releaseCommentModal />
+<@keepScrollPosition />
+<script>
+$(function() {
+	$(".button").tooltip();
+	$(".floating-button").tooltip();
+	<#if open_auth_missing!false>
+		$('#modalAuthPlatform').modal();
+	</#if>
+	function launchStep( dryRun ) {
+		$("#dry_run").val( dryRun );
+		if ( $("#release_target").length ) {
+			$("#launch_release_target").val( $("#release_target").val() );
+			$("#launch_allow_snapshot_dependencies").val( $("#allow_snapshot_dependencies").is(":checked") ? "true" : "false" );
+		}
+		$("form[name='launch_step']").submit();
+	}
+	$("#btn-dry-run-step").click( function(){
+		if ( confirm( "#i18n{releaser.prepare_platform_step.confirmDryRun}" ) ) {
+			launchStep( "true" );
+		}
+	});
+	$("#btn-launch-step").click( function(){
+		if ( confirm( "#i18n{releaser.prepare_platform_step.confirmLaunch}" ) ) {
+			launchStep( "false" );
+		}
+	});
+	<#if open_aggregate_version?? && open_aggregate_version == "1">
+		$("#aggregate-target").addClass("text-warning");
+	</#if>
+});
+</script>

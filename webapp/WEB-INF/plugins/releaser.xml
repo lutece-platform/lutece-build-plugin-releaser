@@ -28,6 +28,14 @@
             <feature-url>jsp/admin/plugins/releaser/ManageClusters.jsp</feature-url>
             <feature-icon-url/>
       </admin-feature>
+        <admin-feature>
+            <feature-id>RELEASER_PLATFORM</feature-id>
+            <feature-title>releaser.adminFeature.ManagePlatformRelease.name</feature-title>
+            <feature-description>releaser.adminFeature.ManagePlatformRelease.description</feature-description>
+            <feature-level>1</feature-level>
+            <feature-url>jsp/admin/plugins/releaser/ManagePlatformRelease.jsp</feature-url>
+            <feature-icon-url/>
+      </admin-feature>
     </admin-features>
     
     <!-- RBAC Resources -->    
@@ -47,13 +55,18 @@
 				fr.paris.lutece.plugins.releaser.service.ComponentResourceIdService
 			</rbac-resource-type-class>
 		</rbac-resource-type>
+		<rbac-resource-type>
+			<rbac-resource-type-class>
+				fr.paris.lutece.plugins.releaser.service.platform.PlatformReleaseResourceIdService
+			</rbac-resource-type-class>
+		</rbac-resource-type>
 	</rbac-resource-types>   	
 	
     <!-- Admin css -->
      <admin-css-stylesheets>
         <admin-css-stylesheet>css/admin/AdminLTEv2.css</admin-css-stylesheet>
         <admin-css-stylesheet>css/plugins/releaser/butns.min.css</admin-css-stylesheet>
-<!--         <admin-css-stylesheet>css/plugins/releaser/portal_admin_deploy.css</admin-css-stylesheet> -->
+        <admin-css-stylesheet>css/plugins/releaser/portal_admin_deploy.css</admin-css-stylesheet>
     </admin-css-stylesheets>    
 
     <!-- XPages parameters -->

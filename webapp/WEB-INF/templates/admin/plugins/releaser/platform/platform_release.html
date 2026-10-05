@@ -1,0 +1,184 @@
+<#include "../releaser_util.html" />
+
+<section class="content-header">
+	<h1>
+		<a href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp" title="#i18n{releaser.adminFeature.ManagePlatformRelease.name}">#i18n{releaser.adminFeature.ManagePlatformRelease.name}</a>
+		<small class="hidden-xs hidden-sm">${platform_release.name}</small>
+	</h1>
+</section>
+<section class="content">
+<div class="app-wrapper app-cluster">
+<@messages infos=infos />
+<@messages errors=errors />
+<div class="box box-info box-solid">
+	<div class="box-header">
+		<h3 class="box-title">
+			<i class="fa fa-rocket"></i> ${platform_release.name}
+			<span class="label label-info">#i18n{releaser.platform_release.type.${platform_release.releaseType}}</span>
+			<span class="label label-default">Core ${platform_release.coreMajor}</span>
+			<@platformStatusLabel status=platform_release.status />
+		</h3>
+		<div class="box-tools">
+			<a class="button transition border-green small" href="jsp/admin/plugins/releaser/ExportPlatformReleaseCsv.jsp?view=exportCsv&id=${platform_release.id}" title="#i18n{releaser.manage_platform_releases.buttonExport}">
+				<i class="fa fa-file-excel-o fa-fw"></i> #i18n{releaser.manage_platform_releases.buttonExport}
+			</a>
+			<a class="button transition border-blue small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp" title="#i18n{releaser.platform_release.buttonBack}">
+				<i class="fa fa-arrow-left fa-fw"></i> #i18n{releaser.platform_release.buttonBack}
+			</a>
+		</div>
+	</div>
+	<div class="box-body table-responsive no-padding">
+		<table class="table table-hover">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>#i18n{releaser.platform_release.columnStep}</th>
+					<th>#i18n{releaser.platform_release.columnRepository}</th>
+					<th>#i18n{releaser.platform_release.columnStatus}</th>
+					<th>#i18n{releaser.platform_release.columnBuild}</th>
+					<th>#i18n{releaser.platform_release.columnDates}</th>
+					<th>#i18n{releaser.platform_release.columnActions}</th>
+				</tr>
+			</thead>
+			<tbody>
+			<#list platform_release.steps as step>
+				<#assign definition = step_definitions[step.stepNumber - 1] />
+				<#assign isPlatformStarters = ( step.stepNumber == 5 ) />
+				<tr id="step-row-${step.stepNumber}" data-status="${step.status}">
+					<td><strong>${step.stepNumber}</strong></td>
+					<td>
+						<strong>${definition.name}</strong><br>
+						<small class="text-muted">${definition.code}</small>
+					</td>
+					<td><a href="${definition.scmUrl}" target="_blank"><small>${definition.scmUrl}</small></a></td>
+					<td>
+						<@platformStatusLabel status=step.status />
+						<#if step.jenkinsResult?has_content><br><small class="text-muted">${step.jenkinsResult}</small></#if>
+					</td>
+					<td>
+						<#if step.jenkinsBuildUrl?has_content>
+							<a href="${step.jenkinsBuildUrl}" target="_blank" title="Jenkins"><i class="fa fa-external-link"></i> #${step.jenkinsBuildNumber}</a>
+						</#if>
+						<#if step_reports[step.stepNumber?string]??>
+							<br><a class="button transition border-lightblue small" href="#" data-toggle="modal" data-target="#modalStepReport${step.stepNumber}" title="#i18n{releaser.platform_release.buttonReportHelp}"><i class="fa fa-file-text-o fa-fw"></i> #i18n{releaser.platform_release.buttonReport}</a>
+						</#if>
+					</td>
+					<td>
+						<small>
+							<#if step.dateBegin??>${step.dateBegin?datetime}</#if>
+							<#if step.dateEnd??><br>${step.dateEnd?datetime}</#if>
+						</small>
+					</td>
+					<td>
+						<#if can_prepare[step.stepNumber - 1]>
+							<#if isPlatformStarters && !platform_release.exportVerified>
+								<span class="text-warning" title="#i18n{releaser.platform_release.exportVerifiedHelp}"><i class="fa fa-lock"></i> #i18n{releaser.platform_release.exportToVerify}</span>
+							<#else>
+								<a class="button transition border-orange small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?view=prepareStep&id=${platform_release.id}&step=${step.stepNumber}" title="#i18n{releaser.platform_release.buttonPrepare}">
+									<i class="fa fa-cogs fa-fw"></i> #i18n{releaser.platform_release.buttonPrepare}
+								</a>
+							</#if>
+						</#if>
+						<#if can_skip[step.stepNumber - 1]>
+							<a class="button transition border-lightblue small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=skipStep&id=${platform_release.id}&step=${step.stepNumber}" title="#i18n{releaser.platform_release.buttonSkipHelp}" onclick="return confirm('#i18n{releaser.message.confirmSkipStep}');">
+									<i class="fa fa-step-forward fa-fw"></i> #i18n{releaser.platform_release.buttonSkip}
+							</a>
+						</#if>
+						<#if step.stepNumber == 4 && step.status == "SUCCESS" && !platform_release.exportVerified>
+							<a class="button transition border-green small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=verifyExport&id=${platform_release.id}" title="#i18n{releaser.platform_release.exportVerifiedHelp}">
+								<i class="fa fa-check-square-o fa-fw"></i> #i18n{releaser.platform_release.buttonExportVerified}
+							</a>
+						</#if>
+						<#if step.status == "RUNNING">
+							<#if orphan_steps[step.stepNumber - 1]>
+							<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> #i18n{releaser.platform_release.followLost}</span>
+							<a class="button transition border-red small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=rearmStep&id=${platform_release.id}&step=${step.stepNumber}" title="#i18n{releaser.platform_release.buttonRearmHelp}">
+								<i class="fa fa-refresh fa-fw"></i> #i18n{releaser.platform_release.buttonRearm}
+							</a>
+							<#else>
+							<span class="text-info"><i class="fa fa-refresh fa-spin"></i> #i18n{releaser.platform_release.running}</span>
+							</#if>
+						</#if>
+					</td>
+				</tr>
+			</#list>
+			</tbody>
+		</table>
+	</div>
+</div>
+</div>
+</section>
+
+<#list platform_release.steps as step>
+<#if step_reports[step.stepNumber?string]??>
+<div class="modal fade" id="modalStepReport${step.stepNumber}" tabindex="-1" role="dialog" aria-labelledby="modalStepReportLabel${step.stepNumber}">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="modalStepReportLabel${step.stepNumber}"><i class="fa fa-file-text-o"></i> #i18n{releaser.platform_release.reportTitle} ${step.stepNumber} - ${step_definitions[step.stepNumber - 1].name}<#if step.jenkinsResult?has_content> <small class="text-muted">${step.jenkinsResult}</small></#if></h4>
+			</div>
+			<div class="modal-body">
+				<pre style="white-space:pre-wrap;max-height:60vh;overflow:auto;">${step_reports[step.stepNumber?string]?html}</pre>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Fermer</button>
+			</div>
+		</div>
+	</div>
+</div>
+</#if>
+</#list>
+<div class="modal fade" id="modalAuthPlatform" tabindex="-1" role="dialog" aria-labelledby="modalAuthPlatformLabel">
+	<div class="modal-dialog vlogin" role="document">
+		<@tform name='authenticate_platform' class='form' action='jsp/admin/plugins/releaser/ManagePlatformRelease.jsp'>
+		<input type="hidden" name="id" value="${platform_release.id}">
+		<input type="hidden" name="step" id="auth_step" value="${open_auth_step!}">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="modalAuthPlatformLabel"><i class="fa fa-address-card-o"></i> Information d'authentification</h4>
+			</div>
+			<div class="modal-body">
+				<p class="help-block">#i18n{releaser.platform_release.authHelp}</p>
+				<#if repo_type_github?has_content><@formAuthCredential type=repo_type_github /></#if>
+				<#if repo_type_gitlab?has_content><@formAuthCredential type=repo_type_gitlab /></#if>
+			</div>
+			<div class="modal-footer">
+				<button type="submit" class="button transition small fill-blue" name="action_authenticate">Ok</button>
+				<button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Fermer</button>
+			</div>
+		</div>
+		</@tform>
+	</div>
+</div>
+
+<script>
+$(function() {
+	$(".button").tooltip();
+	<#if open_auth_step?has_content>
+		$('#modalAuthPlatform').modal();
+	</#if>
+
+	var runningSteps = $("tr[data-status='RUNNING']");
+	if ( runningSteps.length > 0 ) {
+		var stepNumber = runningSteps.first().attr("id").replace("step-row-", "");
+		setTimeout( function(){ refreshStep( stepNumber ); }, 10000 );
+	}
+
+	function refreshStep( stepNumber ) {
+		$.ajax({
+			url: "jsp/admin/plugins/releaser/PlatformReleaseJson.jsp?view=stepStatusJson&id=${platform_release.id}&step=" + stepNumber,
+			type: "GET",
+			dataType: "json",
+			success: function( data ) {
+				if ( data.status == 'OK' && data.result.status != 'RUNNING' ) {
+					window.location.reload();
+				} else {
+					setTimeout( function(){ refreshStep( stepNumber ); }, 10000 );
+				}
+			}
+		});
+	}
+});
+</script>

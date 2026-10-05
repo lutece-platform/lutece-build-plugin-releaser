@@ -1,0 +1,73 @@
+<#include "../releaser_util.html" />
+
+<#if create_authorized>
+	<a class="floating-button" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?view=createPlatformRelease" title="#i18n{releaser.manage_platform_releases.buttonAdd}">
+		<i class="fa fa-plus"></i>
+	</a>
+</#if>
+<div class="app-wrapper app-cluster">
+<@messages infos=infos />
+<@messages errors=errors />
+<div class="box box-info box-solid">
+	<div class="box-header">
+		<h3 class="box-title"><i class="fa fa-rocket"></i> #i18n{releaser.manage_platform_releases.title}</h3>
+		<#if create_authorized>
+		<div class="box-tools">
+			<a class="button transition border-blue small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?view=stepDefinitions" title="#i18n{releaser.manage_platform_releases.buttonConfigure}">
+				<i class="fa fa-cog fa-fw"></i> #i18n{releaser.manage_platform_releases.buttonConfigure}
+			</a>
+		</div>
+		</#if>
+	</div>
+	<div class="box-body table-responsive no-padding">
+		<#if platform_release_list?size == 0>
+			<p class="text-warning" style="padding:10px;"><i class="fa fa-warning"></i> #i18n{releaser.manage_platform_releases.noCampaign}</p>
+		<#else>
+		<table class="table table-hover">
+			<thead>
+				<tr>
+					<th>#i18n{releaser.manage_platform_releases.columnName}</th>
+					<th>#i18n{releaser.manage_platform_releases.columnType}</th>
+					<th>#i18n{releaser.manage_platform_releases.columnMajor}</th>
+					<th>#i18n{releaser.manage_platform_releases.columnCurrentStep}</th>
+					<th>#i18n{releaser.manage_platform_releases.columnStatus}</th>
+					<th>#i18n{releaser.manage_platform_releases.columnDateUpdate}</th>
+					<th>#i18n{releaser.manage_platform_releases.columnActions}</th>
+				</tr>
+			</thead>
+			<tbody>
+			<#list platform_release_list as campaign>
+				<tr>
+					<td><a href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?view=platformRelease&id=${campaign.id}"><strong>${campaign.name}</strong></a></td>
+					<td><span class="label label-info">#i18n{releaser.platform_release.type.${campaign.releaseType}}</span></td>
+					<td>Core ${campaign.coreMajor}</td>
+					<td>${campaign.currentStep} / 5</td>
+					<td><@platformStatusLabel status=campaign.status /></td>
+					<td>${(campaign.dateUpdate?datetime)!}</td>
+					<td>
+						<a class="button transition border-blue small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?view=platformRelease&id=${campaign.id}" title="#i18n{releaser.manage_platform_releases.buttonOpen}">
+							<i class="fa fa-folder-open fa-fw"></i> #i18n{releaser.manage_platform_releases.buttonOpen}
+						</a>
+						<a class="button transition border-green small" href="jsp/admin/plugins/releaser/ExportPlatformReleaseCsv.jsp?view=exportCsv&id=${campaign.id}" title="#i18n{releaser.manage_platform_releases.buttonExport}">
+							<i class="fa fa-file-excel-o fa-fw"></i> #i18n{releaser.manage_platform_releases.buttonExport}
+						</a>
+						<#if campaign.status != "RUNNING">
+						<a class="button transition border-red small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=confirmRemovePlatformRelease&id=${campaign.id}" title="#i18n{releaser.manage_platform_releases.buttonRemove}">
+							<i class="fa fa-trash fa-fw"></i> #i18n{releaser.manage_platform_releases.buttonRemove}
+						</a>
+						</#if>
+					</td>
+				</tr>
+			</#list>
+			</tbody>
+		</table>
+		</#if>
+	</div>
+</div>
+</div>
+<script>
+$(function() {
+	$(".button").tooltip();
+	$(".floating-button").tooltip();
+});
+</script>
