@@ -53,25 +53,25 @@ public class SiteServiceTest
 
         String strLastRelease = null;
         String strCurrent = "3.2.1-SNAPSHOT";
-        String strOrigin = SiteService.getOriginVersion( strLastRelease, strCurrent );
+        String strOrigin = ReleasePreparationService.getOriginVersion( strLastRelease, strCurrent );
         printNextReleases( strLastRelease, strCurrent, strOrigin );
         assertEquals( strOrigin, strCurrent );
 
         strLastRelease = "3.2.1";
         strCurrent = "3.2.2-SNAPSHOT";
-        strOrigin = SiteService.getOriginVersion( strLastRelease, strCurrent );
+        strOrigin = ReleasePreparationService.getOriginVersion( strLastRelease, strCurrent );
         printNextReleases( strLastRelease, strCurrent, strOrigin );
         assertEquals( strOrigin, strCurrent );
 
         strLastRelease = "3.2.1";
         strCurrent = "4.0.0-SNAPSHOT";
-        strOrigin = SiteService.getOriginVersion( strLastRelease, strCurrent );
+        strOrigin = ReleasePreparationService.getOriginVersion( strLastRelease, strCurrent );
         printNextReleases( strLastRelease, strCurrent, strOrigin );
         assertEquals( strOrigin, strCurrent );
 
         strLastRelease = "3.2.1-RC-02";
         strCurrent = "3.2.1-SNAPSHOT";
-        strOrigin = SiteService.getOriginVersion( strLastRelease, strCurrent );
+        strOrigin = ReleasePreparationService.getOriginVersion( strLastRelease, strCurrent );
         printNextReleases( strLastRelease, strCurrent, strOrigin );
         assertEquals( strOrigin, strLastRelease );
 

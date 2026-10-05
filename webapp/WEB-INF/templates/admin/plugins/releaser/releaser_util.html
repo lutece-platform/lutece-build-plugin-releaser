@@ -71,6 +71,19 @@ $( function(){
 </script>
 </#macro>
 
+
+<#macro platformStatusLabel status >
+	<#switch status>
+		<#case "SUCCESS"><span class="label label-success">#i18n{releaser.platform_release.status.SUCCESS}</span><#break>
+		<#case "SKIPPED"><span class="label label-default">#i18n{releaser.platform_release.status.SKIPPED}</span><#break>
+		<#case "RUNNING"><span class="label label-info"><i class="fa fa-refresh fa-spin"></i> #i18n{releaser.platform_release.status.RUNNING}</span><#break>
+		<#case "FAILED"><span class="label label-danger">#i18n{releaser.platform_release.status.FAILED}</span><#break>
+		<#case "READY"><span class="label label-warning">#i18n{releaser.platform_release.status.READY}</span><#break>
+		<#default><span class="label label-default">#i18n{releaser.platform_release.status.TODO}</span>
+	</#switch>
+</#macro>
+
+
 <#macro releaseComments comments maxLength=110 >
 	<#list comments as strComment>
 		<div class="release-comment">
@@ -163,18 +176,37 @@ $( function(){
 </#macro>
 
 
-<#macro formAuthCredential type >
+<#macro formAuthCredential type required=true >
 	 <fieldset>
                 <legend><i class="fa fa-handshake-o"></i> #i18n{releaser.manage_clusters.modalAuthLegend${type.name()}}</legend>
                 <blockquote>
                 <div class="form-group">
                     <label for="${type.name()}_account_login">#i18n{releaser.manage_clusters.modalAuthLoginTitle${type.name()}}</label>
-                    <input type="text" name="${type.name()}_account_login" id="${type.name()}_account_login" value="${(user.getCredential(type).login)!}" class="form-control" required>
+                    <input type="text" name="${type.name()}_account_login" id="${type.name()}_account_login" value="${(user.getCredential(type).login)!}" class="form-control"<#if required> required</#if>>
                 </div>
                 <div class="form-group">
                     <label for="${type.name()}_account_password">#i18n{releaser.manage_clusters.modalAuthPasswordTitle${type.name()}}</label>
-                    <input type="password" name="${type.name()}_account_password" id="${type.name()}_account_password" value="${(user.getCredential(type).password)!}" class="form-control" required>
+                    <input type="password" name="${type.name()}_account_password" id="${type.name()}_account_password" value="${(user.getCredential(type).password)!}" class="form-control"<#if required> required</#if>>
                 </div>
                 </blockquote>
 	 </fieldset>
+</#macro>
+
+<#-- Redmine cell of a component : roadmap link with the closed / opened issue counters of the current version, shared by the site and platform screens -->
+<#macro bugtrackerCell component emptyDash=false>
+	<#if component.bugtrackerRoadmapUrl?has_content>
+	<a href="${component.bugtrackerRoadmapUrl}" target="_blank" title="Roadmap Redmine">
+		Roadmap
+		<#if component.bugtrackerCurrentVersionClosedIssues gte 0>
+			<span class="label label-success">${component.bugtrackerCurrentVersionClosedIssues}</span>
+			<#if component.bugtrackerCurrentVersionOpenedIssues == 0>
+				<span class="label label-success">${component.bugtrackerCurrentVersionOpenedIssues}</span>
+			<#else>
+				<span class="label label-danger">${component.bugtrackerCurrentVersionOpenedIssues}</span>
+			</#if>
+		</#if>
+	</a>
+	<#elseif emptyDash>
+	<span class="text-muted">-</span>
+	</#if>
 </#macro>

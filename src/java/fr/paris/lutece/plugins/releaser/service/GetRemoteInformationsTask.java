@@ -102,11 +102,13 @@ public class GetRemoteInformationsTask implements Runnable
         String strLogin = ( credential != null ) ? credential.getLogin( ) : "";
         String strPassword = ( credential != null ) ? credential.getPassword( ) : "";
 
-        List<String> branchNameList = GitUtils.lsRemoteBranches( strRepoUrl, strLogin, strPassword );
+        StringBuilder sbError = new StringBuilder( );
+        List<String> branchNameList = GitUtils.lsRemoteBranches( strRepoUrl, strLogin, strPassword, sbError );
         if ( !branchNameList.isEmpty( ) )
         {
             _component.setBranches( branchNameList );
         }
+        _component.setRemoteError( sbError.length( ) > 0 ? sbError.toString( ) : null );
     }
 
 }

@@ -124,19 +124,7 @@
                         </#if>
 					</td>
 					<td>
-						<#if component.bugtrackerRoadmapUrl?has_content>
-						<a href="${component.bugtrackerRoadmapUrl}" target="_blank" title="Roadmap Redmine">
-							Roadmap
-							<#if component.bugtrackerCurrentVersionClosedIssues gte 0>
-								<span class="label label-success">${component.bugtrackerCurrentVersionClosedIssues}</span>
-								<#if component.bugtrackerCurrentVersionOpenedIssues = 0 >
-									<span class="label label-success">${component.bugtrackerCurrentVersionOpenedIssues}</span>
-								<#else>
-									<span class="label label-danger">${component.bugtrackerCurrentVersionOpenedIssues}</span>
-								</#if>
-							</#if>
-						</a>
-						</#if>
+						<@bugtrackerCell component=component />
                     </td>
 					<td>
                         <strong class="button transition fill-lightblue small">${component.currentVersion}</strong>
@@ -227,19 +215,7 @@
 						  <@releaseComments comments=component.releaseComments />
 						</td> 
 						<td>
-						  <#if component.bugtrackerRoadmapUrl?has_content>
-							<a href="${component.bugtrackerRoadmapUrl}" target="_blank" title="Roadmap Redmine">
-							  Roadmap
-							  <#if component.bugtrackerCurrentVersionClosedIssues gte 0>
-								<span class="label label-success">${component.bugtrackerCurrentVersionClosedIssues!}</span>
-								<#if component.bugtrackerCurrentVersionOpenedIssues = 0 >
-								  <span class="label label-success">${component.bugtrackerCurrentVersionOpenedIssues!}</span>
-								<#else>
-								  <span class="label label-danger">${component.bugtrackerCurrentVersionOpenedIssues!}</span>
-								</#if>
-							  </#if>
-							 </a>
-						  </#if>
+						  <@bugtrackerCell component=component />
 						</td>
 						<td>
 							<strong class="button transition fill-lightblue small">${component.currentVersion!}</strong>

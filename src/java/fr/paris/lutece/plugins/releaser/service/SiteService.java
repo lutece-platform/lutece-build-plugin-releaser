@@ -42,15 +42,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import org.apache.commons.lang3.StringUtils;
 import javax.servlet.http.HttpServletRequest;import javax.xml.bind.JAXBException;
 import fr.paris.lutece.plugins.releaser.business.Component;
-import fr.paris.lutece.plugins.releaser.business.Dependency;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser.Credential;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
@@ -75,7 +70,6 @@ import fr.paris.lutece.portal.service.rbac.RBACService;
 import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
-import fr.paris.lutece.util.httpaccess.HttpAccessException;
 import java.io.File;
 import org.eclipse.jgit.api.Git;
 
@@ -86,32 +80,8 @@ import org.eclipse.jgit.api.Git;
 public class SiteService
 {
 
-    /** The Constant NB_POOL_REMOTE_INFORMATION. */
-    private static final int NB_POOL_REMOTE_INFORMATION = 60;
-   
-    /** The Constant MESSAGE_AVOID_SNAPSHOT. */
-    private static final String MESSAGE_AVOID_SNAPSHOT = "releaser.message.avoidSnapshot";
-
-    /** The Constant MESSAGE_UPGRADE_SELECTED. */
-    private static final String MESSAGE_UPGRADE_SELECTED = "releaser.message.upgradeSelected";
-
-    /** The Constant MESSAGE_TO_BE_RELEASED. */
-    private static final String MESSAGE_TO_BE_RELEASED = "releaser.message.toBeReleased";
-
-    /** The Constant MESSAGE_MORE_RECENT_VERSION_AVAILABLE. */
-    private static final String MESSAGE_MORE_RECENT_VERSION_AVAILABLE = "releaser.message.moreRecentVersionAvailable";
-
-    /** The Constant MESSAGE_AN_RELEASE_VERSION_ALREADY_EXIST. */
-    private static final String MESSAGE_AN_RELEASE_VERSION_ALREADY_EXIST = "releaser.message.releleaseVersionAlreadyExist";
-
     /** The Constant MESSAGE_WRONG_POM_PARENT_SITE_VERSION. */
     private static final String MESSAGE_WRONG_POM_PARENT_SITE_VERSION = "releaser.message.wrongPomParentSiteVersion";
-
-    /** The Constant MESSAGE_SNAPSHOT_VERSION_OUTDATED. */
-    private static final String MESSAGE_SNAPSHOT_VERSION_OUTDATED = "releaser.message.snapshotVersionOutdated";
-
-    /** The Constant MESSAGE_NO_VERSION_IN_SITE_POM. */
-    private static final String MESSAGE_NO_VERSION_IN_SITE_POM = "releaser.message.noVersionInSitePom";
 
     /** Minimum pom parent version to create docker image. */
     public static String POM_PARENT_MIN_VERSION_TO_CREATE_DOCKET_IMAGE = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_POM_PARENT_MIN_VERSION_TO_CREATE_DOCKET_IMAGE );
@@ -175,18 +145,7 @@ public class SiteService
         // Find last release in the repository (may be empty for a site never released : normalize to null)
         String strLastReleaseVersion = StringUtils.trimToNull( CVSFactoryService.getService( site.getRepoType( ) ).getLastRelease( site,
                 credential.getLogin( ), credential.getPassword( ) ) );
-        site.setLastReleaseVersion( strLastReleaseVersion );
-
-        // To find next releases
-
-        String strOriginVersion = getOriginVersion( strLastReleaseVersion, site.getVersion( ) );
-
-        site.setNextReleaseVersion( Version.getReleaseVersion( strOriginVersion ) );
-        site.setNextSnapshotVersion( Version.getNextSnapshotVersion( strOriginVersion ) );
-        site.setTargetVersions( Version.getNextReleaseVersions( strOriginVersion, strLastReleaseVersion ) );
-        // Align the cycling index with the default next release version, otherwise the first click
-        // to change the version lands back on the value already displayed (off-by-one).
-        site.setTargetVersionIndex( Math.max( 0, site.getTargetVersions( ).indexOf( site.getNextReleaseVersion( ) ) ) );
+        ReleasePreparationService.defineAggregateVersions( site, strLastReleaseVersion );
 
 		site.setCreateDckerImage(isSiteCreateDockerImage( site ) );
 
@@ -218,203 +177,16 @@ public class SiteService
     }
         
     /**
-     * Define which version between last released or current snapshot should be the origin for next release versions. Ex of cases :<br>
-     * last release : 3.2.1 current : 4.0.0-SNAPSHOT -- current <br>
-     * last release : 3.2.1 current : 3.2.2-SNAPSHOT -- last or current <br>
-     * last release : missing current : 1.0.0-SNAPSHOT -- current <br>
-     * last release : 3.2.1-RC-02 current : 3.2.1-SNAPSHOT -- last <br>
-     * 
-     * @param strLastRelease
-     *            The last release
-     * @param strCurrentVersion
-     *            The current release
-     * @return The origin version
-     */
-    public static String getOriginVersion( String strLastRelease, String strCurrentVersion )
-    {
-        String strOriginVersion = strCurrentVersion;
-        if ( ( strLastRelease != null ) && Version.isCandidate( strLastRelease ) )
-        {
-            strOriginVersion = strLastRelease;
-        }
-        
-        return strOriginVersion;
-    }
-
-    /**
-     * Initialize the component list for a given site.
+     * Initialize the component list of a site : components to be released are those flagged as project in the Datastore.
      *
      * @param site
      *            The site
+     * @param user
+     *            The releaser user (credentials)
      */
     private static void initComponents( Site site, ReleaserUser user )
     {
-        for ( Dependency dependency : site.getCurrentDependencies( ) )
-        {        	
-            Component component = new Component( );
-
-            component.setIsProject( isProjectComponent( site, dependency.getArtifactId( ) ) );
-            component.setArtifactId( dependency.getArtifactId( ) );
-            component.setGroupId( dependency.getGroupId( ) );
-            component.setType( dependency.getType( ) );
-            if ( dependency.getVersion() == null )
-            {
-            	dependency.setVersion( ConstanteUtils.NO_VERSION_DEFINED_IN_POM );
-            }
-            String currentVersion = dependency.getVersion( ).replace( "[", "" ).replace( "]", "" );
-            component.setCurrentVersion( currentVersion );
-            site.addComponent( component );
-            
-            
-            
-        }
-
-        ExecutorService executor = Executors.newFixedThreadPool( NB_POOL_REMOTE_INFORMATION );
-
-        List<Future> futures = new ArrayList<Future>( site.getCurrentDependencies( ).size( ) );
-
-        for ( Component component : site.getComponents( ) )
-        {
-            futures.add( executor.submit( new GetRemoteInformationsTask( component, user ) ) );
-        }
-
-        // wait all futures stop before continue
-        for ( Future future : futures )
-        {
-            try
-            {
-                future.get( );
-            }
-            catch( InterruptedException e )
-            {
-                AppLogService.error( e );
-            }
-            catch( ExecutionException e )
-            {
-                // TODO Auto-generated catch block
-                AppLogService.error( e );
-            }
-        }
-
-        executor.shutdown( );
-
-        for ( Component component : site.getComponents( ) )
-        {
-            ComponentService.getService( ).updateComponentForReleaseBranchFrom(component, null);
-
-            defineTargetVersion( component );
-            defineNextSnapshotVersion( component );
-            component.setName( ReleaserUtils.getComponentName( component.getScmDeveloperConnection( ), component.getArtifactId( ) ) );
-
-            String strComponentBranch = getComponentBranch( component, site );
-            component.setBranchReleaseFrom( strComponentBranch );
-        }
-    }
-
-    /**
-     * Returns the branch on which a component must be released, derived from the core line of the site/theme parent POM.
-     *
-     * @param component
-     *            the component
-     * @param site
-     *            the site/theme being released (provides the parent POM version)
-     * @return the component release branch
-     */
-    private static String getComponentBranch( Component component, Site site )
-    {
-        String strDefaultBranch = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_BRANCH_DEFAULT );
-        int nParentMajorForDefault = AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_BRANCH_PARENT_MAJOR_FOR_DEFAULT, 8 );
-
-        int nParentMajor;
-        try
-        {
-            String strParentVersion = site.getParentVersion( ) != null ? site.getParentVersion( ).replace( "[", "" ).replace( "]", "" ) : null;
-            nParentMajor = Version.parse( strParentVersion ).getMajor( );
-        }
-        catch( VersionParsingException | NullPointerException e )
-        {
-            // Parent version unknown/malformed : fall back to the default branch.
-            return strDefaultBranch;
-        }
-
-        if ( nParentMajor >= nParentMajorForDefault )
-        {
-            return strDefaultBranch;
-        }
-
-        // Legacy core 7 line.
-        if ( ConstanteUtils.TAG_LUTECE_CORE.equals( component.getArtifactId( ) ) )
-        {
-            return AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_BRANCH_DEVELOPMENT_FOR_CORE7 );
-        }
-
-        String strLegacyComponentBranch = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_BRANCH_DEVELOPMENT_FOR_LUTECE7 );
-        if ( component.getBranches( ) != null && component.getBranches( ).contains( strLegacyComponentBranch ) )
-        {
-            return strLegacyComponentBranch;
-        }
-
-        return strDefaultBranch;
-    }
-
-    /**
-     * Define the target version for a given component : <br>
-     * - current version for non project component <br>
-     * - nex release for project component.
-     *
-     * @param component
-     *            The component
-     */
-    private static void defineTargetVersion( Component component )
-    {
-        if ( component.isProject( ) && component.isSnapshotVersion( ) )
-        {
-            if ( component.getLastAvailableVersion( ) != null && !component.getCurrentVersion( ).equals( component.getLastAvailableSnapshotVersion( ) )
-                    || component.isTheme( ) )
-            {
-                component.setTargetVersion( component.getLastAvailableVersion( ) );
-            }
-            else
-            {
-            	component.setTargetVersions( Version.getNextReleaseVersions( component.getCurrentVersion( ), component.getLastAvailableVersion( ) ) );
-                String strTargetVersion = Version.getReleaseVersion( component.getCurrentVersion( ) );
-                component.setTargetVersion( strTargetVersion );
-                // Align the cycling index with the default target version (off-by-one on first click).
-                component.setTargetVersionIndex( Math.max( 0, component.getTargetVersions( ).indexOf( strTargetVersion ) ) );
-            }
-        }
-        else
-        {
-            component.setTargetVersion( component.getCurrentVersion( ) );
-        }
-    }
-
-    /**
-     * Define the next snapshot version for a given component.
-     *
-     * @param component
-     *            The component
-     */
-    private static void defineNextSnapshotVersion( Component component )
-    {
-        String strNextSnapshotVersion = Version.NOT_AVAILABLE;
-        // A dependency with no version pinned in the POM (NO_VERSION) is a normal case, not an error : skip parsing.
-        if ( !ConstanteUtils.NO_VERSION_DEFINED_IN_POM.equals( component.getTargetVersion( ) ) )
-        {
-            try
-            {
-                Version version = Version.parse( component.getTargetVersion( ) );
-                boolean bSnapshot = true;
-                strNextSnapshotVersion = version.nextPatch( bSnapshot ).toString( );
-            }
-            catch( VersionParsingException ex )
-            {
-                AppLogService.error( "Error parsing version for component " + component.getArtifactId( ) + " : " + ex.getMessage( ), ex );
-
-            }
-        }
-
-        component.setNextSnapshotVersion( strNextSnapshotVersion );
+        ReleasePreparationService.initComponents( site, user, component -> isProjectComponent( site, component.getArtifactId( ) ) );
     }
 
     /**
@@ -497,105 +269,7 @@ public class SiteService
     {
         site.resetComments( );
         buildReleaseComments( site, locale );
-
-        for ( Component component : site.getComponents( ) )
-        {
-            component.resetComments( );
-            buildReleaseComments( component, locale );
-        }
-    }
-
-    /**
-     * Build release comments for a given component.
-     *
-     * @param component
-     *            The component
-     * @param locale
-     *            The locale to use for comments
-     */
-    private static void buildReleaseComments( Component component, Locale locale )
-    {
-        // A blocking anomaly owns the display : no misleading comments after it.
-        if ( component.getBlockingReleaseComment( ) != null )
-        {
-            return;
-        }
-
-        if ( ConstanteUtils.NO_VERSION_DEFINED_IN_POM.equals( component.getCurrentVersion( ) ) )
-        {
-            component.addReleaseComment( I18nService.getLocalizedString( MESSAGE_NO_VERSION_IN_SITE_POM, locale ) );
-            return;
-        }
-
-        // Infos bugtracker : URL de roadmap, ou commentaire informatif si projet manquant (re-posé après chaque reset).
-        BugtrackerService.getService( ).populateBugtrackerInfo( component );
-
-        // Check if currentVersion matches the last available snapshot for this major
-        if ( component.isSnapshotVersion( ) && !component.getCurrentVersion( ).equals( component.getLastAvailableSnapshotVersion( ) ) )
-        {
-            String [ ] arguments = { component.getCurrentVersion( ), component.getLastAvailableSnapshotVersion( ) };
-            component.addReleaseComment( I18nService.getLocalizedString( MESSAGE_SNAPSHOT_VERSION_OUTDATED, arguments, Locale.getDefault( ) ) );
-        }
-
-        if ( !component.isProject( ) )
-        {
-            if ( Version.isSnapshot( component.getTargetVersion( ) ) )
-            {
-                String strComment = I18nService.getLocalizedString( MESSAGE_AVOID_SNAPSHOT, locale );
-                component.addReleaseComment( strComment );
-            }
-            else
-                if ( component.getLastAvailableVersion( ) != null && component.getTargetVersion( ) != null && component.getLastAvailableVersion( ) != null
-                        && ReleaserUtils.compareVersion( component.getTargetVersion( ), component.getLastAvailableVersion( ) ) < 0 )
-                {
-                    String [ ] arguments = {
-                            component.getLastAvailableVersion( )
-                    };
-                    String strComment = I18nService.getLocalizedString( MESSAGE_MORE_RECENT_VERSION_AVAILABLE, arguments, locale );
-
-                    component.addReleaseComment( strComment );
-                }
-        }
-        else
-        {
-            if ( component.isSnapshotVersion( ) )
-            {
-                if ( ReleaserUtils.compareVersion( component.getCurrentVersion( ), component.getLastAvailableSnapshotVersion( ) ) < 0 )
-                {
-
-                    String [ ] arguments = {
-                            component.getLastAvailableVersion( )
-                    };
-                    String strComment = I18nService.getLocalizedString( MESSAGE_UPGRADE_SELECTED, arguments, locale );
-                    component.addReleaseComment( strComment );
-                }
-                else if ( !component.shouldBeReleased( ) && !component.isDowngrade( ) )
-                {
-
-                    String [ ] arguments = {
-                            component.getLastAvailableVersion( )
-                    };
-                    String strComment = I18nService.getLocalizedString( MESSAGE_AN_RELEASE_VERSION_ALREADY_EXIST, arguments, locale );
-                    component.addReleaseComment( strComment );
-                }
-
-                else if ( component.shouldBeReleased( ) )
-                {
-
-                    String strComment = I18nService.getLocalizedString( MESSAGE_TO_BE_RELEASED, locale );
-                    component.addReleaseComment( strComment );
-                }
-            }
-            else if ( ReleaserUtils.compareVersion( component.getCurrentVersion( ), component.getLastAvailableVersion( ) ) < 0 )
-            {
-                String [ ] arguments = {
-                        component.getLastAvailableVersion( )
-                };
-                String strComment = I18nService.getLocalizedString( MESSAGE_MORE_RECENT_VERSION_AVAILABLE, arguments, locale );
-
-                component.addReleaseComment( strComment );
-            }
-        }
+        ReleasePreparationService.buildComponentsComments( site, locale );
     }
 
     /**
@@ -674,8 +348,8 @@ public class SiteService
             if ( component.getArtifactId( ).equals( strArtifactId ) && component.isSnapshotVersion( ) )
             {
                 component.setDowngrade( false );
-                defineTargetVersion( component );
-                defineNextSnapshotVersion( component );
+                ReleasePreparationService.defineTargetVersion( component );
+                ReleasePreparationService.defineNextSnapshotVersion( component );
             }
         }
     }
@@ -780,18 +454,7 @@ public class SiteService
 
                 if ( component.isProject( ) )
                 {
-                    try
-                    {
-                        ComponentService.getService( ).setRemoteInformations( component, false );
-                    }
-                    catch( HttpAccessException | IOException e )
-                    {
-                        AppLogService.error( e );
-                    }
-                    ComponentService.getService( ).updateComponentForReleaseBranchFrom( component, null );
-                    defineTargetVersion( component );
-                    defineNextSnapshotVersion( component );
-                    component.setName( ReleaserUtils.getComponentName( component.getScmDeveloperConnection( ), component.getArtifactId( ) ) );
+                    ReleasePreparationService.refreshProjectComponent( component );
                 }
 
             }
@@ -1083,13 +746,7 @@ public class SiteService
                 {
                     AppLogService.error( "Error parsing site version : " + e.getMessage( ), e );
                 }
-                site.setLastReleaseVersion( strLastReleaseVersion );
-
-                String strOriginVersion = getOriginVersion( strLastReleaseVersion, site.getVersion( ) );
-                site.setNextReleaseVersion( Version.getReleaseVersion( strOriginVersion ) );
-                site.setNextSnapshotVersion( Version.getNextSnapshotVersion( strOriginVersion ) );
-                site.setTargetVersions( Version.getNextReleaseVersions( strOriginVersion, strLastReleaseVersion ) );
-                site.setTargetVersionIndex( Math.max( 0, site.getTargetVersions( ).indexOf( site.getNextReleaseVersion( ) ) ) );
+                ReleasePreparationService.defineAggregateVersions( site, strLastReleaseVersion );
                 site.setCreateDckerImage( isSiteCreateDockerImage( site ) );
 
                 // Re-initialize components from new POM dependencies

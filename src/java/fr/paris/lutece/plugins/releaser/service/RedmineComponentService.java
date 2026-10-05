@@ -77,7 +77,7 @@ public class RedmineComponentService implements IBugtrackerService
 {
 
     /** The Constant CONSTANTE_SNAPSHOT_VERSION. */
-    private static final String CONSTANTE_SNAPSHOT_VERSION = "-SNAPSHOT";
+    private static final String CONSTANTE_SNAPSHOT_VERSION = "-" + ConstanteUtils.QUALIFIER_VERSION_SNAPSHOT;
 
     /** Maximum page size as per the Redmine REST API. */
     private static final int LIMIT = 100;
