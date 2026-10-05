@@ -134,6 +134,15 @@ public class ConstanteUtils
     /** The Constant PLUGIN_NAME. */
     public static final String PLUGIN_NAME = "releaser";
 
+    /** The Constant BEAN_PLATFORM_RELEASE_DAO. */
+    public static final String BEAN_PLATFORM_RELEASE_DAO = "releaser.platformReleaseDAO";
+
+    /** The Constant BEAN_PLATFORM_RELEASE_STEP_DAO. */
+    public static final String BEAN_PLATFORM_RELEASE_STEP_DAO = "releaser.platformReleaseStepDAO";
+
+    /** The Constant BEAN_PLATFORM_STEP_DEFINITION_DAO. */
+    public static final String BEAN_PLATFORM_STEP_DEFINITION_DAO = "releaser.platformStepDefinitionDAO";
+
     /** The Constant PROPERTY_POM_PARENT_SITE_VERSION. */
     public static final String PROPERTY_POM_PARENT_SITE_VERSION = "releaser.pomParentSiteVersion";
 

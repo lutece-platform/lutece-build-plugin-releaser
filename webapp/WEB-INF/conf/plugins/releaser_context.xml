@@ -7,6 +7,9 @@
     <bean id="releaser.siteDAO" class="fr.paris.lutece.plugins.releaser.business.SiteDAO" />
     <bean id="releaser.clusterDAO" class="fr.paris.lutece.plugins.releaser.business.ClusterDAO" />
     <bean id="releaser.workflowContextHistoryDAO" class="fr.paris.lutece.plugins.releaser.business.WorkflowContextHistoryDAO" />
+    <bean id="releaser.platformReleaseDAO" class="fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseDAO" />
+    <bean id="releaser.platformReleaseStepDAO" class="fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseStepDAO" />
+    <bean id="releaser.platformStepDefinitionDAO" class="fr.paris.lutece.plugins.releaser.business.platform.PlatformStepDefinitionDAO" />
     
     <!-- services -->
     <bean id="releaser.workflowReleaseContextService" class="fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService" />

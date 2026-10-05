@@ -33,6 +33,8 @@
  */
 package fr.paris.lutece.plugins.releaser.business;
 
+import fr.paris.lutece.plugins.releaser.business.platform.PomVersionDecision;
+
 import javax.validation.constraints.*;
 
 import org.hibernate.validator.constraints.*;
@@ -139,6 +141,14 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     
     /** The pom parent version */
     private String _strParentVersion;
+
+    /** The modules declared by the POM (a platform aggregate : its starters and BOM), not persisted. */
+    private List<String> _listModules;
+
+    /** The version of lutece-core referenced by the POM (a platform aggregate), not persisted. */
+    private String _strCoreVersion;
+    private PomVersionDecision _coreVersionDecision;
+    private PomVersionDecision _parentVersionDecision;
     
     /** Is the site candidate to docker image creation */
     private boolean _bCreateDckerImage;
@@ -592,6 +602,90 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     public String getResourceId( )
     {
         return String.valueOf( _nId );
+    }
+
+    /**
+     * Returns the modules declared by the POM (a platform aggregate : its starters and BOM).
+     *
+     * @return the modules, null when the POM was not parsed
+     */
+    public List<String> getModules( )
+    {
+        return _listModules;
+    }
+
+    /**
+     * Sets the modules declared by the POM.
+     *
+     * @param listModules
+     *            the modules
+     */
+    public void setModules( List<String> listModules )
+    {
+        _listModules = listModules;
+    }
+
+    /**
+     * Returns the version of lutece-core referenced by the POM (a platform aggregate).
+     *
+     * @return the core version, null when the POM does not reference it
+     */
+    public String getCoreVersion( )
+    {
+        return _strCoreVersion;
+    }
+
+    /**
+     * Sets the version of lutece-core referenced by the POM.
+     *
+     * @param strCoreVersion
+     *            the core version
+     */
+    public void setCoreVersion( String strCoreVersion )
+    {
+        _strCoreVersion = strCoreVersion;
+    }
+
+    /**
+     * Returns the decision about the lutece-core version referenced by the POM (platform step).
+     *
+     * @return the decision, null when not checked
+     */
+    public PomVersionDecision getCoreVersionDecision( )
+    {
+        return _coreVersionDecision;
+    }
+
+    /**
+     * Sets the decision about the lutece-core version.
+     *
+     * @param decision
+     *            the decision
+     */
+    public void setCoreVersionDecision( PomVersionDecision decision )
+    {
+        _coreVersionDecision = decision;
+    }
+
+    /**
+     * Returns the decision about the parent POM version referenced by the POM (platform step).
+     *
+     * @return the decision, null when not checked
+     */
+    public PomVersionDecision getParentVersionDecision( )
+    {
+        return _parentVersionDecision;
+    }
+
+    /**
+     * Sets the decision about the parent POM version.
+     *
+     * @param decision
+     *            the decision
+     */
+    public void setParentVersionDecision( PomVersionDecision decision )
+    {
+        _parentVersionDecision = decision;
     }
 
     public HashMap<String, Boolean> getPermissions( )
