@@ -273,6 +273,22 @@ public class PlatformReleaseServiceTest
     }
 
     /**
+     * The v-prefixed tags of lutece-platform are its releases, its module tags are not ; an aggregate without such tags is left unchanged.
+     */
+    @Test
+    public void testVersionPrefixedTags( )
+    {
+        List<String> listPlatformTags = Arrays.asList( "v7.2.0-beta-01", "v7.2.0-beta-02", "v8.0.0-beta-01", "v8.0.0-RC-01", "forms-starter-8.0.0-RC-02",
+                "v8.0.0" );
+        assertEquals( Arrays.asList( "7.2.0-beta-01", "7.2.0-beta-02", "8.0.0-beta-01", "8.0.0-RC-01", "8.0.0" ),
+                PlatformReleaseService.getVersionPrefixedTags( listPlatformTags ) );
+
+        assertTrue( PlatformReleaseService.getVersionPrefixedTags( Arrays.asList( "lutece-core-8.0.0", "lutece-core-8.0.1-RC-01" ) ).isEmpty( ) );
+        assertTrue( PlatformReleaseService.getVersionPrefixedTags( Arrays.asList( "v", "vfoo", "v8.0", "v8.0.0-SNAPSHOT", "version-8.0.0" ) ).isEmpty( ) );
+        assertTrue( PlatformReleaseService.getVersionPrefixedTags( null ).isEmpty( ) );
+    }
+
+    /**
      * A flagged component whose snapshot is not the last one available was already released : it is left out of the plan, like in a site
      * release, and only its released version goes to the aggregate POM.
      */

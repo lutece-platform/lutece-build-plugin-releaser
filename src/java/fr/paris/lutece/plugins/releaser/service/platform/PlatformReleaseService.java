@@ -48,6 +48,7 @@ import java.util.Objects;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.api.Git;
 
 import fr.paris.lutece.plugins.releaser.business.AbstractReleaserResource;
 import fr.paris.lutece.plugins.releaser.business.Component;
@@ -128,6 +129,7 @@ public final class PlatformReleaseService
     private static final String GROUP_ID_CORE = "fr.paris.lutece";
     private static final String GLOBAL_POM_ARTIFACT_ID = "lutece-global-pom";
     private static final String GROUP_ID_TOOLS = "fr.paris.lutece.tools";
+    private static final String REGEX_VERSION_PREFIXED_TAG = "^v\\d+\\.\\d+\\.\\d+(-(RC|beta)-\\d+)?$";
 
     private static final String TYPE_POM = "pom";
     private static final int JENKINS_RESULT_MAX_LENGTH = 255;
@@ -1017,6 +1019,7 @@ public final class PlatformReleaseService
         listBranches.remove( site.getBranchReleaseFrom( ) );
         site.setBranches( listBranches );
         vcsService.getLastRelease( site, credential.getLogin( ), credential.getPassword( ) );
+        useVersionPrefixedTags( site );
         String strLocalPath = ReleaserUtils.getLocalSitePath( site );
 
         PomParser parser = new PomParser( );
@@ -1986,6 +1989,50 @@ public final class PlatformReleaseService
         {
             AppLogService.error( "Releaser : unreadable parent version " + parent.getVersion( ) + " of " + component.getArtifactId( ) + " on branch " + strBranch );
         }
+    }
+
+    /**
+     * Keeps only the v-prefixed tags (v8.0.0-RC-01) as releases of the aggregate when its repository has some : lutece-platform tags its
+     * releases this way, its module tags (forms-starter-8.0.0-RC-02) are not releases of the aggregate. The other aggregates keep their
+     * name-x.y.z tags.
+     *
+     * @param site
+     *            the transient site, repository cloned and tags loaded
+     */
+    private static void useVersionPrefixedTags( Site site )
+    {
+        try ( Git git = GitUtils.getGit( ReleaserUtils.getLocalSitePath( site ) ) )
+        {
+            List<String> listVersions = getVersionPrefixedTags( GitUtils.getTagNameList( git ) );
+            if ( !listVersions.isEmpty( ) )
+            {
+                site.setTags( listVersions );
+            }
+        }
+    }
+
+    /**
+     * Returns the versions of the v-prefixed tags (v8.0.0, v8.0.0-RC-01), without the prefix.
+     *
+     * @param listTagNames
+     *            the tag names, may be null
+     * @return the versions, empty when no tag is v-prefixed
+     */
+    static List<String> getVersionPrefixedTags( List<String> listTagNames )
+    {
+        List<String> listVersions = new ArrayList<>( );
+        if ( listTagNames != null )
+        {
+            for ( String strTag : listTagNames )
+            {
+                if ( strTag.matches( REGEX_VERSION_PREFIXED_TAG ) )
+                {
+                    listVersions.add( strTag.substring( 1 ) );
+                }
+            }
+        }
+
+        return listVersions;
     }
 
     /**
