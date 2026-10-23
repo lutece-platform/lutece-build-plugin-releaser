@@ -35,7 +35,9 @@ package fr.paris.lutece.plugins.releaser.service.platform;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -56,11 +58,15 @@ import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleasePlan;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseStatus;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseStep;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseType;
+import fr.paris.lutece.plugins.releaser.business.platform.PlatformResourceVerification;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepCode;
+import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepMode;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepResult;
+import fr.paris.lutece.plugins.releaser.business.platform.PlatformVerificationCheck;
 import fr.paris.lutece.plugins.releaser.business.platform.PomVersionDecision;
 import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
+import fr.paris.lutece.portal.service.util.AppException;
 
 /**
  * Pure logic of the platform release service : version selection by release type, release order, step locking, CSV export
@@ -357,6 +363,48 @@ public class PlatformReleaseServiceTest
         assertEquals( 2, afterDryRun.getReleasedVersions( ).size( ) );
         assertEquals( "1.0.0", afterDryRun.getReleasedVersions( ).get( "fr.paris.lutece.plugins:library-a" ) );
         assertEquals( "dry run after the failure", afterDryRun.getReport( ) );
+
+        PlatformResourceVerification verified = new PlatformResourceVerification( );
+        verified.setStatus( PlatformVerificationCheck.STATUS_OK );
+        verified.setCommit( "abc1234" );
+        first.getVerifications( ).put( "fr.paris.lutece.plugins:plugin-c", verified );
+        first.setVerificationDate( "2026-10-23 10:58:55.0" );
+        PlatformStepResult afterVerification = PlatformReleaseService.mergeResults( first, second );
+        assertEquals( "abc1234", afterVerification.getVerifications( ).get( "fr.paris.lutece.plugins:plugin-c" ).getCommit( ) );
+        assertEquals( "2026-10-23 10:58:55.0", afterVerification.getVerificationDate( ) );
+    }
+
+    /**
+     * Only the step pipeline verifies : a verification plan of the last step, run by the lutece-platform pipeline, is refused, and a verification
+     * plan of another step carries the VERIFY mode.
+     */
+    @Test
+    public void testVerifyOnlyForStepPipeline( )
+    {
+        Site site = new Site( );
+        site.setGroupId( "fr.paris.lutece" );
+        site.setArtifactId( "lutece-parent" );
+        site.setScmUrl( "https://github.com/lutece-platform/lutece-platform.git" );
+        site.setBranchReleaseFrom( "develop" );
+        site.setVersion( "8.0.0-SNAPSHOT" );
+        site.setNextReleaseVersion( "8.0.0-beta-01" );
+        site.setNextSnapshotVersion( "8.0.0-SNAPSHOT" );
+
+        PlatformReleasePlan plan = PlatformReleaseService.buildPlan( campaign( PlatformReleaseType.BETA ), PlatformStepCode.PLATFORM_PLUGINS.getStepNumber( ),
+                site, PlatformStepMode.VERIFY );
+        assertTrue( plan.isVerify( ) );
+        assertFalse( plan.isDryRun( ) );
+
+        try
+        {
+            PlatformReleaseService.buildPlan( campaign( PlatformReleaseType.BETA ), PlatformStepCode.PLATFORM_STARTERS.getStepNumber( ), site,
+                    PlatformStepMode.VERIFY );
+            fail( "a verification of the last step must be refused" );
+        }
+        catch( AppException e )
+        {
+            assertNotNull( e.getMessage( ) );
+        }
     }
 
     /**

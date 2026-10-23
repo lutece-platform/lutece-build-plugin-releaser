@@ -53,6 +53,8 @@ public class PlatformStepResult implements Serializable
     private boolean _bPomUpdated;
     private String _strAggregateVersion;
     private String _strReport;
+    private Map<String, PlatformResourceVerification> _mapVerifications = new LinkedHashMap<>( );
+    private String _strVerificationDate;
 
     /**
      * Returns the released versions : "groupId:artifactId" to released version.
@@ -178,5 +180,47 @@ public class PlatformStepResult implements Serializable
     public void setPomUpdated( boolean bPomUpdated )
     {
         _bPomUpdated = bPomUpdated;
+    }
+
+    /**
+     * Returns the last verification of each resource of the step : "groupId:artifactId" to its verification, the aggregate included.
+     *
+     * @return the verifications
+     */
+    public Map<String, PlatformResourceVerification> getVerifications( )
+    {
+        return _mapVerifications;
+    }
+
+    /**
+     * Sets the verifications.
+     *
+     * @param mapVerifications
+     *            the verifications
+     */
+    public void setVerifications( Map<String, PlatformResourceVerification> mapVerifications )
+    {
+        _mapVerifications = mapVerifications != null ? mapVerifications : new LinkedHashMap<>( );
+    }
+
+    /**
+     * Returns the date of the last verification, null when the step was never verified.
+     *
+     * @return the date of the last verification
+     */
+    public String getVerificationDate( )
+    {
+        return _strVerificationDate;
+    }
+
+    /**
+     * Sets the date of the last verification.
+     *
+     * @param strVerificationDate
+     *            the date of the last verification
+     */
+    public void setVerificationDate( String strVerificationDate )
+    {
+        _strVerificationDate = strVerificationDate;
     }
 }

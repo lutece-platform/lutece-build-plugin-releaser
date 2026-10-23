@@ -47,8 +47,12 @@ import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformPlanResource;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleasePlan;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseType;
+import fr.paris.lutece.plugins.releaser.business.platform.PlatformResourceVerification;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepCode;
+import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepMode;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepResult;
+import fr.paris.lutece.plugins.releaser.business.platform.PlatformVerificationCheck;
+import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
 
 /**
  * Jenkins parameters and fallback result of a platform step
@@ -70,6 +74,67 @@ public class PlatformStepTaskTest
         assertEquals( 1, mapParams.size( ) );
         assertTrue( mapParams.get( PlatformStepTask.PARAM_RELEASE_PLAN ).contains( "\"stepCode\":\"CORE\"" ) );
         assertTrue( mapParams.get( PlatformStepTask.PARAM_RELEASE_PLAN ).contains( "\"targetVersion\":\"8.0.2\"" ) );
+    }
+
+    /**
+     * A verification plan carries its mode and a false dryRun for the pipeline, and reads back as a verification whatever the order of the
+     * fields ; a plan of before the modes reads its dryRun flag.
+     *
+     * @throws IOException
+     *             on JSON error
+     */
+    @Test
+    public void testVerifyPlan( ) throws IOException
+    {
+        PlatformReleasePlan plan = plan( PlatformStepCode.PLATFORM_PLUGINS, PlatformReleaseType.BETA, "8.0.2-beta-01", "8.0.2-SNAPSHOT", false );
+        plan.setMode( PlatformStepMode.VERIFY );
+
+        String strJson = PlatformStepTask.buildJobParameters( plan ).get( PlatformStepTask.PARAM_RELEASE_PLAN );
+        assertTrue( strJson.contains( "\"mode\":\"VERIFY\"" ) );
+        assertTrue( strJson.contains( "\"dryRun\":false" ) );
+        assertFalse( strJson.contains( "\"verify\"" ) );
+        assertTrue( MapperJsonUtil.parse( strJson, PlatformReleasePlan.class ).isVerify( ) );
+        assertTrue( MapperJsonUtil.parse( "{\"dryRun\":false,\"mode\":\"VERIFY\"}", PlatformReleasePlan.class ).isVerify( ) );
+        assertTrue( MapperJsonUtil.parse( "{\"mode\":\"VERIFY\",\"dryRun\":false}", PlatformReleasePlan.class ).isVerify( ) );
+        assertTrue( MapperJsonUtil.parse( "{\"dryRun\":true}", PlatformReleasePlan.class ).isDryRun( ) );
+        assertEquals( PlatformStepMode.RELEASE, MapperJsonUtil.parse( "{\"dryRun\":false}", PlatformReleasePlan.class ).getMode( ) );
+
+        plan.setDryRun( true );
+        assertEquals( PlatformStepMode.DRY_RUN, plan.getMode( ) );
+        plan.setDryRun( false );
+        assertEquals( PlatformStepMode.RELEASE, plan.getMode( ) );
+    }
+
+    /**
+     * verify-report.json gives the verification of each component and of the aggregate, keyed by their coordinates.
+     *
+     * @throws IOException
+     *             on JSON error
+     */
+    @Test
+    public void testParseVerifyReport( ) throws IOException
+    {
+        String strJson = "{\"mode\":\"VERIFY\",\"components\":{\"fr.paris.lutece.plugins:releaser-test-redmine-component-buttom\":"
+                + "{\"status\":\"TO_FIX\",\"version\":\"1.0.5-beta-01\",\"commit\":\"067022d0\",\"checks\":["
+                + "{\"check\":\"clone\",\"status\":\"OK\",\"details\":\"\"},"
+                + "{\"check\":\"transitive-snapshot-dependencies\",\"status\":\"WARNING\",\"details\":\"SNAPSHOT artifacts reached through other dependencies\"},"
+                + "{\"check\":\"tag\",\"status\":\"TO_FIX\",\"details\":\"Tag releaser-test-redmine-component-buttom-1.0.5-beta-01 already exists\"}]}},"
+                + "\"aggregate\":{\"status\":\"OK\",\"version\":\"7.2.0-beta-02\",\"commit\":\"dfd1d78a\",\"note\":\"verified before the version updates\","
+                + "\"checks\":[{\"check\":\"build\",\"status\":\"OK\",\"details\":\"\"}],\"coordinates\":\"fr.paris.lutece.starters:release-test-lutece-parent\"}}";
+
+        Map<String, PlatformResourceVerification> mapVerifications = PlatformStepTask.parseVerifyReport( strJson );
+        assertEquals( 2, mapVerifications.size( ) );
+
+        PlatformResourceVerification buttom = mapVerifications.get( "fr.paris.lutece.plugins:releaser-test-redmine-component-buttom" );
+        assertEquals( PlatformVerificationCheck.STATUS_TO_FIX, buttom.getStatus( ) );
+        assertEquals( "067022d0", buttom.getCommit( ) );
+        assertEquals( 3, buttom.getChecks( ).size( ) );
+        assertEquals( PlatformVerificationCheck.STATUS_WARNING, buttom.getChecks( ).get( 1 ).getStatus( ) );
+        assertTrue( buttom.getChecks( ).get( 2 ).getDetails( ).contains( "already exists" ) );
+
+        PlatformResourceVerification aggregate = mapVerifications.get( "fr.paris.lutece.starters:release-test-lutece-parent" );
+        assertEquals( PlatformVerificationCheck.STATUS_OK, aggregate.getStatus( ) );
+        assertEquals( "verified before the version updates", aggregate.getNote( ) );
     }
 
     /**

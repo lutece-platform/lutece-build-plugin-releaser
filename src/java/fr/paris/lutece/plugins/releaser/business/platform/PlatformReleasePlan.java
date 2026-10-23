@@ -33,6 +33,8 @@
  */
 package fr.paris.lutece.plugins.releaser.business.platform;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -53,7 +55,7 @@ public class PlatformReleasePlan implements Serializable
     private PlatformStepCode _stepCode;
     private PlatformReleaseType _releaseType;
     private int _nCoreMajor;
-    private boolean _bDryRun;
+    private PlatformStepMode _mode = PlatformStepMode.RELEASE;
     private List<PlatformPlanResource> _listComponents = new ArrayList<>( );
     private PlatformPlanResource _aggregate;
     private Map<String, String> _mapPipelineParameters = new LinkedHashMap<>( );
@@ -191,18 +193,59 @@ public class PlatformReleasePlan implements Serializable
      */
     public boolean isDryRun( )
     {
-        return _bDryRun;
+        return _mode == PlatformStepMode.DRY_RUN;
     }
 
     /**
-     * Sets the dry run flag.
+     * Sets the dry run flag, kept in the JSON for the pipelines reading it : true sets the DRY_RUN mode, false leaves a VERIFY mode as is
+     * whatever the order the JSON fields are read in.
      *
      * @param bDryRun
      *            true for a dry run
      */
     public void setDryRun( boolean bDryRun )
     {
-        _bDryRun = bDryRun;
+        if ( bDryRun )
+        {
+            _mode = PlatformStepMode.DRY_RUN;
+        }
+        else
+            if ( _mode == PlatformStepMode.DRY_RUN )
+            {
+                _mode = PlatformStepMode.RELEASE;
+            }
+    }
+
+    /**
+     * Returns the mode of the build : release, dry run or verification.
+     *
+     * @return the mode
+     */
+    public PlatformStepMode getMode( )
+    {
+        return _mode;
+    }
+
+    /**
+     * Sets the mode of the build.
+     *
+     * @param mode
+     *            the mode, RELEASE when null
+     */
+    public void setMode( PlatformStepMode mode )
+    {
+        _mode = mode != null ? mode : PlatformStepMode.RELEASE;
+    }
+
+    /**
+     * Whether the pipeline must verify every resource without committing nor pushing anything.
+     *
+     * @return true for a verification
+     */
+    @JsonIgnore
+    public boolean isVerify( )
+    {
+        return _mode == PlatformStepMode.VERIFY;
     }
 
     /**

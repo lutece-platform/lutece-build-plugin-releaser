@@ -66,7 +66,9 @@ import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseStatus;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseStep;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseStepHome;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseType;
+import fr.paris.lutece.plugins.releaser.business.platform.PlatformResourceVerification;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepCode;
+import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepMode;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepDefinition;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepDefinitionHome;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepResult;
@@ -111,6 +113,7 @@ public final class PlatformReleaseService
     private static final String MESSAGE_THEME_NOT_RELEASABLE = "releaser.message.themeNotReleasable";
     private static final String MESSAGE_AGGREGATE_CORE_MISMATCH = "releaser.message.platform.aggregateCoreMismatch";
     private static final String MESSAGE_AGGREGATE_BLOCKED = "releaser.message.platform.aggregateBlocked";
+    private static final String MESSAGE_VERIFY_NOT_AVAILABLE = "releaser.message.platform.verifyNotAvailable";
     private static final String MESSAGE_MASTER_BRANCH_MISSING = "releaser.message.platform.masterBranchMissing";
     private static final String MESSAGE_REMOTE_BRANCHES_UNAVAILABLE = "releaser.message.platform.remoteBranchesUnavailable";
     private static final String MESSAGE_POM_VERSION_MISMATCH = "releaser.message.platform.pomVersionMismatch";
@@ -143,6 +146,7 @@ public final class PlatformReleaseService
     private static final String STEP_BRANCH_KEY = "branch";
 
     private static final String DRY_RUN_RESULT_PREFIX = "DRY RUN ";
+    private static final String VERIFY_RESULT_PREFIX = "VERIFY ";
 
     private static final String CSV_SEPARATOR = ";";
     private static final String CSV_LINE_SEPARATOR = "\n";
@@ -563,6 +567,51 @@ public final class PlatformReleaseService
     }
 
     /**
+     * Ends a verification : the step goes back to READY like after a simulation, the verifications read from the pipeline replace the previous
+     * ones of the same resources and keep the others (a retest of some components only), the report of the verification is the report of
+     * the step.
+     *
+     * @param campaign
+     *            the campaign, loaded with its steps
+     * @param step
+     *            the step
+     * @param strJenkinsResult
+     *            the Jenkins result of the verification build
+     * @param strReport
+     *            the text report of the build, null when unreadable
+     * @param mapVerifications
+     *            the verification of each resource, "groupId:artifactId" to verification, null when unreadable
+     * @throws IOException
+     *             if the result cannot be serialized
+     */
+    public static void finishVerification( PlatformRelease campaign, PlatformReleaseStep step, String strJenkinsResult, String strReport,
+            Map<String, PlatformResourceVerification> mapVerifications ) throws IOException
+    {
+        step.setJenkinsResult( truncateResult( VERIFY_RESULT_PREFIX + strJenkinsResult ) );
+        step.setStatus( PlatformReleaseStatus.READY );
+        PlatformStepResult result = parseResult( step );
+        if ( result == null )
+        {
+            result = new PlatformStepResult( );
+        }
+        if ( strReport != null )
+        {
+            result.setReport( strReport );
+        }
+        if ( mapVerifications != null )
+        {
+            result.getVerifications( ).putAll( mapVerifications );
+            result.setVerificationDate( new Timestamp( System.currentTimeMillis( ) ).toString( ) );
+        }
+        step.setResultJson( MapperJsonUtil.getJson( result ) );
+        step.setDateEnd( new Timestamp( System.currentTimeMillis( ) ) );
+        PlatformReleaseStepHome.update( step );
+
+        campaign.setStatus( PlatformReleaseStatus.READY );
+        touch( campaign );
+    }
+
+    /**
      * Fits a Jenkins result or an error message into the result column : an oversized value would make the update fail inside the error
      * handling of the task and leave the step RUNNING for ever.
      *
@@ -803,7 +852,8 @@ public final class PlatformReleaseService
 
     /**
      * Merges the result of an attempt of a step into the result of its previous attempts : the released versions add up (the newest wins on a
-     * same component), the aggregate version and the report are those of the newest attempt when it has them.
+     * same component), the aggregate version and the report are those of the newest attempt when it has them, the verifications of the step
+     * are kept.
      *
      * @param previous
      *            the result of the previous attempts, null when none
@@ -828,6 +878,9 @@ public final class PlatformReleaseService
         merged.getNotProcessed( ).addAll( next.getNotProcessed( ).isEmpty( ) ? previous.getNotProcessed( ) : next.getNotProcessed( ) );
         merged.getNotProcessed( ).removeAll( merged.getReleasedVersions( ).keySet( ) );
         merged.setPomUpdated( previous.isPomUpdated( ) || next.isPomUpdated( ) );
+        merged.getVerifications( ).putAll( previous.getVerifications( ) );
+        merged.getVerifications( ).putAll( next.getVerifications( ) );
+        merged.setVerificationDate( next.getVerificationDate( ) != null ? next.getVerificationDate( ) : previous.getVerificationDate( ) );
 
         return merged;
     }
@@ -2430,8 +2483,31 @@ public final class PlatformReleaseService
      */
     public static PlatformReleasePlan buildPlan( PlatformRelease campaign, int nStepNumber, Site site, boolean bDryRun )
     {
+        return buildPlan( campaign, nStepNumber, site, bDryRun ? PlatformStepMode.DRY_RUN : PlatformStepMode.RELEASE );
+    }
+
+    /**
+     * Builds the plan of a step for a release, a simulation or a verification, see {@link #buildPlan(PlatformRelease, int, Site, boolean)}.
+     * Only the step pipeline verifies : a verification of the last step, run by the lutece-platform pipeline, is refused.
+     *
+     * @param campaign
+     *            the campaign, loaded with its steps
+     * @param nStepNumber
+     *            the step number
+     * @param site
+     *            the transient site of the step
+     * @param mode
+     *            the mode of the build
+     * @return the plan
+     */
+    public static PlatformReleasePlan buildPlan( PlatformRelease campaign, int nStepNumber, Site site, PlatformStepMode mode )
+    {
         PlatformStepCode code = PlatformStepCode.fromStepNumber( nStepNumber );
         PlatformReleaseType releaseType = getStepReleaseType( campaign, code );
+        if ( mode == PlatformStepMode.VERIFY && code.getExecutor( ) != PlatformStepCode.Executor.STEP_PIPELINE )
+        {
+            throw new AppException( I18nService.getLocalizedString( MESSAGE_VERIFY_NOT_AVAILABLE, Locale.getDefault( ) ) );
+        }
 
         PlatformReleasePlan plan = new PlatformReleasePlan( );
         plan.setCampaignId( campaign.getId( ) );
@@ -2440,7 +2516,7 @@ public final class PlatformReleaseService
         plan.setStepCode( code );
         plan.setReleaseType( releaseType );
         plan.setCoreMajor( campaign.getCoreMajor( ) );
-        plan.setDryRun( bDryRun );
+        plan.setMode( mode );
 
         if ( site.getBlockingReleaseComment( ) != null )
         {

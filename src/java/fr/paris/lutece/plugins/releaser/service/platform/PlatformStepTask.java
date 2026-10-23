@@ -55,6 +55,7 @@ import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseHome;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleasePlan;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseStep;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseType;
+import fr.paris.lutece.plugins.releaser.business.platform.PlatformResourceVerification;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepCode;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepResult;
 import fr.paris.lutece.plugins.releaser.service.IJenkinsService;
@@ -106,6 +107,7 @@ public class PlatformStepTask implements Runnable
 
     /** Report archived by the step pipeline */
     static final String STEP_REPORT_ARTIFACT = "step-report.json";
+    static final String VERIFY_REPORT_ARTIFACT = "verify-report.json";
 
     /** Report archived by the lutece-platform pipeline */
     static final String PLATFORM_REPORT_ARTIFACT = "release-report.txt";
@@ -293,23 +295,28 @@ public class PlatformStepTask implements Runnable
 
             String strResult = waitForResult( jenkins, build.getUrl( ) );
 
-            if ( _plan.isDryRun( ) )
+            if ( _plan.isVerify( ) )
             {
-                PlatformReleaseService.finishDryRun( campaign, step, strResult, readReportText( jenkins, build ) );
+                PlatformReleaseService.finishVerification( campaign, step, strResult, readReportText( jenkins, build ), readVerifyReport( jenkins, build ) );
             }
             else
-                if ( isPublished( strResult ) )
+                if ( _plan.isDryRun( ) )
                 {
-                    PlatformStepResult result = readStepResult( jenkins, build );
-                    PlatformReleaseService.completeStep( campaign, step, result, strResult );
-                    PlatformReleaseService.updateBugtrackerVersions( step, _plan, result );
+                    PlatformReleaseService.finishDryRun( campaign, step, strResult, readReportText( jenkins, build ) );
                 }
                 else
-                {
-                    PlatformStepResult partialResult = readPartialResult( jenkins, build );
-                    PlatformReleaseService.failStep( campaign, step, strResult, partialResult );
-                    PlatformReleaseService.updateBugtrackerVersions( step, _plan, partialResult );
-                }
+                    if ( isPublished( strResult ) )
+                    {
+                        PlatformStepResult result = readStepResult( jenkins, build );
+                        PlatformReleaseService.completeStep( campaign, step, result, strResult );
+                        PlatformReleaseService.updateBugtrackerVersions( step, _plan, result );
+                    }
+                    else
+                    {
+                        PlatformStepResult partialResult = readPartialResult( jenkins, build );
+                        PlatformReleaseService.failStep( campaign, step, strResult, partialResult );
+                        PlatformReleaseService.updateBugtrackerVersions( step, _plan, partialResult );
+                    }
         }
         catch( Exception e )
         {
@@ -711,6 +718,49 @@ public class PlatformStepTask implements Runnable
     }
 
     /**
+     * Reads the verification of each resource archived by the step pipeline in verify mode.
+     *
+     * @param jenkins
+     *            the Jenkins service
+     * @param build
+     *            the finished build
+     * @return "groupId:artifactId" to verification, the aggregate included, null when the report cannot be read
+     */
+    private Map<String, PlatformResourceVerification> readVerifyReport( IJenkinsService jenkins, JenkinsBuild build )
+    {
+        try
+        {
+            return parseVerifyReport( jenkins.readArtifact( build.getUrl( ), VERIFY_REPORT_ARTIFACT ) );
+        }
+        catch( Exception e )
+        {
+            AppLogService.error( "Releaser : unreadable " + VERIFY_REPORT_ARTIFACT + " of build " + build.getUrl( ) + " : " + e.getMessage( ) );
+            return null;
+        }
+    }
+
+    /**
+     * Parses verify-report.json : the components keyed by "groupId:artifactId", then the aggregate under its own coordinates.
+     *
+     * @param strJson
+     *            the content of verify-report.json
+     * @return "groupId:artifactId" to verification
+     * @throws IOException
+     *             if the report is not valid JSON
+     */
+    static Map<String, PlatformResourceVerification> parseVerifyReport( String strJson ) throws IOException
+    {
+        VerifyReport report = MapperJsonUtil.parse( strJson, VerifyReport.class );
+        Map<String, PlatformResourceVerification> mapVerifications = new LinkedHashMap<>( report.getComponents( ) );
+        if ( report.getAggregate( ) != null && report.getAggregate( ).getCoordinates( ) != null )
+        {
+            mapVerifications.put( report.getAggregate( ).getCoordinates( ), report.getAggregate( ) );
+        }
+
+        return mapVerifications;
+    }
+
+    /**
      * Builds the result of a successful step from its plan : every component released at its target version, the aggregate too.
      *
      * @param plan
@@ -731,5 +781,87 @@ public class PlatformStepTask implements Runnable
         result.setReport( "Result taken from the plan, no " + STEP_REPORT_ARTIFACT + " read from Jenkins." );
 
         return result;
+    }
+
+    /**
+     * Content of verify-report.json : the verification of each component, then of the aggregate.
+     */
+    public static class VerifyReport
+    {
+        private Map<String, PlatformResourceVerification> _mapComponents = new LinkedHashMap<>( );
+        private AggregateVerification _aggregate;
+
+        /**
+         * Returns the verification of each component, "groupId:artifactId" to verification.
+         *
+         * @return the components
+         */
+        public Map<String, PlatformResourceVerification> getComponents( )
+        {
+            return _mapComponents;
+        }
+
+        /**
+         * Sets the verification of each component.
+         *
+         * @param mapComponents
+         *            the components
+         */
+        public void setComponents( Map<String, PlatformResourceVerification> mapComponents )
+        {
+            _mapComponents = mapComponents != null ? mapComponents : new LinkedHashMap<>( );
+        }
+
+        /**
+         * Returns the verification of the aggregate, null when the step has none.
+         *
+         * @return the aggregate
+         */
+        public AggregateVerification getAggregate( )
+        {
+            return _aggregate;
+        }
+
+        /**
+         * Sets the verification of the aggregate.
+         *
+         * @param aggregate
+         *            the aggregate
+         */
+        public void setAggregate( AggregateVerification aggregate )
+        {
+            _aggregate = aggregate;
+        }
+    }
+
+    /**
+     * Verification of the aggregate in verify-report.json : a resource verification carrying its own coordinates.
+     */
+    public static class AggregateVerification extends PlatformResourceVerification
+    {
+        private static final long serialVersionUID = 1L;
+
+        private String _strCoordinates;
+
+        /**
+         * Returns the coordinates "groupId:artifactId" of the aggregate.
+         *
+         * @return the coordinates
+         */
+        public String getCoordinates( )
+        {
+            return _strCoordinates;
+        }
+
+        /**
+         * Sets the coordinates of the aggregate.
+         *
+         * @param strCoordinates
+         *            the coordinates
+         */
+        public void setCoordinates( String strCoordinates )
+        {
+            _strCoordinates = strCoordinates;
+        }
     }
 }
