@@ -57,6 +57,7 @@ import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseStatus;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseStep;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseType;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepCode;
+import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepMode;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepDefinition;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepDefinitionHome;
 import fr.paris.lutece.plugins.releaser.service.ReleasePreparationService;
@@ -100,6 +101,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String PARAMETER_RELEASE_TYPE = "release_type";
     private static final String PARAMETER_CORE_MAJOR = "core_major";
     private static final String PARAMETER_DRY_RUN = "dry_run";
+    private static final String PARAMETER_MODE = "mode";
     private static final String PARAMETER_RELOAD = "reload";
     private static final String PARAMETER_AUTH = "auth";
     private static final String PARAMETER_OPEN_AGGREGATE_VERSION = "open_aggregate_version";
@@ -181,6 +183,12 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String MARK_SITE = "site";
     private static final String MARK_OPEN_AGGREGATE_VERSION = "open_aggregate_version";
     private static final String MARK_PIPELINE_PARAMETERS = "pipeline_parameters";
+    private static final String MARK_CAN_VERIFY = "can_verify";
+    private static final String MARK_VERIFICATIONS = "verifications";
+    private static final String MARK_VERIFICATION_STATUSES = "verification_statuses";
+    private static final String MARK_VERIFICATION_COUNTS = "verification_counts";
+    private static final String MARK_VERIFICATION_DATE = "verification_date";
+    private static final String MARK_STEP_VERIFICATIONS = "step_verifications";
     private static final String MARK_CORE_BRANCHES = "core_branches";
     private static final String MARK_STEP_REPORTS = "step_reports";
     private static final String MARK_MASTER_BRANCH = "master_branch";
@@ -210,6 +218,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String MESSAGE_STEP_NOT_REARMABLE = "releaser.message.platformRelease.stepNotRearmable";
     private static final String INFO_STEP_LAUNCHED = "releaser.info.platformRelease.stepLaunched";
     private static final String INFO_DRY_RUN_LAUNCHED = "releaser.info.platformRelease.dryRunLaunched";
+    private static final String INFO_VERIFY_LAUNCHED = "releaser.info.platformRelease.verifyLaunched";
     private static final String INFO_EXPORT_VERIFIED = "releaser.info.platformRelease.exportVerified";
     private static final String INFO_STEP_DEFINITIONS_SAVED = "releaser.info.platformRelease.stepDefinitionsSaved";
 
@@ -420,6 +429,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         List<Boolean> listCanSkip = new ArrayList<>( );
         List<Boolean> listOrphan = new ArrayList<>( );
         Map<String, String> mapStepReports = new LinkedHashMap<>( );
+        Map<String, Map<String, Object>> mapStepVerifications = new LinkedHashMap<>( );
         for ( PlatformReleaseStep step : campaign.getSteps( ) )
         {
             listCanPrepare.add( PlatformReleaseService.canPrepareStep( campaign, step.getStepNumber( ) ) );
@@ -430,6 +440,14 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
             {
                 mapStepReports.put( Integer.toString( step.getStepNumber( ) ), strReport );
             }
+            String strVerificationDate = PlatformReleaseService.getVerificationDate( step );
+            if ( strVerificationDate != null )
+            {
+                Map<String, Object> mapSummary = new LinkedHashMap<>( );
+                mapSummary.put( MARK_VERIFICATION_DATE, strVerificationDate );
+                mapSummary.put( MARK_VERIFICATION_COUNTS, PlatformReleaseService.countVerificationStatuses( PlatformReleaseService.getRawVerificationStatuses( step ) ) );
+                mapStepVerifications.put( Integer.toString( step.getStepNumber( ) ), mapSummary );
+            }
         }
 
         Map<String, Object> model = getModel( );
@@ -438,6 +456,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         model.put( MARK_CAN_PREPARE, listCanPrepare );
         model.put( MARK_CAN_SKIP, listCanSkip );
         model.put( MARK_STEP_REPORTS, mapStepReports );
+        model.put( MARK_STEP_VERIFICATIONS, mapStepVerifications );
         model.put( MARK_ORPHAN_STEPS, listOrphan );
         model.put( MARK_OPEN_AUTH_STEP, request.getParameter( PARAMETER_AUTH ) );
         RepositoryType stepRepositoryType = PlatformReleaseService.getStepRepositoryType( ReleaserUtils.convertStringToInt( request.getParameter( PARAMETER_AUTH ) ) );
@@ -583,6 +602,16 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         {
             model.put( MARK_PIPELINE_PARAMETERS, PlatformReleaseService.getEffectivePipelineParameters( campaign, nStepNumber, _site ) );
             model.put( MARK_MASTER_BRANCH, PlatformReleaseService.getMasterBranch( _site.getBranchReleaseFrom( ), _site.getNextReleaseVersion( ) ) );
+        }
+        else
+        {
+            PlatformReleaseStep step = PlatformReleaseService.getStep( campaign, nStepNumber );
+            Map<String, String> mapStatuses = PlatformReleaseService.getVerificationStatuses( step, _site );
+            model.put( MARK_CAN_VERIFY, true );
+            model.put( MARK_VERIFICATIONS, PlatformReleaseService.getStepVerifications( step ) );
+            model.put( MARK_VERIFICATION_STATUSES, mapStatuses );
+            model.put( MARK_VERIFICATION_COUNTS, PlatformReleaseService.countVerificationStatuses( mapStatuses ) );
+            model.put( MARK_VERIFICATION_DATE, PlatformReleaseService.getVerificationDate( step ) );
         }
         model.put( ConstanteUtils.MARK_USER, user );
 
@@ -1183,9 +1212,10 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         }
         checkAuthorized( request, campaign );
 
-        boolean bDryRun = Boolean.parseBoolean( request.getParameter( PARAMETER_DRY_RUN ) );
+        PlatformStepMode mode = getLaunchMode( request );
+        boolean bNothingPushed = mode != PlatformStepMode.RELEASE;
         ReleaserUser user = ReleaserUtils.getReleaserUser( request, getLocale( ) );
-        String strPermissionError = bDryRun ? null : PlatformReleaseService.checkLaunchPermissions( _site, user );
+        String strPermissionError = bNothingPushed ? null : PlatformReleaseService.checkLaunchPermissions( _site, user );
         if ( strPermissionError != null )
         {
             addError( strPermissionError );
@@ -1194,16 +1224,16 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         try
         {
             savePipelineParameters( request, campaign );
-            PlatformReleasePlan plan = PlatformReleaseService.buildPlan( campaign, _nSiteStepNumber, _site, bDryRun );
+            PlatformReleasePlan plan = PlatformReleaseService.buildPlan( campaign, _nSiteStepNumber, _site, mode );
             PlatformReleaseService.applyPipelineParameters( campaign, _nSiteStepNumber, plan );
-            String strMasterError = bDryRun ? null : PlatformReleaseService.checkMasterBranches( plan, user, getLocale( ) );
+            String strMasterError = bNothingPushed ? null : PlatformReleaseService.checkMasterBranches( plan, user, getLocale( ) );
             if ( strMasterError != null )
             {
                 addError( strMasterError );
                 return redirectToPreparedStep( request );
             }
             PlatformReleaseService.launchStep( campaign, _nSiteStepNumber, plan, user );
-            addInfo( bDryRun ? INFO_DRY_RUN_LAUNCHED : INFO_STEP_LAUNCHED, getLocale( ) );
+            addInfo( mode == PlatformStepMode.VERIFY ? INFO_VERIFY_LAUNCHED : ( bNothingPushed ? INFO_DRY_RUN_LAUNCHED : INFO_STEP_LAUNCHED ), getLocale( ) );
         }
         catch( IOException | AppException e )
         {
@@ -1212,6 +1242,23 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         }
 
         return redirect( request, VIEW_PLATFORM_RELEASE, PARAMETER_ID, campaign.getId( ) );
+    }
+
+    /**
+     * Mode of a launch : VERIFY for the verification button, DRY_RUN for the simulation, RELEASE otherwise.
+     *
+     * @param request
+     *            the request
+     * @return the mode
+     */
+    private static PlatformStepMode getLaunchMode( HttpServletRequest request )
+    {
+        if ( PlatformStepMode.VERIFY.name( ).equals( request.getParameter( PARAMETER_MODE ) ) )
+        {
+            return PlatformStepMode.VERIFY;
+        }
+
+        return Boolean.parseBoolean( request.getParameter( PARAMETER_DRY_RUN ) ) ? PlatformStepMode.DRY_RUN : PlatformStepMode.RELEASE;
     }
 
     /**

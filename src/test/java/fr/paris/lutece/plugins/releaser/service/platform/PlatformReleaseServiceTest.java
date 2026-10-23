@@ -35,9 +35,7 @@ package fr.paris.lutece.plugins.releaser.service.platform;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -66,7 +64,6 @@ import fr.paris.lutece.plugins.releaser.business.platform.PlatformVerificationCh
 import fr.paris.lutece.plugins.releaser.business.platform.PomVersionDecision;
 import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
-import fr.paris.lutece.portal.service.util.AppException;
 
 /**
  * Pure logic of the platform release service : version selection by release type, release order, step locking, CSV export
@@ -395,16 +392,35 @@ public class PlatformReleaseServiceTest
         assertTrue( plan.isVerify( ) );
         assertFalse( plan.isDryRun( ) );
 
-        try
-        {
-            PlatformReleaseService.buildPlan( campaign( PlatformReleaseType.BETA ), PlatformStepCode.PLATFORM_STARTERS.getStepNumber( ), site,
-                    PlatformStepMode.VERIFY );
-            fail( "a verification of the last step must be refused" );
-        }
-        catch( AppException e )
-        {
-            assertNotNull( e.getMessage( ) );
-        }
+        assertTrue( PlatformReleaseService.canVerify( PlatformStepCode.CORE ) );
+        assertTrue( PlatformReleaseService.canVerify( PlatformStepCode.PLATFORM_PLUGINS ) );
+        assertFalse( PlatformReleaseService.canVerify( PlatformStepCode.PLATFORM_STARTERS ) );
+    }
+
+    /**
+     * A resource keeps the status of its verification only for the version it was verified for, and the statuses are counted for the summary.
+     */
+    @Test
+    public void testVerificationStatuses( )
+    {
+        PlatformResourceVerification verification = new PlatformResourceVerification( );
+        verification.setStatus( PlatformVerificationCheck.STATUS_TO_FIX );
+        verification.setVersion( "1.0.5-beta-01" );
+
+        assertEquals( PlatformVerificationCheck.STATUS_TO_FIX, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-01" ) );
+        assertEquals( PlatformReleaseService.VERIFICATION_NOT_VERIFIED, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-02" ) );
+        assertEquals( PlatformReleaseService.VERIFICATION_NOT_VERIFIED, PlatformReleaseService.getVerificationStatus( null, "1.0.5-beta-01" ) );
+
+        Map<String, String> mapStatuses = new java.util.LinkedHashMap<>( );
+        mapStatuses.put( "a", PlatformVerificationCheck.STATUS_OK );
+        mapStatuses.put( "b", PlatformVerificationCheck.STATUS_TO_FIX );
+        mapStatuses.put( "c", PlatformVerificationCheck.STATUS_OK );
+        mapStatuses.put( "d", PlatformReleaseService.VERIFICATION_NOT_VERIFIED );
+        Map<String, Integer> mapCounts = PlatformReleaseService.countVerificationStatuses( mapStatuses );
+        assertEquals( Integer.valueOf( 2 ), mapCounts.get( PlatformVerificationCheck.STATUS_OK ) );
+        assertEquals( Integer.valueOf( 1 ), mapCounts.get( PlatformVerificationCheck.STATUS_TO_FIX ) );
+        assertEquals( Integer.valueOf( 0 ), mapCounts.get( PlatformVerificationCheck.STATUS_WARNING ) );
+        assertEquals( Integer.valueOf( 1 ), mapCounts.get( PlatformReleaseService.VERIFICATION_NOT_VERIFIED ) );
     }
 
     /**

@@ -72,6 +72,65 @@
 		<span class="text-muted">-</span>
 	</#if>
 </#macro>
+<#function verificationLabelClass status>
+	<#switch status>
+		<#case "OK"><#return "label-success">
+		<#case "TO_FIX"><#return "label-danger">
+		<#case "WARNING"><#return "label-warning">
+		<#default><#return "label-default">
+	</#switch>
+</#function>
+<#macro verificationBadge coordinates>
+	<#local status = verification_statuses[coordinates]!"NOT_VERIFIED" />
+	<#if verifications[coordinates]??>
+		<a href="#" data-toggle="modal" data-target="#modalVerification-${coordinates?replace('[^A-Za-z0-9]', '-', 'r')}" class="label ${verificationLabelClass(status)}" title="#i18n{releaser.prepare_platform_step.verificationDetailHelp}">#i18n{releaser.prepare_platform_step.verification.${status}}</a>
+	<#else>
+		<span class="label label-default">#i18n{releaser.prepare_platform_step.verification.NOT_VERIFIED}</span>
+	</#if>
+</#macro>
+<#macro verificationModal coordinates artifactId targetVersion removable>
+	<#if verifications[coordinates]??>
+	<#local v = verifications[coordinates] />
+	<div class="modal fade" id="modalVerification-${coordinates?replace('[^A-Za-z0-9]', '-', 'r')}" tabindex="-1" role="dialog">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title"><i class="fa fa-stethoscope"></i> ${artifactId} ${v.version!} <span class="label ${verificationLabelClass(v.status!)}">#i18n{releaser.prepare_platform_step.verification.${v.status!"NOT_VERIFIED"}}</span></h4>
+				</div>
+				<div class="modal-body">
+					<p><small class="text-muted">#i18n{releaser.prepare_platform_step.verificationCommit} <#if (v.commit!"")?length gt 7>${v.commit?substring(0, 7)}<#else>${v.commit!}</#if><#if verification_date??> — ${verification_date?substring(0, 16)}</#if></small></p>
+					<#if (v.version!"") != targetVersion>
+						<p class="text-warning"><i class="fa fa-exclamation-triangle"></i> #i18n{releaser.prepare_platform_step.verificationOtherVersion} ${targetVersion}</p>
+					</#if>
+					<#if v.note?has_content>
+						<p class="text-info"><i class="fa fa-info-circle"></i> #i18n{releaser.prepare_platform_step.verificationAggregateNote}</p>
+					</#if>
+					<table class="table table-condensed">
+						<tbody>
+						<#list v.checks as check>
+							<tr>
+								<td>#i18n{releaser.prepare_platform_step.check.${check.check}}</td>
+								<td><span class="label ${verificationLabelClass(check.status!)}">#i18n{releaser.prepare_platform_step.verification.${check.status!"NOT_VERIFIED"}}</span></td>
+							</tr>
+							<#if (check.status!"OK") != "OK" && check.details?has_content>
+							<tr><td colspan="2"><pre style="white-space:pre-wrap;max-height:30vh;overflow:auto;">${check.details?html}</pre></td></tr>
+							</#if>
+						</#list>
+						</tbody>
+					</table>
+				</div>
+				<div class="modal-footer">
+					<#if removable && (v.status!"") == "TO_FIX">
+					<a class="button transition border-red small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=toggleComponent&artifact_id=${artifactId}" title="#i18n{releaser.prepare_platform_step.buttonRemoveComponentHelp}"><i class="fa fa-minus-circle"></i> #i18n{releaser.prepare_platform_step.buttonRemoveComponent}</a>
+					</#if>
+					<button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">#i18n{releaser.prepare_platform_step.buttonClose}</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	</#if>
+</#macro>
 
 <section class="content-header">
 	<h1>
@@ -82,6 +141,11 @@
 <section class="content">
 <div class="app-wrapper app-cluster">
 	<#if !site.blockingReleaseComment??>
+	<#if can_verify!false>
+	<button type="button" id="btn-verify-step" class="floating-button" style="right:calc(13% + 30px);background-color:#f39c12" title="#i18n{releaser.prepare_platform_step.buttonVerify}">
+		<i class="fa fa-stethoscope fa-fw"></i>
+	</button>
+	</#if>
 	<button type="button" id="btn-dry-run-step" class="floating-button btn-release-history-bg" title="#i18n{releaser.prepare_platform_step.buttonDryRun}">
 		<i class="fa fa-flask fa-fw"></i>
 	</button>
@@ -92,11 +156,26 @@
 	<@tform name='launch_step' class='hidden' action='jsp/admin/plugins/releaser/ManagePlatformRelease.jsp'>
 		<input type="hidden" name="action" value="launchStep">
 		<input type="hidden" name="dry_run" id="dry_run" value="false">
+		<input type="hidden" name="mode" id="launch_mode" value="">
 		<input type="hidden" name="release_target" id="launch_release_target" value="">
 		<input type="hidden" name="allow_snapshot_dependencies" id="launch_allow_snapshot_dependencies" value="">
 	</@tform>
 <@messages infos=infos />
 <@messages errors=errors />
+<#if can_verify!false>
+<div class="alert <#if !verification_date??>alert-info<#elseif (verification_counts["TO_FIX"] > 0)>alert-danger<#elseif (verification_counts["WARNING"] > 0 || verification_counts["NOT_VERIFIED"] > 0)>alert-warning<#else>alert-success</#if>">
+	<i class="fa fa-stethoscope fa-fw"></i>
+	<#if verification_date??>
+		#i18n{releaser.prepare_platform_step.lastVerification} ${verification_date?substring(0, 16)} :
+		<span class="label label-success">${verification_counts["OK"]} #i18n{releaser.prepare_platform_step.countVerified}</span>
+		<span class="label label-danger">${verification_counts["TO_FIX"]} #i18n{releaser.prepare_platform_step.countToFix}</span>
+		<span class="label label-warning">${verification_counts["WARNING"]} #i18n{releaser.prepare_platform_step.countWarning}</span>
+		<span class="label label-default">${verification_counts["NOT_VERIFIED"]} #i18n{releaser.prepare_platform_step.countNotVerified}</span>
+	<#else>
+		#i18n{releaser.prepare_platform_step.neverVerified}
+	</#if>
+</div>
+</#if>
 
 <div class="row">
 	<div class="col-md-12">
@@ -126,6 +205,7 @@
 							<th>#i18n{releaser.prepare_platform_step.lastRelease}</th>
 							<th>#i18n{releaser.prepare_platform_step.targetVersion}</th>
 							<th>#i18n{releaser.prepare_platform_step.nextSnapshot}</th>
+							<#if can_verify!false><th>#i18n{releaser.prepare_platform_step.columnVerification}</th></#if>
 							<th>Actions</th>
 						</tr>
 					</thead>
@@ -144,6 +224,7 @@
 							<td><strong class="button transition fill-lightblue small">${site.lastReleaseVersion!'n/a'}</strong></td>
 							<td><strong id="aggregate-target" class="button transition fill-lightblue small">${site.nextReleaseVersion!}</strong></td>
 							<td><strong class="button transition fill-lightblue small">${site.nextSnapshotVersion!}</strong></td>
+							<#if can_verify!false><td><@verificationBadge coordinates="${site.groupId!}:${site.artifactId!}" /></td></#if>
 							<td>
 								<a class="button transition border-lightblue small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=changeAggregateVersion" title="#i18n{releaser.prepare_platform_step.buttonChangeVersionHelp}">
 									<i class="fa fa-code-fork fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonChangeVersion}
@@ -239,6 +320,7 @@
 							<th>Version</th>
 							<th>Version cible</th>
 							<th>Prochaine version</th>
+							<#if can_verify!false><th>#i18n{releaser.prepare_platform_step.columnVerification}</th></#if>
 							<th>Actions</th>
 						</tr>
 					</thead>
@@ -254,6 +336,7 @@
 							<td><strong class="button transition fill-lightblue small">${component.currentVersion!}</strong></td>
 							<td><strong class="button transition fill-lightblue small">${component.targetVersion!}</strong></td>
 							<td><span class="button transition fill-lightblue small"><#if component.isSnapshotVersion()>${component.nextSnapshotVersion!}<#else>${component.targetVersion!}</#if></span></td>
+							<#if can_verify!false><td><@verificationBadge coordinates="${component.groupId!}:${component.artifactId!}" /></td></#if>
 							<td>
 								<#if !component.blockingReleaseComment?? && component.isSnapshotVersion() && !component.downgrade>
 									<a class="button transition border-lightblue small" title="Modifier la version pour la release" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=changeComponentVersion&artifact_id=${component.artifactId}">
@@ -363,6 +446,14 @@
 </#if>
 </div>
 </section>
+<#if can_verify!false>
+<@verificationModal coordinates="${site.groupId!}:${site.artifactId!}" artifactId=site.artifactId! targetVersion=site.nextReleaseVersion! removable=false />
+<#list site.components as component>
+<#if component.project>
+<@verificationModal coordinates="${component.groupId!}:${component.artifactId!}" artifactId=component.artifactId! targetVersion=component.targetVersion! removable=true />
+</#if>
+</#list>
+</#if>
 <#if open_auth_missing!false>
 <div class="modal fade" id="modalAuthPlatform" tabindex="-1" role="dialog" aria-labelledby="modalAuthPlatformLabel">
 	<div class="modal-dialog vlogin" role="document">
@@ -400,14 +491,20 @@ $(function() {
 	<#if open_auth_missing!false>
 		$('#modalAuthPlatform').modal();
 	</#if>
-	function launchStep( dryRun ) {
+	function launchStep( dryRun, mode ) {
 		$("#dry_run").val( dryRun );
+		$("#launch_mode").val( mode || "" );
 		if ( $("#release_target").length ) {
 			$("#launch_release_target").val( $("#release_target").val() );
 			$("#launch_allow_snapshot_dependencies").val( $("#allow_snapshot_dependencies").is(":checked") ? "true" : "false" );
 		}
 		$("form[name='launch_step']").submit();
 	}
+	$("#btn-verify-step").click( function(){
+		if ( confirm( "#i18n{releaser.prepare_platform_step.confirmVerify}" ) ) {
+			launchStep( "false", "VERIFY" );
+		}
+	});
 	$("#btn-dry-run-step").click( function(){
 		if ( confirm( "#i18n{releaser.prepare_platform_step.confirmDryRun}" ) ) {
 			launchStep( "true" );

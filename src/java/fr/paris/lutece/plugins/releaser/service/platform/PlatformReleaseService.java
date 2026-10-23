@@ -72,6 +72,7 @@ import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepMode;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepDefinition;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepDefinitionHome;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepResult;
+import fr.paris.lutece.plugins.releaser.business.platform.PlatformVerificationCheck;
 import fr.paris.lutece.plugins.releaser.service.MavenRepoComponentInfoProvider;
 import fr.paris.lutece.plugins.releaser.service.ReleasePreparationService;
 import fr.paris.lutece.plugins.releaser.service.BugtrackerService;
@@ -147,6 +148,9 @@ public final class PlatformReleaseService
 
     private static final String DRY_RUN_RESULT_PREFIX = "DRY RUN ";
     private static final String VERIFY_RESULT_PREFIX = "VERIFY ";
+
+    /** Verification status of a resource never verified, or verified for another version than its current target. */
+    public static final String VERIFICATION_NOT_VERIFIED = "NOT_VERIFIED";
 
     private static final String CSV_SEPARATOR = ";";
     private static final String CSV_LINE_SEPARATOR = "\n";
@@ -2487,6 +2491,19 @@ public final class PlatformReleaseService
     }
 
     /**
+     * Whether the components of a step can be verified : only the step pipeline has a verification mode, not the lutece-platform pipeline of
+     * the last step.
+     *
+     * @param code
+     *            the code of the step
+     * @return true for the steps 1 to 4
+     */
+    public static boolean canVerify( PlatformStepCode code )
+    {
+        return code != null && code.getExecutor( ) == PlatformStepCode.Executor.STEP_PIPELINE;
+    }
+
+    /**
      * Builds the plan of a step for a release, a simulation or a verification, see {@link #buildPlan(PlatformRelease, int, Site, boolean)}.
      * Only the step pipeline verifies : a verification of the last step, run by the lutece-platform pipeline, is refused.
      *
@@ -2504,7 +2521,7 @@ public final class PlatformReleaseService
     {
         PlatformStepCode code = PlatformStepCode.fromStepNumber( nStepNumber );
         PlatformReleaseType releaseType = getStepReleaseType( campaign, code );
-        if ( mode == PlatformStepMode.VERIFY && code.getExecutor( ) != PlatformStepCode.Executor.STEP_PIPELINE )
+        if ( mode == PlatformStepMode.VERIFY && !canVerify( code ) )
         {
             throw new AppException( I18nService.getLocalizedString( MESSAGE_VERIFY_NOT_AVAILABLE, Locale.getDefault( ) ) );
         }
@@ -2863,6 +2880,123 @@ public final class PlatformReleaseService
             AppLogService.error( "Unreadable result of platform step " + step.getStepNumber( ) + " of campaign " + step.getIdPlatformRelease( ), e );
             return null;
         }
+    }
+
+    /**
+     * Returns the last verification of each resource of a step, "groupId:artifactId" to verification.
+     *
+     * @param step
+     *            the step, may be null
+     * @return the verifications, empty when the step was never verified
+     */
+    public static Map<String, PlatformResourceVerification> getStepVerifications( PlatformReleaseStep step )
+    {
+        PlatformStepResult result = parseResult( step );
+
+        return result != null ? result.getVerifications( ) : new LinkedHashMap<>( );
+    }
+
+    /**
+     * Returns the date of the last verification of a step.
+     *
+     * @param step
+     *            the step, may be null
+     * @return the date, null when the step was never verified
+     */
+    public static String getVerificationDate( PlatformReleaseStep step )
+    {
+        PlatformStepResult result = parseResult( step );
+
+        return result != null ? result.getVerificationDate( ) : null;
+    }
+
+    /**
+     * Returns the verification status of each resource to release in a prepared step, "groupId:artifactId" to OK, TO_FIX, WARNING or
+     * NOT_VERIFIED : the components to release, then the aggregate.
+     *
+     * @param step
+     *            the step
+     * @param site
+     *            the transient site of the step
+     * @return the statuses
+     */
+    public static Map<String, String> getVerificationStatuses( PlatformReleaseStep step, Site site )
+    {
+        Map<String, PlatformResourceVerification> mapVerifications = getStepVerifications( step );
+        Map<String, String> mapStatuses = new LinkedHashMap<>( );
+        for ( Component component : site.getComponents( ) )
+        {
+            if ( component.isProject( ) )
+            {
+                String strCoordinates = component.getGroupId( ) + COORDINATES_SEPARATOR + component.getArtifactId( );
+                mapStatuses.put( strCoordinates, getVerificationStatus( mapVerifications.get( strCoordinates ), component.getTargetVersion( ) ) );
+            }
+        }
+        String strAggregate = site.getGroupId( ) + COORDINATES_SEPARATOR + site.getArtifactId( );
+        mapStatuses.put( strAggregate, getVerificationStatus( mapVerifications.get( strAggregate ), site.getNextReleaseVersion( ) ) );
+
+        return mapStatuses;
+    }
+
+    /**
+     * Returns the status of each resource as last verified, "groupId:artifactId" to OK, TO_FIX or WARNING, without comparing to the current
+     * target versions : for the summary of the campaign page, where the steps are not prepared.
+     *
+     * @param step
+     *            the step
+     * @return the statuses
+     */
+    public static Map<String, String> getRawVerificationStatuses( PlatformReleaseStep step )
+    {
+        Map<String, String> mapStatuses = new LinkedHashMap<>( );
+        for ( Map.Entry<String, PlatformResourceVerification> entry : getStepVerifications( step ).entrySet( ) )
+        {
+            mapStatuses.put( entry.getKey( ), StringUtils.defaultString( entry.getValue( ).getStatus( ), VERIFICATION_NOT_VERIFIED ) );
+        }
+
+        return mapStatuses;
+    }
+
+    /**
+     * Returns the status of a resource : the status of its verification, or NOT_VERIFIED when it was never verified or was verified for another
+     * version than its current target.
+     *
+     * @param verification
+     *            the last verification of the resource, may be null
+     * @param strTargetVersion
+     *            the current target version of the resource
+     * @return OK, TO_FIX, WARNING or NOT_VERIFIED
+     */
+    static String getVerificationStatus( PlatformResourceVerification verification, String strTargetVersion )
+    {
+        if ( verification == null || verification.getStatus( ) == null || !StringUtils.equals( verification.getVersion( ), strTargetVersion ) )
+        {
+            return VERIFICATION_NOT_VERIFIED;
+        }
+
+        return verification.getStatus( );
+    }
+
+    /**
+     * Counts the resources of each verification status.
+     *
+     * @param mapStatuses
+     *            the status of each resource
+     * @return OK, TO_FIX, WARNING and NOT_VERIFIED to their number of resources
+     */
+    public static Map<String, Integer> countVerificationStatuses( Map<String, String> mapStatuses )
+    {
+        Map<String, Integer> mapCounts = new LinkedHashMap<>( );
+        mapCounts.put( PlatformVerificationCheck.STATUS_OK, 0 );
+        mapCounts.put( PlatformVerificationCheck.STATUS_TO_FIX, 0 );
+        mapCounts.put( PlatformVerificationCheck.STATUS_WARNING, 0 );
+        mapCounts.put( VERIFICATION_NOT_VERIFIED, 0 );
+        for ( String strStatus : mapStatuses.values( ) )
+        {
+            mapCounts.merge( strStatus, 1, Integer::sum );
+        }
+
+        return mapCounts;
     }
 
     /**

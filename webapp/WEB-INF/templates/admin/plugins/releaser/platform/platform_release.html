@@ -54,6 +54,10 @@
 					<td>
 						<@platformStatusLabel status=step.status />
 						<#if step.jenkinsResult?has_content><br><small class="text-muted">${step.jenkinsResult}</small></#if>
+						<#if step_verifications?? && step_verifications[step.stepNumber?string]??>
+							<#assign stepVerification = step_verifications[step.stepNumber?string] />
+							<br><small class="<#if (stepVerification.verification_counts["TO_FIX"] > 0)>text-danger<#elseif (stepVerification.verification_counts["WARNING"] > 0)>text-warning<#else>text-success</#if>"><i class="fa fa-stethoscope"></i> #i18n{releaser.platform_release.verifiedOn} ${stepVerification.verification_date?substring(0, 16)} : ${stepVerification.verification_counts["TO_FIX"]} #i18n{releaser.prepare_platform_step.countToFix}, ${stepVerification.verification_counts["WARNING"]} #i18n{releaser.prepare_platform_step.countWarning}</small>
+						</#if>
 					</td>
 					<td>
 						<#if step.jenkinsBuildUrl?has_content>
