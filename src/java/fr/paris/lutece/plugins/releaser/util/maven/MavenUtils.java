@@ -35,6 +35,9 @@ package fr.paris.lutece.plugins.releaser.util.maven;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 
 /**
  * 
@@ -52,6 +55,12 @@ public final class MavenUtils
     private static final String RELEASE_PREPARE_ARGS = "-DignoreSnapshots=true" + " -DreleaseVersion=" + TOKEN_RELEASE_VERSION + " -Dtag=" + TOKEN_TAG
             + " -DdevelopmentVersion=" + TOKEN_DEVELOPMENT_VERSION + " -DforkMode=never" + " -Dusername=" + TOKEN_USERNAME + " -Dpassword=" + TOKEN_PASSWORD
             + " -Darguments=\"-Dmaven.test.skip=true\" --batch-mode";
+
+    /** Name of the private Nexus repositories (suffix of their properties). */
+    public static final String REPOSITORY_PRIVATE = "private";
+
+    /** Name of the public Nexus repositories (suffix of their properties). */
+    public static final String REPOSITORY_PUBLIC = "public";
 
     private MavenUtils( )
     {
@@ -87,6 +96,81 @@ public final class MavenUtils
         listPrepare.add( strArguments );
 
         return listPrepare;
+    }
+
+    /**
+     * Returns the name of the only Nexus repository holding a component.
+     *
+     * @param mapUrls
+     *            the URLs of the component by repository name
+     * @return the repository name, null when no repository or several ones hold the component
+     */
+    public static String getSingleRepository( Map<String, String> mapUrls )
+    {
+        return mapUrls.size( ) == 1 ? mapUrls.keySet( ).iterator( ).next( ) : null;
+    }
+
+    /**
+     * Builds the blocking message of a component found in several Nexus repositories : the first and last versions of each repository.
+     *
+     * @param strKind
+     *            the kind of repositories (releases or snapshots)
+     * @param mapVersions
+     *            the sorted versions of the component by repository name
+     * @return the message
+     */
+    public static String getSeveralRepositoriesMessage( String strKind, Map<String, List<String>> mapVersions )
+    {
+        List<String> listRepositories = new ArrayList<>( );
+        for ( Map.Entry<String, List<String>> entry : mapVersions.entrySet( ) )
+        {
+            List<String> listVersions = entry.getValue( );
+            String strVersions;
+            if ( listVersions == null || listVersions.isEmpty( ) )
+            {
+                strVersions = "aucune version";
+            }
+            else
+                if ( listVersions.size( ) == 1 )
+                {
+                    strVersions = listVersions.get( 0 );
+                }
+                else
+                {
+                    strVersions = listVersions.get( 0 ) + " … " + listVersions.get( listVersions.size( ) - 1 );
+                }
+            listRepositories.add( entry.getKey( ) + " : " + strVersions );
+        }
+
+        return "Composant présent dans plusieurs dépôts Nexus de " + strKind + " (" + String.join( " ; ", listRepositories )
+                + ") : à corriger dans Nexus avant toute release.";
+    }
+
+    /**
+     * Builds the informative message of a component whose releases are not in the Nexus repository of its platform : private for GitLab, public
+     * for GitHub.
+     *
+     * @param strReleaseRepository
+     *            the only repository holding the releases, null when none or several
+     * @param repositoryType
+     *            the platform of the component
+     * @return the message, null when the releases are in the expected repository or cannot be checked
+     */
+    public static String getMisplacedReleasesMessage( String strReleaseRepository, RepositoryType repositoryType )
+    {
+        if ( strReleaseRepository == null || repositoryType == null )
+        {
+            return null;
+        }
+
+        String strExpected = repositoryType == RepositoryType.GITLAB ? REPOSITORY_PRIVATE : REPOSITORY_PUBLIC;
+        if ( strExpected.equals( strReleaseRepository ) )
+        {
+            return null;
+        }
+
+        return "Les releases du composant sont dans le dépôt Nexus " + strReleaseRepository + " alors qu'un composant " + repositoryType
+                + " les publie dans le dépôt " + strExpected + ".";
     }
 
 }

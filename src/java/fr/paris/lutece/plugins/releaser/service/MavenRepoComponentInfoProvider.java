@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -30,6 +31,7 @@ import java.time.format.DateTimeParseException;
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.Dependency;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
+import fr.paris.lutece.plugins.releaser.util.maven.MavenUtils;
 import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
 import fr.paris.lutece.plugins.releaser.util.pom.SaxPomHandler;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
@@ -69,6 +71,8 @@ public final class MavenRepoComponentInfoProvider
     private static final String RELEASE_NOT_FOUND = "Release not found";
     private static final String SNAPSHOT_NOT_FOUND = "Snapshot not found";
     private static final String EXCEPTION_MESSAGE = "LuteceTools - MavenRepoService : Error retrieving pom infos : ";
+    private static final String KIND_RELEASES = "releases";
+    private static final String KIND_SNAPSHOTS = "snapshots";
 
     private static MavenRepoComponentInfoProvider _instance;
 
@@ -110,8 +114,14 @@ public final class MavenRepoComponentInfoProvider
         {
             String strComponentPath = getComponentPath( component );
             
-            // Get release versions
-        	String strReleaseUrl = getAvailableUrl( PROPERTIES_RELEASES_PATH, strComponentPath );
+            // Get release versions : a component in both repositories is an anomaly to fix in Nexus.
+            Map<String, String> mapReleaseUrls = getAvailableUrls( PROPERTIES_RELEASES_PATH, strComponentPath );
+            if ( blockIfSeveralRepositories( component, KIND_RELEASES, mapReleaseUrls ) )
+            {
+                return;
+            }
+            String strReleaseRepository = MavenUtils.getSingleRepository( mapReleaseUrls );
+        	String strReleaseUrl = strReleaseRepository != null ? mapReleaseUrls.get( strReleaseRepository ) : null;
 
         	if ( strReleaseUrl != null )
         	{
@@ -134,7 +144,13 @@ public final class MavenRepoComponentInfoProvider
         	}
 
             // Get snapshot versions and scmDeveloperConnection.
-            String strSnapshotUrl = getAvailableUrl( PROPERTIES_SNAPSHOTS_PATH, strComponentPath );
+            Map<String, String> mapSnapshotUrls = getAvailableUrls( PROPERTIES_SNAPSHOTS_PATH, strComponentPath );
+            if ( blockIfSeveralRepositories( component, KIND_SNAPSHOTS, mapSnapshotUrls ) )
+            {
+                return;
+            }
+            String strSnapshotRepository = MavenUtils.getSingleRepository( mapSnapshotUrls );
+            String strSnapshotUrl = strSnapshotRepository != null ? mapSnapshotUrls.get( strSnapshotRepository ) : null;
 
             // Composant absent du dépôt Nexus snapshot.
             if ( strSnapshotUrl == null )
@@ -186,6 +202,14 @@ public final class MavenRepoComponentInfoProvider
                 return;
             }
 
+            // Releases in the repository of the other platform : informative only.
+            String strMisplaced = MavenUtils.getMisplacedReleasesMessage( strReleaseRepository, component.getRepoType( ) );
+            if ( strMisplaced != null )
+            {
+                component.addReleaseComment( strMisplaced );
+                AppLogService.info( "MavenRepoComponentInfoProvider - " + strArtifactId + " : " + strMisplaced );
+            }
+
             // Infos bugtracker : URL de roadmap, ou commentaire informatif si projet manquant.
             BugtrackerService.getService( ).populateBugtrackerInfo( component );
         }
@@ -196,41 +220,84 @@ public final class MavenRepoComponentInfoProvider
         }
     }
     
-    private String getAvailableUrl( List<String> listRepoPathTypeProperties, String strComponentPath )
+    /**
+     * Returns the URL of the component in every repository holding it, by repository name (private, public), in the order of the properties.
+     *
+     * @param listRepoPathTypeProperties
+     *            the path properties of the repositories (releases or snapshots)
+     * @param strComponentPath
+     *            the Nexus path of the component
+     * @return the URLs by repository name, empty when no repository holds the component
+     */
+    private Map<String, String> getAvailableUrls( List<String> listRepoPathTypeProperties, String strComponentPath )
     {
     	HttpAccess httpAccess = new HttpAccess( );
-    	String strHtml = null;
-    	
+    	Map<String, String> mapUrls = new LinkedHashMap<>( );
+
     	for (String strUrlProperty : PROPERTIES_MAVEN_URL)
-    	{    		
+    	{
     		String[] tabUrl = strUrlProperty.split("\\.");
+    		String strRepository = tabUrl[tabUrl.length - 1].trim( );
     		for (String strTypeProperty : listRepoPathTypeProperties)
         	{
     			String[] tabRepoType = strTypeProperty.split("\\.");
-    			if ( tabRepoType[tabRepoType.length - 1].equals( tabUrl[tabUrl.length - 1] ) )
+    			if ( tabRepoType[tabRepoType.length - 1].trim( ).equals( strRepository ) )
     			{
-    				String url =  AppPropertiesService.getProperty(strUrlProperty) + PATH_MAVEN_REPO_TREE 
+    				String url =  AppPropertiesService.getProperty(strUrlProperty) + PATH_MAVEN_REPO_TREE
     						+ AppPropertiesService.getProperty(strTypeProperty) + strComponentPath;
+    				String strHtml = null;
     				try
-    	            {  
+    	            {
     	    			strHtml = httpAccess.doGet( url );
     	            }
     	            catch ( HttpAccessException e )
     	            {
     	                AppLogService.info( "LuteceTools - MavenRepoService : Not available url : " + url );
     	            }
-    	    		
+
     	    		if ( strHtml != null && !strHtml.isEmpty())
     	    		{
-    	    			return url;
-    	    		} 
-    			}	
-    			
-        	}    		   			
-    	}     
-    	
-    	return null;
+    	    			mapUrls.put( strRepository, url );
+    	    		}
+    			}
+
+        	}
+    	}
+
+    	return mapUrls;
     }
+
+    /**
+     * Blocks the release of a component found in several repositories of the same kind, with the versions of each repository in the message.
+     *
+     * @param component
+     *            the component
+     * @param strKind
+     *            the kind of repositories (releases or snapshots)
+     * @param mapUrls
+     *            the URLs of the component by repository name
+     * @return true when the component is blocked
+     */
+    private boolean blockIfSeveralRepositories( Component component, String strKind, Map<String, String> mapUrls )
+    {
+        if ( mapUrls.size( ) < 2 )
+        {
+            return false;
+        }
+
+        Map<String, List<String>> mapVersions = new LinkedHashMap<>( );
+        for ( Map.Entry<String, String> entry : mapUrls.entrySet( ) )
+        {
+            mapVersions.put( entry.getKey( ), VersionUtils.sortVersionsList( getVersionList( entry.getValue( ) ), true ) );
+        }
+
+        String strMessage = MavenUtils.getSeveralRepositoriesMessage( strKind, mapVersions );
+        component.setBlockingReleaseComment( strMessage );
+        AppLogService.error( "MavenRepoComponentInfoProvider - " + component.getArtifactId( ) + " : " + strMessage );
+
+        return true;
+    }
+
     
     private List<String> getVersionList( String strUrl )
     {
