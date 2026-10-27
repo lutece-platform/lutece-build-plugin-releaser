@@ -77,6 +77,7 @@
 		<#case "OK"><#return "label-success">
 		<#case "TO_FIX"><#return "label-danger">
 		<#case "WARNING"><#return "label-warning">
+		<#case "STALE"><#return "label-primary">
 		<#default><#return "label-default">
 	</#switch>
 </#function>
@@ -102,6 +103,9 @@
 					<p><small class="text-muted">#i18n{releaser.prepare_platform_step.verificationCommit} <#if (v.commit!"")?length gt 7>${v.commit?substring(0, 7)}<#else>${v.commit!}</#if><#if verification_date??> — ${verification_date?substring(0, 16)}</#if></small></p>
 					<#if (v.version!"") != targetVersion>
 						<p class="text-warning"><i class="fa fa-exclamation-triangle"></i> #i18n{releaser.prepare_platform_step.verificationOtherVersion} ${targetVersion}</p>
+					</#if>
+					<#if (verification_statuses[coordinates]!"") == "STALE" && branch_heads[coordinates]??>
+						<p class="text-primary"><i class="fa fa-code-fork"></i> #i18n{releaser.prepare_platform_step.verificationStale} <#if (v.commit!"")?length gt 7>${v.commit?substring(0, 7)}<#else>${v.commit!}</#if> &rarr; <#if branch_heads[coordinates]?length gt 7>${branch_heads[coordinates]?substring(0, 7)}<#else>${branch_heads[coordinates]}</#if></p>
 					</#if>
 					<#if v.note?has_content>
 						<p class="text-info"><i class="fa fa-info-circle"></i> #i18n{releaser.prepare_platform_step.verificationAggregateNote}</p>
@@ -157,13 +161,15 @@
 		<input type="hidden" name="action" value="launchStep">
 		<input type="hidden" name="dry_run" id="dry_run" value="false">
 		<input type="hidden" name="mode" id="launch_mode" value="">
+		<input type="hidden" name="scope" id="launch_scope" value="">
+		<input type="hidden" name="confirm_unverified" id="launch_confirm_unverified" value="false">
 		<input type="hidden" name="release_target" id="launch_release_target" value="">
 		<input type="hidden" name="allow_snapshot_dependencies" id="launch_allow_snapshot_dependencies" value="">
 	</@tform>
 <@messages infos=infos />
 <@messages errors=errors />
 <#if can_verify!false>
-<div class="alert <#if !verification_date??>alert-info<#elseif (verification_counts["TO_FIX"] > 0)>alert-danger<#elseif (verification_counts["WARNING"] > 0 || verification_counts["NOT_VERIFIED"] > 0)>alert-warning<#else>alert-success</#if>">
+<div class="alert <#if !verification_date??>alert-info<#elseif (verification_counts["TO_FIX"] > 0)>alert-danger<#elseif (verification_counts["WARNING"] > 0 || verification_counts["NOT_VERIFIED"] > 0 || verification_counts["STALE"] > 0)>alert-warning<#else>alert-success</#if>">
 	<i class="fa fa-stethoscope fa-fw"></i>
 	<#if verification_date??>
 		#i18n{releaser.prepare_platform_step.lastVerification} ${verification_date?substring(0, 16)} :
@@ -171,6 +177,10 @@
 		<span class="label label-danger">${verification_counts["TO_FIX"]} #i18n{releaser.prepare_platform_step.countToFix}</span>
 		<span class="label label-warning">${verification_counts["WARNING"]} #i18n{releaser.prepare_platform_step.countWarning}</span>
 		<span class="label label-default">${verification_counts["NOT_VERIFIED"]} #i18n{releaser.prepare_platform_step.countNotVerified}</span>
+		<span class="label label-primary">${verification_counts["STALE"]} #i18n{releaser.prepare_platform_step.countStale}</span>
+		<#if !site.blockingReleaseComment?? && (verification_counts["TO_FIX"] + verification_counts["NOT_VERIFIED"] + verification_counts["STALE"] > 0)>
+		<a href="#" id="btn-retest-step" class="button transition border-orange small" style="margin-left:10px" title="#i18n{releaser.prepare_platform_step.buttonRetestHelp}"><i class="fa fa-repeat fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonRetest}</a>
+		</#if>
 	<#else>
 		#i18n{releaser.prepare_platform_step.neverVerified}
 	</#if>
@@ -454,6 +464,35 @@
 </#if>
 </#list>
 </#if>
+<#if confirm_resources??>
+<div class="modal fade" id="modalConfirmUnverified" tabindex="-1" role="dialog">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title"><i class="fa fa-exclamation-triangle text-warning"></i> #i18n{releaser.prepare_platform_step.confirmUnverifiedTitle}</h4>
+			</div>
+			<div class="modal-body">
+				<p>#i18n{releaser.prepare_platform_step.confirmUnverifiedText}</p>
+				<table class="table table-condensed">
+					<tbody>
+					<#list confirm_resources?keys as coordinates>
+						<tr>
+							<td>${coordinates}</td>
+							<td><span class="label ${verificationLabelClass(confirm_resources[coordinates])}">#i18n{releaser.prepare_platform_step.verification.${confirm_resources[coordinates]}}</span></td>
+						</tr>
+					</#list>
+					</tbody>
+				</table>
+			</div>
+			<div class="modal-footer">
+				<button type="button" id="btn-launch-anyway" class="button transition small border-red"><i class="fa fa-rocket fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonLaunchAnyway}</button>
+				<button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">#i18n{releaser.prepare_platform_step.buttonCancel}</button>
+			</div>
+		</div>
+	</div>
+</div>
+</#if>
 <#if open_auth_missing!false>
 <div class="modal fade" id="modalAuthPlatform" tabindex="-1" role="dialog" aria-labelledby="modalAuthPlatformLabel">
 	<div class="modal-dialog vlogin" role="document">
@@ -491,9 +530,10 @@ $(function() {
 	<#if open_auth_missing!false>
 		$('#modalAuthPlatform').modal();
 	</#if>
-	function launchStep( dryRun, mode ) {
+	function launchStep( dryRun, mode, scope ) {
 		$("#dry_run").val( dryRun );
 		$("#launch_mode").val( mode || "" );
+		$("#launch_scope").val( scope || "" );
 		if ( $("#release_target").length ) {
 			$("#launch_release_target").val( $("#release_target").val() );
 			$("#launch_allow_snapshot_dependencies").val( $("#allow_snapshot_dependencies").is(":checked") ? "true" : "false" );
@@ -505,6 +545,19 @@ $(function() {
 			launchStep( "false", "VERIFY" );
 		}
 	});
+	$("#btn-retest-step").click( function( e ){
+		e.preventDefault();
+		if ( confirm( "#i18n{releaser.prepare_platform_step.confirmRetest}" ) ) {
+			launchStep( "false", "VERIFY", "TO_RETEST" );
+		}
+	});
+	$("#btn-launch-anyway").click( function(){
+		$("#launch_confirm_unverified").val( "true" );
+		launchStep( "false" );
+	});
+	<#if confirm_resources??>
+		$('#modalConfirmUnverified').modal();
+	</#if>
 	$("#btn-dry-run-step").click( function(){
 		if ( confirm( "#i18n{releaser.prepare_platform_step.confirmDryRun}" ) ) {
 			launchStep( "true" );

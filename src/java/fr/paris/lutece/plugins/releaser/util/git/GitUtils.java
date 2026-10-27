@@ -48,6 +48,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -1049,10 +1050,28 @@ public class GitUtils
      */
     public static List<String> lsRemoteBranches( String repoUrl, String login, String pwd, StringBuilder sbError )
     {
-        List<String> branchNameList = new ArrayList<String>( );
+        return new ArrayList<>( lsRemoteBranchHeads( repoUrl, login, pwd, sbError ).keySet( ) );
+    }
+
+    /**
+     * Lists the branches of a remote repository with the commit each one points to.
+     *
+     * @param repoUrl
+     *            the repository URL
+     * @param login
+     *            the login
+     * @param pwd
+     *            the password or token
+     * @param sbError
+     *            receives the error message when the listing fails, null when the caller does not care
+     * @return the branch names to their commit, empty when the listing fails
+     */
+    public static Map<String, String> lsRemoteBranchHeads( String repoUrl, String login, String pwd, StringBuilder sbError )
+    {
+        Map<String, String> mapHeads = new LinkedHashMap<>( );
         if ( StringUtils.isBlank( repoUrl ) )
         {
-            return branchNameList;
+            return mapHeads;
         }
         try
         {
@@ -1061,9 +1080,9 @@ public class GitUtils
             for ( Ref ref : refs )
             {
                 String strName = ref.getName( );
-                if ( strName != null && strName.startsWith( CONSTANTE_REF_HEADS ) )
+                if ( strName != null && strName.startsWith( CONSTANTE_REF_HEADS ) && ref.getObjectId( ) != null )
                 {
-                    branchNameList.add( strName.substring( CONSTANTE_REF_HEADS.length( ) ) );
+                    mapHeads.put( strName.substring( CONSTANTE_REF_HEADS.length( ) ), ref.getObjectId( ).getName( ) );
                 }
             }
         }
@@ -1075,7 +1094,7 @@ public class GitUtils
                 sbError.append( StringUtils.defaultString( e.getMessage( ) ) );
             }
         }
-        return branchNameList;
+        return mapHeads;
     }
 
     /**

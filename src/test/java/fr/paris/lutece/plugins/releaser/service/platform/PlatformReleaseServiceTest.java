@@ -407,9 +407,15 @@ public class PlatformReleaseServiceTest
         verification.setStatus( PlatformVerificationCheck.STATUS_TO_FIX );
         verification.setVersion( "1.0.5-beta-01" );
 
-        assertEquals( PlatformVerificationCheck.STATUS_TO_FIX, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-01" ) );
-        assertEquals( PlatformReleaseService.VERIFICATION_NOT_VERIFIED, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-02" ) );
-        assertEquals( PlatformReleaseService.VERIFICATION_NOT_VERIFIED, PlatformReleaseService.getVerificationStatus( null, "1.0.5-beta-01" ) );
+        verification.setCommit( "abc1234" );
+        assertEquals( PlatformVerificationCheck.STATUS_TO_FIX, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-01", "def5678" ) );
+        assertEquals( PlatformReleaseService.VERIFICATION_NOT_VERIFIED, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-02", null ) );
+        assertEquals( PlatformReleaseService.VERIFICATION_NOT_VERIFIED, PlatformReleaseService.getVerificationStatus( null, "1.0.5-beta-01", null ) );
+
+        verification.setStatus( PlatformVerificationCheck.STATUS_WARNING );
+        assertEquals( PlatformVerificationCheck.STATUS_WARNING, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-01", "abc1234" ) );
+        assertEquals( PlatformVerificationCheck.STATUS_WARNING, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-01", null ) );
+        assertEquals( PlatformReleaseService.VERIFICATION_STALE, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-01", "def5678" ) );
 
         Map<String, String> mapStatuses = new java.util.LinkedHashMap<>( );
         mapStatuses.put( "a", PlatformVerificationCheck.STATUS_OK );
@@ -421,6 +427,50 @@ public class PlatformReleaseServiceTest
         assertEquals( Integer.valueOf( 1 ), mapCounts.get( PlatformVerificationCheck.STATUS_TO_FIX ) );
         assertEquals( Integer.valueOf( 0 ), mapCounts.get( PlatformVerificationCheck.STATUS_WARNING ) );
         assertEquals( Integer.valueOf( 1 ), mapCounts.get( PlatformReleaseService.VERIFICATION_NOT_VERIFIED ) );
+        assertEquals( Integer.valueOf( 0 ), mapCounts.get( PlatformReleaseService.VERIFICATION_STALE ) );
+
+        mapStatuses.put( "e", PlatformVerificationCheck.STATUS_WARNING );
+        mapStatuses.put( "f", PlatformReleaseService.VERIFICATION_STALE );
+        Map<String, String> mapToConfirm = PlatformReleaseService.getResourcesToConfirm( mapStatuses );
+        assertEquals( Arrays.asList( "b", "d", "f" ), new ArrayList<>( mapToConfirm.keySet( ) ) );
+    }
+
+    /**
+     * A retest plan keeps only the resources to verify again, without the aggregate when it already passed.
+     */
+    @Test
+    public void testRestrictPlan( )
+    {
+        PlatformReleasePlan plan = new PlatformReleasePlan( );
+        plan.getComponents( ).add( resource( "plugin-a" ) );
+        plan.getComponents( ).add( resource( "plugin-b" ) );
+        plan.setAggregate( resource( "lutece-parent" ) );
+
+        PlatformReleaseService.restrictPlan( plan, new java.util.HashSet<>( Arrays.asList( "fr.paris.lutece.plugins:plugin-b" ) ) );
+        assertEquals( 1, plan.getComponents( ).size( ) );
+        assertEquals( "plugin-b", plan.getComponents( ).get( 0 ).getArtifactId( ) );
+        assertEquals( null, plan.getAggregate( ) );
+
+        plan.setAggregate( resource( "lutece-parent" ) );
+        PlatformReleaseService.restrictPlan( plan, new java.util.HashSet<>( Arrays.asList( "fr.paris.lutece.plugins:lutece-parent" ) ) );
+        assertEquals( 0, plan.getComponents( ).size( ) );
+        assertEquals( "lutece-parent", plan.getAggregate( ).getArtifactId( ) );
+    }
+
+    /**
+     * Builds a plan resource of the plugins group.
+     *
+     * @param strArtifactId
+     *            the artifactId
+     * @return the resource
+     */
+    private static PlatformPlanResource resource( String strArtifactId )
+    {
+        PlatformPlanResource resource = new PlatformPlanResource( );
+        resource.setGroupId( "fr.paris.lutece.plugins" );
+        resource.setArtifactId( strArtifactId );
+
+        return resource;
     }
 
     /**

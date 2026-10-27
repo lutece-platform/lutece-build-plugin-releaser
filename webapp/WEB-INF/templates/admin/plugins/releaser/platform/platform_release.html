@@ -44,7 +44,7 @@
 			<#list platform_release.steps as step>
 				<#assign definition = step_definitions[step.stepNumber - 1] />
 				<#assign isPlatformStarters = ( step.stepNumber == 5 ) />
-				<tr id="step-row-${step.stepNumber}" data-status="${step.status}">
+				<tr id="step-row-${step.stepNumber}" data-status="${step.status}"<#if verifying_steps[step.stepNumber - 1]> data-verify="true"</#if>>
 					<td><strong>${step.stepNumber}</strong></td>
 					<td>
 						<strong>${definition.name}</strong><br>
@@ -177,7 +177,11 @@ $(function() {
 			dataType: "json",
 			success: function( data ) {
 				if ( data.status == 'OK' && data.result.status != 'RUNNING' ) {
-					window.location.reload();
+					if ( $("#step-row-" + stepNumber).data("verify") ) {
+						window.location.href = "jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?view=prepareStep&id=${platform_release.id}&step=" + stepNumber;
+					} else {
+						window.location.reload();
+					}
 				} else {
 					setTimeout( function(){ refreshStep( stepNumber ); }, 10000 );
 				}

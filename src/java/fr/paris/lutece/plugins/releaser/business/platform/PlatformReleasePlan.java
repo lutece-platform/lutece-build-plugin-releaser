@@ -59,6 +59,7 @@ public class PlatformReleasePlan implements Serializable
     private List<PlatformPlanResource> _listComponents = new ArrayList<>( );
     private PlatformPlanResource _aggregate;
     private Map<String, String> _mapPipelineParameters = new LinkedHashMap<>( );
+    private List<String> _listLaunchedDespite = new ArrayList<>( );
 
     /**
      * Returns the campaign id.
@@ -235,6 +236,28 @@ public class PlatformReleasePlan implements Serializable
     public void setMode( PlatformStepMode mode )
     {
         _mode = mode != null ? mode : PlatformStepMode.RELEASE;
+    }
+
+    /**
+     * Returns the resources the person confirmed launching the release with although they were not verified, to fix or stale ("groupId:artifactId :
+     * status"), written by the pipeline at the head of its report.
+     *
+     * @return the resources, empty when every resource was verified
+     */
+    public List<String> getLaunchedDespite( )
+    {
+        return _listLaunchedDespite;
+    }
+
+    /**
+     * Sets the resources the release was launched with although they were not verified.
+     *
+     * @param listLaunchedDespite
+     *            the resources
+     */
+    public void setLaunchedDespite( List<String> listLaunchedDespite )
+    {
+        _listLaunchedDespite = listLaunchedDespite != null ? listLaunchedDespite : new ArrayList<>( );
     }
 
     /**

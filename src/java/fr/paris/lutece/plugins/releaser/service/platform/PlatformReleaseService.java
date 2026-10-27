@@ -45,6 +45,11 @@ import java.util.Locale;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -151,6 +156,10 @@ public final class PlatformReleaseService
 
     /** Verification status of a resource never verified, or verified for another version than its current target. */
     public static final String VERIFICATION_NOT_VERIFIED = "NOT_VERIFIED";
+    /** Verification status of a resource that passed on a commit its branch no longer points to. */
+    public static final String VERIFICATION_STALE = "STALE";
+    private static final int BRANCH_HEADS_THREADS = 4;
+    private static final int BRANCH_HEADS_TIMEOUT_SECONDS = 60;
 
     private static final String CSV_SEPARATOR = ";";
     private static final String CSV_LINE_SEPARATOR = "\n";
@@ -715,6 +724,30 @@ public final class PlatformReleaseService
     public static boolean isStepFollowed( PlatformReleaseStep step )
     {
         return PlatformStepTask.isFollowed( step.getId( ) );
+    }
+
+    /**
+     * Whether a step is running a verification of its components.
+     *
+     * @param step
+     *            the step
+     * @return true when the step is running with a plan in VERIFY mode
+     */
+    public static boolean isVerifying( PlatformReleaseStep step )
+    {
+        if ( step.getStatus( ) != PlatformReleaseStatus.RUNNING || StringUtils.isBlank( step.getPlanJson( ) ) )
+        {
+            return false;
+        }
+        try
+        {
+            return MapperJsonUtil.parse( step.getPlanJson( ), PlatformReleasePlan.class ).isVerify( );
+        }
+        catch( IOException e )
+        {
+            AppLogService.error( "Releaser : unreadable plan of platform step " + step.getStepNumber( ), e );
+            return false;
+        }
     }
 
     /**
@@ -2911,16 +2944,18 @@ public final class PlatformReleaseService
     }
 
     /**
-     * Returns the verification status of each resource to release in a prepared step, "groupId:artifactId" to OK, TO_FIX, WARNING or
-     * NOT_VERIFIED : the components to release, then the aggregate.
+     * Returns the verification status of each resource to release in a prepared step, "groupId:artifactId" to OK, TO_FIX, WARNING,
+     * NOT_VERIFIED or STALE : the components to release, then the aggregate.
      *
      * @param step
      *            the step
      * @param site
      *            the transient site of the step
+     * @param mapBranchHeads
+     *            the current commit of the branch of the verified resources, see getBranchHeads ; a resource missing from it is not stale
      * @return the statuses
      */
-    public static Map<String, String> getVerificationStatuses( PlatformReleaseStep step, Site site )
+    public static Map<String, String> getVerificationStatuses( PlatformReleaseStep step, Site site, Map<String, String> mapBranchHeads )
     {
         Map<String, PlatformResourceVerification> mapVerifications = getStepVerifications( step );
         Map<String, String> mapStatuses = new LinkedHashMap<>( );
@@ -2929,13 +2964,162 @@ public final class PlatformReleaseService
             if ( component.isProject( ) )
             {
                 String strCoordinates = component.getGroupId( ) + COORDINATES_SEPARATOR + component.getArtifactId( );
-                mapStatuses.put( strCoordinates, getVerificationStatus( mapVerifications.get( strCoordinates ), component.getTargetVersion( ) ) );
+                mapStatuses.put( strCoordinates, getVerificationStatus( mapVerifications.get( strCoordinates ), component.getTargetVersion( ),
+                        mapBranchHeads.get( strCoordinates ) ) );
             }
         }
         String strAggregate = site.getGroupId( ) + COORDINATES_SEPARATOR + site.getArtifactId( );
-        mapStatuses.put( strAggregate, getVerificationStatus( mapVerifications.get( strAggregate ), site.getNextReleaseVersion( ) ) );
+        mapStatuses.put( strAggregate,
+                getVerificationStatus( mapVerifications.get( strAggregate ), site.getNextReleaseVersion( ), mapBranchHeads.get( strAggregate ) ) );
 
         return mapStatuses;
+    }
+
+    /**
+     * Reads the current commit of the branch of every resource verified OK or with a warning, in parallel and with the credentials of the
+     * user : a resource whose branch moved since its verification is stale. A resource whose branch cannot be read is left out.
+     *
+     * @param step
+     *            the step
+     * @param site
+     *            the transient site of the step
+     * @param user
+     *            the releaser user
+     * @return "groupId:artifactId" to the current commit of its branch
+     */
+    public static Map<String, String> getBranchHeads( PlatformReleaseStep step, Site site, ReleaserUser user )
+    {
+        Map<String, PlatformResourceVerification> mapVerifications = getStepVerifications( step );
+        Map<String, String [ ]> mapRepositories = new LinkedHashMap<>( );
+        for ( Component component : site.getComponents( ) )
+        {
+            if ( component.isProject( ) )
+            {
+                addVerifiedRepository( mapRepositories, mapVerifications, component.getGroupId( ) + COORDINATES_SEPARATOR + component.getArtifactId( ),
+                        component.getScmUrl( ), component.getBranchReleaseFrom( ) );
+            }
+        }
+        addVerifiedRepository( mapRepositories, mapVerifications, site.getGroupId( ) + COORDINATES_SEPARATOR + site.getArtifactId( ), site.getScmUrl( ),
+                site.getBranchReleaseFrom( ) );
+
+        Map<String, String> mapHeads = new ConcurrentHashMap<>( );
+        ExecutorService executor = Executors.newFixedThreadPool( BRANCH_HEADS_THREADS );
+        try
+        {
+            for ( Map.Entry<String, String [ ]> entry : mapRepositories.entrySet( ) )
+            {
+                executor.submit( ( ) -> {
+                    String strHead = getBranchHead( entry.getValue( ) [0], entry.getValue( ) [1], user );
+                    if ( strHead != null )
+                    {
+                        mapHeads.put( entry.getKey( ), strHead );
+                    }
+                } );
+            }
+            executor.shutdown( );
+            if ( !executor.awaitTermination( BRANCH_HEADS_TIMEOUT_SECONDS, TimeUnit.SECONDS ) )
+            {
+                AppLogService.error( "Releaser : the branches of the verified resources could not all be read in " + BRANCH_HEADS_TIMEOUT_SECONDS + " s" );
+            }
+        }
+        catch( InterruptedException e )
+        {
+            Thread.currentThread( ).interrupt( );
+        }
+        finally
+        {
+            executor.shutdownNow( );
+        }
+
+        return new LinkedHashMap<>( mapHeads );
+    }
+
+    /**
+     * Adds the repository and branch of a resource verified OK or with a warning, the only ones that can become stale.
+     *
+     * @param mapRepositories
+     *            "groupId:artifactId" to its repository URL and branch
+     * @param mapVerifications
+     *            the verifications of the step
+     * @param strCoordinates
+     *            the coordinates of the resource
+     * @param strScmUrl
+     *            the repository URL of the resource
+     * @param strBranch
+     *            the release branch of the resource
+     */
+    private static void addVerifiedRepository( Map<String, String [ ]> mapRepositories, Map<String, PlatformResourceVerification> mapVerifications,
+            String strCoordinates, String strScmUrl, String strBranch )
+    {
+        PlatformResourceVerification verification = mapVerifications.get( strCoordinates );
+        if ( verification != null && StringUtils.isNotBlank( verification.getCommit( ) ) && StringUtils.isNotBlank( strScmUrl )
+                && StringUtils.isNotBlank( strBranch ) && ( PlatformVerificationCheck.STATUS_OK.equals( verification.getStatus( ) )
+                        || PlatformVerificationCheck.STATUS_WARNING.equals( verification.getStatus( ) ) ) )
+        {
+            mapRepositories.put( strCoordinates, new String [ ] {
+                    strScmUrl, strBranch
+            } );
+        }
+    }
+
+    /**
+     * Reads the current commit of a branch with the credentials of the user for the host of the repository.
+     *
+     * @param strScmUrl
+     *            the repository URL
+     * @param strBranch
+     *            the branch
+     * @param user
+     *            the releaser user
+     * @return the commit, null when the branch cannot be read
+     */
+    private static String getBranchHead( String strScmUrl, String strBranch, ReleaserUser user )
+    {
+        Site host = new Site( );
+        host.setScmUrl( strScmUrl );
+        RepositoryType type = host.getRepoType( );
+        Credential credential = ( user != null && type != null ) ? user.getCredential( type ) : null;
+
+        return GitUtils.lsRemoteBranchHeads( GitUtils.getRepoUrl( strScmUrl ), credential != null ? credential.getLogin( ) : null,
+                credential != null ? credential.getPassword( ) : null, null ).get( strBranch );
+    }
+
+    /**
+     * Returns the resources a release would be launched with although they are not verified, to fix or stale : the warnings are accepted.
+     *
+     * @param mapStatuses
+     *            the status of each resource
+     * @return "groupId:artifactId" to its status, empty when every resource is verified
+     */
+    public static Map<String, String> getResourcesToConfirm( Map<String, String> mapStatuses )
+    {
+        Map<String, String> mapToConfirm = new LinkedHashMap<>( );
+        for ( Map.Entry<String, String> entry : mapStatuses.entrySet( ) )
+        {
+            if ( !PlatformVerificationCheck.STATUS_OK.equals( entry.getValue( ) ) && !PlatformVerificationCheck.STATUS_WARNING.equals( entry.getValue( ) ) )
+            {
+                mapToConfirm.put( entry.getKey( ), entry.getValue( ) );
+            }
+        }
+
+        return mapToConfirm;
+    }
+
+    /**
+     * Restricts a verification plan to some resources : the components not listed are removed, the aggregate too when it is not listed.
+     *
+     * @param plan
+     *            the plan
+     * @param setCoordinates
+     *            the "groupId:artifactId" of the resources to keep
+     */
+    public static void restrictPlan( PlatformReleasePlan plan, Set<String> setCoordinates )
+    {
+        plan.getComponents( ).removeIf( component -> !setCoordinates.contains( component.getCoordinates( ) ) );
+        if ( plan.getAggregate( ) != null && !setCoordinates.contains( plan.getAggregate( ).getCoordinates( ) ) )
+        {
+            plan.setAggregate( null );
+        }
     }
 
     /**
@@ -2958,20 +3142,28 @@ public final class PlatformReleaseService
     }
 
     /**
-     * Returns the status of a resource : the status of its verification, or NOT_VERIFIED when it was never verified or was verified for another
-     * version than its current target.
+     * Returns the status of a resource : the status of its verification, NOT_VERIFIED when it was never verified or was verified for another
+     * version than its current target, STALE when it passed (OK or warning) on a commit its branch no longer points to.
      *
      * @param verification
      *            the last verification of the resource, may be null
      * @param strTargetVersion
      *            the current target version of the resource
-     * @return OK, TO_FIX, WARNING or NOT_VERIFIED
+     * @param strBranchHead
+     *            the current commit of its branch, null when unknown
+     * @return OK, TO_FIX, WARNING, NOT_VERIFIED or STALE
      */
-    static String getVerificationStatus( PlatformResourceVerification verification, String strTargetVersion )
+    static String getVerificationStatus( PlatformResourceVerification verification, String strTargetVersion, String strBranchHead )
     {
         if ( verification == null || verification.getStatus( ) == null || !StringUtils.equals( verification.getVersion( ), strTargetVersion ) )
         {
             return VERIFICATION_NOT_VERIFIED;
+        }
+        boolean bPassed = PlatformVerificationCheck.STATUS_OK.equals( verification.getStatus( ) )
+                || PlatformVerificationCheck.STATUS_WARNING.equals( verification.getStatus( ) );
+        if ( bPassed && strBranchHead != null && !strBranchHead.equals( verification.getCommit( ) ) )
+        {
+            return VERIFICATION_STALE;
         }
 
         return verification.getStatus( );
@@ -2991,6 +3183,7 @@ public final class PlatformReleaseService
         mapCounts.put( PlatformVerificationCheck.STATUS_TO_FIX, 0 );
         mapCounts.put( PlatformVerificationCheck.STATUS_WARNING, 0 );
         mapCounts.put( VERIFICATION_NOT_VERIFIED, 0 );
+        mapCounts.put( VERIFICATION_STALE, 0 );
         for ( String strStatus : mapStatuses.values( ) )
         {
             mapCounts.merge( strStatus, 1, Integer::sum );

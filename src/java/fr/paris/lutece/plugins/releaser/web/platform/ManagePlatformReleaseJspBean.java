@@ -105,6 +105,10 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String PARAMETER_RELOAD = "reload";
     private static final String PARAMETER_AUTH = "auth";
     private static final String PARAMETER_OPEN_AGGREGATE_VERSION = "open_aggregate_version";
+    private static final String PARAMETER_SCOPE = "scope";
+    private static final String PARAMETER_CONFIRM_UNVERIFIED = "confirm_unverified";
+    private static final String PARAMETER_OPEN_CONFIRM = "open_confirm";
+    private static final String SCOPE_TO_RETEST = "TO_RETEST";
     private static final String PARAMETER_RELEASE_TARGET = "release_target";
     private static final String PARAMETER_RELEASE_BRANCH = "release_branch";
     private static final String PARAMETER_CORE_VERSION = "core_version";
@@ -173,6 +177,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String MARK_CAN_PREPARE = "can_prepare";
     private static final String MARK_CAN_SKIP = "can_skip";
     private static final String MARK_ORPHAN_STEPS = "orphan_steps";
+    private static final String MARK_VERIFYING_STEPS = "verifying_steps";
     private static final String MARK_OPEN_AUTH_STEP = "open_auth_step";
     private static final String MARK_OPEN_AUTH_MISSING = "open_auth_missing";
     private static final String MARK_AUTH_MESSAGES = "auth_messages";
@@ -189,6 +194,8 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String MARK_VERIFICATION_COUNTS = "verification_counts";
     private static final String MARK_VERIFICATION_DATE = "verification_date";
     private static final String MARK_STEP_VERIFICATIONS = "step_verifications";
+    private static final String MARK_BRANCH_HEADS = "branch_heads";
+    private static final String MARK_CONFIRM_RESOURCES = "confirm_resources";
     private static final String MARK_CORE_BRANCHES = "core_branches";
     private static final String MARK_STEP_REPORTS = "step_reports";
     private static final String MARK_MASTER_BRANCH = "master_branch";
@@ -219,6 +226,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String INFO_STEP_LAUNCHED = "releaser.info.platformRelease.stepLaunched";
     private static final String INFO_DRY_RUN_LAUNCHED = "releaser.info.platformRelease.dryRunLaunched";
     private static final String INFO_VERIFY_LAUNCHED = "releaser.info.platformRelease.verifyLaunched";
+    private static final String INFO_NOTHING_TO_RETEST = "releaser.info.platformRelease.nothingToRetest";
     private static final String INFO_EXPORT_VERIFIED = "releaser.info.platformRelease.exportVerified";
     private static final String INFO_STEP_DEFINITIONS_SAVED = "releaser.info.platformRelease.stepDefinitionsSaved";
 
@@ -238,6 +246,10 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private int _nSiteCampaignId;
     private int _nSiteStepNumber;
     private String _strSiteStepStamp;
+    // current commit of the branch of the verified resources of the prepared step, read when the step is loaded
+    private Map<String, String> _mapBranchHeads = new LinkedHashMap<>( );
+    // resources a release was about to be launched with although not verified, waiting for the confirmation of the person
+    private Map<String, String> _mapPendingConfirmation;
     private List<PlatformStepDefinition> _listPendingDefinitions;
 
     /**
@@ -428,6 +440,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         List<Boolean> listCanPrepare = new ArrayList<>( );
         List<Boolean> listCanSkip = new ArrayList<>( );
         List<Boolean> listOrphan = new ArrayList<>( );
+        List<Boolean> listVerifying = new ArrayList<>( );
         Map<String, String> mapStepReports = new LinkedHashMap<>( );
         Map<String, Map<String, Object>> mapStepVerifications = new LinkedHashMap<>( );
         for ( PlatformReleaseStep step : campaign.getSteps( ) )
@@ -435,6 +448,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
             listCanPrepare.add( PlatformReleaseService.canPrepareStep( campaign, step.getStepNumber( ) ) );
             listCanSkip.add( PlatformReleaseService.canSkipStep( campaign, step.getStepNumber( ) ) );
             listOrphan.add( step.getStatus( ) == PlatformReleaseStatus.RUNNING && !PlatformReleaseService.isStepFollowed( step ) );
+            listVerifying.add( PlatformReleaseService.isVerifying( step ) );
             String strReport = PlatformReleaseService.getStepReport( campaign, step.getStepNumber( ) );
             if ( strReport != null )
             {
@@ -458,6 +472,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         model.put( MARK_STEP_REPORTS, mapStepReports );
         model.put( MARK_STEP_VERIFICATIONS, mapStepVerifications );
         model.put( MARK_ORPHAN_STEPS, listOrphan );
+        model.put( MARK_VERIFYING_STEPS, listVerifying );
         model.put( MARK_OPEN_AUTH_STEP, request.getParameter( PARAMETER_AUTH ) );
         RepositoryType stepRepositoryType = PlatformReleaseService.getStepRepositoryType( ReleaserUtils.convertStringToInt( request.getParameter( PARAMETER_AUTH ) ) );
         putRepositoryTypeMarks( model, stepRepositoryType != null ? Arrays.asList( stepRepositoryType ) : Arrays.asList( RepositoryType.values( ) ) );
@@ -549,6 +564,9 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
                 _nSiteCampaignId = campaign.getId( );
                 _nSiteStepNumber = nStepNumber;
                 _strSiteStepStamp = strStepStamp;
+                _mapBranchHeads = PlatformReleaseService.canVerify( PlatformStepCode.fromStepNumber( nStepNumber ) )
+                        ? PlatformReleaseService.getBranchHeads( PlatformReleaseService.getStep( campaign, nStepNumber ), _site, user )
+                        : new LinkedHashMap<>( );
             }
             catch( AppException e )
             {
@@ -606,8 +624,13 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         else
         {
             PlatformReleaseStep step = PlatformReleaseService.getStep( campaign, nStepNumber );
-            Map<String, String> mapStatuses = PlatformReleaseService.getVerificationStatuses( step, _site );
+            Map<String, String> mapStatuses = PlatformReleaseService.getVerificationStatuses( step, _site, _mapBranchHeads );
             model.put( MARK_CAN_VERIFY, true );
+            model.put( MARK_BRANCH_HEADS, _mapBranchHeads );
+            if ( request.getParameter( PARAMETER_OPEN_CONFIRM ) != null && _mapPendingConfirmation != null )
+            {
+                model.put( MARK_CONFIRM_RESOURCES, _mapPendingConfirmation );
+            }
             model.put( MARK_VERIFICATIONS, PlatformReleaseService.getStepVerifications( step ) );
             model.put( MARK_VERIFICATION_STATUSES, mapStatuses );
             model.put( MARK_VERIFICATION_COUNTS, PlatformReleaseService.countVerificationStatuses( mapStatuses ) );
@@ -1221,10 +1244,38 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
             addError( strPermissionError );
             return redirectToPreparedStep( request );
         }
+        PlatformReleaseStep step = PlatformReleaseService.getStep( campaign, _nSiteStepNumber );
+        boolean bVerifiable = PlatformReleaseService.canVerify( PlatformStepCode.fromStepNumber( _nSiteStepNumber ) );
+        Map<String, String> mapToConfirm = new LinkedHashMap<>( );
+        if ( mode == PlatformStepMode.RELEASE && bVerifiable )
+        {
+            _mapBranchHeads = PlatformReleaseService.getBranchHeads( step, _site, user );
+            mapToConfirm = PlatformReleaseService.getResourcesToConfirm( PlatformReleaseService.getVerificationStatuses( step, _site, _mapBranchHeads ) );
+            if ( !mapToConfirm.isEmpty( ) && !Boolean.parseBoolean( request.getParameter( PARAMETER_CONFIRM_UNVERIFIED ) ) )
+            {
+                _mapPendingConfirmation = mapToConfirm;
+                return redirectToStep( request, VIEW_PREPARE_STEP, campaign.getId( ), _nSiteStepNumber, PARAMETER_OPEN_CONFIRM, "1" );
+            }
+        }
+        _mapPendingConfirmation = null;
         try
         {
             savePipelineParameters( request, campaign );
             PlatformReleasePlan plan = PlatformReleaseService.buildPlan( campaign, _nSiteStepNumber, _site, mode );
+            if ( mode == PlatformStepMode.VERIFY && SCOPE_TO_RETEST.equals( request.getParameter( PARAMETER_SCOPE ) ) )
+            {
+                PlatformReleaseService.restrictPlan( plan, PlatformReleaseService
+                        .getResourcesToConfirm( PlatformReleaseService.getVerificationStatuses( step, _site, _mapBranchHeads ) ).keySet( ) );
+                if ( plan.getComponents( ).isEmpty( ) && plan.getAggregate( ) == null )
+                {
+                    addInfo( INFO_NOTHING_TO_RETEST, getLocale( ) );
+                    return redirectToPreparedStep( request );
+                }
+            }
+            for ( Map.Entry<String, String> entry : mapToConfirm.entrySet( ) )
+            {
+                plan.getLaunchedDespite( ).add( entry.getKey( ) + " : " + entry.getValue( ) );
+            }
             PlatformReleaseService.applyPipelineParameters( campaign, _nSiteStepNumber, plan );
             String strMasterError = bNothingPushed ? null : PlatformReleaseService.checkMasterBranches( plan, user, getLocale( ) );
             if ( strMasterError != null )
