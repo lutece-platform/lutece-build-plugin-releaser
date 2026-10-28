@@ -48,7 +48,8 @@ public final class PlatformReleaseStepDAO implements IPlatformReleaseStepDAO
     // Constants
     private static final String SQL_QUERY_SELECT_COLUMNS = "SELECT id_step, id_platform_release, step_number, status, plan_json, result_json, jenkins_build_url, jenkins_build_number, jenkins_result, date_begin, date_end FROM releaser_platform_release_step";
     private static final String SQL_QUERY_SELECT = SQL_QUERY_SELECT_COLUMNS + " WHERE id_step = ?";
-    private static final String SQL_QUERY_SELECT_BY_PLATFORM_RELEASE = SQL_QUERY_SELECT_COLUMNS + " WHERE id_platform_release = ? ORDER BY step_number";
+    private static final String SQL_QUERY_SELECT_BY_PLATFORM_RELEASE = SQL_QUERY_SELECT_COLUMNS + " WHERE id_platform_release = ? AND step_number > 0 ORDER BY step_number";
+    private static final String SQL_QUERY_SELECT_BY_PLATFORM_RELEASE_AND_NUMBER = SQL_QUERY_SELECT_COLUMNS + " WHERE id_platform_release = ? AND step_number = ?";
     private static final String SQL_QUERY_INSERT = "INSERT INTO releaser_platform_release_step ( id_platform_release, step_number, status, plan_json, result_json, jenkins_build_url, jenkins_build_number, jenkins_result, date_begin, date_end ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )";
     private static final String SQL_QUERY_UPDATE = "UPDATE releaser_platform_release_step SET id_platform_release = ?, step_number = ?, status = ?, plan_json = ?, result_json = ?, jenkins_build_url = ?, jenkins_build_number = ?, jenkins_result = ?, date_begin = ?, date_end = ? WHERE id_step = ?";
     private static final String SQL_QUERY_DELETE = "DELETE FROM releaser_platform_release_step WHERE id_step = ?";
@@ -154,6 +155,29 @@ public final class PlatformReleaseStepDAO implements IPlatformReleaseStepDAO
         }
 
         return listSteps;
+    }
+
+    /**
+     * {@inheritDoc }
+     */
+    @Override
+    public PlatformReleaseStep selectByPlatformReleaseAndNumber( int nIdPlatformRelease, int nStepNumber, Plugin plugin )
+    {
+        PlatformReleaseStep step = null;
+
+        try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECT_BY_PLATFORM_RELEASE_AND_NUMBER, plugin ) )
+        {
+            daoUtil.setInt( 1, nIdPlatformRelease );
+            daoUtil.setInt( 2, nStepNumber );
+            daoUtil.executeQuery( );
+
+            if ( daoUtil.next( ) )
+            {
+                step = dataToObject( daoUtil );
+            }
+        }
+
+        return step;
     }
 
     /**

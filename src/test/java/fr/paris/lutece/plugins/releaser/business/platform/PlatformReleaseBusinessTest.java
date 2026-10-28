@@ -91,6 +91,7 @@ public class PlatformReleaseBusinessTest extends LuteceTestCase
 
         PlatformReleaseStep step2 = createStep( platformRelease.getId( ), 2 );
         PlatformReleaseStep step1 = createStep( platformRelease.getId( ), 1 );
+        PlatformReleaseStep step0 = createStep( platformRelease.getId( ), 0 );
 
         step1.setStatus( PlatformReleaseStatus.SUCCESS );
         step1.setPlanJson( PLAN );
@@ -118,12 +119,16 @@ public class PlatformReleaseBusinessTest extends LuteceTestCase
         assertEquals( 1, listSteps.get( 0 ).getStepNumber( ) );
         assertEquals( 2, listSteps.get( 1 ).getStepNumber( ) );
         assertEquals( step2.getId( ), listSteps.get( 1 ).getId( ) );
+        assertEquals( step0.getId( ), PlatformReleaseStepHome.findByPlatformReleaseAndNumber( platformRelease.getId( ), 0 ).getId( ) );
+        assertEquals( step2.getId( ), PlatformReleaseStepHome.findByPlatformReleaseAndNumber( platformRelease.getId( ), 2 ).getId( ) );
+        assertNull( PlatformReleaseStepHome.findByPlatformReleaseAndNumber( platformRelease.getId( ), 3 ) );
 
         assertFalse( PlatformReleaseHome.getPlatformReleasesList( ).isEmpty( ) );
 
         PlatformReleaseHome.remove( platformRelease.getId( ) );
         assertNull( PlatformReleaseHome.findByPrimaryKey( platformRelease.getId( ) ) );
         assertTrue( PlatformReleaseStepHome.findByPlatformRelease( platformRelease.getId( ) ).isEmpty( ) );
+        assertNull( PlatformReleaseStepHome.findByPlatformReleaseAndNumber( platformRelease.getId( ), 0 ) );
     }
 
     /**

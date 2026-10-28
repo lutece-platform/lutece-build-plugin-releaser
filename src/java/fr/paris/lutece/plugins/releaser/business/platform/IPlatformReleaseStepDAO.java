@@ -94,7 +94,7 @@ public interface IPlatformReleaseStepDAO
     PlatformReleaseStep load( int nKey, Plugin plugin );
 
     /**
-     * Load the steps of a campaign, ordered by step number
+     * Load the steps 1 to 5 of a campaign, ordered by step number : the verification of step 0 is left out
      *
      * @param nIdPlatformRelease
      *            The identifier of the campaign
@@ -103,4 +103,17 @@ public interface IPlatformReleaseStepDAO
      * @return The steps
      */
     List<PlatformReleaseStep> selectByPlatformRelease( int nIdPlatformRelease, Plugin plugin );
+
+    /**
+     * Load one step of a campaign by its number, step 0 included
+     *
+     * @param nIdPlatformRelease
+     *            The identifier of the campaign
+     * @param nStepNumber
+     *            The step number
+     * @param plugin
+     *            the Plugin
+     * @return The step, or null if not found
+     */
+    PlatformReleaseStep selectByPlatformReleaseAndNumber( int nIdPlatformRelease, int nStepNumber, Plugin plugin );
 }

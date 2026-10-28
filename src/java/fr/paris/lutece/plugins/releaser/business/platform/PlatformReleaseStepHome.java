@@ -119,7 +119,7 @@ public final class PlatformReleaseStepHome
     }
 
     /**
-     * Returns the steps of a campaign, ordered by step number
+     * Returns the steps 1 to 5 of a campaign, ordered by step number : the verification of step 0 is left out
      *
      * @param nIdPlatformRelease
      *            The campaign Id
@@ -128,5 +128,19 @@ public final class PlatformReleaseStepHome
     public static List<PlatformReleaseStep> findByPlatformRelease( int nIdPlatformRelease )
     {
         return _dao.selectByPlatformRelease( nIdPlatformRelease, _plugin );
+    }
+
+    /**
+     * Returns one step of a campaign by its number, step 0 included
+     *
+     * @param nIdPlatformRelease
+     *            The campaign Id
+     * @param nStepNumber
+     *            The step number
+     * @return the step, or null if not found
+     */
+    public static PlatformReleaseStep findByPlatformReleaseAndNumber( int nIdPlatformRelease, int nStepNumber )
+    {
+        return _dao.selectByPlatformReleaseAndNumber( nIdPlatformRelease, nStepNumber, _plugin );
     }
 }

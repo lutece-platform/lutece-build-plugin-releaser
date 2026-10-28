@@ -49,6 +49,7 @@ public class PlatformResourceVerification implements Serializable
     private String _strVersion;
     private String _strCommit;
     private String _strNote;
+    private int _nStep;
     private List<PlatformVerificationCheck> _listChecks = new ArrayList<>( );
 
     /**
@@ -133,6 +134,27 @@ public class PlatformResourceVerification implements Serializable
     public void setNote( String strNote )
     {
         _strNote = strNote;
+    }
+
+    /**
+     * Returns the step that releases the resource, set by the verification of step 0.
+     *
+     * @return the step number, 0 when unknown
+     */
+    public int getStep( )
+    {
+        return _nStep;
+    }
+
+    /**
+     * Sets the step that releases the resource.
+     *
+     * @param nStep
+     *            the step number
+     */
+    public void setStep( int nStep )
+    {
+        _nStep = nStep;
     }
 
     /**

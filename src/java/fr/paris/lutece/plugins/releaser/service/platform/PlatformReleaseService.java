@@ -2773,7 +2773,7 @@ public final class PlatformReleaseService
      *            the component
      * @return the resource
      */
-    private static PlatformPlanResource toResource( Component component )
+    static PlatformPlanResource toResource( Component component )
     {
         PlatformPlanResource resource = new PlatformPlanResource( );
         resource.setGroupId( component.getGroupId( ) );
@@ -3627,7 +3627,7 @@ public final class PlatformReleaseService
      *            the component
      * @return the coordinates
      */
-    private static String getCoordinates( Component component )
+    static String getCoordinates( Component component )
     {
         return component.getGroupId( ) + COORDINATES_SEPARATOR + component.getArtifactId( );
     }

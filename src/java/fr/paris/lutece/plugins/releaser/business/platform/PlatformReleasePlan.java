@@ -60,6 +60,7 @@ public class PlatformReleasePlan implements Serializable
     private PlatformPlanResource _aggregate;
     private Map<String, String> _mapPipelineParameters = new LinkedHashMap<>( );
     private List<String> _listLaunchedDespite = new ArrayList<>( );
+    private List<String> _listCampaignCoordinates = new ArrayList<>( );
 
     /**
      * Returns the campaign id.
@@ -258,6 +259,28 @@ public class PlatformReleasePlan implements Serializable
     public void setLaunchedDespite( List<String> listLaunchedDespite )
     {
         _listLaunchedDespite = listLaunchedDespite != null ? listLaunchedDespite : new ArrayList<>( );
+    }
+
+    /**
+     * Returns the "groupId:artifactId" of every SNAPSHOT of the campaign (step 0) : a SNAPSHOT dependency outside this list will never be
+     * released by the campaign.
+     *
+     * @return the coordinates, empty outside step 0
+     */
+    public List<String> getCampaignCoordinates( )
+    {
+        return _listCampaignCoordinates;
+    }
+
+    /**
+     * Sets the coordinates of every SNAPSHOT of the campaign.
+     *
+     * @param listCampaignCoordinates
+     *            the coordinates
+     */
+    public void setCampaignCoordinates( List<String> listCampaignCoordinates )
+    {
+        _listCampaignCoordinates = listCampaignCoordinates != null ? listCampaignCoordinates : new ArrayList<>( );
     }
 
     /**

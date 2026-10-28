@@ -43,5 +43,7 @@ public enum PlatformStepMode
     /** Simulates the release : nothing is pushed, tagged or deployed. */
     DRY_RUN,
     /** Verifies every resource with a build (tests, SNAPSHOT artifacts, release profile, tag) : nothing is committed nor pushed. */
-    VERIFY
+    VERIFY,
+    /** Verifies the head of the branch of every SNAPSHOT of the campaign before it starts (step 0) : no version set, nothing pushed. */
+    PRECHECK
 }
