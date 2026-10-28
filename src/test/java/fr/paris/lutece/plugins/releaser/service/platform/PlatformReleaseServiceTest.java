@@ -35,6 +35,7 @@ package fr.paris.lutece.plugins.releaser.service.platform;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -433,6 +434,48 @@ public class PlatformReleaseServiceTest
         mapStatuses.put( "f", PlatformReleaseService.VERIFICATION_STALE );
         Map<String, String> mapToConfirm = PlatformReleaseService.getResourcesToConfirm( mapStatuses );
         assertEquals( Arrays.asList( "b", "d", "f" ), new ArrayList<>( mapToConfirm.keySet( ) ) );
+    }
+
+    /**
+     * The release skips the tests only for a commit whose tests passed at the verification of the same version.
+     */
+    @Test
+    public void testTestedCommit( )
+    {
+        PlatformResourceVerification verification = new PlatformResourceVerification( );
+        verification.setStatus( PlatformVerificationCheck.STATUS_WARNING );
+        verification.setVersion( "1.0.5-beta-01" );
+        verification.setCommit( "abc1234" );
+        assertNull( PlatformReleaseService.getTestedCommit( verification, "1.0.5-beta-01" ) );
+
+        PlatformVerificationCheck tests = new PlatformVerificationCheck( );
+        tests.setCheck( "tests" );
+        tests.setStatus( PlatformVerificationCheck.STATUS_OK );
+        verification.getChecks( ).add( tests );
+        assertEquals( "abc1234", PlatformReleaseService.getTestedCommit( verification, "1.0.5-beta-01" ) );
+        assertNull( PlatformReleaseService.getTestedCommit( verification, "1.0.5-beta-02" ) );
+        assertNull( PlatformReleaseService.getTestedCommit( null, "1.0.5-beta-01" ) );
+
+        verification.setStatus( PlatformVerificationCheck.STATUS_TO_FIX );
+        assertNull( PlatformReleaseService.getTestedCommit( verification, "1.0.5-beta-01" ) );
+
+        verification.setStatus( PlatformVerificationCheck.STATUS_OK );
+        tests.setStatus( PlatformVerificationCheck.STATUS_TO_FIX );
+        assertNull( PlatformReleaseService.getTestedCommit( verification, "1.0.5-beta-01" ) );
+    }
+
+    /**
+     * Only a GitLab resource is deployed to the private repository, when it is configured.
+     */
+    @Test
+    public void testDeployRepository( )
+    {
+        assertEquals( "lutece_releases_private_repository::default::https://nexus/private",
+                PlatformReleaseService.getDeployRepository( RepositoryType.GITLAB, " https://nexus/private " ) );
+        assertNull( PlatformReleaseService.getDeployRepository( RepositoryType.GITLAB, "" ) );
+        assertNull( PlatformReleaseService.getDeployRepository( RepositoryType.GITLAB, null ) );
+        assertNull( PlatformReleaseService.getDeployRepository( RepositoryType.GITHUB, "https://nexus/private" ) );
+        assertNull( PlatformReleaseService.getDeployRepository( null, "https://nexus/private" ) );
     }
 
     /**

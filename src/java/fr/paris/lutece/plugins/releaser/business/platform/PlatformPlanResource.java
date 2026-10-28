@@ -55,6 +55,8 @@ public class PlatformPlanResource implements Serializable
     private String _strCurrentParentVersion;
     private String _strCoreVersion;
     private String _strVersionProperty;
+    private String _strVerifiedCommit;
+    private String _strDeployRepository;
     private PlatformVersionUpdates _versionUpdates = new PlatformVersionUpdates( );
 
     /**
@@ -329,6 +331,48 @@ public class PlatformPlanResource implements Serializable
     public void setVersionProperty( String strVersionProperty )
     {
         _strVersionProperty = strVersionProperty;
+    }
+
+    /**
+     * Returns the commit whose tests passed at the verification of the step : the release skips the tests when it clones this commit.
+     *
+     * @return the verified commit, null when the tests must run
+     */
+    public String getVerifiedCommit( )
+    {
+        return _strVerifiedCommit;
+    }
+
+    /**
+     * Sets the commit whose tests passed at the verification of the step.
+     *
+     * @param strVerifiedCommit
+     *            the verified commit
+     */
+    public void setVerifiedCommit( String strVerifiedCommit )
+    {
+        _strVerifiedCommit = strVerifiedCommit;
+    }
+
+    /**
+     * Returns the Nexus repository of the deploy, as expected by -DaltReleaseDeploymentRepository (id::layout::url).
+     *
+     * @return the repository, null for the repository of the POM
+     */
+    public String getDeployRepository( )
+    {
+        return _strDeployRepository;
+    }
+
+    /**
+     * Sets the Nexus repository of the deploy.
+     *
+     * @param strDeployRepository
+     *            the repository (id::layout::url)
+     */
+    public void setDeployRepository( String strDeployRepository )
+    {
+        _strDeployRepository = strDeployRepository;
     }
 
     /**

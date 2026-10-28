@@ -120,6 +120,9 @@ public final class PlatformReleaseService
     private static final String MESSAGE_AGGREGATE_CORE_MISMATCH = "releaser.message.platform.aggregateCoreMismatch";
     private static final String MESSAGE_AGGREGATE_BLOCKED = "releaser.message.platform.aggregateBlocked";
     private static final String MESSAGE_VERIFY_NOT_AVAILABLE = "releaser.message.platform.verifyNotAvailable";
+    private static final String MESSAGE_PRIVATE_REPOSITORY_MISSING = "releaser.message.platform.privateRepositoryMissing";
+    private static final String PRIVATE_DEPLOY_REPOSITORY = "lutece_releases_private_repository::default::";
+    private static final String CHECK_TESTS = "tests";
     private static final String MESSAGE_MASTER_BRANCH_MISSING = "releaser.message.platform.masterBranchMissing";
     private static final String MESSAGE_REMOTE_BRANCHES_UNAVAILABLE = "releaser.message.platform.remoteBranchesUnavailable";
     private static final String MESSAGE_POM_VERSION_MISMATCH = "releaser.message.platform.pomVersionMismatch";
@@ -2595,16 +2598,102 @@ public final class PlatformReleaseService
             }, Locale.getDefault( ) ) );
         }
         Map<String, String> mapVersionProperties = getVersionProperties( site );
+        Map<String, PlatformResourceVerification> mapVerifications = mode == PlatformStepMode.VERIFY ? new HashMap<>( )
+                : getStepVerifications( getStep( campaign, nStepNumber ) );
+        List<String> listNoPrivateRepository = new ArrayList<>( );
         for ( Component component : sortComponents( listToRelease ) )
         {
             PlatformPlanResource resource = toResource( component );
             resource.setVersionProperty( mapVersionProperties.get( getCoordinates( component ) ) );
+            resource.setVerifiedCommit( getTestedCommit( mapVerifications.get( resource.getCoordinates( ) ), resource.getTargetVersion( ) ) );
+            resource.setDeployRepository( getDeployRepository( component.getRepoType( ) ) );
+            if ( component.getRepoType( ) == RepositoryType.GITLAB && resource.getDeployRepository( ) == null )
+            {
+                listNoPrivateRepository.add( component.getArtifactId( ) );
+            }
             plan.getComponents( ).add( resource );
         }
 
-        plan.setAggregate( buildAggregateResource( campaign, nStepNumber, code, site ) );
+        PlatformPlanResource aggregate = buildAggregateResource( campaign, nStepNumber, code, site );
+        aggregate.setVerifiedCommit( getTestedCommit( mapVerifications.get( aggregate.getCoordinates( ) ), aggregate.getTargetVersion( ) ) );
+        aggregate.setDeployRepository( getDeployRepository( site.getRepoType( ) ) );
+        if ( site.getRepoType( ) == RepositoryType.GITLAB && aggregate.getDeployRepository( ) == null )
+        {
+            listNoPrivateRepository.add( site.getArtifactId( ) );
+        }
+        if ( mode == PlatformStepMode.RELEASE && !listNoPrivateRepository.isEmpty( ) )
+        {
+            throw new AppException( I18nService.getLocalizedString( MESSAGE_PRIVATE_REPOSITORY_MISSING, new String [ ] {
+                    String.join( ", ", listNoPrivateRepository )
+            }, Locale.getDefault( ) ) );
+        }
+        plan.setAggregate( aggregate );
 
         return plan;
+    }
+
+    /**
+     * Returns the commit whose tests passed at the verification of a resource, so that the release does not run them again on the same commit.
+     *
+     * @param verification
+     *            the verification of the resource, null when not verified
+     * @param strTargetVersion
+     *            the version to release
+     * @return the commit, null when the verification failed, was made for another version or did not run the tests
+     */
+    public static String getTestedCommit( PlatformResourceVerification verification, String strTargetVersion )
+    {
+        if ( verification == null || StringUtils.isBlank( verification.getCommit( ) ) || !Objects.equals( verification.getVersion( ), strTargetVersion )
+                || PlatformVerificationCheck.STATUS_TO_FIX.equals( verification.getStatus( ) ) )
+        {
+            return null;
+        }
+        for ( PlatformVerificationCheck check : verification.getChecks( ) )
+        {
+            if ( CHECK_TESTS.equals( check.getCheck( ) ) && PlatformVerificationCheck.STATUS_OK.equals( check.getStatus( ) ) )
+            {
+                return verification.getCommit( );
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the Nexus repository a resource is deployed to, the private one being read from the configuration only for GitLab.
+     *
+     * @param repositoryType
+     *            the platform of the resource
+     * @return the repository, see {@link #getDeployRepository(RepositoryType, String)}
+     */
+    private static String getDeployRepository( RepositoryType repositoryType )
+    {
+        if ( repositoryType != RepositoryType.GITLAB )
+        {
+            return null;
+        }
+
+        return getDeployRepository( repositoryType, AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_MAVEN_PRIVATE_RELEASE_DEPLOYMENT_REPOSITORY ) );
+    }
+
+    /**
+     * Returns the Nexus repository a resource is deployed to : the private one for GitLab, the one of the POM for the others.
+     *
+     * @param repositoryType
+     *            the platform of the resource
+     * @param strPrivateRepositoryUrl
+     *            the URL of the private release repository
+     * @return the repository as expected by -DaltReleaseDeploymentRepository, null for the repository of the POM or when the private one is
+     *         not configured
+     */
+    public static String getDeployRepository( RepositoryType repositoryType, String strPrivateRepositoryUrl )
+    {
+        if ( repositoryType != RepositoryType.GITLAB || StringUtils.isBlank( strPrivateRepositoryUrl ) )
+        {
+            return null;
+        }
+
+        return PRIVATE_DEPLOY_REPOSITORY + strPrivateRepositoryUrl.trim( );
     }
 
     /**
