@@ -41,6 +41,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -61,6 +62,7 @@ import fr.paris.lutece.plugins.releaser.business.platform.PlatformResourceVerifi
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepCode;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepMode;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepResult;
+import fr.paris.lutece.plugins.releaser.business.platform.PlatformUntestedDecision;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformVerificationCheck;
 import fr.paris.lutece.plugins.releaser.business.platform.PomVersionDecision;
 import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
@@ -462,6 +464,55 @@ public class PlatformReleaseServiceTest
         verification.setStatus( PlatformVerificationCheck.STATUS_OK );
         tests.setStatus( PlatformVerificationCheck.STATUS_TO_FIX );
         assertNull( PlatformReleaseService.getTestedCommit( verification, "1.0.5-beta-01" ) );
+    }
+
+    /**
+     * A resource with commits after its last beta or RC blocks the release until a decision is taken on its verified commit.
+     *
+     * @throws IOException
+     *             if the result cannot be serialized
+     */
+    @Test
+    public void testUntestedDecisions( ) throws IOException
+    {
+        PlatformResourceVerification verification = new PlatformResourceVerification( );
+        verification.setStatus( PlatformVerificationCheck.STATUS_TO_FIX );
+        verification.setVersion( "1.0.5" );
+        verification.setCommit( "abc1234" );
+        assertFalse( PlatformReleaseService.hasUntestedCommits( verification ) );
+        PlatformVerificationCheck untested = new PlatformVerificationCheck( );
+        untested.setCheck( "untested-commits" );
+        untested.setStatus( PlatformVerificationCheck.STATUS_TO_FIX );
+        verification.getChecks( ).add( untested );
+        assertTrue( PlatformReleaseService.hasUntestedCommits( verification ) );
+
+        PlatformUntestedDecision decision = new PlatformUntestedDecision( );
+        decision.setCommit( "abc1234" );
+        decision.setUserName( "admin" );
+        assertTrue( PlatformReleaseService.isUntestedDecisionValid( decision, verification ) );
+        assertFalse( PlatformReleaseService.isUntestedDecisionValid( null, verification ) );
+
+        PlatformStepResult result = new PlatformStepResult( );
+        result.getVerifications( ).put( "g:a", verification );
+        PlatformReleaseStep step = new PlatformReleaseStep( );
+        step.setResultJson( MapperJsonUtil.getJson( result ) );
+        Map<String, String> mapStatuses = new LinkedHashMap<>( );
+        mapStatuses.put( "g:a", PlatformVerificationCheck.STATUS_TO_FIX );
+        mapStatuses.put( "g:b", PlatformVerificationCheck.STATUS_TO_FIX );
+        assertEquals( Arrays.asList( "g:a" ), PlatformReleaseService.getUndecidedUntestedResources( step, mapStatuses ) );
+
+        result.getUntestedDecisions( ).put( "g:a", decision );
+        step.setResultJson( MapperJsonUtil.getJson( result ) );
+        assertTrue( PlatformReleaseService.getUndecidedUntestedResources( step, mapStatuses ).isEmpty( ) );
+        assertEquals( "admin", PlatformReleaseService.getUntestedDecisions( step ).get( "g:a" ).getUserName( ) );
+
+        verification.setCommit( "def5678" );
+        step.setResultJson( MapperJsonUtil.getJson( result ) );
+        assertTrue( PlatformReleaseService.getUntestedDecisions( step ).isEmpty( ) );
+        assertEquals( Arrays.asList( "g:a" ), PlatformReleaseService.getUndecidedUntestedResources( step, mapStatuses ) );
+
+        PlatformStepResult merged = PlatformReleaseService.mergeResults( result, new PlatformStepResult( ) );
+        assertEquals( "abc1234", merged.getUntestedDecisions( ).get( "g:a" ).getCommit( ) );
     }
 
     /**

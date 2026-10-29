@@ -60,6 +60,7 @@ import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepCode;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepMode;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepDefinition;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepDefinitionHome;
+import fr.paris.lutece.plugins.releaser.business.platform.PlatformUntestedDecision;
 import fr.paris.lutece.plugins.releaser.service.ReleasePreparationService;
 import fr.paris.lutece.plugins.releaser.service.SiteService;
 import fr.paris.lutece.plugins.releaser.service.platform.PlatformReleaseService;
@@ -114,6 +115,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String PARAMETER_CORE_VERSION = "core_version";
     private static final String PARAMETER_PARENT_VERSION = "parent_version";
     private static final String PARAMETER_ALLOW_SNAPSHOT_DEPENDENCIES = "allow_snapshot_dependencies";
+    private static final String PARAMETER_COORDINATES = "coordinates";
 
     // Views
     private static final String VIEW_MANAGE_PLATFORM_RELEASES = "managePlatformReleases";
@@ -153,6 +155,8 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String ACTION_CHANGE_STEP_BRANCH = "changeStepBranch";
     private static final String ACTION_SELECT_SNAPSHOT_COMPONENTS = "selectSnapshotComponents";
     private static final String ACTION_DESELECT_SNAPSHOT_COMPONENTS = "deselectSnapshotComponents";
+    private static final String ACTION_ACCEPT_UNTESTED_COMMITS = "acceptUntestedCommits";
+    private static final String ACTION_CANCEL_UNTESTED_DECISION = "cancelUntestedDecision";
 
     // Templates
     private static final String TEMPLATE_MANAGE_PLATFORM_RELEASES = "/admin/plugins/releaser/platform/manage_platform_releases.html";
@@ -196,6 +200,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String MARK_STEP_VERIFICATIONS = "step_verifications";
     private static final String MARK_BRANCH_HEADS = "branch_heads";
     private static final String MARK_CONFIRM_RESOURCES = "confirm_resources";
+    private static final String MARK_UNTESTED_DECISIONS = "untested_decisions";
     private static final String MARK_CORE_BRANCHES = "core_branches";
     private static final String MARK_STEP_REPORTS = "step_reports";
     private static final String MARK_MASTER_BRANCH = "master_branch";
@@ -218,6 +223,8 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String MESSAGE_NAME_ALREADY_USED = "releaser.message.platformRelease.nameAlreadyUsed";
     private static final String MESSAGE_CREDENTIALS_REFUSED = "releaser.message.platform.credentialsRefused";
     private static final String MESSAGE_CREDENTIALS_MISSING_FOR = "releaser.message.platform.credentialsMissingFor";
+    private static final String MESSAGE_UNTESTED_UNDECIDED = "releaser.message.platform.untestedCommitsUndecided";
+    private static final String LAUNCHED_DESPITE_UNTESTED = " — released from the SNAPSHOT despite untested commits, accepted by ";
     private static final String INFO_CREATED = "releaser.info.platformRelease.created";
     private static final String INFO_REMOVED = "releaser.info.platformRelease.removed";
     private static final String INFO_STEP_SKIPPED = "releaser.info.platformRelease.stepSkipped";
@@ -632,6 +639,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
                 model.put( MARK_CONFIRM_RESOURCES, _mapPendingConfirmation );
             }
             model.put( MARK_VERIFICATIONS, PlatformReleaseService.getStepVerifications( step ) );
+            model.put( MARK_UNTESTED_DECISIONS, PlatformReleaseService.getUntestedDecisions( step ) );
             model.put( MARK_VERIFICATION_STATUSES, mapStatuses );
             model.put( MARK_VERIFICATION_COUNTS, PlatformReleaseService.countVerificationStatuses( mapStatuses ) );
             model.put( MARK_VERIFICATION_DATE, PlatformReleaseService.getVerificationDate( step ) );
@@ -802,6 +810,59 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         {
             PlatformReleaseService.toggleProjectComponent( campaign, _nSiteStepNumber, _site, request.getParameter( PARAMETER_ARTIFACT_ID ),
                     ReleaserUtils.getReleaserUser( request, getLocale( ) ), getLocale( ) );
+        }
+
+        return redirectToPreparedStep( request );
+    }
+
+    /**
+     * Records the decision to release a resource of the prepared step from the SNAPSHOT despite its commits made after its last beta or RC.
+     *
+     * @param request
+     *            the request
+     * @return the step preparation
+     * @throws IOException
+     *             if the decision cannot be saved
+     */
+    @Action( ACTION_ACCEPT_UNTESTED_COMMITS )
+    public String doAcceptUntestedCommits( HttpServletRequest request ) throws IOException
+    {
+        return setUntestedDecision( request, true );
+    }
+
+    /**
+     * Cancels the decision to release a resource of the prepared step from the SNAPSHOT despite its untested commits.
+     *
+     * @param request
+     *            the request
+     * @return the step preparation
+     * @throws IOException
+     *             if the decision cannot be saved
+     */
+    @Action( ACTION_CANCEL_UNTESTED_DECISION )
+    public String doCancelUntestedDecision( HttpServletRequest request ) throws IOException
+    {
+        return setUntestedDecision( request, false );
+    }
+
+    /**
+     * Records or cancels the decision on the untested commits of a resource of the prepared step.
+     *
+     * @param request
+     *            the request
+     * @param bAccept
+     *            true to record the decision, false to cancel it
+     * @return the step preparation
+     * @throws IOException
+     *             if the decision cannot be saved
+     */
+    private String setUntestedDecision( HttpServletRequest request, boolean bAccept ) throws IOException
+    {
+        PlatformRelease campaign = getPreparedCampaign( request );
+        if ( campaign != null )
+        {
+            PlatformReleaseService.setUntestedDecision( PlatformReleaseService.getStep( campaign, _nSiteStepNumber ),
+                    request.getParameter( PARAMETER_COORDINATES ), AdminUserService.getAdminUser( request ).getAccessCode( ), bAccept );
         }
 
         return redirectToPreparedStep( request );
@@ -1250,7 +1311,16 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         if ( mode == PlatformStepMode.RELEASE && bVerifiable )
         {
             _mapBranchHeads = PlatformReleaseService.getBranchHeads( step, _site, user );
-            mapToConfirm = PlatformReleaseService.getResourcesToConfirm( PlatformReleaseService.getVerificationStatuses( step, _site, _mapBranchHeads ) );
+            Map<String, String> mapStatuses = PlatformReleaseService.getVerificationStatuses( step, _site, _mapBranchHeads );
+            List<String> listUndecided = PlatformReleaseService.getUndecidedUntestedResources( step, mapStatuses );
+            if ( !listUndecided.isEmpty( ) )
+            {
+                addError( I18nService.getLocalizedString( MESSAGE_UNTESTED_UNDECIDED, new String [ ] {
+                        String.join( ", ", listUndecided )
+                }, getLocale( ) ) );
+                return redirectToPreparedStep( request );
+            }
+            mapToConfirm = PlatformReleaseService.getResourcesToConfirm( mapStatuses );
             if ( !mapToConfirm.isEmpty( ) && !Boolean.parseBoolean( request.getParameter( PARAMETER_CONFIRM_UNVERIFIED ) ) )
             {
                 _mapPendingConfirmation = mapToConfirm;
@@ -1272,9 +1342,11 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
                     return redirectToPreparedStep( request );
                 }
             }
+            Map<String, PlatformUntestedDecision> mapDecisions = PlatformReleaseService.getUntestedDecisions( step );
             for ( Map.Entry<String, String> entry : mapToConfirm.entrySet( ) )
             {
-                plan.getLaunchedDespite( ).add( entry.getKey( ) + " : " + entry.getValue( ) );
+                PlatformUntestedDecision decision = mapDecisions.get( entry.getKey( ) );
+                plan.getLaunchedDespite( ).add( entry.getKey( ) + " : " + entry.getValue( ) + ( decision != null ? LAUNCHED_DESPITE_UNTESTED + decision.getUserName( ) : "" ) );
             }
             PlatformReleaseService.applyPipelineParameters( campaign, _nSiteStepNumber, plan );
             String strMasterError = bNothingPushed ? null : PlatformReleaseService.checkMasterBranches( plan, user, getLocale( ) );

@@ -77,6 +77,7 @@ import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepMode;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepDefinition;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepDefinitionHome;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepResult;
+import fr.paris.lutece.plugins.releaser.business.platform.PlatformUntestedDecision;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformVerificationCheck;
 import fr.paris.lutece.plugins.releaser.service.MavenRepoComponentInfoProvider;
 import fr.paris.lutece.plugins.releaser.service.ReleasePreparationService;
@@ -123,6 +124,7 @@ public final class PlatformReleaseService
     private static final String MESSAGE_PRIVATE_REPOSITORY_MISSING = "releaser.message.platform.privateRepositoryMissing";
     private static final String PRIVATE_DEPLOY_REPOSITORY = "lutece_releases_private_repository::default::";
     private static final String CHECK_TESTS = "tests";
+    private static final String CHECK_UNTESTED_COMMITS = "untested-commits";
     private static final String MESSAGE_MASTER_BRANCH_MISSING = "releaser.message.platform.masterBranchMissing";
     private static final String MESSAGE_REMOTE_BRANCHES_UNAVAILABLE = "releaser.message.platform.remoteBranchesUnavailable";
     private static final String MESSAGE_POM_VERSION_MISMATCH = "releaser.message.platform.pomVersionMismatch";
@@ -921,6 +923,8 @@ public final class PlatformReleaseService
         merged.getVerifications( ).putAll( previous.getVerifications( ) );
         merged.getVerifications( ).putAll( next.getVerifications( ) );
         merged.setVerificationDate( next.getVerificationDate( ) != null ? next.getVerificationDate( ) : previous.getVerificationDate( ) );
+        merged.getUntestedDecisions( ).putAll( previous.getUntestedDecisions( ) );
+        merged.getUntestedDecisions( ).putAll( next.getUntestedDecisions( ) );
 
         return merged;
     }
@@ -3192,6 +3196,138 @@ public final class PlatformReleaseService
         }
 
         return mapToConfirm;
+    }
+
+    /**
+     * Tells whether the verification of a resource found commits made after the last beta or RC of its version, for a stable release.
+     *
+     * @param verification
+     *            the verification, may be null
+     * @return true when its untested-commits check is to fix
+     */
+    static boolean hasUntestedCommits( PlatformResourceVerification verification )
+    {
+        if ( verification == null )
+        {
+            return false;
+        }
+        for ( PlatformVerificationCheck check : verification.getChecks( ) )
+        {
+            if ( CHECK_UNTESTED_COMMITS.equals( check.getCheck( ) ) && PlatformVerificationCheck.STATUS_TO_FIX.equals( check.getStatus( ) ) )
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Tells whether a decision still holds : the last verification of the resource still finds untested commits, on the commit of the decision.
+     *
+     * @param decision
+     *            the decision, may be null
+     * @param verification
+     *            the last verification of the resource, may be null
+     * @return true when the decision holds
+     */
+    static boolean isUntestedDecisionValid( PlatformUntestedDecision decision, PlatformResourceVerification verification )
+    {
+        return decision != null && hasUntestedCommits( verification ) && StringUtils.isNotBlank( decision.getCommit( ) )
+                && decision.getCommit( ).equals( verification.getCommit( ) );
+    }
+
+    /**
+     * Returns the decisions of a step that still hold, "groupId:artifactId" to decision.
+     *
+     * @param step
+     *            the step, may be null
+     * @return the decisions
+     */
+    public static Map<String, PlatformUntestedDecision> getUntestedDecisions( PlatformReleaseStep step )
+    {
+        Map<String, PlatformUntestedDecision> mapDecisions = new LinkedHashMap<>( );
+        PlatformStepResult result = parseResult( step );
+        if ( result != null )
+        {
+            for ( Map.Entry<String, PlatformUntestedDecision> entry : result.getUntestedDecisions( ).entrySet( ) )
+            {
+                if ( isUntestedDecisionValid( entry.getValue( ), result.getVerifications( ).get( entry.getKey( ) ) ) )
+                {
+                    mapDecisions.put( entry.getKey( ), entry.getValue( ) );
+                }
+            }
+        }
+
+        return mapDecisions;
+    }
+
+    /**
+     * Returns the resources a release cannot be launched with : to fix for commits made after their last beta or RC, without a decision.
+     *
+     * @param step
+     *            the step
+     * @param mapStatuses
+     *            the status of each resource to release, see getVerificationStatuses
+     * @return the "groupId:artifactId" of the resources, empty when none
+     */
+    public static List<String> getUndecidedUntestedResources( PlatformReleaseStep step, Map<String, String> mapStatuses )
+    {
+        Map<String, PlatformResourceVerification> mapVerifications = getStepVerifications( step );
+        Map<String, PlatformUntestedDecision> mapDecisions = getUntestedDecisions( step );
+        List<String> listUndecided = new ArrayList<>( );
+        for ( Map.Entry<String, String> entry : mapStatuses.entrySet( ) )
+        {
+            if ( PlatformVerificationCheck.STATUS_TO_FIX.equals( entry.getValue( ) ) && hasUntestedCommits( mapVerifications.get( entry.getKey( ) ) )
+                    && !mapDecisions.containsKey( entry.getKey( ) ) )
+            {
+                listUndecided.add( entry.getKey( ) );
+            }
+        }
+
+        return listUndecided;
+    }
+
+    /**
+     * Records the decision to release a resource from the SNAPSHOT despite its untested commits, on the commit of its last verification, or
+     * cancels it.
+     *
+     * @param step
+     *            the step
+     * @param strCoordinates
+     *            the "groupId:artifactId" of the resource
+     * @param strUserName
+     *            the user who takes the decision
+     * @param bAccept
+     *            true to record the decision, false to cancel it
+     * @return false when the last verification of the resource found no untested commits
+     * @throws IOException
+     *             if the result cannot be serialized
+     */
+    public static boolean setUntestedDecision( PlatformReleaseStep step, String strCoordinates, String strUserName, boolean bAccept ) throws IOException
+    {
+        PlatformStepResult result = parseResult( step );
+        PlatformResourceVerification verification = result != null ? result.getVerifications( ).get( strCoordinates ) : null;
+        if ( !hasUntestedCommits( verification ) )
+        {
+            return false;
+        }
+        if ( bAccept )
+        {
+            PlatformUntestedDecision decision = new PlatformUntestedDecision( );
+            decision.setCommit( verification.getCommit( ) );
+            decision.setUserName( strUserName );
+            decision.setDate( new Timestamp( System.currentTimeMillis( ) ).toString( ) );
+            result.getUntestedDecisions( ).put( strCoordinates, decision );
+        }
+        else
+        {
+            result.getUntestedDecisions( ).remove( strCoordinates );
+        }
+        step.setResultJson( MapperJsonUtil.getJson( result ) );
+        PlatformReleaseStepHome.update( step );
+
+        return true;
     }
 
     /**

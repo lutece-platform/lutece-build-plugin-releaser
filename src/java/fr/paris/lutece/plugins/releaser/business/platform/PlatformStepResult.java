@@ -55,6 +55,7 @@ public class PlatformStepResult implements Serializable
     private String _strReport;
     private Map<String, PlatformResourceVerification> _mapVerifications = new LinkedHashMap<>( );
     private String _strVerificationDate;
+    private Map<String, PlatformUntestedDecision> _mapUntestedDecisions = new LinkedHashMap<>( );
 
     /**
      * Returns the released versions : "groupId:artifactId" to released version.
@@ -222,5 +223,26 @@ public class PlatformStepResult implements Serializable
     public void setVerificationDate( String strVerificationDate )
     {
         _strVerificationDate = strVerificationDate;
+    }
+
+    /**
+     * Returns the decisions taken on the resources with commits made after their last beta or RC : "groupId:artifactId" to decision.
+     *
+     * @return the decisions
+     */
+    public Map<String, PlatformUntestedDecision> getUntestedDecisions( )
+    {
+        return _mapUntestedDecisions;
+    }
+
+    /**
+     * Sets the decisions taken on the resources with commits made after their last beta or RC.
+     *
+     * @param mapUntestedDecisions
+     *            the decisions
+     */
+    public void setUntestedDecisions( Map<String, PlatformUntestedDecision> mapUntestedDecisions )
+    {
+        _mapUntestedDecisions = mapUntestedDecisions != null ? mapUntestedDecisions : new LinkedHashMap<>( );
     }
 }
