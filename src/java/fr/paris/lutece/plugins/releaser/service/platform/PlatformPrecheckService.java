@@ -61,8 +61,11 @@ import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
 import fr.paris.lutece.plugins.releaser.util.git.GitUtils;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
+import org.apache.commons.lang3.StringUtils;
+
 import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.util.AppException;
+import fr.paris.lutece.portal.service.util.AppLogService;
 
 /**
  * Verification of a campaign before it starts (step 0) : census of every SNAPSHOT the five steps will release, instant checks of the releaser
@@ -111,6 +114,7 @@ public final class PlatformPrecheckService
             step.setStatus( PlatformReleaseStatus.READY );
             PlatformReleaseStepHome.create( step );
         }
+        campaign.setPrecheckStep( step );
 
         return step;
     }
@@ -408,6 +412,121 @@ public final class PlatformPrecheckService
         }
 
         return mapMessages;
+    }
+
+    /**
+     * Whether the step 0 of a campaign can be launched : it is not running.
+     *
+     * @param campaign
+     *            the campaign, loaded with its steps
+     * @return true when it can be launched
+     */
+    public static boolean canLaunch( PlatformRelease campaign )
+    {
+        PlatformReleaseStep step = campaign.getPrecheckStep( );
+
+        return step == null || step.getStatus( ) != PlatformReleaseStatus.RUNNING;
+    }
+
+    /**
+     * Launches the step 0 : takes the census, then sends the resources not already to fix to the step pipeline.
+     *
+     * @param campaign
+     *            the campaign, loaded with its steps
+     * @param user
+     *            the releaser user
+     * @param locale
+     *            the locale of the messages
+     * @return true when the pipeline was launched, false when the census left nothing to send
+     * @throws IOException
+     *             if the result or the plan cannot be serialized
+     */
+    public static boolean launch( PlatformRelease campaign, ReleaserUser user, Locale locale ) throws IOException
+    {
+        if ( !canLaunch( campaign ) )
+        {
+            throw new AppException( "Platform step " + STEP_NUMBER + " of campaign " + campaign.getId( ) + " is already running" );
+        }
+        runCensus( campaign, user, locale );
+        PlatformReleasePlan plan = MapperJsonUtil.parse( campaign.getPrecheckStep( ).getPlanJson( ), PlatformReleasePlan.class );
+        if ( plan.getComponents( ).isEmpty( ) )
+        {
+            return false;
+        }
+        PlatformReleaseService.launchStep( campaign, STEP_NUMBER, plan, user );
+
+        return true;
+    }
+
+    /**
+     * Adds the checks of the pipeline to the instant checks of the census, resource by resource : the step of the census is kept and the
+     * status is the worst of both.
+     *
+     * @param mapItems
+     *            the census, updated
+     * @param mapPipeline
+     *            the verifications of the pipeline, by "groupId:artifactId"
+     */
+    static void mergeVerifications( Map<String, PlatformResourceVerification> mapItems, Map<String, PlatformResourceVerification> mapPipeline )
+    {
+        for ( Map.Entry<String, PlatformResourceVerification> entry : mapPipeline.entrySet( ) )
+        {
+            PlatformResourceVerification item = mapItems.get( entry.getKey( ) );
+            PlatformResourceVerification verification = entry.getValue( );
+            if ( item != null )
+            {
+                List<PlatformVerificationCheck> listChecks = new ArrayList<>( item.getChecks( ) );
+                listChecks.addAll( verification.getChecks( ) );
+                verification.setChecks( listChecks );
+                verification.setStep( item.getStep( ) );
+                String strStatus = getStatus( listChecks );
+                verification.setStatus( PlatformReleaseService.VERIFICATION_NOT_VERIFIED.equals( strStatus ) ? verification.getStatus( ) : strStatus );
+            }
+            mapItems.put( entry.getKey( ), verification );
+        }
+    }
+
+    /**
+     * Puts the report of the pipeline after the report of the census.
+     *
+     * @param strCensusReport
+     *            the report of the census, may be null
+     * @param strPipelineReport
+     *            the report of the pipeline
+     * @return the report of the step 0
+     */
+    static String mergeReports( String strCensusReport, String strPipelineReport )
+    {
+        return StringUtils.isBlank( strCensusReport ) ? strPipelineReport : strCensusReport + LINE_SEPARATOR + LINE_SEPARATOR + strPipelineReport;
+    }
+
+    /**
+     * Returns the resources of the plan of the step 0, by "groupId:artifactId" : their branch is shown with the result.
+     *
+     * @param step
+     *            the step 0, may be null
+     * @return the resources, empty when none
+     */
+    public static Map<String, PlatformPlanResource> getPlanResources( PlatformReleaseStep step )
+    {
+        Map<String, PlatformPlanResource> mapResources = new LinkedHashMap<>( );
+        if ( step == null || StringUtils.isBlank( step.getPlanJson( ) ) )
+        {
+            return mapResources;
+        }
+        try
+        {
+            for ( PlatformPlanResource resource : MapperJsonUtil.parse( step.getPlanJson( ), PlatformReleasePlan.class ).getComponents( ) )
+            {
+                mapResources.put( resource.getCoordinates( ), resource );
+            }
+        }
+        catch( IOException e )
+        {
+            AppLogService.error( "Releaser : unreadable plan of the step 0 of campaign " + step.getIdPlatformRelease( ), e );
+        }
+
+        return mapResources;
     }
 
     /**

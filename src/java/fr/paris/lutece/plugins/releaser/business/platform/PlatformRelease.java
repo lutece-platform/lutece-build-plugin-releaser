@@ -92,6 +92,7 @@ public class PlatformRelease implements RBACResource, Serializable
 
     /** The steps, loaded on demand. */
     private List<PlatformReleaseStep> _listSteps = new ArrayList<>( );
+    private PlatformReleaseStep _precheckStep;
 
     /**
      * Returns the id.
@@ -322,6 +323,27 @@ public class PlatformRelease implements RBACResource, Serializable
     public void setSteps( List<PlatformReleaseStep> listSteps )
     {
         _listSteps = listSteps;
+    }
+
+    /**
+     * Returns the step 0 (test of the SNAPSHOT of the campaign), loaded with the steps but kept out of them.
+     *
+     * @return the step 0, null until loaded or when never launched
+     */
+    public PlatformReleaseStep getPrecheckStep( )
+    {
+        return _precheckStep;
+    }
+
+    /**
+     * Sets the step 0.
+     *
+     * @param precheckStep
+     *            the step 0
+     */
+    public void setPrecheckStep( PlatformReleaseStep precheckStep )
+    {
+        _precheckStep = precheckStep;
     }
 
     /**

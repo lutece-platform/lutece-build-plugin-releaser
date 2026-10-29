@@ -52,6 +52,8 @@ import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformPlanResource;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformRelease;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleasePlan;
+import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseStatus;
+import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseStep;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseType;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformResourceVerification;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepCode;
@@ -229,5 +231,95 @@ public class PlatformPrecheckServiceTest
         component.setScmDeveloperConnection( strScmBase + strArtifactId + ".git" );
 
         return component;
+    }
+
+    /**
+     * The checks of the pipeline are added to the instant checks : the step of the census is kept, the status is the worst of both, a
+     * resource unknown to the census is taken as is. The report of the pipeline follows the census one.
+     */
+    @Test
+    public void testMergeVerifications( )
+    {
+        Map<String, PlatformResourceVerification> mapItems = new LinkedHashMap<>( );
+        PlatformResourceVerification warned = new PlatformResourceVerification( );
+        warned.setStep( 4 );
+        warned.getChecks( ).add( check( PlatformPrecheckService.CHECK_RELEASE_COMMENTS, PlatformVerificationCheck.STATUS_WARNING ) );
+        warned.setStatus( PlatformVerificationCheck.STATUS_WARNING );
+        mapItems.put( "g:warned", warned );
+        PlatformResourceVerification clean = new PlatformResourceVerification( );
+        clean.setStep( 2 );
+        clean.setStatus( PlatformReleaseService.VERIFICATION_NOT_VERIFIED );
+        mapItems.put( "g:clean", clean );
+
+        Map<String, PlatformResourceVerification> mapPipeline = new LinkedHashMap<>( );
+        mapPipeline.put( "g:warned", pipelineResult( PlatformVerificationCheck.STATUS_OK ) );
+        mapPipeline.put( "g:clean", pipelineResult( PlatformVerificationCheck.STATUS_OK ) );
+        mapPipeline.put( "g:other", pipelineResult( PlatformVerificationCheck.STATUS_TO_FIX ) );
+        PlatformPrecheckService.mergeVerifications( mapItems, mapPipeline );
+
+        assertEquals( PlatformVerificationCheck.STATUS_WARNING, mapItems.get( "g:warned" ).getStatus( ) );
+        assertEquals( 2, mapItems.get( "g:warned" ).getChecks( ).size( ) );
+        assertEquals( 4, mapItems.get( "g:warned" ).getStep( ) );
+        assertEquals( "abc1234", mapItems.get( "g:warned" ).getCommit( ) );
+        assertEquals( PlatformVerificationCheck.STATUS_OK, mapItems.get( "g:clean" ).getStatus( ) );
+        assertEquals( 2, mapItems.get( "g:clean" ).getStep( ) );
+        assertEquals( PlatformVerificationCheck.STATUS_TO_FIX, mapItems.get( "g:other" ).getStatus( ) );
+
+        assertEquals( "pipeline", PlatformPrecheckService.mergeReports( null, "pipeline" ) );
+        assertEquals( "census\n\npipeline", PlatformPrecheckService.mergeReports( "census", "pipeline" ) );
+    }
+
+    /**
+     * The step 0 can be launched when never launched or finished, not while it runs.
+     */
+    @Test
+    public void testCanLaunch( )
+    {
+        PlatformRelease campaign = new PlatformRelease( );
+        assertTrue( PlatformPrecheckService.canLaunch( campaign ) );
+        PlatformReleaseStep step = new PlatformReleaseStep( );
+        step.setStepNumber( PlatformPrecheckService.STEP_NUMBER );
+        step.setStatus( PlatformReleaseStatus.RUNNING );
+        campaign.setPrecheckStep( step );
+        assertFalse( PlatformPrecheckService.canLaunch( campaign ) );
+        assertEquals( step, PlatformReleaseService.getStep( campaign, PlatformPrecheckService.STEP_NUMBER ) );
+        step.setStatus( PlatformReleaseStatus.READY );
+        assertTrue( PlatformPrecheckService.canLaunch( campaign ) );
+    }
+
+    /**
+     * Builds a check.
+     *
+     * @param strCheck
+     *            the check name
+     * @param strStatus
+     *            the status
+     * @return the check
+     */
+    private static PlatformVerificationCheck check( String strCheck, String strStatus )
+    {
+        PlatformVerificationCheck check = new PlatformVerificationCheck( );
+        check.setCheck( strCheck );
+        check.setStatus( strStatus );
+
+        return check;
+    }
+
+    /**
+     * Builds the verification of a resource by the pipeline : tests and build with the given status.
+     *
+     * @param strStatus
+     *            the status of the build check and of the resource
+     * @return the verification
+     */
+    private static PlatformResourceVerification pipelineResult( String strStatus )
+    {
+        PlatformResourceVerification verification = new PlatformResourceVerification( );
+        verification.setCommit( "abc1234" );
+        verification.setVersion( "1.0.5-SNAPSHOT" );
+        verification.setStatus( strStatus );
+        verification.getChecks( ).add( check( "build", strStatus ) );
+
+        return verification;
     }
 }

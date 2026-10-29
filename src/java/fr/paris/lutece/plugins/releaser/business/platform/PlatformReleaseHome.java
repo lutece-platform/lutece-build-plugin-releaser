@@ -109,7 +109,7 @@ public final class PlatformReleaseHome
     }
 
     /**
-     * Returns an instance of a platformRelease whose identifier is specified in parameter, with its steps loaded
+     * Returns an instance of a platformRelease whose identifier is specified in parameter, with its steps and its step 0 loaded
      *
      * @param nKey
      *            The platformRelease primary key
@@ -122,6 +122,7 @@ public final class PlatformReleaseHome
         if ( platformRelease != null )
         {
             platformRelease.setSteps( PlatformReleaseStepHome.findByPlatformRelease( nKey ) );
+            platformRelease.setPrecheckStep( PlatformReleaseStepHome.findByPlatformReleaseAndNumber( nKey, 0 ) );
         }
 
         return platformRelease;

@@ -63,6 +63,7 @@ import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepDefinition
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformUntestedDecision;
 import fr.paris.lutece.plugins.releaser.service.ReleasePreparationService;
 import fr.paris.lutece.plugins.releaser.service.SiteService;
+import fr.paris.lutece.plugins.releaser.service.platform.PlatformPrecheckService;
 import fr.paris.lutece.plugins.releaser.service.platform.PlatformReleaseService;
 import fr.paris.lutece.plugins.releaser.service.platform.PlatformStepTask;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
@@ -79,6 +80,7 @@ import fr.paris.lutece.portal.util.mvc.admin.MVCAdminJspBean;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.View;
+import fr.paris.lutece.portal.util.mvc.utils.MVCUtils;
 import fr.paris.lutece.util.json.AbstractJsonResponse;
 import fr.paris.lutece.util.json.ErrorJsonResponse;
 import fr.paris.lutece.util.json.JsonResponse;
@@ -125,6 +127,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String VIEW_STEP_STATUS_JSON = "stepStatusJson";
     private static final String VIEW_EXPORT_CSV = "exportCsv";
     private static final String VIEW_STEP_DEFINITIONS = "stepDefinitions";
+    private static final String VIEW_PRECHECK = "precheck";
 
     // Actions
     private static final String ACTION_CREATE_PLATFORM_RELEASE = "createPlatformRelease";
@@ -157,6 +160,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String ACTION_DESELECT_SNAPSHOT_COMPONENTS = "deselectSnapshotComponents";
     private static final String ACTION_ACCEPT_UNTESTED_COMMITS = "acceptUntestedCommits";
     private static final String ACTION_CANCEL_UNTESTED_DECISION = "cancelUntestedDecision";
+    private static final String ACTION_LAUNCH_PRECHECK = "launchPrecheck";
 
     // Templates
     private static final String TEMPLATE_MANAGE_PLATFORM_RELEASES = "/admin/plugins/releaser/platform/manage_platform_releases.html";
@@ -164,6 +168,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String TEMPLATE_PLATFORM_RELEASE = "/admin/plugins/releaser/platform/platform_release.html";
     private static final String TEMPLATE_PREPARE_STEP = "/admin/plugins/releaser/platform/prepare_platform_step.html";
     private static final String TEMPLATE_STEP_DEFINITIONS = "/admin/plugins/releaser/platform/manage_step_definitions.html";
+    private static final String TEMPLATE_PRECHECK = "/admin/plugins/releaser/platform/platform_precheck.html";
 
     // Page titles
     private static final String PROPERTY_PAGE_TITLE_MANAGE = "releaser.manage_platform_releases.pageTitle";
@@ -171,6 +176,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String PROPERTY_PAGE_TITLE_PLATFORM_RELEASE = "releaser.platform_release.pageTitle";
     private static final String PROPERTY_PAGE_TITLE_PREPARE_STEP = "releaser.prepare_platform_step.pageTitle";
     private static final String PROPERTY_PAGE_TITLE_STEP_DEFINITIONS = "releaser.manage_step_definitions.pageTitle";
+    private static final String PROPERTY_PAGE_TITLE_PRECHECK = "releaser.platform_precheck.pageTitle";
 
     // Marks
     private static final String MARK_PLATFORM_RELEASE_LIST = "platform_release_list";
@@ -201,6 +207,12 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String MARK_BRANCH_HEADS = "branch_heads";
     private static final String MARK_CONFIRM_RESOURCES = "confirm_resources";
     private static final String MARK_UNTESTED_DECISIONS = "untested_decisions";
+    private static final String MARK_PRECHECK_STEP = "precheck_step";
+    private static final String MARK_PRECHECK_SUMMARY = "precheck_summary";
+    private static final String MARK_PRECHECK_REPORT = "precheck_report";
+    private static final String MARK_PRECHECK_ORPHAN = "precheck_orphan";
+    private static final String MARK_PRECHECK_RESOURCES = "precheck_resources";
+    private static final String MARK_CAN_LAUNCH_PRECHECK = "can_launch_precheck";
     private static final String MARK_CORE_BRANCHES = "core_branches";
     private static final String MARK_STEP_REPORTS = "step_reports";
     private static final String MARK_MASTER_BRANCH = "master_branch";
@@ -236,6 +248,8 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String INFO_NOTHING_TO_RETEST = "releaser.info.platformRelease.nothingToRetest";
     private static final String INFO_EXPORT_VERIFIED = "releaser.info.platformRelease.exportVerified";
     private static final String INFO_STEP_DEFINITIONS_SAVED = "releaser.info.platformRelease.stepDefinitionsSaved";
+    private static final String INFO_PRECHECK_LAUNCHED = "releaser.info.platformRelease.precheckLaunched";
+    private static final String INFO_PRECHECK_CENSUS_ONLY = "releaser.info.platformRelease.precheckCensusOnly";
 
     private static final String VALIDATION_ATTRIBUTES_PREFIX = "releaser.model.entity.platformRelease.attribute.";
     private static final String VALIDATION_STEP_DEFINITION_PREFIX = "releaser.model.entity.platformStepDefinition.attribute.";
@@ -480,6 +494,26 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         model.put( MARK_STEP_VERIFICATIONS, mapStepVerifications );
         model.put( MARK_ORPHAN_STEPS, listOrphan );
         model.put( MARK_VERIFYING_STEPS, listVerifying );
+        PlatformReleaseStep precheck = campaign.getPrecheckStep( );
+        model.put( MARK_CAN_LAUNCH_PRECHECK, PlatformPrecheckService.canLaunch( campaign ) );
+        if ( precheck != null )
+        {
+            model.put( MARK_PRECHECK_STEP, precheck );
+            model.put( MARK_PRECHECK_ORPHAN, precheck.getStatus( ) == PlatformReleaseStatus.RUNNING && !PlatformReleaseService.isStepFollowed( precheck ) );
+            String strPrecheckReport = PlatformReleaseService.getStepReport( campaign, PlatformPrecheckService.STEP_NUMBER );
+            if ( strPrecheckReport != null )
+            {
+                model.put( MARK_PRECHECK_REPORT, strPrecheckReport );
+            }
+            String strPrecheckDate = PlatformReleaseService.getVerificationDate( precheck );
+            if ( strPrecheckDate != null )
+            {
+                Map<String, Object> mapSummary = new LinkedHashMap<>( );
+                mapSummary.put( MARK_VERIFICATION_DATE, strPrecheckDate );
+                mapSummary.put( MARK_VERIFICATION_COUNTS, PlatformReleaseService.countVerificationStatuses( PlatformReleaseService.getRawVerificationStatuses( precheck ) ) );
+                model.put( MARK_PRECHECK_SUMMARY, mapSummary );
+            }
+        }
         model.put( MARK_OPEN_AUTH_STEP, request.getParameter( PARAMETER_AUTH ) );
         RepositoryType stepRepositoryType = PlatformReleaseService.getStepRepositoryType( ReleaserUtils.convertStringToInt( request.getParameter( PARAMETER_AUTH ) ) );
         putRepositoryTypeMarks( model, stepRepositoryType != null ? Arrays.asList( stepRepositoryType ) : Arrays.asList( RepositoryType.values( ) ) );
@@ -505,8 +539,92 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         }
         ReleaserUtils.populateReleaserUser( request, user );
         ReleaserUtils.setReleaserUser( request, user );
+        if ( getStepNumber( request ) == PlatformPrecheckService.STEP_NUMBER )
+        {
+            // Relative to the JSP, as getActionUrl already holds its path
+            UrlItem url = new UrlItem( getControllerJsp( ) );
+            url.addParameter( MVCUtils.PARAMETER_ACTION, ACTION_LAUNCH_PRECHECK );
+            url.addParameter( PARAMETER_ID, getCampaignId( request ) );
+            return redirect( request, url.getUrl( ) );
+        }
 
         return redirectToStep( request, VIEW_PREPARE_STEP, getCampaignId( request ), getStepNumber( request ), PARAMETER_RELOAD, "1" );
+    }
+
+    /**
+     * Launches the step 0 : census of the SNAPSHOT of the campaign, then their test by the step pipeline. Asks for the Git credentials first.
+     *
+     * @param request
+     *            the request
+     * @return the campaign page, or the result of the step 0 when the census left nothing to test
+     * @throws AccessDeniedException
+     *             if the user may not manage the campaign
+     */
+    @Action( ACTION_LAUNCH_PRECHECK )
+    public String doLaunchPrecheck( HttpServletRequest request ) throws AccessDeniedException
+    {
+        PlatformRelease campaign = getCampaign( request );
+        if ( campaign == null )
+        {
+            return redirectView( request, VIEW_MANAGE_PLATFORM_RELEASES );
+        }
+        checkAuthorized( request, campaign );
+
+        ReleaserUser user = ReleaserUtils.getReleaserUser( request, getLocale( ) );
+        if ( user == null )
+        {
+            return redirectToStep( request, VIEW_PLATFORM_RELEASE, campaign.getId( ), PlatformPrecheckService.STEP_NUMBER, PARAMETER_AUTH,
+                    Integer.toString( PlatformPrecheckService.STEP_NUMBER ) );
+        }
+        try
+        {
+            if ( !PlatformPrecheckService.launch( campaign, user, getLocale( ) ) )
+            {
+                addInfo( INFO_PRECHECK_CENSUS_ONLY, getLocale( ) );
+                return redirect( request, VIEW_PRECHECK, PARAMETER_ID, campaign.getId( ) );
+            }
+            addInfo( INFO_PRECHECK_LAUNCHED, getLocale( ) );
+        }
+        catch( IOException | AppException e )
+        {
+            AppLogService.error( "Releaser : unable to launch the step 0 of campaign " + campaign.getId( ), e );
+            addError( e.getMessage( ) );
+        }
+
+        return redirect( request, VIEW_PLATFORM_RELEASE, PARAMETER_ID, campaign.getId( ) );
+    }
+
+    /**
+     * Shows the result of the step 0 : every SNAPSHOT of the campaign with its step, its checks and their status.
+     *
+     * @param request
+     *            the request
+     * @return the page
+     * @throws AccessDeniedException
+     *             if the user may not manage the campaign
+     */
+    @View( VIEW_PRECHECK )
+    public String getPrecheck( HttpServletRequest request ) throws AccessDeniedException
+    {
+        PlatformRelease campaign = getCampaign( request );
+        if ( campaign == null )
+        {
+            return redirectView( request, VIEW_MANAGE_PLATFORM_RELEASES );
+        }
+        checkAuthorized( request, campaign );
+
+        PlatformReleaseStep step = campaign.getPrecheckStep( );
+        Map<String, Object> model = getModel( );
+        model.put( MARK_PLATFORM_RELEASE, campaign );
+        model.put( MARK_STEP_DEFINITIONS, PlatformStepDefinitionHome.findAll( ) );
+        model.put( MARK_PRECHECK_STEP, step );
+        model.put( MARK_VERIFICATIONS, PlatformReleaseService.getStepVerifications( step ) );
+        model.put( MARK_VERIFICATION_DATE, PlatformReleaseService.getVerificationDate( step ) );
+        model.put( MARK_VERIFICATION_COUNTS, PlatformReleaseService.countVerificationStatuses( PlatformReleaseService.getRawVerificationStatuses( step ) ) );
+        model.put( MARK_PRECHECK_RESOURCES, PlatformPrecheckService.getPlanResources( step ) );
+        model.put( MARK_CAN_LAUNCH_PRECHECK, PlatformPrecheckService.canLaunch( campaign ) );
+
+        return getPage( PROPERTY_PAGE_TITLE_PRECHECK, TEMPLATE_PRECHECK, model );
     }
 
     /**

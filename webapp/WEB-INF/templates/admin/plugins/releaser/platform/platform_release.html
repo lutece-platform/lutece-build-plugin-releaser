@@ -41,6 +41,59 @@
 				</tr>
 			</thead>
 			<tbody>
+				<tr id="step-row-0" data-status="${(precheck_step.status)!'NONE'}">
+					<td><strong>0</strong></td>
+					<td>
+						<strong>#i18n{releaser.platform_release.precheckName}</strong><br>
+						<small class="text-muted">PRECHECK</small>
+					</td>
+					<td><small class="text-muted">#i18n{releaser.platform_release.precheckScope}</small></td>
+					<td>
+						<#if precheck_step??>
+							<@platformStatusLabel status=precheck_step.status />
+							<#if precheck_step.jenkinsResult?has_content><br><small class="text-muted">${precheck_step.jenkinsResult}</small></#if>
+						</#if>
+						<#if precheck_summary??>
+							<br><small class="<#if (precheck_summary.verification_counts["TO_FIX"] > 0)>text-danger<#elseif (precheck_summary.verification_counts["WARNING"] > 0)>text-warning<#else>text-success</#if>"><i class="fa fa-stethoscope"></i> #i18n{releaser.platform_release.precheckTestedOn} ${precheck_summary.verification_date?substring(0, 16)} : ${precheck_summary.verification_counts["TO_FIX"]} #i18n{releaser.prepare_platform_step.countToFix}, ${precheck_summary.verification_counts["WARNING"]} #i18n{releaser.prepare_platform_step.countWarning}</small>
+						</#if>
+					</td>
+					<td>
+						<#if precheck_step?? && precheck_step.jenkinsBuildUrl?has_content>
+							<a href="${precheck_step.jenkinsBuildUrl}" target="_blank" title="Jenkins"><i class="fa fa-external-link"></i> #${precheck_step.jenkinsBuildNumber}</a>
+						</#if>
+						<#if precheck_report??>
+							<br><a class="button transition border-lightblue small" href="#" data-toggle="modal" data-target="#modalStepReport0" title="#i18n{releaser.platform_release.buttonReportHelp}"><i class="fa fa-file-text-o fa-fw"></i> #i18n{releaser.platform_release.buttonReport}</a>
+						</#if>
+					</td>
+					<td>
+						<small>
+							<#if precheck_step?? && precheck_step.dateBegin??>${precheck_step.dateBegin?datetime}</#if>
+							<#if precheck_step?? && precheck_step.dateEnd??><br>${precheck_step.dateEnd?datetime}</#if>
+						</small>
+					</td>
+					<td>
+						<#if can_launch_precheck!false>
+							<a class="button transition border-orange small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=launchPrecheck&id=${platform_release.id}" title="#i18n{releaser.platform_release.buttonPrecheckHelp}" onclick="return confirm('#i18n{releaser.platform_release.confirmPrecheck}');">
+								<i class="fa fa-stethoscope fa-fw"></i> #i18n{releaser.platform_release.buttonPrecheck}
+							</a>
+						</#if>
+						<#if precheck_summary??>
+							<a class="button transition border-lightblue small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?view=precheck&id=${platform_release.id}" title="#i18n{releaser.platform_release.buttonPrecheckResultHelp}">
+								<i class="fa fa-list fa-fw"></i> #i18n{releaser.platform_release.buttonPrecheckResult}
+							</a>
+						</#if>
+						<#if precheck_step?? && precheck_step.status == "RUNNING">
+							<#if precheck_orphan!false>
+							<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> #i18n{releaser.platform_release.followLost}</span>
+							<a class="button transition border-red small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=rearmStep&id=${platform_release.id}&step=0" title="#i18n{releaser.platform_release.buttonRearmHelp}">
+								<i class="fa fa-refresh fa-fw"></i> #i18n{releaser.platform_release.buttonRearm}
+							</a>
+							<#else>
+							<span class="text-info"><i class="fa fa-refresh fa-spin"></i> #i18n{releaser.platform_release.running}</span>
+							</#if>
+						</#if>
+					</td>
+				</tr>
 			<#list platform_release.steps as step>
 				<#assign definition = step_definitions[step.stepNumber - 1] />
 				<#assign isPlatformStarters = ( step.stepNumber == 5 ) />
@@ -133,6 +186,24 @@
 </div>
 </#if>
 </#list>
+<#if precheck_report??>
+<div class="modal fade" id="modalStepReport0" tabindex="-1" role="dialog" aria-labelledby="modalStepReportLabel0">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="modalStepReportLabel0"><i class="fa fa-file-text-o"></i> #i18n{releaser.platform_release.reportTitle} 0 - #i18n{releaser.platform_release.precheckName}<#if precheck_step.jenkinsResult?has_content> <small class="text-muted">${precheck_step.jenkinsResult}</small></#if></h4>
+			</div>
+			<div class="modal-body">
+				<pre style="white-space:pre-wrap;max-height:60vh;overflow:auto;">${precheck_report?html}</pre>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Fermer</button>
+			</div>
+		</div>
+	</div>
+</div>
+</#if>
 <div class="modal fade" id="modalAuthPlatform" tabindex="-1" role="dialog" aria-labelledby="modalAuthPlatformLabel">
 	<div class="modal-dialog vlogin" role="document">
 		<@tform name='authenticate_platform' class='form' action='jsp/admin/plugins/releaser/ManagePlatformRelease.jsp'>

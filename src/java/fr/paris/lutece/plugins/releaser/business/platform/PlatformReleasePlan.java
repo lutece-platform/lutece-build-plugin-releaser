@@ -284,14 +284,14 @@ public class PlatformReleasePlan implements Serializable
     }
 
     /**
-     * Whether the pipeline must verify every resource without committing nor pushing anything.
+     * Whether the pipeline must verify every resource without committing nor pushing anything : verification of a step or step 0.
      *
      * @return true for a verification
      */
     @JsonIgnore
     public boolean isVerify( )
     {
-        return _mode == PlatformStepMode.VERIFY;
+        return _mode == PlatformStepMode.VERIFY || _mode == PlatformStepMode.PRECHECK;
     }
 
     /**

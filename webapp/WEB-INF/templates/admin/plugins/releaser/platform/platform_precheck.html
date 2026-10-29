@@ -1,0 +1,129 @@
+<#include "../releaser_util.html" />
+<#function precheckLabelClass status>
+	<#switch status>
+		<#case "OK"><#return "label-success">
+		<#case "TO_FIX"><#return "label-danger">
+		<#case "WARNING"><#return "label-warning">
+		<#default><#return "label-default">
+	</#switch>
+</#function>
+<section class="content-header">
+	<h1>
+		<a href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?view=platformRelease&id=${platform_release.id}" title="${platform_release.name}">${platform_release.name}</a>
+		<small class="hidden-xs hidden-sm">#i18n{releaser.platform_precheck.title}</small>
+	</h1>
+</section>
+<section class="content">
+<div class="app-wrapper app-cluster">
+<@messages infos=infos />
+<@messages errors=errors />
+<div class="box box-info box-solid">
+	<div class="box-header">
+		<h3 class="box-title">
+			<i class="fa fa-stethoscope"></i> #i18n{releaser.platform_precheck.title}
+			<span class="label label-info">#i18n{releaser.platform_release.type.${platform_release.releaseType}}</span>
+			<span class="label label-default">Core ${platform_release.coreMajor}</span>
+			<#if precheck_step??><@platformStatusLabel status=precheck_step.status /></#if>
+		</h3>
+		<div class="box-tools">
+			<#if can_launch_precheck!false>
+			<a class="button transition border-orange small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=launchPrecheck&id=${platform_release.id}" title="#i18n{releaser.platform_release.buttonPrecheckHelp}" onclick="return confirm('#i18n{releaser.platform_release.confirmPrecheck}');">
+				<i class="fa fa-stethoscope fa-fw"></i> #i18n{releaser.platform_release.buttonPrecheck}
+			</a>
+			</#if>
+			<a class="button transition border-blue small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?view=platformRelease&id=${platform_release.id}" title="#i18n{releaser.platform_precheck.buttonBack}">
+				<i class="fa fa-arrow-left fa-fw"></i> #i18n{releaser.platform_precheck.buttonBack}
+			</a>
+		</div>
+	</div>
+	<div class="box-body">
+		<#if verification_date??>
+		<p>
+			#i18n{releaser.platform_release.precheckTestedOn} ${verification_date?substring(0, 16)} :
+			<span class="label label-success">${verification_counts["OK"]} #i18n{releaser.prepare_platform_step.countVerified}</span>
+			<span class="label label-danger">${verification_counts["TO_FIX"]} #i18n{releaser.prepare_platform_step.countToFix}</span>
+			<span class="label label-warning">${verification_counts["WARNING"]} #i18n{releaser.prepare_platform_step.countWarning}</span>
+			<span class="label label-default">${verification_counts["NOT_VERIFIED"]} #i18n{releaser.prepare_platform_step.countNotVerified}</span>
+		</p>
+		<#if precheck_step?? && precheck_step.status == "RUNNING">
+		<p class="text-info"><i class="fa fa-refresh fa-spin"></i> #i18n{releaser.platform_precheck.running}</p>
+		</#if>
+		<#else>
+		<p class="text-muted">#i18n{releaser.platform_precheck.never}</p>
+		</#if>
+	</div>
+	<#if verifications?has_content>
+	<div class="box-body table-responsive no-padding">
+		<table class="table table-hover table-condensed">
+			<thead>
+				<tr>
+					<th>#i18n{releaser.platform_release.columnStep}</th>
+					<th>#i18n{releaser.platform_precheck.columnResource}</th>
+					<th>#i18n{releaser.platform_precheck.columnVersion}</th>
+					<th>#i18n{releaser.platform_precheck.columnBranch}</th>
+					<th>#i18n{releaser.platform_release.columnStatus}</th>
+				</tr>
+			</thead>
+			<tbody>
+			<#list verifications?keys as coordinates>
+				<#assign v = verifications[coordinates] />
+				<#assign status = v.status!"NOT_VERIFIED" />
+				<tr>
+					<td><strong>${v.step}</strong><#if (v.step > 0) && step_definitions[v.step - 1]??> <small class="text-muted">${step_definitions[v.step - 1].name}</small></#if></td>
+					<td><strong>${coordinates?keep_after(":")}</strong><br><small class="text-muted">${coordinates?keep_before(":")}</small></td>
+					<td>${v.version!}<#if (v.commit!"")?length gt 7><br><small class="text-muted">${v.commit?substring(0, 7)}</small></#if></td>
+					<td><#if precheck_resources[coordinates]??>${precheck_resources[coordinates].branch!}</#if></td>
+					<td>
+						<#if v.checks?has_content>
+						<a href="#" data-toggle="modal" data-target="#modalPrecheck-${coordinates?replace('[^A-Za-z0-9]', '-', 'r')}" class="label ${precheckLabelClass(status)}" title="#i18n{releaser.prepare_platform_step.verificationDetailHelp}">#i18n{releaser.prepare_platform_step.verification.${status}}</a>
+						<#else>
+						<span class="label ${precheckLabelClass(status)}">#i18n{releaser.prepare_platform_step.verification.${status}}</span>
+						</#if>
+					</td>
+				</tr>
+			</#list>
+			</tbody>
+		</table>
+	</div>
+	</#if>
+</div>
+</div>
+</section>
+<#list verifications?keys as coordinates>
+<#assign v = verifications[coordinates] />
+<#if v.checks?has_content>
+<div class="modal fade" id="modalPrecheck-${coordinates?replace('[^A-Za-z0-9]', '-', 'r')}" tabindex="-1" role="dialog">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title"><i class="fa fa-stethoscope"></i> ${coordinates?keep_after(":")} ${v.version!} <span class="label ${precheckLabelClass(v.status!"")}">#i18n{releaser.prepare_platform_step.verification.${v.status!"NOT_VERIFIED"}}</span></h4>
+			</div>
+			<div class="modal-body">
+				<table class="table table-condensed">
+					<tbody>
+					<#list v.checks as check>
+						<tr>
+							<td>#i18n{releaser.prepare_platform_step.check.${check.check}}</td>
+							<td><span class="label ${precheckLabelClass(check.status!"")}">#i18n{releaser.prepare_platform_step.verification.${check.status!"NOT_VERIFIED"}}</span></td>
+						</tr>
+						<#if (check.status!"OK") != "OK" && check.details?has_content>
+						<tr><td colspan="2"><pre style="white-space:pre-wrap;max-height:30vh;overflow:auto;">${check.details?html}</pre></td></tr>
+						</#if>
+					</#list>
+					</tbody>
+				</table>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">#i18n{releaser.prepare_platform_step.buttonClose}</button>
+			</div>
+		</div>
+	</div>
+</div>
+</#if>
+</#list>
+<script>
+$(function() {
+	$(".button").tooltip();
+});
+</script>

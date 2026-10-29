@@ -481,6 +481,19 @@ public class PlatformStepTask implements Runnable
     }
 
     /**
+     * Whether a plan goes to the lutece-platform pipeline (last step) rather than to the step pipeline. The plan of the step 0 has no step code
+     * and goes to the step pipeline.
+     *
+     * @param plan
+     *            the plan
+     * @return true for the lutece-platform pipeline
+     */
+    static boolean isPlatformPipeline( PlatformReleasePlan plan )
+    {
+        return plan.getStepCode( ) != null && plan.getStepCode( ).getExecutor( ) == PlatformStepCode.Executor.PLATFORM_PIPELINE;
+    }
+
+    /**
      * Returns the Jenkins job of a step : the generic step pipeline, or the existing lutece-platform pipeline for the last step, followed by
      * the release branch of the aggregate when that pipeline is a multibranch job.
      *
@@ -490,7 +503,7 @@ public class PlatformStepTask implements Runnable
      */
     static String getJobPath( PlatformReleasePlan plan )
     {
-        if ( plan.getStepCode( ).getExecutor( ) != PlatformStepCode.Executor.PLATFORM_PIPELINE )
+        if ( !isPlatformPipeline( plan ) )
         {
             return AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_PLATFORM_JENKINS_STEP_JOB );
         }
@@ -537,7 +550,7 @@ public class PlatformStepTask implements Runnable
     {
         Map<String, String> mapParams = new LinkedHashMap<>( );
 
-        if ( plan.getStepCode( ).getExecutor( ) != PlatformStepCode.Executor.PLATFORM_PIPELINE )
+        if ( !isPlatformPipeline( plan ) )
         {
             mapParams.put( PARAM_RELEASE_PLAN, MapperJsonUtil.getJson( plan ) );
             return mapParams;
@@ -619,7 +632,7 @@ public class PlatformStepTask implements Runnable
      */
     private PlatformStepResult readStepResult( IJenkinsService jenkins, JenkinsBuild build )
     {
-        if ( _plan.getStepCode( ).getExecutor( ) == PlatformStepCode.Executor.PLATFORM_PIPELINE )
+        if ( isPlatformPipeline( _plan ) )
         {
             PlatformStepResult result = buildResultFromPlan( _plan );
             String strReport = readPlatformReport( jenkins, build );
@@ -651,7 +664,7 @@ public class PlatformStepTask implements Runnable
      */
     private String readReportText( IJenkinsService jenkins, JenkinsBuild build )
     {
-        if ( _plan.getStepCode( ).getExecutor( ) == PlatformStepCode.Executor.PLATFORM_PIPELINE )
+        if ( isPlatformPipeline( _plan ) )
         {
             return readPlatformReport( jenkins, build );
         }
@@ -694,7 +707,7 @@ public class PlatformStepTask implements Runnable
      */
     private PlatformStepResult readPartialResult( IJenkinsService jenkins, JenkinsBuild build )
     {
-        if ( _plan.getStepCode( ).getExecutor( ) == PlatformStepCode.Executor.PLATFORM_PIPELINE )
+        if ( isPlatformPipeline( _plan ) )
         {
             String strReport = readPlatformReport( jenkins, build );
             if ( strReport == null )

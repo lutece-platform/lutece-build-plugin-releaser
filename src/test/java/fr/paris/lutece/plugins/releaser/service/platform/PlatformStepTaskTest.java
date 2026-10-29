@@ -77,6 +77,30 @@ public class PlatformStepTaskTest
     }
 
     /**
+     * The plan of the step 0 has no step code : it goes to the step pipeline as a verification, the whole plan in a single parameter.
+     *
+     * @throws IOException
+     *             on JSON error
+     */
+    @Test
+    public void testPrecheckPlan( ) throws IOException
+    {
+        PlatformReleasePlan plan = new PlatformReleasePlan( );
+        plan.setStep( PlatformPrecheckService.STEP_NUMBER );
+        plan.setMode( PlatformStepMode.PRECHECK );
+        assertFalse( PlatformStepTask.isPlatformPipeline( plan ) );
+        assertTrue( plan.isVerify( ) );
+        assertFalse( plan.isDryRun( ) );
+
+        Map<String, String> mapParams = PlatformStepTask.buildJobParameters( plan );
+        assertEquals( 1, mapParams.size( ) );
+        assertTrue( mapParams.get( PlatformStepTask.PARAM_RELEASE_PLAN ).contains( "\"mode\":\"PRECHECK\"" ) );
+        assertTrue( MapperJsonUtil.parse( mapParams.get( PlatformStepTask.PARAM_RELEASE_PLAN ), PlatformReleasePlan.class ).isVerify( ) );
+
+        assertTrue( PlatformStepTask.isPlatformPipeline( plan( PlatformStepCode.PLATFORM_STARTERS, PlatformReleaseType.STABLE, "8.0.2", "8.0.3-SNAPSHOT", false ) ) );
+    }
+
+    /**
      * A verification plan carries its mode and a false dryRun for the pipeline, and reads back as a verification whatever the order of the
      * fields ; a plan of before the modes reads its dryRun flag.
      *

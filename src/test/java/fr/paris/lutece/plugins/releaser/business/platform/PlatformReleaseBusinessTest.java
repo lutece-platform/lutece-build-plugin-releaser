@@ -119,6 +119,7 @@ public class PlatformReleaseBusinessTest extends LuteceTestCase
         assertEquals( 1, listSteps.get( 0 ).getStepNumber( ) );
         assertEquals( 2, listSteps.get( 1 ).getStepNumber( ) );
         assertEquals( step2.getId( ), listSteps.get( 1 ).getId( ) );
+        assertEquals( step0.getId( ), withSteps.getPrecheckStep( ).getId( ) );
         assertEquals( step0.getId( ), PlatformReleaseStepHome.findByPlatformReleaseAndNumber( platformRelease.getId( ), 0 ).getId( ) );
         assertEquals( step2.getId( ), PlatformReleaseStepHome.findByPlatformReleaseAndNumber( platformRelease.getId( ), 2 ).getId( ) );
         assertNull( PlatformReleaseStepHome.findByPlatformReleaseAndNumber( platformRelease.getId( ), 3 ) );

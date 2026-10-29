@@ -467,6 +467,55 @@ public class PlatformReleaseServiceTest
     }
 
     /**
+     * The tests passed at the verification of the step win ; otherwise those of the step 0 on the SNAPSHOT version are reused.
+     */
+    @Test
+    public void testVerifiedCommitFromPrecheck( )
+    {
+        PlatformPlanResource resource = new PlatformPlanResource( );
+        resource.setGroupId( "g" );
+        resource.setArtifactId( "a" );
+        resource.setCurrentVersion( "1.0.5-SNAPSHOT" );
+        resource.setTargetVersion( "1.0.5" );
+        Map<String, PlatformResourceVerification> mapVerifications = new LinkedHashMap<>( );
+        Map<String, PlatformResourceVerification> mapPrechecks = new LinkedHashMap<>( );
+        assertNull( PlatformReleaseService.getVerifiedCommit( resource, mapVerifications, mapPrechecks ) );
+
+        mapPrechecks.put( "g:a", testedVerification( "1.0.5-SNAPSHOT", "aaa1111" ) );
+        assertEquals( "aaa1111", PlatformReleaseService.getVerifiedCommit( resource, mapVerifications, mapPrechecks ) );
+
+        mapVerifications.put( "g:a", testedVerification( "1.0.5", "bbb2222" ) );
+        assertEquals( "bbb2222", PlatformReleaseService.getVerifiedCommit( resource, mapVerifications, mapPrechecks ) );
+
+        mapVerifications.clear( );
+        mapPrechecks.put( "g:a", testedVerification( "1.0.4-SNAPSHOT", "aaa1111" ) );
+        assertNull( PlatformReleaseService.getVerifiedCommit( resource, mapVerifications, mapPrechecks ) );
+    }
+
+    /**
+     * Builds a verification whose tests passed.
+     *
+     * @param strVersion
+     *            the verified version
+     * @param strCommit
+     *            the verified commit
+     * @return the verification
+     */
+    private static PlatformResourceVerification testedVerification( String strVersion, String strCommit )
+    {
+        PlatformResourceVerification verification = new PlatformResourceVerification( );
+        verification.setStatus( PlatformVerificationCheck.STATUS_OK );
+        verification.setVersion( strVersion );
+        verification.setCommit( strCommit );
+        PlatformVerificationCheck tests = new PlatformVerificationCheck( );
+        tests.setCheck( "tests" );
+        tests.setStatus( PlatformVerificationCheck.STATUS_OK );
+        verification.getChecks( ).add( tests );
+
+        return verification;
+    }
+
+    /**
      * A resource with commits after its last beta or RC blocks the release until a decision is taken on its verified commit.
      *
      * @throws IOException

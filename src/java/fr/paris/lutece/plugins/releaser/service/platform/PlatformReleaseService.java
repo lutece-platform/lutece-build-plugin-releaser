@@ -270,7 +270,7 @@ public final class PlatformReleaseService
     }
 
     /**
-     * Returns a step of a campaign.
+     * Returns a step of a campaign, the step 0 included.
      *
      * @param campaign
      *            the campaign, loaded with its steps
@@ -280,6 +280,10 @@ public final class PlatformReleaseService
      */
     public static PlatformReleaseStep getStep( PlatformRelease campaign, int nStepNumber )
     {
+        if ( nStepNumber == PlatformPrecheckService.STEP_NUMBER )
+        {
+            return campaign.getPrecheckStep( );
+        }
         for ( PlatformReleaseStep step : campaign.getSteps( ) )
         {
             if ( step.getStepNumber( ) == nStepNumber )
@@ -374,7 +378,9 @@ public final class PlatformReleaseService
      */
     public static void launchStep( PlatformRelease campaign, int nStepNumber, PlatformReleasePlan plan, ReleaserUser user ) throws IOException
     {
-        if ( !canPrepareStep( campaign, nStepNumber ) )
+        boolean bLaunchable = nStepNumber == PlatformPrecheckService.STEP_NUMBER ? PlatformPrecheckService.canLaunch( campaign )
+                : canPrepareStep( campaign, nStepNumber );
+        if ( !bLaunchable )
         {
             throw new AppException( "Platform step " + nStepNumber + " cannot be launched" );
         }
@@ -530,8 +536,26 @@ public final class PlatformReleaseService
         step.setDateEnd( null );
         PlatformReleaseStepHome.update( step );
 
-        campaign.setStatus( PlatformReleaseStatus.RUNNING );
-        touch( campaign );
+        updateCampaignStatus( campaign, step, PlatformReleaseStatus.RUNNING );
+    }
+
+    /**
+     * Saves the status of a campaign after an event of one of its steps. The step 0 runs beside the release steps and never changes it.
+     *
+     * @param campaign
+     *            the campaign
+     * @param step
+     *            the step
+     * @param status
+     *            the new status of the campaign
+     */
+    private static void updateCampaignStatus( PlatformRelease campaign, PlatformReleaseStep step, PlatformReleaseStatus status )
+    {
+        if ( step.getStepNumber( ) != PlatformPrecheckService.STEP_NUMBER )
+        {
+            campaign.setStatus( status );
+            touch( campaign );
+        }
     }
 
     /**
@@ -580,14 +604,13 @@ public final class PlatformReleaseService
         step.setDateEnd( new Timestamp( System.currentTimeMillis( ) ) );
         PlatformReleaseStepHome.update( step );
 
-        campaign.setStatus( PlatformReleaseStatus.READY );
-        touch( campaign );
+        updateCampaignStatus( campaign, step, PlatformReleaseStatus.READY );
     }
 
     /**
      * Ends a verification : the step goes back to READY like after a simulation, the verifications read from the pipeline replace the previous
      * ones of the same resources and keep the others (a retest of some components only), the report of the verification is the report of
-     * the step.
+     * the step. For the step 0, the checks of the pipeline are added to the instant checks of the census and its report follows the census one.
      *
      * @param campaign
      *            the campaign, loaded with its steps
@@ -612,21 +635,28 @@ public final class PlatformReleaseService
         {
             result = new PlatformStepResult( );
         }
+        boolean bPrecheck = step.getStepNumber( ) == PlatformPrecheckService.STEP_NUMBER;
         if ( strReport != null )
         {
-            result.setReport( strReport );
+            result.setReport( bPrecheck ? PlatformPrecheckService.mergeReports( result.getReport( ), strReport ) : strReport );
         }
         if ( mapVerifications != null )
         {
-            result.getVerifications( ).putAll( mapVerifications );
+            if ( bPrecheck )
+            {
+                PlatformPrecheckService.mergeVerifications( result.getVerifications( ), mapVerifications );
+            }
+            else
+            {
+                result.getVerifications( ).putAll( mapVerifications );
+            }
             result.setVerificationDate( new Timestamp( System.currentTimeMillis( ) ).toString( ) );
         }
         step.setResultJson( MapperJsonUtil.getJson( result ) );
         step.setDateEnd( new Timestamp( System.currentTimeMillis( ) ) );
         PlatformReleaseStepHome.update( step );
 
-        campaign.setStatus( PlatformReleaseStatus.READY );
-        touch( campaign );
+        updateCampaignStatus( campaign, step, PlatformReleaseStatus.READY );
     }
 
     /**
@@ -793,7 +823,7 @@ public final class PlatformReleaseService
     }
 
     /**
-     * Rearms every step left RUNNING by a previous run of the webapp.
+     * Rearms every step left RUNNING by a previous run of the webapp, the step 0 of any campaign included.
      *
      * @return the number of steps rearmed
      */
@@ -802,6 +832,11 @@ public final class PlatformReleaseService
         int nRearmed = 0;
         for ( PlatformRelease summary : PlatformReleaseHome.getPlatformReleasesList( ) )
         {
+            summary.setPrecheckStep( PlatformReleaseStepHome.findByPlatformReleaseAndNumber( summary.getId( ), PlatformPrecheckService.STEP_NUMBER ) );
+            if ( rearmStep( summary, PlatformPrecheckService.STEP_NUMBER ) )
+            {
+                nRearmed++;
+            }
             if ( summary.getStatus( ) != PlatformReleaseStatus.RUNNING )
             {
                 continue;
@@ -888,8 +923,7 @@ public final class PlatformReleaseService
         step.setDateEnd( new Timestamp( System.currentTimeMillis( ) ) );
         PlatformReleaseStepHome.update( step );
 
-        campaign.setStatus( PlatformReleaseStatus.FAILED );
-        touch( campaign );
+        updateCampaignStatus( campaign, step, PlatformReleaseStatus.FAILED );
     }
 
     /**
@@ -2604,12 +2638,14 @@ public final class PlatformReleaseService
         Map<String, String> mapVersionProperties = getVersionProperties( site );
         Map<String, PlatformResourceVerification> mapVerifications = mode == PlatformStepMode.VERIFY ? new HashMap<>( )
                 : getStepVerifications( getStep( campaign, nStepNumber ) );
+        Map<String, PlatformResourceVerification> mapPrechecks = mode == PlatformStepMode.VERIFY ? new HashMap<>( )
+                : getStepVerifications( getStep( campaign, PlatformPrecheckService.STEP_NUMBER ) );
         List<String> listNoPrivateRepository = new ArrayList<>( );
         for ( Component component : sortComponents( listToRelease ) )
         {
             PlatformPlanResource resource = toResource( component );
             resource.setVersionProperty( mapVersionProperties.get( getCoordinates( component ) ) );
-            resource.setVerifiedCommit( getTestedCommit( mapVerifications.get( resource.getCoordinates( ) ), resource.getTargetVersion( ) ) );
+            resource.setVerifiedCommit( getVerifiedCommit( resource, mapVerifications, mapPrechecks ) );
             resource.setDeployRepository( getDeployRepository( component.getRepoType( ) ) );
             if ( component.getRepoType( ) == RepositoryType.GITLAB && resource.getDeployRepository( ) == null )
             {
@@ -2619,7 +2655,7 @@ public final class PlatformReleaseService
         }
 
         PlatformPlanResource aggregate = buildAggregateResource( campaign, nStepNumber, code, site );
-        aggregate.setVerifiedCommit( getTestedCommit( mapVerifications.get( aggregate.getCoordinates( ) ), aggregate.getTargetVersion( ) ) );
+        aggregate.setVerifiedCommit( getVerifiedCommit( aggregate, mapVerifications, mapPrechecks ) );
         aggregate.setDeployRepository( getDeployRepository( site.getRepoType( ) ) );
         if ( site.getRepoType( ) == RepositoryType.GITLAB && aggregate.getDeployRepository( ) == null )
         {
@@ -2634,6 +2670,26 @@ public final class PlatformReleaseService
         plan.setAggregate( aggregate );
 
         return plan;
+    }
+
+    /**
+     * Returns the commit whose tests passed for a resource of the plan : at the verification of the step for its target version, otherwise at
+     * the step 0 for its SNAPSHOT version. The pipeline skips the tests when the head of the branch is still that commit.
+     *
+     * @param resource
+     *            the resource of the plan
+     * @param mapVerifications
+     *            the verifications of the step
+     * @param mapPrechecks
+     *            the verifications of the step 0
+     * @return the commit, null when the tests must run
+     */
+    static String getVerifiedCommit( PlatformPlanResource resource, Map<String, PlatformResourceVerification> mapVerifications,
+            Map<String, PlatformResourceVerification> mapPrechecks )
+    {
+        String strCommit = getTestedCommit( mapVerifications.get( resource.getCoordinates( ) ), resource.getTargetVersion( ) );
+
+        return strCommit != null ? strCommit : getTestedCommit( mapPrechecks.get( resource.getCoordinates( ) ), resource.getCurrentVersion( ) );
     }
 
     /**
