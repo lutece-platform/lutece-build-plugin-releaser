@@ -239,6 +239,9 @@ public class ConstanteUtils
     /** The Constant PROPERTY_PLATFORM_JENKINS_PLATFORM_JOB_BY_BRANCH — true when the platform job is a multibranch pipeline : the release branch is appended as a sub-job. */
     public static final String PROPERTY_PLATFORM_JENKINS_PLATFORM_JOB_BY_BRANCH = "releaser.platform.jenkins.platformJobByBranch";
 
+    /** The Constant PROPERTY_PLATFORM_VERIFY_PARALLELISM — number of resources the step pipeline verifies at the same time (step 0, verification). */
+    public static final String PROPERTY_PLATFORM_VERIFY_PARALLELISM = "releaser.platform.verifyParallelism";
+
     /** The Constant CONSTANTE_PLATFORM_PIPELINE_PARAMETER_PREFIX — Datastore key segment of a pipeline parameter chosen for a platform step. */
     public static final String CONSTANTE_PLATFORM_PIPELINE_PARAMETER_PREFIX = "param_";
 

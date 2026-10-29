@@ -55,6 +55,7 @@ public class PlatformReleasePlan implements Serializable
     private PlatformStepCode _stepCode;
     private PlatformReleaseType _releaseType;
     private int _nCoreMajor;
+    private int _nParallelism = 1;
     private PlatformStepMode _mode = PlatformStepMode.RELEASE;
     private List<PlatformPlanResource> _listComponents = new ArrayList<>( );
     private PlatformPlanResource _aggregate;
@@ -186,6 +187,27 @@ public class PlatformReleasePlan implements Serializable
     public void setCoreMajor( int nCoreMajor )
     {
         _nCoreMajor = nCoreMajor;
+    }
+
+    /**
+     * Returns the number of resources the pipeline verifies at the same time : 1 outside a verification.
+     *
+     * @return the parallelism
+     */
+    public int getParallelism( )
+    {
+        return _nParallelism;
+    }
+
+    /**
+     * Sets the number of resources verified at the same time.
+     *
+     * @param nParallelism
+     *            the parallelism, at least 1
+     */
+    public void setParallelism( int nParallelism )
+    {
+        _nParallelism = Math.max( 1, nParallelism );
     }
 
     /**

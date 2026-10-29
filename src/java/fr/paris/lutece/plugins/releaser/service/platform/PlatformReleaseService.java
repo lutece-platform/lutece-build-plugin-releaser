@@ -164,6 +164,7 @@ public final class PlatformReleaseService
     /** Verification status of a resource that passed on a commit its branch no longer points to. */
     public static final String VERIFICATION_STALE = "STALE";
     private static final int BRANCH_HEADS_THREADS = 4;
+    private static final int DEFAULT_VERIFY_PARALLELISM = 4;
     private static final int BRANCH_HEADS_TIMEOUT_SECONDS = 60;
 
     private static final String CSV_SEPARATOR = ";";
@@ -385,6 +386,10 @@ public final class PlatformReleaseService
             throw new AppException( "Platform step " + nStepNumber + " cannot be launched" );
         }
         checkPlanCredentials( plan, user );
+        if ( plan.isVerify( ) )
+        {
+            plan.setParallelism( AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_PLATFORM_VERIFY_PARALLELISM, DEFAULT_VERIFY_PARALLELISM ) );
+        }
 
         startStep( campaign, getStep( campaign, nStepNumber ), plan );
         WorkflowReleaseContextService.getService( )

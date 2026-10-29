@@ -96,6 +96,13 @@ public class PlatformStepTaskTest
         assertEquals( 1, mapParams.size( ) );
         assertTrue( mapParams.get( PlatformStepTask.PARAM_RELEASE_PLAN ).contains( "\"mode\":\"PRECHECK\"" ) );
         assertTrue( MapperJsonUtil.parse( mapParams.get( PlatformStepTask.PARAM_RELEASE_PLAN ), PlatformReleasePlan.class ).isVerify( ) );
+        assertTrue( mapParams.get( PlatformStepTask.PARAM_RELEASE_PLAN ).contains( "\"parallelism\":1" ) );
+
+        plan.setParallelism( 4 );
+        assertEquals( 4, MapperJsonUtil.parse( PlatformStepTask.buildJobParameters( plan ).get( PlatformStepTask.PARAM_RELEASE_PLAN ), PlatformReleasePlan.class )
+                .getParallelism( ) );
+        plan.setParallelism( 0 );
+        assertEquals( 1, plan.getParallelism( ) );
 
         assertTrue( PlatformStepTask.isPlatformPipeline( plan( PlatformStepCode.PLATFORM_STARTERS, PlatformReleaseType.STABLE, "8.0.2", "8.0.3-SNAPSHOT", false ) ) );
     }
