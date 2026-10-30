@@ -91,7 +91,9 @@
 	<#local status = verification_statuses[coordinates]!"NOT_VERIFIED" />
 	<#if verifications[coordinates]??>
 		<a href="#" data-toggle="modal" data-target="#modalVerification-${coordinates?replace('[^A-Za-z0-9]', '-', 'r')}" class="label ${verificationLabelClass(status)}" title="#i18n{releaser.prepare_platform_step.verificationDetailHelp}">#i18n{releaser.prepare_platform_step.verification.${status}}</a>
-		<#if status == "TO_FIX" && untestedCommitsDetails(verifications[coordinates])?has_content>
+		<#if untested_decisions[coordinates]?? && (untested_decisions[coordinates].sourceTag!"")?has_content>
+			<br><span class="label label-info" title="${untested_decisions[coordinates].userName!}"><i class="fa fa-tag"></i> #i18n{releaser.prepare_platform_step.untestedCommitsFromTagAccepted} ${untested_decisions[coordinates].sourceTag}</span>
+		<#elseif status == "TO_FIX" && untestedCommitsDetails(verifications[coordinates])?has_content>
 			<#if untested_decisions[coordinates]??>
 			<br><span class="label label-warning" title="${untested_decisions[coordinates].userName!}"><i class="fa fa-check"></i> #i18n{releaser.prepare_platform_step.untestedCommitsAccepted}</span>
 			<#else>
@@ -106,6 +108,7 @@
 	<#if verifications[coordinates]??>
 	<#local v = verifications[coordinates] />
 	<#local untested = ((verification_statuses[coordinates]!"") == "TO_FIX")?then(untestedCommitsDetails(v), "") />
+	<#local fromTagDecision = untested_decisions[coordinates]?? && (untested_decisions[coordinates].sourceTag!"")?has_content />
 	<div class="modal fade" id="modalVerification-${coordinates?replace('[^A-Za-z0-9]', '-', 'r')}" tabindex="-1" role="dialog">
 		<div class="modal-dialog modal-lg" role="document">
 			<div class="modal-content">
@@ -114,7 +117,7 @@
 					<h4 class="modal-title"><i class="fa fa-stethoscope"></i> ${artifactId} ${v.version!} <span class="label ${verificationLabelClass(v.status!)}">#i18n{releaser.prepare_platform_step.verification.${v.status!"NOT_VERIFIED"}}</span></h4>
 				</div>
 				<div class="modal-body">
-					<p><small class="text-muted">#i18n{releaser.prepare_platform_step.verificationCommit} <#if (v.commit!"")?length gt 7>${v.commit?substring(0, 7)}<#else>${v.commit!}</#if><#if verification_date??> — ${verification_date?substring(0, 16)}</#if></small></p>
+					<p><small class="text-muted">#i18n{releaser.prepare_platform_step.verificationCommit} <#if (v.commit!"")?length gt 7>${v.commit?substring(0, 7)}<#else>${v.commit!}</#if><#if (v.sourceTag!"")?has_content> (#i18n{releaser.prepare_platform_step.verificationFromTag} ${v.sourceTag})</#if><#if verification_date??> — ${verification_date?substring(0, 16)}</#if></small></p>
 					<#if (v.version!"") != targetVersion>
 						<p class="text-warning"><i class="fa fa-exclamation-triangle"></i> #i18n{releaser.prepare_platform_step.verificationOtherVersion} ${targetVersion}</p>
 					</#if>
@@ -124,20 +127,28 @@
 					<#if v.note?has_content>
 						<p class="text-info"><i class="fa fa-info-circle"></i> #i18n{releaser.prepare_platform_step.verificationAggregateNote}</p>
 					</#if>
-					<#if untested?has_content>
+					<#if untested?has_content || fromTagDecision>
 					<div class="panel panel-danger">
 						<div class="panel-heading"><i class="fa fa-code-fork"></i> #i18n{releaser.prepare_platform_step.untestedCommitsTitle}</div>
 						<div class="panel-body">
 						<#if untested_decisions[coordinates]??>
 							<#local decision = untested_decisions[coordinates] />
+							<#if fromTagDecision>
+							<p class="text-info"><i class="fa fa-tag"></i> #i18n{releaser.prepare_platform_step.untestedCommitsFromTagDecision} ${decision.sourceTag}, ${decision.userName!} — <#if (decision.date!"")?length gt 16>${decision.date?substring(0, 16)}<#else>${decision.date!}</#if></p>
+							<#else>
 							<p class="text-warning"><i class="fa fa-check"></i> #i18n{releaser.prepare_platform_step.untestedCommitsDecision} ${decision.userName!} — <#if (decision.date!"")?length gt 16>${decision.date?substring(0, 16)}<#else>${decision.date!}</#if></p>
+							</#if>
 							<a class="button transition border-lightblue small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=cancelUntestedDecision&coordinates=${coordinates?url('UTF-8')}"><i class="fa fa-undo"></i> #i18n{releaser.prepare_platform_step.untestedCommitsCancel}</a>
 						<#else>
 							<ul class="list-unstyled">
 								<#if removable>
 								<li style="margin-bottom:8px"><a class="button transition border-red small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=toggleComponent&artifact_id=${artifactId}"><i class="fa fa-minus-circle"></i> #i18n{releaser.prepare_platform_step.untestedCommitsApart}</a> <small class="text-muted">#i18n{releaser.prepare_platform_step.untestedCommitsApartHelp}</small></li>
 								</#if>
-								<li style="margin-bottom:8px"><span class="button transition small fill-whitish-black" style="opacity:.5;cursor:not-allowed"><i class="fa fa-tag"></i> #i18n{releaser.prepare_platform_step.untestedCommitsFromTag} ${untested?keep_after(" after ")?keep_before(",")}</span> <small class="text-muted">#i18n{releaser.prepare_platform_step.untestedCommitsComingSoon}</small></li>
+								<#if (v.untestedSinceTag!"")?has_content>
+								<li style="margin-bottom:8px"><a class="button transition border-lightblue small btn-accept-from-tag" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=acceptUntestedFromTag&coordinates=${coordinates?url('UTF-8')}"><i class="fa fa-tag"></i> #i18n{releaser.prepare_platform_step.untestedCommitsFromTag} ${v.untestedSinceTag}</a> <small class="text-muted">#i18n{releaser.prepare_platform_step.untestedCommitsFromTagHelp}</small></li>
+								<#else>
+								<li style="margin-bottom:8px"><span class="button transition small fill-whitish-black" style="opacity:.5;cursor:not-allowed"><i class="fa fa-tag"></i> #i18n{releaser.prepare_platform_step.untestedCommitsFromTag}</span> <small class="text-muted">#i18n{releaser.prepare_platform_step.untestedCommitsNoTag}</small></li>
+								</#if>
 								<li><a class="button transition border-orange small btn-accept-untested" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=acceptUntestedCommits&coordinates=${coordinates?url('UTF-8')}"><i class="fa fa-exclamation-triangle"></i> #i18n{releaser.prepare_platform_step.untestedCommitsFromSnapshot}</a></li>
 							</ul>
 						</#if>
@@ -588,6 +599,9 @@ $(function() {
 		if ( confirm( "#i18n{releaser.prepare_platform_step.confirmRetest}" ) ) {
 			launchStep( "false", "VERIFY", "TO_RETEST" );
 		}
+	});
+	$(".btn-accept-from-tag").click( function(){
+		return confirm( "#i18n{releaser.prepare_platform_step.confirmUntestedFromTag}" );
 	});
 	$(".btn-accept-untested").click( function(){
 		return confirm( "#i18n{releaser.prepare_platform_step.confirmUntestedFromSnapshot}" );

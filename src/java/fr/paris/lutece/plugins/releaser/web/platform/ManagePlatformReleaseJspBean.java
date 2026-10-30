@@ -159,6 +159,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String ACTION_SELECT_SNAPSHOT_COMPONENTS = "selectSnapshotComponents";
     private static final String ACTION_DESELECT_SNAPSHOT_COMPONENTS = "deselectSnapshotComponents";
     private static final String ACTION_ACCEPT_UNTESTED_COMMITS = "acceptUntestedCommits";
+    private static final String ACTION_ACCEPT_UNTESTED_FROM_TAG = "acceptUntestedFromTag";
     private static final String ACTION_CANCEL_UNTESTED_DECISION = "cancelUntestedDecision";
     private static final String ACTION_LAUNCH_PRECHECK = "launchPrecheck";
 
@@ -237,6 +238,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String MESSAGE_CREDENTIALS_MISSING_FOR = "releaser.message.platform.credentialsMissingFor";
     private static final String MESSAGE_UNTESTED_UNDECIDED = "releaser.message.platform.untestedCommitsUndecided";
     private static final String LAUNCHED_DESPITE_UNTESTED = " — released from the SNAPSHOT despite untested commits, accepted by ";
+    private static final String LAUNCHED_DESPITE_FROM_TAG = " — released from %s, decided by %s";
     private static final String INFO_CREATED = "releaser.info.platformRelease.created";
     private static final String INFO_REMOVED = "releaser.info.platformRelease.removed";
     private static final String INFO_STEP_SKIPPED = "releaser.info.platformRelease.stepSkipped";
@@ -246,6 +248,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String INFO_DRY_RUN_LAUNCHED = "releaser.info.platformRelease.dryRunLaunched";
     private static final String INFO_VERIFY_LAUNCHED = "releaser.info.platformRelease.verifyLaunched";
     private static final String INFO_NOTHING_TO_RETEST = "releaser.info.platformRelease.nothingToRetest";
+    private static final String INFO_REVERIFY_FROM_TAG = "releaser.info.platformRelease.reverifyFromTag";
     private static final String INFO_EXPORT_VERIFIED = "releaser.info.platformRelease.exportVerified";
     private static final String INFO_STEP_DEFINITIONS_SAVED = "releaser.info.platformRelease.stepDefinitionsSaved";
     private static final String INFO_PRECHECK_LAUNCHED = "releaser.info.platformRelease.precheckLaunched";
@@ -945,7 +948,22 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     @Action( ACTION_ACCEPT_UNTESTED_COMMITS )
     public String doAcceptUntestedCommits( HttpServletRequest request ) throws IOException
     {
-        return setUntestedDecision( request, true );
+        return setUntestedDecision( request, true, false );
+    }
+
+    /**
+     * Records the decision to release a resource of the prepared step from the beta or RC tag its untested commits follow.
+     *
+     * @param request
+     *            the request
+     * @return the step preparation
+     * @throws IOException
+     *             if the decision cannot be saved
+     */
+    @Action( ACTION_ACCEPT_UNTESTED_FROM_TAG )
+    public String doAcceptUntestedFromTag( HttpServletRequest request ) throws IOException
+    {
+        return setUntestedDecision( request, true, true );
     }
 
     /**
@@ -960,7 +978,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     @Action( ACTION_CANCEL_UNTESTED_DECISION )
     public String doCancelUntestedDecision( HttpServletRequest request ) throws IOException
     {
-        return setUntestedDecision( request, false );
+        return setUntestedDecision( request, false, false );
     }
 
     /**
@@ -970,17 +988,20 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
      *            the request
      * @param bAccept
      *            true to record the decision, false to cancel it
+     * @param bFromTag
+     *            true to release from the tag, false from the SNAPSHOT
      * @return the step preparation
      * @throws IOException
      *             if the decision cannot be saved
      */
-    private String setUntestedDecision( HttpServletRequest request, boolean bAccept ) throws IOException
+    private String setUntestedDecision( HttpServletRequest request, boolean bAccept, boolean bFromTag ) throws IOException
     {
         PlatformRelease campaign = getPreparedCampaign( request );
-        if ( campaign != null )
+        if ( campaign != null && PlatformReleaseService.setUntestedDecision( PlatformReleaseService.getStep( campaign, _nSiteStepNumber ),
+                request.getParameter( PARAMETER_COORDINATES ), AdminUserService.getAdminUser( request ).getAccessCode( ), bAccept, bFromTag )
+                && bAccept && bFromTag )
         {
-            PlatformReleaseService.setUntestedDecision( PlatformReleaseService.getStep( campaign, _nSiteStepNumber ),
-                    request.getParameter( PARAMETER_COORDINATES ), AdminUserService.getAdminUser( request ).getAccessCode( ), bAccept, false );
+            addInfo( INFO_REVERIFY_FROM_TAG, getLocale( ) );
         }
 
         return redirectToPreparedStep( request );
@@ -1464,7 +1485,14 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
             for ( Map.Entry<String, String> entry : mapToConfirm.entrySet( ) )
             {
                 PlatformUntestedDecision decision = mapDecisions.get( entry.getKey( ) );
-                plan.getLaunchedDespite( ).add( entry.getKey( ) + " : " + entry.getValue( ) + ( decision != null ? LAUNCHED_DESPITE_UNTESTED + decision.getUserName( ) : "" ) );
+                String strDecision = "";
+                if ( decision != null )
+                {
+                    strDecision = StringUtils.isNotBlank( decision.getSourceTag( ) )
+                            ? String.format( LAUNCHED_DESPITE_FROM_TAG, decision.getSourceTag( ), decision.getUserName( ) )
+                            : LAUNCHED_DESPITE_UNTESTED + decision.getUserName( );
+                }
+                plan.getLaunchedDespite( ).add( entry.getKey( ) + " : " + entry.getValue( ) + strDecision );
             }
             PlatformReleaseService.applyPipelineParameters( campaign, _nSiteStepNumber, plan );
             String strMasterError = bNothingPushed ? null : PlatformReleaseService.checkMasterBranches( plan, user, getLocale( ) );
