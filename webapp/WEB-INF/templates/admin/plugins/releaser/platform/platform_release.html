@@ -1,4 +1,24 @@
 <#include "../releaser_util.html" />
+<#-- Readable Jenkins result of a step, the raw result in the tooltip -->
+<#macro jenkinsResultLabel raw>
+	<#local prefix = "" />
+	<#local result = raw />
+	<#if raw?starts_with("DRY RUN ")>
+		<#local prefix = "#i18n{releaser.platform_release.resultDryRun} " />
+		<#local result = raw?remove_beginning("DRY RUN ") />
+	<#elseif raw?starts_with("VERIFY ")>
+		<#local prefix = "#i18n{releaser.platform_release.resultVerify} " />
+		<#local result = raw?remove_beginning("VERIFY ") />
+	</#if>
+	<#switch result>
+		<#case "SUCCESS"><#local result = "#i18n{releaser.platform_release.resultSuccess}" /><#break>
+		<#case "UNSTABLE"><#local result = "#i18n{releaser.platform_release.resultUnstable}" /><#break>
+		<#case "FAILURE"><#local result = "#i18n{releaser.platform_release.resultFailure}" /><#break>
+		<#case "ABORTED"><#local result = "#i18n{releaser.platform_release.resultAborted}" /><#break>
+		<#default>
+	</#switch>
+	<span title="${raw?html}">${prefix}${result?html}</span>
+</#macro>
 
 <section class="content-header">
 	<h1>
@@ -51,7 +71,7 @@
 					<td>
 						<#if precheck_step??>
 							<@platformStatusLabel status=precheck_step.status />
-							<#if precheck_step.jenkinsResult?has_content><br><small class="text-muted">${precheck_step.jenkinsResult}</small></#if>
+							<#if precheck_step.jenkinsResult?has_content><br><small class="text-muted"><@jenkinsResultLabel raw=precheck_step.jenkinsResult /></small></#if>
 						</#if>
 						<#if precheck_summary??>
 							<br><small class="<#if (precheck_summary.verification_counts["TO_FIX"] > 0)>text-danger<#elseif (precheck_summary.verification_counts["WARNING"] > 0)>text-warning<#else>text-success</#if>"><i class="fa fa-stethoscope"></i> #i18n{releaser.platform_release.precheckTestedOn} ${precheck_summary.verification_date?substring(0, 16)} : ${precheck_summary.verification_counts["TO_FIX"]} #i18n{releaser.prepare_platform_step.countToFix}, ${precheck_summary.verification_counts["WARNING"]} #i18n{releaser.prepare_platform_step.countWarning}</small>
@@ -106,7 +126,7 @@
 					<td><a href="${definition.scmUrl}" target="_blank"><small>${definition.scmUrl}</small></a></td>
 					<td>
 						<@platformStatusLabel status=step.status />
-						<#if step.jenkinsResult?has_content><br><small class="text-muted">${step.jenkinsResult}</small></#if>
+						<#if step.jenkinsResult?has_content><br><small class="text-muted"><@jenkinsResultLabel raw=step.jenkinsResult /></small></#if>
 						<#if step_verifications?? && step_verifications[step.stepNumber?string]??>
 							<#assign stepVerification = step_verifications[step.stepNumber?string] />
 							<br><small class="<#if (stepVerification.verification_counts["TO_FIX"] > 0)>text-danger<#elseif (stepVerification.verification_counts["WARNING"] > 0)>text-warning<#else>text-success</#if>"><i class="fa fa-stethoscope"></i> #i18n{releaser.platform_release.verifiedOn} ${stepVerification.verification_date?substring(0, 16)} : ${stepVerification.verification_counts["TO_FIX"]} #i18n{releaser.prepare_platform_step.countToFix}, ${stepVerification.verification_counts["WARNING"]} #i18n{releaser.prepare_platform_step.countWarning}</small>
@@ -173,7 +193,7 @@
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title" id="modalStepReportLabel${step.stepNumber}"><i class="fa fa-file-text-o"></i> #i18n{releaser.platform_release.reportTitle} ${step.stepNumber} - ${step_definitions[step.stepNumber - 1].name}<#if step.jenkinsResult?has_content> <small class="text-muted">${step.jenkinsResult}</small></#if></h4>
+				<h4 class="modal-title" id="modalStepReportLabel${step.stepNumber}"><i class="fa fa-file-text-o"></i> #i18n{releaser.platform_release.reportTitle} ${step.stepNumber} - ${step_definitions[step.stepNumber - 1].name}<#if step.jenkinsResult?has_content> <small class="text-muted"><@jenkinsResultLabel raw=step.jenkinsResult /></small></#if></h4>
 			</div>
 			<div class="modal-body">
 				<pre style="white-space:pre-wrap;max-height:60vh;overflow:auto;">${step_reports[step.stepNumber?string]?html}</pre>
@@ -192,7 +212,7 @@
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title" id="modalStepReportLabel0"><i class="fa fa-file-text-o"></i> #i18n{releaser.platform_release.reportTitle} 0 - #i18n{releaser.platform_release.precheckName}<#if precheck_step.jenkinsResult?has_content> <small class="text-muted">${precheck_step.jenkinsResult}</small></#if></h4>
+				<h4 class="modal-title" id="modalStepReportLabel0"><i class="fa fa-file-text-o"></i> #i18n{releaser.platform_release.reportTitle} 0 - #i18n{releaser.platform_release.precheckName}<#if precheck_step.jenkinsResult?has_content> <small class="text-muted"><@jenkinsResultLabel raw=precheck_step.jenkinsResult /></small></#if></h4>
 			</div>
 			<div class="modal-body">
 				<pre style="white-space:pre-wrap;max-height:60vh;overflow:auto;">${precheck_report?html}</pre>
@@ -247,7 +267,9 @@ $(function() {
 			type: "GET",
 			dataType: "json",
 			success: function( data ) {
-				if ( data.status == 'OK' && data.result.status != 'RUNNING' ) {
+				if ( data.status != 'OK' ) {
+					$("#step-row-" + stepNumber).after( '<tr><td colspan="7" class="text-danger"><i class="fa fa-warning"></i> #i18n{releaser.platform_release.campaignGone}</td></tr>' );
+				} else if ( data.result.status != 'RUNNING' ) {
 					if ( $("#step-row-" + stepNumber).data("verify") ) {
 						window.location.href = "jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?view=prepareStep&id=${platform_release.id}&step=" + stepNumber;
 					} else {

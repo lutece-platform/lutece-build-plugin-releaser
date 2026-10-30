@@ -258,15 +258,15 @@
 				<table class="table table-hover">
 					<thead>
 						<tr>
-							<th>Artifact</th>
-							<th>Infos Release</th>
+							<th>#i18n{releaser.prepare_platform_step.columnArtifact}</th>
+							<th>#i18n{releaser.prepare_platform_step.columnReleaseInfo}</th>
 							<th>#i18n{releaser.prepare_platform_step.branch}</th>
 							<#if step_code.executor != "PLATFORM_PIPELINE"><th>#i18n{releaser.prepare_platform_step.parent}</th></#if>
 							<th>#i18n{releaser.prepare_platform_step.lastRelease}</th>
 							<th>#i18n{releaser.prepare_platform_step.targetVersion}</th>
 							<th>#i18n{releaser.prepare_platform_step.nextSnapshot}</th>
 							<#if can_verify!false><th>#i18n{releaser.prepare_platform_step.columnVerification}</th></#if>
-							<th>Actions</th>
+							<th>#i18n{portal.util.labelActions}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -372,16 +372,16 @@
 				<table class="table table-hover">
 					<thead>
 						<tr>
-							<th>Artifact</th>
-							<th>Infos Release</th>
-							<th>Branche &agrave; releaser</th>
+							<th>#i18n{releaser.prepare_platform_step.columnArtifact}</th>
+							<th>#i18n{releaser.prepare_platform_step.columnReleaseInfo}</th>
+							<th>#i18n{releaser.prepare_platform_step.columnBranch}</th>
 							<th>#i18n{releaser.prepare_platform_step.bugtracker}</th>
 							<th>#i18n{releaser.prepare_platform_step.parent}</th>
-							<th>Version</th>
-							<th>Version cible</th>
-							<th>Prochaine version</th>
+							<th>#i18n{releaser.prepare_platform_step.columnVersion}</th>
+							<th>#i18n{releaser.prepare_platform_step.targetVersion}</th>
+							<th>#i18n{releaser.prepare_platform_step.nextSnapshot}</th>
 							<#if can_verify!false><th>#i18n{releaser.prepare_platform_step.columnVerification}</th></#if>
-							<th>Actions</th>
+							<th>#i18n{portal.util.labelActions}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -459,13 +459,13 @@
 				<table class="table table-hover">
 					<thead>
 						<tr>
-							<th>Artifact</th>
-							<th>Infos Release</th>
+							<th>#i18n{releaser.prepare_platform_step.columnArtifact}</th>
+							<th>#i18n{releaser.prepare_platform_step.columnReleaseInfo}</th>
 							<th>#i18n{releaser.prepare_platform_step.bugtracker}</th>
 							<th>#i18n{releaser.prepare_platform_step.parent}</th>
-							<th>Version</th>
-							<th>Version cible</th>
-							<th>Actions</th>
+							<th>#i18n{releaser.prepare_platform_step.columnVersion}</th>
+							<th>#i18n{releaser.prepare_platform_step.targetVersion}</th>
+							<th>#i18n{portal.util.labelActions}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -634,7 +634,7 @@ $(function() {
 		}
 	});
 	$("#btn-launch-step").click( function(){
-		if ( confirm( "#i18n{releaser.prepare_platform_step.confirmLaunch}" ) ) {
+		if ( confirm( "<#if step_code.executor == "PLATFORM_PIPELINE">#i18n{releaser.prepare_platform_step.confirmLaunchPlatform}<#elseif !step_code.aggregateReleased>#i18n{releaser.prepare_platform_step.confirmLaunchPomOnly}<#else>#i18n{releaser.prepare_platform_step.confirmLaunch}</#if>" ) ) {
 			launchStep( "false" );
 		}
 	});

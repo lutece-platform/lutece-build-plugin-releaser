@@ -117,6 +117,9 @@ public class PlatformStepTask implements Runnable
     private static final String RESULT_SUCCESS = "SUCCESS";
     private static final String RESULT_UNSTABLE = "UNSTABLE";
     private static final String RESULT_ERROR_PREFIX = "ERROR : ";
+    private static final String REPORT_UNREADABLE = "Report of build #%d unreadable : see the Jenkins build %s";
+    private static final String REPORT_ASSUMED = "Jenkins report unreadable (no " + STEP_REPORT_ARTIFACT
+            + " in build #%d) : result assumed from the plan, check the build";
     private static final String QUALIFIER_SEPARATOR = "-";
     private static final long BUILD_POLL_DELAY = 8000L;
 
@@ -297,12 +300,12 @@ public class PlatformStepTask implements Runnable
 
             if ( _plan.isVerify( ) )
             {
-                PlatformReleaseService.finishVerification( campaign, step, strResult, readReportText( jenkins, build ), readVerifyReport( jenkins, build ) );
+                PlatformReleaseService.finishVerification( campaign, step, strResult, readReportOrNotice( jenkins, build ), readVerifyReport( jenkins, build ) );
             }
             else
                 if ( _plan.isDryRun( ) )
                 {
-                    PlatformReleaseService.finishDryRun( campaign, step, strResult, readReportText( jenkins, build ) );
+                    PlatformReleaseService.finishDryRun( campaign, step, strResult, readReportOrNotice( jenkins, build ) );
                 }
                 else
                     if ( isPublished( strResult ) )
@@ -314,14 +317,14 @@ public class PlatformStepTask implements Runnable
                     else
                     {
                         PlatformStepResult partialResult = readPartialResult( jenkins, build );
-                        PlatformReleaseService.failStep( campaign, step, strResult, partialResult );
+                        PlatformReleaseService.failStep( campaign, step, strResult, partialResult != null ? partialResult : unreadableReport( build ) );
                         PlatformReleaseService.updateBugtrackerVersions( step, _plan, partialResult );
                     }
         }
         catch( Exception e )
         {
             AppLogService.error( "Releaser : platform step " + _nStepNumber + " of campaign " + _nIdPlatformRelease + " failed : " + e.getMessage( ), e );
-            markFailed( campaign, step, e instanceof FollowUpException ? e.getMessage( ) : RESULT_ERROR_PREFIX + e.getMessage( ) );
+            markFailed( campaign, step, e instanceof FollowUpException ? e.getMessage( ) : RESULT_ERROR_PREFIX + describe( e ) );
         }
         finally
         {
@@ -634,7 +637,7 @@ public class PlatformStepTask implements Runnable
     {
         if ( isPlatformPipeline( _plan ) )
         {
-            PlatformStepResult result = buildResultFromPlan( _plan );
+            PlatformStepResult result = buildResultFromPlan( _plan, build.getNumber( ) );
             String strReport = readPlatformReport( jenkins, build );
             if ( strReport != null )
             {
@@ -647,7 +650,7 @@ public class PlatformStepTask implements Runnable
         if ( result == null )
         {
             AppLogService.error( "Releaser : no readable " + STEP_REPORT_ARTIFACT + " for build " + build.getUrl( ) + ", result taken from the plan" );
-            result = buildResultFromPlan( _plan );
+            result = buildResultFromPlan( _plan, build.getNumber( ) );
         }
 
         return result;
@@ -774,13 +777,59 @@ public class PlatformStepTask implements Runnable
     }
 
     /**
+     * Reads the text of the report of a finished build, or says that it is unreadable : the report of a previous build must not stay shown
+     * under the new result.
+     *
+     * @param jenkins
+     *            the Jenkins service
+     * @param build
+     *            the finished build
+     * @return the report
+     */
+    private String readReportOrNotice( IJenkinsService jenkins, JenkinsBuild build )
+    {
+        String strReport = readReportText( jenkins, build );
+
+        return strReport != null ? strReport : String.format( REPORT_UNREADABLE, build.getNumber( ), build.getUrl( ) );
+    }
+
+    /**
+     * Builds the result of a failed build whose report cannot be read : nothing released, only the notice as report.
+     *
+     * @param build
+     *            the failed build
+     * @return the result
+     */
+    static PlatformStepResult unreadableReport( JenkinsBuild build )
+    {
+        PlatformStepResult result = new PlatformStepResult( );
+        result.setReport( String.format( REPORT_UNREADABLE, build.getNumber( ), build.getUrl( ) ) );
+
+        return result;
+    }
+
+    /**
+     * Describes an error for the result of a step : its message, or its type when it has none.
+     *
+     * @param e
+     *            the error
+     * @return the description
+     */
+    static String describe( Throwable e )
+    {
+        return StringUtils.isNotBlank( e.getMessage( ) ) ? e.getMessage( ) : e.getClass( ).getSimpleName( );
+    }
+
+    /**
      * Builds the result of a successful step from its plan : every component released at its target version, the aggregate too.
      *
      * @param plan
      *            the plan
+     * @param nBuildNumber
+     *            the number of the build whose report could not be read
      * @return the result
      */
-    static PlatformStepResult buildResultFromPlan( PlatformReleasePlan plan )
+    static PlatformStepResult buildResultFromPlan( PlatformReleasePlan plan, int nBuildNumber )
     {
         PlatformStepResult result = new PlatformStepResult( );
         for ( PlatformPlanResource component : plan.getComponents( ) )
@@ -791,7 +840,7 @@ public class PlatformStepTask implements Runnable
         {
             result.setAggregateVersion( plan.getAggregate( ).getTargetVersion( ) );
         }
-        result.setReport( "Result taken from the plan, no " + STEP_REPORT_ARTIFACT + " read from Jenkins." );
+        result.setReport( String.format( REPORT_ASSUMED, nBuildNumber ) );
 
         return result;
     }

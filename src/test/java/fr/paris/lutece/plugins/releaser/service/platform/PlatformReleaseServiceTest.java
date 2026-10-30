@@ -143,6 +143,30 @@ public class PlatformReleaseServiceTest
     }
 
     /**
+     * A locked step tells why : previous step not completed, running, completed, export not verified, not skippable, unknown.
+     */
+    @Test
+    public void testStepLockReason( )
+    {
+        PlatformRelease campaign = campaign( PlatformReleaseType.BETA );
+        assertNull( PlatformReleaseService.getStepLockReason( campaign, 1, false ) );
+        assertEquals( "releaser.message.platformRelease.stepLockedPrevious", PlatformReleaseService.getStepLockReason( campaign, 2, false ) );
+        assertEquals( "releaser.message.platformRelease.stepLockedUnknown", PlatformReleaseService.getStepLockReason( campaign, 9, false ) );
+
+        PlatformReleaseService.getStep( campaign, 1 ).setStatus( PlatformReleaseStatus.RUNNING );
+        assertEquals( "releaser.message.platformRelease.stepLockedRunning", PlatformReleaseService.getStepLockReason( campaign, 1, true ) );
+        PlatformReleaseService.getStep( campaign, 1 ).setStatus( PlatformReleaseStatus.SUCCESS );
+        assertEquals( "releaser.message.platformRelease.stepLockedCompleted", PlatformReleaseService.getStepLockReason( campaign, 1, false ) );
+
+        for ( int nStep = 2; nStep <= 4; nStep++ )
+        {
+            PlatformReleaseService.getStep( campaign, nStep ).setStatus( PlatformReleaseStatus.SUCCESS );
+        }
+        assertEquals( "releaser.message.platformRelease.stepLockedExport", PlatformReleaseService.getStepLockReason( campaign, 5, false ) );
+        assertEquals( "releaser.message.platformRelease.stepLockedNotSkippable", PlatformReleaseService.getStepLockReason( campaign, 5, true ) );
+    }
+
+    /**
      * A step is locked until the previous one is completed ; global-pom, site-pom and core can be skipped once preparable, the plugins and
      * starters steps never ; the campaign type is forced to stable on the stable-only steps.
      */

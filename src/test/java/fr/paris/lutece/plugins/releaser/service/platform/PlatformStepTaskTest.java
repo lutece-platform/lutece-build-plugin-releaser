@@ -52,6 +52,7 @@ import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepCode;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepMode;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepResult;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformVerificationCheck;
+import fr.paris.lutece.plugins.releaser.service.JenkinsBuild;
 import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
 
 /**
@@ -260,10 +261,24 @@ public class PlatformStepTaskTest
         component.setTargetVersion( "3.0.1" );
         plan.getComponents( ).add( component );
 
-        PlatformStepResult result = PlatformStepTask.buildResultFromPlan( plan );
+        PlatformStepResult result = PlatformStepTask.buildResultFromPlan( plan, 66 );
         assertEquals( "3.0.1", result.getReleasedVersions( ).get( "fr.paris.lutece.tools:build-config" ) );
         assertEquals( "8.0.2", result.getAggregateVersion( ) );
         assertTrue( result.getReport( ).contains( PlatformStepTask.STEP_REPORT_ARTIFACT ) );
+        assertTrue( result.getReport( ).contains( "#66" ) );
+    }
+
+    /**
+     * An unreadable report and an error without message are said as such, never as the report of a previous build nor as "null".
+     */
+    @Test
+    public void testUnreadableReportAndErrorDescription( )
+    {
+        PlatformStepResult result = PlatformStepTask.unreadableReport( new JenkinsBuild( "https://jenkins/job/x/12/", 12 ) );
+        assertTrue( result.getReport( ).contains( "#12" ) );
+        assertTrue( result.getReleasedVersions( ).isEmpty( ) );
+        assertEquals( "NullPointerException", PlatformStepTask.describe( new NullPointerException( ) ) );
+        assertEquals( "refused", PlatformStepTask.describe( new IllegalStateException( "refused" ) ) );
     }
 
     /**

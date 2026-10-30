@@ -109,6 +109,7 @@ import fr.paris.lutece.portal.service.util.AppPropertiesService;
 public final class PlatformReleaseService
 {
     private static final String MESSAGE_UNKNOWN_GROUP_ID = "releaser.message.platform.unknownGroupId";
+    private static final String MESSAGE_UNKNOWN_GROUP_ID_NO_BOM = "releaser.message.platform.unknownGroupIdNoBom";
     private static final String MESSAGE_ALREADY_RELEASED = "releaser.message.platform.alreadyReleased";
     private static final String MESSAGE_BOM_NOT_FOUND = "releaser.message.platform.bomNotFound";
     private static final String MESSAGE_BRANCH_CREDENTIALS_MISSING = "releaser.message.platform.branchCredentialsMissing";
@@ -138,6 +139,16 @@ public final class PlatformReleaseService
     private static final String POM_FILE = "pom.xml";
     private static final String LATEST_SNAPSHOT_KEY = "latest";
     private static final String FROM_TAG_KEY = "fromTag";
+    private static final String MESSAGE_TOGGLE_ALREADY_RELEASED = "releaser.message.platformRelease.toggleAlreadyReleased";
+    private static final String MESSAGE_LOAD_UNKNOWN_STEP ="releaser.message.platformRelease.loadUnknownStep";
+    private static final String MESSAGE_LOAD_UNSUPPORTED_REPOSITORY = "releaser.message.platformRelease.loadUnsupportedRepository";
+    private static final String MESSAGE_LOAD_POM_UNREADABLE = "releaser.message.platformRelease.loadPomUnreadable";
+    private static final String MESSAGE_STEP_LOCKED_UNKNOWN ="releaser.message.platformRelease.stepLockedUnknown";
+    private static final String MESSAGE_STEP_LOCKED_RUNNING = "releaser.message.platformRelease.stepLockedRunning";
+    private static final String MESSAGE_STEP_LOCKED_COMPLETED = "releaser.message.platformRelease.stepLockedCompleted";
+    private static final String MESSAGE_STEP_LOCKED_NOT_SKIPPABLE = "releaser.message.platformRelease.stepLockedNotSkippable";
+    private static final String MESSAGE_STEP_LOCKED_EXPORT = "releaser.message.platformRelease.stepLockedExport";
+    private static final String MESSAGE_STEP_LOCKED_PREVIOUS = "releaser.message.platformRelease.stepLockedPrevious";
     private static final String MESSAGE_FROM_TAG_NOT_FOUND = "releaser.message.platform.fromTagNotFound";
     private static final String CAMPAIGN_LABEL = "#%d %s";
     private static final String PARENT_KEY = "parent";
@@ -312,25 +323,50 @@ public final class PlatformReleaseService
      */
     public static boolean canPrepareStep( PlatformRelease campaign, int nStepNumber )
     {
-        PlatformReleaseStep step = getStep( campaign, nStepNumber );
-        if ( step == null || step.getStatus( ) == PlatformReleaseStatus.RUNNING || step.getStatus( ).isCompleted( ) )
-        {
-            return false;
-        }
+        return getStepLockReason( campaign, nStepNumber, false ) == null;
+    }
 
+    /**
+     * Returns why a step cannot be prepared or skipped, as the i18n key of the message to show.
+     *
+     * @param campaign
+     *            the campaign, loaded with its steps
+     * @param nStepNumber
+     *            the step number
+     * @param bSkip
+     *            true when the step is to be skipped
+     * @return the message key, null when the step can be prepared or skipped
+     */
+    public static String getStepLockReason( PlatformRelease campaign, int nStepNumber, boolean bSkip )
+    {
+        PlatformReleaseStep step = getStep( campaign, nStepNumber );
+        if ( step == null )
+        {
+            return MESSAGE_STEP_LOCKED_UNKNOWN;
+        }
+        if ( step.getStatus( ) == PlatformReleaseStatus.RUNNING )
+        {
+            return MESSAGE_STEP_LOCKED_RUNNING;
+        }
+        if ( step.getStatus( ).isCompleted( ) )
+        {
+            return MESSAGE_STEP_LOCKED_COMPLETED;
+        }
+        if ( bSkip && nStepNumber > PlatformStepCode.CORE.getStepNumber( ) )
+        {
+            return MESSAGE_STEP_LOCKED_NOT_SKIPPABLE;
+        }
         if ( nStepNumber == 1 )
         {
-            return true;
+            return null;
         }
-
         if ( nStepNumber == PlatformStepCode.PLATFORM_STARTERS.getStepNumber( ) && !campaign.isExportVerified( ) )
         {
-            return false;
+            return MESSAGE_STEP_LOCKED_EXPORT;
         }
-
         PlatformReleaseStep previous = getStep( campaign, nStepNumber - 1 );
 
-        return previous != null && previous.getStatus( ).isCompleted( );
+        return previous != null && previous.getStatus( ).isCompleted( ) ? null : MESSAGE_STEP_LOCKED_PREVIOUS;
     }
 
     /**
@@ -345,7 +381,7 @@ public final class PlatformReleaseService
      */
     public static boolean canSkipStep( PlatformRelease campaign, int nStepNumber )
     {
-        return nStepNumber <= PlatformStepCode.CORE.getStepNumber( ) && canPrepareStep( campaign, nStepNumber );
+        return getStepLockReason( campaign, nStepNumber, true ) == null;
     }
 
     /**
@@ -386,11 +422,18 @@ public final class PlatformReleaseService
     public static void launchStep( PlatformRelease campaign, int nStepNumber, PlatformReleasePlan plan, ReleaserUser user, Locale locale )
             throws IOException
     {
-        boolean bLaunchable = nStepNumber == PlatformPrecheckService.STEP_NUMBER ? PlatformPrecheckService.canLaunch( campaign )
-                : canPrepareStep( campaign, nStepNumber );
-        if ( !bLaunchable )
+        String strLockReason;
+        if ( nStepNumber == PlatformPrecheckService.STEP_NUMBER )
         {
-            throw new AppException( "Platform step " + nStepNumber + " cannot be launched" );
+            strLockReason = PlatformPrecheckService.canLaunch( campaign ) ? null : MESSAGE_STEP_LOCKED_RUNNING;
+        }
+        else
+        {
+            strLockReason = getStepLockReason( campaign, nStepNumber, false );
+        }
+        if ( strLockReason != null )
+        {
+            throw new AppException( I18nService.getLocalizedString( strLockReason, locale ) );
         }
         checkPlanCredentials( plan, user, locale );
         if ( plan.isVerify( ) )
@@ -1122,7 +1165,9 @@ public final class PlatformReleaseService
         PlatformStepDefinition definition = PlatformStepDefinitionHome.findByStepNumber( nStepNumber );
         if ( code == null || definition == null )
         {
-            throw new AppException( "Unknown platform step " + nStepNumber );
+            throw new AppException( I18nService.getLocalizedString( MESSAGE_LOAD_UNKNOWN_STEP, new String [ ] {
+                    Integer.toString( nStepNumber )
+            }, locale ) );
         }
 
         Site site = new Site( );
@@ -1135,7 +1180,9 @@ public final class PlatformReleaseService
         RepositoryType repositoryType = site.getRepoType( );
         if ( repositoryType == null )
         {
-            throw new AppException( "Unsupported repository : " + definition.getScmUrl( ) );
+            throw new AppException( I18nService.getLocalizedString( MESSAGE_LOAD_UNSUPPORTED_REPOSITORY, new String [ ] {
+                    definition.getScmUrl( )
+            }, locale ) );
         }
         Credential credential = user != null ? user.getCredential( repositoryType ) : null;
         if ( credential == null )
@@ -1160,7 +1207,9 @@ public final class PlatformReleaseService
         }
         if ( strPom == null )
         {
-            throw new AppException( "Unable to read the POM of " + definition.getScmUrl( ) + " on branch " + site.getBranchReleaseFrom( ) );
+            throw new AppException( I18nService.getLocalizedString( MESSAGE_LOAD_POM_UNREADABLE, new String [ ] {
+                    definition.getScmUrl( ), site.getBranchReleaseFrom( )
+            }, locale ) );
         }
         listBranches.remove( site.getBranchReleaseFrom( ) );
         site.setBranches( listBranches );
@@ -1204,7 +1253,7 @@ public final class PlatformReleaseService
             applyReleaseType( component, releaseType );
         }
 
-        addUnknownGroupIdComponents( site, listUnknownGroupId, locale );
+        addUnknownGroupIdComponents( site, listUnknownGroupId, strLocalPath, locale );
         applyPreviousResults( campaign, nStepNumber, site, locale );
         for ( Component component : site.getComponents( ) )
         {
@@ -2667,10 +2716,18 @@ public final class PlatformReleaseService
 
         for ( Component component : site.getComponents( ) )
         {
-            if ( component.getArtifactId( ).equals( strArtifactId ) && !mapReleasedVersions.containsKey( getCoordinates( component ) ) )
+            if ( !component.getArtifactId( ).equals( strArtifactId ) )
             {
-                setProjectComponent( campaign, nStepNumber, site, component, !component.isProject( ), user, locale );
+                continue;
             }
+            String strReleasedVersion = mapReleasedVersions.get( getCoordinates( component ) );
+            if ( strReleasedVersion != null )
+            {
+                throw new AppException( I18nService.getLocalizedString( MESSAGE_TOGGLE_ALREADY_RELEASED, new String [ ] {
+                        strArtifactId, strReleasedVersion
+                }, locale ) );
+            }
+            setProjectComponent( campaign, nStepNumber, site, component, !component.isProject( ), user, locale );
         }
     }
 
@@ -4281,7 +4338,7 @@ public final class PlatformReleaseService
                 return parser.parseReferencedArtifacts( strPom, AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_PLATFORM_GROUP_ID_PREFIX ) );
 
             case VERSION_PROPERTIES:
-                String strBomPath = strLocalPath + File.separator + AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_PLATFORM_BOM_PATH );
+                String strBomPath = getBomPath( strLocalPath );
                 String strBom = null;
                 if ( new File( strBomPath ).exists( ) )
                 {
@@ -4322,17 +4379,21 @@ public final class PlatformReleaseService
     }
 
     /**
-     * Adds the components whose groupId is unknown (not in the BOM) with a blocking comment, without remote informations.
+     * Adds the components whose groupId is unknown (not in the BOM, or no BOM at all) with a blocking comment, without remote informations.
      *
      * @param site
      *            the transient site
      * @param listDependencies
      *            the dependencies without groupId
+     * @param strLocalPath
+     *            the local clone path, where the BOM is looked for
      * @param locale
      *            the locale of the comment
      */
-    private static void addUnknownGroupIdComponents( Site site, List<Dependency> listDependencies, Locale locale )
+    private static void addUnknownGroupIdComponents( Site site, List<Dependency> listDependencies, String strLocalPath, Locale locale )
     {
+        String strMessage = I18nService.getLocalizedString( new File( getBomPath( strLocalPath ) ).exists( ) ? MESSAGE_UNKNOWN_GROUP_ID
+                : MESSAGE_UNKNOWN_GROUP_ID_NO_BOM, locale );
         for ( Dependency dependency : listDependencies )
         {
             Component component = new Component( );
@@ -4341,9 +4402,21 @@ public final class PlatformReleaseService
             component.setCurrentVersion( StringUtils.defaultString( dependency.getVersion( ), ConstanteUtils.NO_VERSION_DEFINED_IN_POM ) );
             component.setTargetVersion( component.getCurrentVersion( ) );
             component.setName( dependency.getArtifactId( ) );
-            component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_UNKNOWN_GROUP_ID, locale ) );
+            component.setBlockingReleaseComment( strMessage );
             site.addComponent( component );
         }
+    }
+
+    /**
+     * Returns the path of the bill of materials of lutece-platform in the local clone of the aggregate.
+     *
+     * @param strLocalPath
+     *            the local clone path
+     * @return the path
+     */
+    private static String getBomPath( String strLocalPath )
+    {
+        return strLocalPath + File.separator + AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_PLATFORM_BOM_PATH );
     }
 
     /**

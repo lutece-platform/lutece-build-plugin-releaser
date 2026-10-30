@@ -229,7 +229,6 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String MESSAGE_ACCESS_DENIED = "releaser.message.accesDenied";
     private static final String MESSAGE_CONFIRM_REMOVE = "releaser.message.confirmRemovePlatformRelease";
     private static final String MESSAGE_NOT_FOUND = "releaser.message.platformRelease.notFound";
-    private static final String MESSAGE_STEP_LOCKED = "releaser.message.platformRelease.stepLocked";
     private static final String MESSAGE_REMOVE_RUNNING = "releaser.message.platformRelease.removeRunning";
     private static final String MESSAGE_UNKNOWN_BRANCH = "releaser.message.platformRelease.unknownBranch";
     private static final String MESSAGE_EXPORT_VERIFICATION_NOT_ALLOWED = "releaser.message.platformRelease.exportVerificationNotAllowed";
@@ -676,9 +675,10 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         checkAuthorized( request, campaign );
 
         int nStepNumber = getStepNumber( request );
-        if ( !PlatformReleaseService.canPrepareStep( campaign, nStepNumber ) )
+        String strLockReason = PlatformReleaseService.getStepLockReason( campaign, nStepNumber, false );
+        if ( strLockReason != null )
         {
-            addError( MESSAGE_STEP_LOCKED, getLocale( ) );
+            addError( strLockReason, getLocale( ) );
             return redirect( request, VIEW_PLATFORM_RELEASE, PARAMETER_ID, campaign.getId( ) );
         }
 
@@ -881,9 +881,10 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         checkAuthorized( request, campaign );
 
         int nStepNumber = getStepNumber( request );
-        if ( !PlatformReleaseService.canSkipStep( campaign, nStepNumber ) )
+        String strLockReason = PlatformReleaseService.getStepLockReason( campaign, nStepNumber, true );
+        if ( strLockReason != null )
         {
-            addError( MESSAGE_STEP_LOCKED, getLocale( ) );
+            addError( strLockReason, getLocale( ) );
         }
         else
         {
@@ -938,8 +939,15 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         PlatformRelease campaign = getPreparedCampaign( request );
         if ( campaign != null )
         {
-            PlatformReleaseService.toggleProjectComponent( campaign, _nSiteStepNumber, _site, request.getParameter( PARAMETER_ARTIFACT_ID ),
-                    ReleaserUtils.getReleaserUser( request, getLocale( ) ), getLocale( ) );
+            try
+            {
+                PlatformReleaseService.toggleProjectComponent( campaign, _nSiteStepNumber, _site, request.getParameter( PARAMETER_ARTIFACT_ID ),
+                        ReleaserUtils.getReleaserUser( request, getLocale( ) ), getLocale( ) );
+            }
+            catch( AppException e )
+            {
+                addError( e.getMessage( ) );
+            }
         }
 
         return redirectToPreparedStep( request );
