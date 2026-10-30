@@ -603,6 +603,36 @@ public class PlatformReleaseServiceTest
     }
 
     /**
+     * A component stayed in beta or RC in a stable step when the stable of its beta or RC, or a later release, is not in Nexus.
+     */
+    @Test
+    public void testStayedInPrerelease( )
+    {
+        assertEquals( "1.0.5", PlatformReleaseService.getStableOfPrerelease( "1.0.5-beta-02" ) );
+        assertEquals( "1.0.5", PlatformReleaseService.getStableOfPrerelease( "1.0.5-RC-01" ) );
+        assertNull( PlatformReleaseService.getStableOfPrerelease( "1.0.5" ) );
+        assertNull( PlatformReleaseService.getStableOfPrerelease( "1.0.5-SNAPSHOT" ) );
+        assertNull( PlatformReleaseService.getStableOfPrerelease( null ) );
+
+        Component component = new Component( );
+        component.setCurrentVersion( "1.0.5-beta-02" );
+        component.setLastAvailableVersion( "1.0.5-beta-02" );
+        component.setReleaseVersions( new ArrayList<>( Arrays.asList( "1.0.4", "1.0.5-beta-02" ) ) );
+        assertTrue( PlatformReleaseService.isStayedInPrerelease( component, PlatformReleaseType.STABLE ) );
+        assertFalse( PlatformReleaseService.isStayedInPrerelease( component, PlatformReleaseType.BETA ) );
+
+        component.setLastAvailableVersion( "1.0.6" );
+        assertFalse( PlatformReleaseService.isStayedInPrerelease( component, PlatformReleaseType.STABLE ) );
+
+        component.setLastAvailableVersion( "1.0.5-beta-02" );
+        component.getReleaseVersions( ).add( "1.0.5" );
+        assertFalse( PlatformReleaseService.isStayedInPrerelease( component, PlatformReleaseType.STABLE ) );
+
+        component.setCurrentVersion( "1.0.6-SNAPSHOT" );
+        assertFalse( PlatformReleaseService.isStayedInPrerelease( component, PlatformReleaseType.STABLE ) );
+    }
+
+    /**
      * A verification from a tag counts only for a release from that tag, and never becomes stale when the branch moves.
      */
     @Test

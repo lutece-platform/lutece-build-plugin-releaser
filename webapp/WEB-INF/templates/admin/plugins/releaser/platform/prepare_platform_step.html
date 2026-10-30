@@ -394,9 +394,12 @@
 							<td><@parentCell resource=component /></td>
 							<td><strong class="button transition fill-lightblue small">${component.currentVersion!}</strong></td>
 							<td><strong class="button transition fill-lightblue small">${component.targetVersion!}</strong></td>
-							<td><span class="button transition fill-lightblue small"><#if component.isSnapshotVersion()>${component.nextSnapshotVersion!}<#else>${component.targetVersion!}</#if></span></td>
+							<td><#if (from_tag_components!{})[component.artifactId]??><span class="button transition fill-lightblue small" title="#i18n{releaser.prepare_platform_step.fromTagNextHelp}">${component.nextSnapshotVersion!"-"}</span><#else><span class="button transition fill-lightblue small"><#if component.isSnapshotVersion()>${component.nextSnapshotVersion!}<#else>${component.targetVersion!}</#if></span></#if></td>
 							<#if can_verify!false><td><@verificationBadge coordinates="${component.groupId!}:${component.artifactId!}" /></td></#if>
 							<td>
+								<#if (from_tag_components!{})[component.artifactId]??>
+									<span class="label label-info"><i class="fa fa-tag"></i> #i18n{releaser.prepare_platform_step.untestedCommitsFromTagAccepted} ${from_tag_components[component.artifactId]}</span>
+								</#if>
 								<#if !component.blockingReleaseComment?? && component.isSnapshotVersion() && !component.downgrade>
 									<a class="button transition border-lightblue small" title="Modifier la version pour la release" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=changeComponentVersion&artifact_id=${component.artifactId}">
 										<i class="fa fa-code-fork fa-fw"></i> Modifier la version
@@ -471,6 +474,9 @@
 							<td><strong>${component.artifactId!}</strong><br><small class="text-muted">${component.groupId!}</small></td>
 							<td>
 								<@releaseComments comments=component.releaseComments />
+								<#if (stayed_in_prerelease!{})[component.artifactId]??>
+									<span class="label label-warning" title="#i18n{releaser.prepare_platform_step.stayedInPrereleaseHelp}"><i class="fa fa-flask"></i> #i18n{releaser.prepare_platform_step.stayedInPrerelease}<#if stayed_in_prerelease[component.artifactId]?has_content> — #i18n{releaser.prepare_platform_step.stayedInPrereleaseBy} ${stayed_in_prerelease[component.artifactId]}</#if></span>
+								</#if>
 							</td>
 							<td><@bugtrackerCell component=component emptyDash=true /></td>
 							<td><@parentCell resource=component actions=false /></td>
@@ -480,6 +486,11 @@
 								<#if !component.blockingReleaseComment?? && component.isSnapshotVersion() && component.currentVersion == component.targetVersion>
 									<a class="button transition border-green small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=toggleComponent&artifact_id=${component.artifactId}" title="#i18n{releaser.prepare_platform_step.buttonAddComponentHelp}">
 										<i class="fa fa-plus-circle fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonAddComponent}
+									</a>
+								</#if>
+								<#if (stayed_in_prerelease!{})[component.artifactId]??>
+									<a class="button transition border-lightblue small btn-release-from-tag" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=releaseFromTag&artifact_id=${component.artifactId}" title="#i18n{releaser.prepare_platform_step.buttonReleaseFromTagHelp}">
+										<i class="fa fa-tag fa-fw"></i> #i18n{releaser.prepare_platform_step.buttonReleaseFromTag} ${component.currentVersion}
 									</a>
 								</#if>
 								<#if !component.blockingReleaseComment?? && !component.isSnapshotVersion() && component.lastAvailableVersion?? && component.lastAvailableVersion != component.targetVersion && !component.upgrade>
@@ -599,6 +610,9 @@ $(function() {
 		if ( confirm( "#i18n{releaser.prepare_platform_step.confirmRetest}" ) ) {
 			launchStep( "false", "VERIFY", "TO_RETEST" );
 		}
+	});
+	$(".btn-release-from-tag").click( function(){
+		return confirm( "#i18n{releaser.prepare_platform_step.confirmReleaseFromTag}" );
 	});
 	$(".btn-accept-from-tag").click( function(){
 		return confirm( "#i18n{releaser.prepare_platform_step.confirmUntestedFromTag}" );

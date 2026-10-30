@@ -47,10 +47,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -72,6 +74,7 @@ import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
@@ -1095,6 +1098,44 @@ public class GitUtils
             }
         }
         return mapHeads;
+    }
+
+    /**
+     * Lists the tags of a remote repository without cloning it.
+     *
+     * @param repoUrl
+     *            the repository URL
+     * @param login
+     *            the login
+     * @param pwd
+     *            the password or token
+     * @return the tag names, empty when the listing fails
+     */
+    public static Set<String> lsRemoteTags( String repoUrl, String login, String pwd )
+    {
+        Set<String> setTags = new HashSet<>( );
+        if ( StringUtils.isBlank( repoUrl ) )
+        {
+            return setTags;
+        }
+        try
+        {
+            Collection<Ref> refs = Git.lsRemoteRepository( ).setTags( true ).setRemote( repoUrl )
+                    .setCredentialsProvider( new UsernamePasswordCredentialsProvider( login, pwd ) ).call( );
+            for ( Ref ref : refs )
+            {
+                String strName = ref.getName( );
+                if ( strName != null && strName.startsWith( Constants.R_TAGS ) )
+                {
+                    setTags.add( StringUtils.removeEnd( strName.substring( Constants.R_TAGS.length( ) ), "^{}" ) );
+                }
+            }
+        }
+        catch( GitAPIException e )
+        {
+            AppLogService.error( "GitUtils - lsRemoteTags error on " + repoUrl + " : " + e.getMessage( ), e );
+        }
+        return setTags;
     }
 
     /**

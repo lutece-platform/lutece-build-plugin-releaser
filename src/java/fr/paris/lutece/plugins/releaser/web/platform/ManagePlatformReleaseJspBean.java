@@ -145,6 +145,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String ACTION_DOWNGRADE_COMPONENT = "downgradeComponent";
     private static final String ACTION_CANCEL_DOWNGRADE_COMPONENT = "cancelDowngradeComponent";
     private static final String ACTION_USE_LATEST_SNAPSHOT = "useLatestSnapshot";
+    private static final String ACTION_RELEASE_FROM_TAG = "releaseFromTag";
     private static final String ACTION_CANCEL_LATEST_SNAPSHOT = "cancelLatestSnapshot";
     private static final String ACTION_UPGRADE_PARENT = "upgradeParent";
     private static final String ACTION_USE_CORE_VERSION = "useCoreVersion";
@@ -220,6 +221,8 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String MARK_HAS_SELECTABLE_SNAPSHOTS = "has_selectable_snapshots";
     private static final String MARK_LATEST_SNAPSHOT_CANDIDATES = "latest_snapshot_candidates";
     private static final String MARK_LATEST_SNAPSHOT_COMPONENTS = "latest_snapshot_components";
+    private static final String MARK_STAYED_IN_PRERELEASE = "stayed_in_prerelease";
+    private static final String MARK_FROM_TAG_COMPONENTS = "from_tag_components";
     private static final String MARK_CREATE_AUTHORIZED = "create_authorized";
 
     // Messages
@@ -761,6 +764,8 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
             }
             model.put( MARK_VERIFICATIONS, PlatformReleaseService.getStepVerifications( step ) );
             model.put( MARK_UNTESTED_DECISIONS, PlatformReleaseService.getUntestedDecisions( step ) );
+            model.put( MARK_STAYED_IN_PRERELEASE, PlatformReleaseService.getStayedInPrereleaseComponents( campaign, nStepNumber, _site ) );
+            model.put( MARK_FROM_TAG_COMPONENTS, PlatformReleaseService.getFromTagComponents( campaign.getId( ), nStepNumber, _site ) );
             model.put( MARK_VERIFICATION_STATUSES, mapStatuses );
             model.put( MARK_VERIFICATION_COUNTS, PlatformReleaseService.countVerificationStatuses( mapStatuses ) );
             model.put( MARK_VERIFICATION_DATE, PlatformReleaseService.getVerificationDate( step ) );
@@ -1196,6 +1201,33 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     public String doUseLatestSnapshot( HttpServletRequest request )
     {
         return doLatestSnapshot( request, true );
+    }
+
+    /**
+     * Releases in stable, from its tag, a component of the prepared step that stayed in beta or RC.
+     *
+     * @param request
+     *            the request
+     * @return the step preparation
+     */
+    @Action( ACTION_RELEASE_FROM_TAG )
+    public String doReleaseFromTag( HttpServletRequest request )
+    {
+        PlatformRelease campaign = getPreparedCampaign( request );
+        if ( campaign != null )
+        {
+            try
+            {
+                PlatformReleaseService.releaseFromTag( campaign, _nSiteStepNumber, _site, request.getParameter( PARAMETER_ARTIFACT_ID ),
+                        ReleaserUtils.getReleaserUser( request, getLocale( ) ), getLocale( ) );
+            }
+            catch( AppException e )
+            {
+                addError( e.getMessage( ) );
+            }
+        }
+
+        return redirectToPreparedStep( request );
     }
 
     /**

@@ -136,6 +136,9 @@ public final class PlatformReleaseService
 
     private static final String POM_FILE = "pom.xml";
     private static final String LATEST_SNAPSHOT_KEY = "latest";
+    private static final String FROM_TAG_KEY = "fromTag";
+    private static final String MESSAGE_FROM_TAG_NOT_FOUND = "releaser.message.platform.fromTagNotFound";
+    private static final String CAMPAIGN_LABEL = "#%d %s";
     private static final String PARENT_KEY = "parent";
     private static final String CORE_VERSION_KEY = "coreversion";
     private static final String PARENT_VERSION_KEY = "parentversion";
@@ -509,7 +512,8 @@ public final class PlatformReleaseService
         String strError = ReleaserUtils.checkGithubWritePermission( site, user );
         for ( Component component : site.getComponents( ) )
         {
-            if ( strError == null && component.shouldBeReleased( ) )
+            if ( strError == null && ( component.shouldBeReleased( )
+                    || ( component.isProject( ) && component.getBlockingReleaseComment( ) == null && getStableOfPrerelease( component.getCurrentVersion( ) ) != null ) ) )
             {
                 strError = ReleaserUtils.checkGithubWritePermission( component, user );
             }
@@ -1208,6 +1212,7 @@ public final class PlatformReleaseService
                 continue;
             }
             checkComponentBranch( component, nCoreMajor, user, locale );
+            applyFromTagChoice( campaign, nStepNumber, component, user, locale );
         }
         loadParentVersions( campaign, nStepNumber, site );
 
@@ -2056,6 +2061,317 @@ public final class PlatformReleaseService
     }
 
     /**
+     * Returns the stable version of a beta or RC version (1.0.5-beta-02 gives 1.0.5).
+     *
+     * @param strVersion
+     *            the version, may be null
+     * @return the stable version, null for any other version
+     */
+    static String getStableOfPrerelease( String strVersion )
+    {
+        if ( StringUtils.isBlank( strVersion ) || ConstanteUtils.NO_VERSION_DEFINED_IN_POM.equals( strVersion ) )
+        {
+            return null;
+        }
+        try
+        {
+            Version version = Version.parse( strVersion );
+
+            return version.isBeta( ) || version.isCandidate( ) ? new Version( version.getMajor( ), version.getMinor( ), version.getPatch( ), null ).getVersion( )
+                    : null;
+        }
+        catch( VersionParsingException e )
+        {
+            return null;
+        }
+    }
+
+    /**
+     * Tells whether a component stayed in beta or RC in a stable step : the aggregate references a beta or RC whose stable, or a later release,
+     * is not in Nexus. It can be released in stable from its tag ; nothing is selected nor blocked, a beta may be wanted.
+     *
+     * @param component
+     *            the component
+     * @param releaseType
+     *            the release type of the step
+     * @return true when the release in stable from its tag is offered
+     */
+    static boolean isStayedInPrerelease( Component component, PlatformReleaseType releaseType )
+    {
+        String strStable = getStableOfPrerelease( component.getCurrentVersion( ) );
+        if ( releaseType != PlatformReleaseType.STABLE || strStable == null || component.isTheme( ) || component.getBlockingReleaseComment( ) != null )
+        {
+            return false;
+        }
+
+        return ( component.getReleaseVersions( ) == null || !component.getReleaseVersions( ).contains( strStable ) )
+                && ( component.getLastAvailableVersion( ) == null || ReleaserUtils.compareVersion( component.getLastAvailableVersion( ), strStable ) < 0 );
+    }
+
+    /**
+     * Returns the components of a step not to release that stayed in beta or RC, with the campaign that released their beta or RC when known.
+     *
+     * @param campaign
+     *            the campaign
+     * @param nStepNumber
+     *            the step number
+     * @param site
+     *            the transient site of the step
+     * @return artifactId to "#id name" of the campaign, empty when unknown
+     */
+    public static Map<String, String> getStayedInPrereleaseComponents( PlatformRelease campaign, int nStepNumber, Site site )
+    {
+        PlatformReleaseType releaseType = getStepReleaseType( campaign, PlatformStepCode.fromStepNumber( nStepNumber ) );
+        Map<String, String> mapComponents = new LinkedHashMap<>( );
+        Map<String, String> mapReleasedBy = null;
+        for ( Component component : site.getComponents( ) )
+        {
+            if ( !component.isProject( ) && isStayedInPrerelease( component, releaseType ) )
+            {
+                if ( mapReleasedBy == null )
+                {
+                    mapReleasedBy = getReleasingCampaigns( );
+                }
+                mapComponents.put( component.getArtifactId( ),
+                        StringUtils.defaultString( mapReleasedBy.get( getCoordinates( component ) + COORDINATES_SEPARATOR + component.getCurrentVersion( ) ) ) );
+            }
+        }
+
+        return mapComponents;
+    }
+
+    /**
+     * Returns the campaign that released each version, "groupId:artifactId:version" to "#id name", the first campaign found winning.
+     *
+     * @return the campaigns
+     */
+    private static Map<String, String> getReleasingCampaigns( )
+    {
+        Map<String, String> mapReleasedBy = new HashMap<>( );
+        for ( PlatformRelease release : PlatformReleaseHome.getPlatformReleasesList( ) )
+        {
+            String strLabel = String.format( CAMPAIGN_LABEL, release.getId( ), release.getName( ) );
+            for ( PlatformReleaseStep step : PlatformReleaseStepHome.findByPlatformRelease( release.getId( ) ) )
+            {
+                PlatformStepResult result = parseResult( step );
+                if ( result != null )
+                {
+                    for ( Map.Entry<String, String> entry : result.getReleasedVersions( ).entrySet( ) )
+                    {
+                        mapReleasedBy.putIfAbsent( entry.getKey( ) + COORDINATES_SEPARATOR + entry.getValue( ), strLabel );
+                    }
+                }
+            }
+        }
+
+        return mapReleasedBy;
+    }
+
+    /**
+     * Flags a component that stayed in beta or RC as to be released in stable from its tag, found on its repository
+     * ("artifactId-version", otherwise "vversion").
+     *
+     * @param campaign
+     *            the campaign
+     * @param nStepNumber
+     *            the step number
+     * @param site
+     *            the transient site of the step
+     * @param strArtifactId
+     *            the component artifactId
+     * @param user
+     *            the releaser user, for the repository credentials
+     * @param locale
+     *            the locale of the messages
+     */
+    public static void releaseFromTag( PlatformRelease campaign, int nStepNumber, Site site, String strArtifactId, ReleaserUser user, Locale locale )
+    {
+        PlatformReleaseType releaseType = getStepReleaseType( campaign, PlatformStepCode.fromStepNumber( nStepNumber ) );
+        for ( Component component : site.getComponents( ) )
+        {
+            if ( !component.getArtifactId( ).equals( strArtifactId ) || component.isProject( ) || !isStayedInPrerelease( component, releaseType ) )
+            {
+                continue;
+            }
+            String strTag = findPrereleaseTag( component, user );
+            if ( strTag == null )
+            {
+                throw new AppException( I18nService.getLocalizedString( MESSAGE_FROM_TAG_NOT_FOUND, new String [ ] {
+                        component.getArtifactId( ), component.getCurrentVersion( )
+                }, locale ) );
+            }
+            DatastoreService.setDataValue( getFromTagDataKey( campaign.getId( ), nStepNumber, strArtifactId ), strTag );
+            setProjectComponent( campaign, nStepNumber, site, component, true, user, locale );
+            applyFromTagChoice( campaign, nStepNumber, component, user, locale );
+        }
+    }
+
+    /**
+     * Returns the tag of the beta or RC a component stayed in, as found on its repository.
+     *
+     * @param component
+     *            the component
+     * @param user
+     *            the releaser user, for the repository credentials
+     * @return the tag, null when none is found
+     */
+    private static String findPrereleaseTag( Component component, ReleaserUser user )
+    {
+        RepositoryType repositoryType = component.getRepoType( );
+        Credential credential = ( user != null && repositoryType != null ) ? user.getCredential( repositoryType ) : null;
+        Set<String> setTags = GitUtils.lsRemoteTags( GitUtils.getRepoUrl( component.getScmUrl( ) ), credential != null ? credential.getLogin( ) : null,
+                credential != null ? credential.getPassword( ) : null );
+        for ( String strTag : new String [ ] {
+                component.getArtifactId( ) + "-" + component.getCurrentVersion( ), "v" + component.getCurrentVersion( )
+        } )
+        {
+            if ( setTags.contains( strTag ) )
+            {
+                return strTag;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Applies the release in stable from its tag of a flagged component that stayed in beta or RC : target the stable version, and next
+     * snapshot computed from the version of its branch, none when the branch is already beyond. The choice is forgotten when the component
+     * no longer stayed in beta or RC.
+     *
+     * @param campaign
+     *            the campaign
+     * @param nStepNumber
+     *            the step number
+     * @param component
+     *            the component
+     * @param user
+     *            the releaser user, for the branch check
+     * @param locale
+     *            the locale of the messages
+     */
+    private static void applyFromTagChoice( PlatformRelease campaign, int nStepNumber, Component component, ReleaserUser user, Locale locale )
+    {
+        String strKey = getFromTagDataKey( campaign.getId( ), nStepNumber, component.getArtifactId( ) );
+        if ( !component.isProject( ) || DatastoreService.getDataValue( strKey, null ) == null )
+        {
+            return;
+        }
+        if ( !isStayedInPrerelease( component, getStepReleaseType( campaign, PlatformStepCode.fromStepNumber( nStepNumber ) ) ) )
+        {
+            DatastoreService.removeData( strKey );
+            return;
+        }
+        component.setTargetVersion( getStableOfPrerelease( component.getCurrentVersion( ) ) );
+        component.setNextSnapshotVersion( null );
+        checkFromTagBranch( component, campaign.getCoreMajor( ), user, locale );
+    }
+
+    /**
+     * Reads the branch of a component released from its tag : its version gives the next snapshot, and the parent of the tag must be of the
+     * core version of the campaign. An unreadable POM or a mismatch is a blocking anomaly.
+     *
+     * @param component
+     *            the component, target version set
+     * @param nCoreMajor
+     *            the core version of the campaign
+     * @param user
+     *            the releaser user, for the repository credentials
+     * @param locale
+     *            the locale of the messages
+     */
+    private static void checkFromTagBranch( Component component, int nCoreMajor, ReleaserUser user, Locale locale )
+    {
+        RepositoryType repositoryType = component.getRepoType( );
+        String strRepository = repositoryType != null ? repositoryType.name( ) : "";
+        Credential credential = ( user != null && repositoryType != null ) ? user.getCredential( repositoryType ) : null;
+        String strBranch = component.getBranchReleaseFrom( );
+        if ( credential == null )
+        {
+            component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_BRANCH_CREDENTIALS_MISSING, new String [ ] {
+                    strRepository, strBranch
+            }, locale ) );
+            return;
+        }
+        String strPom = GitUtils.getRemoteFileContent( component.getScmUrl( ), strBranch, POM_FILE, credential.getLogin( ), credential.getPassword( ) );
+        if ( strPom == null )
+        {
+            component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_BRANCH_POM_UNREADABLE, new String [ ] {
+                    strBranch, strRepository
+            }, locale ) );
+            return;
+        }
+        try
+        {
+            component.setNextSnapshotVersion( Version.getBranchVersionAfterRelease( new PomParser( ).parseVersion( strPom ), component.getTargetVersion( ) ) );
+        }
+        catch( VersionParsingException e )
+        {
+            AppLogService.error( "Releaser : unreadable version on branch " + strBranch + " of " + component.getArtifactId( ), e );
+        }
+        checkParentCore( component, component.getPomParentArtifactId( ), component.getPomParentVersion( ), strBranch, nCoreMajor, locale );
+    }
+
+    /**
+     * Returns the tag a flagged component that stayed in beta or RC is released from in a step.
+     *
+     * @param nIdPlatformRelease
+     *            the campaign id
+     * @param nStepNumber
+     *            the step number
+     * @param component
+     *            the component
+     * @return the tag, null when the component is not released from a tag
+     */
+    static String getFromTag( int nIdPlatformRelease, int nStepNumber, Component component )
+    {
+        return component.isProject( ) ? DatastoreService.getDataValue( getFromTagDataKey( nIdPlatformRelease, nStepNumber, component.getArtifactId( ) ), null )
+                : null;
+    }
+
+    /**
+     * Returns the components of a step released in stable from the tag of the beta or RC they stayed in.
+     *
+     * @param nIdPlatformRelease
+     *            the campaign id
+     * @param nStepNumber
+     *            the step number
+     * @param site
+     *            the transient site of the step
+     * @return artifactId to tag
+     */
+    public static Map<String, String> getFromTagComponents( int nIdPlatformRelease, int nStepNumber, Site site )
+    {
+        Map<String, String> mapComponents = new LinkedHashMap<>( );
+        for ( Component component : site.getComponents( ) )
+        {
+            String strTag = getFromTag( nIdPlatformRelease, nStepNumber, component );
+            if ( strTag != null )
+            {
+                mapComponents.put( component.getArtifactId( ), strTag );
+            }
+        }
+
+        return mapComponents;
+    }
+
+    /**
+     * Returns the Datastore key of the tag a component is released from, under the prefix of the campaign so that it is purged with it.
+     *
+     * @param nIdPlatformRelease
+     *            the campaign id
+     * @param nStepNumber
+     *            the step number
+     * @param strArtifactId
+     *            the component artifactId
+     * @return the key
+     */
+    private static String getFromTagDataKey( int nIdPlatformRelease, int nStepNumber, String strArtifactId )
+    {
+        return getProjectDataKeyPrefix( nIdPlatformRelease ) + nStepNumber + DATA_KEY_SEPARATOR + FROM_TAG_KEY + DATA_KEY_SEPARATOR + strArtifactId;
+    }
+
+    /**
      * Checks that the branch of a component to release carries what the plan expects, before anything is sent to the pipeline : the version of
      * its POM must be the SNAPSHOT referenced by the aggregate, and a parent of the core line (lutece-global-pom, lutece-site-pom) must be of
      * the core version of the campaign. An unreadable POM or a mismatch is a blocking anomaly. A component that is not to be released is not
@@ -2108,22 +2424,47 @@ public final class PlatformReleaseService
 
         Dependency parent = parser.parseParent( strPom );
         setPomParent( component, parent );
-        if ( parent == null || !ReleasePreparationService.CORE_LINE_PARENTS.contains( parent.getArtifactId( ) ) )
+        if ( parent != null )
+        {
+            checkParentCore( component, parent.getArtifactId( ), parent.getVersion( ), strBranch, nCoreMajor, locale );
+        }
+    }
+
+    /**
+     * Blocks a component whose parent of the core line (lutece-global-pom, lutece-site-pom) is of another core version than the campaign.
+     *
+     * @param component
+     *            the component
+     * @param strParentArtifactId
+     *            the artifactId of the parent, may be null
+     * @param strParentVersion
+     *            the version of the parent
+     * @param strBranch
+     *            the branch, for the message
+     * @param nCoreMajor
+     *            the core version of the campaign
+     * @param locale
+     *            the locale of the messages
+     */
+    private static void checkParentCore( Component component, String strParentArtifactId, String strParentVersion, String strBranch, int nCoreMajor,
+            Locale locale )
+    {
+        if ( strParentArtifactId == null || strParentVersion == null || !ReleasePreparationService.CORE_LINE_PARENTS.contains( strParentArtifactId ) )
         {
             return;
         }
         try
         {
-            if ( ReleasePreparationService.toCoreLine( Version.parse( parent.getVersion( ) ).getMajor( ) ) != nCoreMajor )
+            if ( ReleasePreparationService.toCoreLine( Version.parse( strParentVersion ).getMajor( ) ) != nCoreMajor )
             {
                 component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_BRANCH_PARENT_MISMATCH, new String [ ] {
-                        parent.getArtifactId( ), parent.getVersion( ), strBranch, Integer.toString( nCoreMajor )
+                        strParentArtifactId, strParentVersion, strBranch, Integer.toString( nCoreMajor )
                 }, locale ) );
             }
         }
         catch( VersionParsingException e )
         {
-            AppLogService.error( "Releaser : unreadable parent version " + parent.getVersion( ) + " of " + component.getArtifactId( ) + " on branch " + strBranch );
+            AppLogService.error( "Releaser : unreadable parent version " + strParentVersion + " of " + component.getArtifactId( ) + " on branch " + strBranch );
         }
     }
 
@@ -2461,6 +2802,7 @@ public final class PlatformReleaseService
         else
         {
             clearLatestSnapshotChoice( campaign, nStepNumber, site, component );
+            DatastoreService.removeData( getFromTagDataKey( campaign.getId( ), nStepNumber, component.getArtifactId( ) ) );
             component.setDowngrade( false );
             ReleasePreparationService.defineTargetVersion( component );
             ReleasePreparationService.defineNextSnapshotVersion( component );
@@ -2629,7 +2971,7 @@ public final class PlatformReleaseService
                 listBlocked.add( component.getArtifactId( ) );
             }
             else
-                if ( component.shouldBeReleased( ) )
+                if ( component.shouldBeReleased( ) || getFromTag( campaign.getId( ), nStepNumber, component ) != null )
                 {
                     listToRelease.add( component );
                 }
@@ -2652,7 +2994,8 @@ public final class PlatformReleaseService
             PlatformPlanResource resource = toResource( component );
             resource.setVersionProperty( mapVersionProperties.get( getCoordinates( component ) ) );
             PlatformUntestedDecision decision = mapDecisions.get( resource.getCoordinates( ) );
-            resource.setSourceTag( decision != null ? StringUtils.trimToNull( decision.getSourceTag( ) ) : null );
+            resource.setSourceTag( StringUtils.defaultIfBlank( decision != null ? StringUtils.trimToNull( decision.getSourceTag( ) ) : null,
+                    getFromTag( campaign.getId( ), nStepNumber, component ) ) );
             resource.setVerifiedCommit( getVerifiedCommit( resource, mapVerifications, mapPrechecks ) );
             resource.setDeployRepository( getDeployRepository( component.getRepoType( ) ) );
             if ( component.getRepoType( ) == RepositoryType.GITLAB && resource.getDeployRepository( ) == null )
@@ -2983,7 +3326,7 @@ public final class PlatformReleaseService
             for ( Component component : site.getComponents( ) )
             {
                 String strReleasedVersion = result.getReleasedVersions( ).get( getCoordinates( component ) );
-                if ( strReleasedVersion != null && component.isSnapshotVersion( ) )
+                if ( strReleasedVersion != null && ( component.isSnapshotVersion( ) || getStableOfPrerelease( component.getCurrentVersion( ) ) != null ) )
                 {
                     component.setIsProject( false );
                     component.setTargetVersion( strReleasedVersion );
@@ -3143,8 +3486,10 @@ public final class PlatformReleaseService
             {
                 String strCoordinates = component.getGroupId( ) + COORDINATES_SEPARATOR + component.getArtifactId( );
                 PlatformUntestedDecision decision = mapDecisions.get( strCoordinates );
+                String strSourceTag = StringUtils.defaultIfBlank( decision != null ? decision.getSourceTag( ) : null,
+                        step != null ? getFromTag( step.getIdPlatformRelease( ), step.getStepNumber( ), component ) : null );
                 mapStatuses.put( strCoordinates, getVerificationStatus( mapVerifications.get( strCoordinates ), component.getTargetVersion( ),
-                        mapBranchHeads.get( strCoordinates ), decision != null ? decision.getSourceTag( ) : null ) );
+                        mapBranchHeads.get( strCoordinates ), strSourceTag ) );
             }
         }
         String strAggregate = site.getGroupId( ) + COORDINATES_SEPARATOR + site.getArtifactId( );
