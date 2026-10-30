@@ -45,6 +45,7 @@ import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.InvocationResult;
 import org.apache.maven.shared.invoker.Invoker;
 
+import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
@@ -229,8 +230,14 @@ public class MavenService implements IMavenService
      */
     public String mvnReleasePerform( String strPathPom, String strUsername, String strPassword, CommandResult commandResult,boolean bPrivateRepository ,String strTargetJdkVersion )
     {
-        
-    	InvocationResult invocationResult = mvnExecute( strPathPom,bPrivateRepository && StringUtils.isNoneBlank(AppPropertiesService.getProperty(ConstanteUtils.PROPERTY_MAVEN_PRIVATE_RELEASE_DEPLOYMENT_REPOSITORY))? MavenGoals.RELEASE_PERFORM_PRIVATE_REPO.asList( ):MavenGoals.RELEASE_PERFORM.asList( ), commandResult ,strTargetJdkVersion );
+        // Never fall back to the public repository for a private component
+        if ( bPrivateRepository && StringUtils.isBlank( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_MAVEN_PRIVATE_RELEASE_DEPLOYMENT_REPOSITORY ) ) )
+        {
+            ReleaserUtils.addTechnicalError( commandResult, MavenUtils.getPrivateRepositoryMissingMessage( RepositoryType.GITLAB, null ) );
+            return "";
+        }
+
+    	InvocationResult invocationResult = mvnExecute( strPathPom, bPrivateRepository ? MavenGoals.RELEASE_PERFORM_PRIVATE_REPO.asList( ) : MavenGoals.RELEASE_PERFORM.asList( ), commandResult ,strTargetJdkVersion );
         int nStatus = invocationResult.getExitCode( );
         System.out.println( commandResult.getLog( ).toString( ) );
         if ( nStatus != 0 )

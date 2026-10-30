@@ -202,6 +202,15 @@ public final class MavenRepoComponentInfoProvider
                 return;
             }
 
+            // GitLab component without private repository : it would go to the public one.
+            String strPrivateMissing = MavenUtils.getPrivateRepositoryMissingMessage( component.getRepoType( ),
+                    AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_MAVEN_PRIVATE_RELEASE_DEPLOYMENT_REPOSITORY ) );
+            if ( strPrivateMissing != null )
+            {
+                component.setBlockingReleaseComment( strPrivateMissing );
+                AppLogService.error( "MavenRepoComponentInfoProvider - " + strArtifactId + " : " + strPrivateMissing );
+            }
+
             // Releases in the repository of the other platform : informative only.
             String strMisplaced = MavenUtils.getMisplacedReleasesMessage( strReleaseRepository, component.getRepoType( ) );
             if ( strMisplaced != null )

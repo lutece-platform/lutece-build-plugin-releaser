@@ -37,7 +37,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 import fr.paris.lutece.plugins.releaser.business.RepositoryType;
+import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 
 /**
  * 
@@ -171,6 +174,26 @@ public final class MavenUtils
 
         return "Les releases du composant sont dans le dépôt Nexus " + strReleaseRepository + " alors qu'un composant " + repositoryType
                 + " les publie dans le dépôt " + strExpected + ".";
+    }
+
+    /**
+     * Builds the blocking message of a GitLab component when no private Nexus repository is configured : it would be released to the public one.
+     *
+     * @param repositoryType
+     *            the platform of the component
+     * @param strPrivateRepository
+     *            the value of releaser.mavenPrivateReleaseDeploymentRepository
+     * @return the message, null when the component can be released
+     */
+    public static String getPrivateRepositoryMissingMessage( RepositoryType repositoryType, String strPrivateRepository )
+    {
+        if ( repositoryType != RepositoryType.GITLAB || StringUtils.isNotBlank( strPrivateRepository ) )
+        {
+            return null;
+        }
+
+        return "Dépôt Nexus privé non configuré (" + ConstanteUtils.PROPERTY_MAVEN_PRIVATE_RELEASE_DEPLOYMENT_REPOSITORY
+                + ") : release impossible d'un composant GitLab.";
     }
 
 }

@@ -98,4 +98,19 @@ public class MavenUtilsTest
         assertEquals( "Les releases du composant sont dans le dépôt Nexus private alors qu'un composant GITHUB les publie dans le dépôt public.",
                 MavenUtils.getMisplacedReleasesMessage( MavenUtils.REPOSITORY_PRIVATE, RepositoryType.GITHUB ) );
     }
+
+    /**
+     * A GitLab component is blocked without private repository, never with one, and a GitHub component never.
+     */
+    @Test
+    public void testPrivateRepositoryMissingMessage( )
+    {
+        assertEquals( "Dépôt Nexus privé non configuré (releaser.mavenPrivateReleaseDeploymentRepository) : release impossible d'un composant GitLab.",
+                MavenUtils.getPrivateRepositoryMissingMessage( RepositoryType.GITLAB, null ) );
+        assertEquals( MavenUtils.getPrivateRepositoryMissingMessage( RepositoryType.GITLAB, null ),
+                MavenUtils.getPrivateRepositoryMissingMessage( RepositoryType.GITLAB, " " ) );
+        assertNull( MavenUtils.getPrivateRepositoryMissingMessage( RepositoryType.GITLAB, "https://nexus/private" ) );
+        assertNull( MavenUtils.getPrivateRepositoryMissingMessage( RepositoryType.GITHUB, null ) );
+        assertNull( MavenUtils.getPrivateRepositoryMissingMessage( null, null ) );
+    }
 }
