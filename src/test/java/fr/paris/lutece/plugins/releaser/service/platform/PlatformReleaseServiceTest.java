@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.junit.Test;
@@ -224,7 +225,7 @@ public class PlatformReleaseServiceTest
         site.addComponent( workflowCore );
         site.addComponent( workflow );
 
-        PlatformReleasePlan plan = PlatformReleaseService.buildPlan( campaign, PlatformStepCode.PLATFORM_PLUGINS.getStepNumber( ), site, true );
+        PlatformReleasePlan plan = PlatformReleaseService.buildPlan( campaign, PlatformStepCode.PLATFORM_PLUGINS.getStepNumber( ), site, true, Locale.FRENCH );
 
         assertEquals( PlatformStepCode.PLATFORM_PLUGINS, plan.getStepCode( ) );
         assertEquals( PlatformReleaseType.BETA, plan.getReleaseType( ) );
@@ -274,7 +275,7 @@ public class PlatformReleaseServiceTest
         site.addComponent( betaInStable );
 
         PlatformReleasePlan plan = PlatformReleaseService.buildPlan( campaign( PlatformReleaseType.STABLE ), PlatformStepCode.CORE.getStepNumber( ), site,
-                true );
+                true, Locale.FRENCH );
         assertEquals( null, plan.getComponents( ).get( 0 ).getMasterBranch( ) );
     }
 
@@ -324,7 +325,7 @@ public class PlatformReleaseServiceTest
         site.addComponent( alreadyReleased );
 
         PlatformReleasePlan plan = PlatformReleaseService.buildPlan( campaign( PlatformReleaseType.STABLE ), PlatformStepCode.PLATFORM_PLUGINS.getStepNumber( ),
-                site, true );
+                site, true, Locale.FRENCH );
 
         assertEquals( 1, plan.getComponents( ).size( ) );
         assertEquals( "plugin-forms", plan.getComponents( ).get( 0 ).getArtifactId( ) );
@@ -391,7 +392,7 @@ public class PlatformReleaseServiceTest
         site.setNextSnapshotVersion( "8.0.0-SNAPSHOT" );
 
         PlatformReleasePlan plan = PlatformReleaseService.buildPlan( campaign( PlatformReleaseType.BETA ), PlatformStepCode.PLATFORM_PLUGINS.getStepNumber( ),
-                site, PlatformStepMode.VERIFY );
+                site, PlatformStepMode.VERIFY, Locale.FRENCH );
         assertTrue( plan.isVerify( ) );
         assertFalse( plan.isDryRun( ) );
 

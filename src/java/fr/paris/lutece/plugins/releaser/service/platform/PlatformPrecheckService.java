@@ -453,7 +453,7 @@ public final class PlatformPrecheckService
         {
             return false;
         }
-        PlatformReleaseService.launchStep( campaign, STEP_NUMBER, plan, user );
+        PlatformReleaseService.launchStep( campaign, STEP_NUMBER, plan, user, locale );
 
         return true;
     }

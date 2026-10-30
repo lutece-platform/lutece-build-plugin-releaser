@@ -378,10 +378,13 @@ public final class PlatformReleaseService
      *            the plan to send
      * @param user
      *            the releaser user, whose credentials are sent to the pipeline : it clones and pushes with them
+     * @param locale
+     *            the locale of the messages
      * @throws IOException
      *             if the plan cannot be serialized
      */
-    public static void launchStep( PlatformRelease campaign, int nStepNumber, PlatformReleasePlan plan, ReleaserUser user ) throws IOException
+    public static void launchStep( PlatformRelease campaign, int nStepNumber, PlatformReleasePlan plan, ReleaserUser user, Locale locale )
+            throws IOException
     {
         boolean bLaunchable = nStepNumber == PlatformPrecheckService.STEP_NUMBER ? PlatformPrecheckService.canLaunch( campaign )
                 : canPrepareStep( campaign, nStepNumber );
@@ -389,7 +392,7 @@ public final class PlatformReleaseService
         {
             throw new AppException( "Platform step " + nStepNumber + " cannot be launched" );
         }
-        checkPlanCredentials( plan, user );
+        checkPlanCredentials( plan, user, locale );
         if ( plan.isVerify( ) )
         {
             plan.setParallelism( AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_PLATFORM_VERIFY_PARALLELISM, DEFAULT_VERIFY_PARALLELISM ) );
@@ -408,8 +411,10 @@ public final class PlatformReleaseService
      *            the plan
      * @param user
      *            the releaser user, null when not authenticated
+     * @param locale
+     *            the locale of the messages
      */
-    private static void checkPlanCredentials( PlatformReleasePlan plan, ReleaserUser user )
+    private static void checkPlanCredentials( PlatformReleasePlan plan, ReleaserUser user, Locale locale )
     {
         List<PlatformPlanResource> listResources = new ArrayList<>( plan.getComponents( ) );
         if ( plan.getAggregate( ) != null )
@@ -425,7 +430,7 @@ public final class PlatformReleaseService
             {
                 throw new AppException( I18nService.getLocalizedString( MESSAGE_CREDENTIALS_REQUIRED, new String [ ] {
                         type.name( ), resource.getArtifactId( )
-                }, Locale.getDefault( ) ) );
+                }, locale ) );
             }
         }
     }
@@ -1558,10 +1563,12 @@ public final class PlatformReleaseService
      *            true for the parent POM version, false for the lutece-core version
      * @param strChoice
      *            "keep", a version, or null
+     * @param locale
+     *            the locale of the messages
      * @throws AppException
      *             when the version is not acceptable
      */
-    public static void usePomVersion( PlatformRelease campaign, int nStepNumber, Site site, boolean bParent, String strChoice )
+    public static void usePomVersion( PlatformRelease campaign, int nStepNumber, Site site, boolean bParent, String strChoice, Locale locale )
     {
         String strKey = getPomVersionDataKey( campaign.getId( ), nStepNumber, bParent ? PARENT_VERSION_KEY : CORE_VERSION_KEY );
         String strValue = StringUtils.trimToNull( strChoice );
@@ -1574,7 +1581,7 @@ public final class PlatformReleaseService
         {
             throw new AppException( I18nService.getLocalizedString( MESSAGE_POM_VERSION_UNKNOWN, new String [ ] {
                     bParent ? site.getPomParentArtifactId( ) : ConstanteUtils.TAG_LUTECE_CORE, strValue, Integer.toString( campaign.getCoreMajor( ) )
-            }, Locale.getDefault( ) ) );
+            }, locale ) );
         }
         DatastoreService.setDataValue( strKey, strValue );
     }
@@ -3023,11 +3030,13 @@ public final class PlatformReleaseService
      *            the transient site of the step
      * @param bDryRun
      *            true to ask the pipeline for a simulation
+     * @param locale
+     *            the locale of the messages
      * @return the plan
      */
-    public static PlatformReleasePlan buildPlan( PlatformRelease campaign, int nStepNumber, Site site, boolean bDryRun )
+    public static PlatformReleasePlan buildPlan( PlatformRelease campaign, int nStepNumber, Site site, boolean bDryRun, Locale locale )
     {
-        return buildPlan( campaign, nStepNumber, site, bDryRun ? PlatformStepMode.DRY_RUN : PlatformStepMode.RELEASE );
+        return buildPlan( campaign, nStepNumber, site, bDryRun ? PlatformStepMode.DRY_RUN : PlatformStepMode.RELEASE, locale );
     }
 
     /**
@@ -3044,7 +3053,7 @@ public final class PlatformReleaseService
     }
 
     /**
-     * Builds the plan of a step for a release, a simulation or a verification, see {@link #buildPlan(PlatformRelease, int, Site, boolean)}.
+     * Builds the plan of a step for a release, a simulation or a verification, see {@link #buildPlan(PlatformRelease, int, Site, boolean, Locale)}.
      * Only the step pipeline verifies : a verification of the last step, run by the lutece-platform pipeline, is refused.
      *
      * @param campaign
@@ -3055,15 +3064,17 @@ public final class PlatformReleaseService
      *            the transient site of the step
      * @param mode
      *            the mode of the build
+     * @param locale
+     *            the locale of the messages
      * @return the plan
      */
-    public static PlatformReleasePlan buildPlan( PlatformRelease campaign, int nStepNumber, Site site, PlatformStepMode mode )
+    public static PlatformReleasePlan buildPlan( PlatformRelease campaign, int nStepNumber, Site site, PlatformStepMode mode, Locale locale )
     {
         PlatformStepCode code = PlatformStepCode.fromStepNumber( nStepNumber );
         PlatformReleaseType releaseType = getStepReleaseType( campaign, code );
         if ( mode == PlatformStepMode.VERIFY && !canVerify( code ) )
         {
-            throw new AppException( I18nService.getLocalizedString( MESSAGE_VERIFY_NOT_AVAILABLE, Locale.getDefault( ) ) );
+            throw new AppException( I18nService.getLocalizedString( MESSAGE_VERIFY_NOT_AVAILABLE, locale ) );
         }
 
         PlatformReleasePlan plan = new PlatformReleasePlan( );
@@ -3079,7 +3090,7 @@ public final class PlatformReleaseService
         {
             throw new AppException( I18nService.getLocalizedString( MESSAGE_AGGREGATE_BLOCKED, new String [ ] {
                     site.getBlockingReleaseComment( )
-            }, Locale.getDefault( ) ) );
+            }, locale ) );
         }
         List<Component> listToRelease = new ArrayList<>( );
         List<String> listBlocked = new ArrayList<>( );
@@ -3099,7 +3110,7 @@ public final class PlatformReleaseService
         {
             throw new AppException( I18nService.getLocalizedString( MESSAGE_BLOCKED_COMPONENTS, new String [ ] {
                     String.join( ", ", listBlocked )
-            }, Locale.getDefault( ) ) );
+            }, locale ) );
         }
         Map<String, String> mapVersionProperties = getVersionProperties( site );
         Map<String, PlatformResourceVerification> mapVerifications = mode == PlatformStepMode.VERIFY ? new HashMap<>( )
@@ -3140,7 +3151,7 @@ public final class PlatformReleaseService
         {
             throw new AppException( I18nService.getLocalizedString( MESSAGE_PRIVATE_REPOSITORY_MISSING, new String [ ] {
                     String.join( ", ", listNoPrivateRepository )
-            }, Locale.getDefault( ) ) );
+            }, locale ) );
         }
         plan.setAggregate( aggregate );
 

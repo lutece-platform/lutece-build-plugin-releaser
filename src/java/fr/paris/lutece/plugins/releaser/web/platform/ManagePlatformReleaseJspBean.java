@@ -1410,7 +1410,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         }
         try
         {
-            PlatformReleaseService.usePomVersion( campaign, _nSiteStepNumber, _site, bParent, strChoice );
+            PlatformReleaseService.usePomVersion( campaign, _nSiteStepNumber, _site, bParent, strChoice, getLocale( ) );
         }
         catch( AppException e )
         {
@@ -1533,7 +1533,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         try
         {
             savePipelineParameters( request, campaign );
-            PlatformReleasePlan plan = PlatformReleaseService.buildPlan( campaign, _nSiteStepNumber, _site, mode );
+            PlatformReleasePlan plan = PlatformReleaseService.buildPlan( campaign, _nSiteStepNumber, _site, mode, getLocale( ) );
             if ( mode == PlatformStepMode.VERIFY && SCOPE_TO_RETEST.equals( request.getParameter( PARAMETER_SCOPE ) ) )
             {
                 PlatformReleaseService.restrictPlan( plan, PlatformReleaseService
@@ -1564,7 +1564,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
                 addError( strMasterError );
                 return redirectToPreparedStep( request );
             }
-            PlatformReleaseService.launchStep( campaign, _nSiteStepNumber, plan, user );
+            PlatformReleaseService.launchStep( campaign, _nSiteStepNumber, plan, user, getLocale( ) );
             addInfo( mode == PlatformStepMode.VERIFY ? INFO_VERIFY_LAUNCHED : ( bNothingPushed ? INFO_DRY_RUN_LAUNCHED : INFO_STEP_LAUNCHED ), getLocale( ) );
         }
         catch( IOException | AppException e )
