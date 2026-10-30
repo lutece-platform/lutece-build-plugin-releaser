@@ -194,4 +194,18 @@ public class VersionTest
         assertFalse( listVersions.contains( "4.0.0-beta-01" ) );
     }
 
+    /**
+     * After a release from tag, the branch goes to the next patch SNAPSHOT, unless it is already beyond the released version.
+     */
+    @Test
+    public void testGetBranchVersionAfterRelease( ) throws VersionParsingException
+    {
+        assertEquals( "1.0.6-SNAPSHOT", Version.getBranchVersionAfterRelease( "1.0.5-SNAPSHOT", "1.0.5" ) );
+        assertEquals( "1.0.6-SNAPSHOT", Version.getBranchVersionAfterRelease( "1.0.4-SNAPSHOT", "1.0.5" ) );
+        assertEquals( "1.0.6-SNAPSHOT", Version.getBranchVersionAfterRelease( null, "1.0.5" ) );
+        assertNull( Version.getBranchVersionAfterRelease( "1.1.0-SNAPSHOT", "1.0.5" ) );
+        assertNull( Version.getBranchVersionAfterRelease( "1.0.6-SNAPSHOT", "1.0.5" ) );
+        assertNull( Version.getBranchVersionAfterRelease( "2.0.0-SNAPSHOT", "1.0.5" ) );
+    }
+
 }

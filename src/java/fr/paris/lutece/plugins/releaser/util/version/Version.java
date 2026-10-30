@@ -706,6 +706,29 @@ public class Version implements Comparable
     }
 
     /**
+     * Returns the development version of a branch after a release made apart from it (release from tag) : the next patch SNAPSHOT of the
+     * released version, or null when the branch is already beyond the released version and must be left as it is.
+     *
+     * @param strBranchVersion
+     *            the current version of the branch, null if unknown
+     * @param strReleasedVersion
+     *            the released version
+     * @return the next development version, null to keep the branch version
+     * @throws VersionParsingException
+     *             if a version cannot be parsed
+     */
+    public static String getBranchVersionAfterRelease( String strBranchVersion, String strReleasedVersion ) throws VersionParsingException
+    {
+        Version released = Version.parse( strReleasedVersion );
+        if ( strBranchVersion != null && Version.parse( strBranchVersion ).nextRelease( ).compareTo( released ) > 0 )
+        {
+            return null;
+        }
+
+        return released.nextPatch( true ).getVersion( );
+    }
+
+    /**
      * Get the next release version for a given version.
      *
      * @param strVersion

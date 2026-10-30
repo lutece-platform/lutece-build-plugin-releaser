@@ -69,6 +69,7 @@ import fr.paris.lutece.plugins.releaser.util.IVCSResourceService;
 import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
 import fr.paris.lutece.plugins.releaser.util.PluginUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
+import fr.paris.lutece.plugins.releaser.util.file.FileUtils;
 import fr.paris.lutece.plugins.releaser.util.git.GitUtils;
 import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
 import fr.paris.lutece.plugins.releaser.util.pom.PomUpdater;
@@ -900,6 +901,47 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
     }
 
     /**
+     * Sets a version in the files of the local clone that hold it, like releasePrepareComponent does : the core descriptor and AppInfo for
+     * lutece-core, the plugin descriptors otherwise, then the version of the pom only (no dependency rewrite).
+     *
+     * @param context
+     *            the context
+     * @param strVersion
+     *            the version
+     * @throws JAXBException
+     *             if the pom cannot be updated
+     */
+    private void setVersionedFiles( WorkflowReleaseContext context, String strVersion ) throws JAXBException
+    {
+        CommandResult commandResult = context.getCommandResult( );
+        String strLocalComponentPath = ReleaserUtils.getLocalPath( context );
+
+        if ( PluginUtils.isCore( context.getComponent( ).getArtifactId( ) ) )
+        {
+            String strCoreXMLPath = PluginUtils.getCoreXMLFile( strLocalComponentPath );
+            if ( StringUtils.isNotBlank( strCoreXMLPath ) )
+            {
+                PluginUtils.updatePluginXMLVersion( strCoreXMLPath, strVersion, commandResult );
+            }
+            String strAppInfoFilePath = PluginUtils.getAppInfoFile( strLocalComponentPath );
+            if ( StringUtils.isNotBlank( strAppInfoFilePath ) )
+            {
+                PluginUtils.updateAppInfoFile( strAppInfoFilePath, strVersion, commandResult );
+            }
+        }
+        else
+        {
+            for ( String pluginXMLPath : PluginUtils.getPluginXMLFile( strLocalComponentPath ) )
+            {
+                PluginUtils.updatePluginXMLVersion( pluginXMLPath, strVersion, commandResult );
+            }
+        }
+
+        PomUpdater.updatePomVersion( ReleaserUtils.getLocalPomPath( context ), strVersion );
+        commandResult.getLog( ).append( "Pom version set to " + strVersion + "\n" );
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -935,32 +977,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             GitUtils.checkoutTag( git, strSourceTag, commandResult );
             commandResult.getLog( ).append( "Checked out tag " + strSourceTag + " (detached HEAD)\n" );
 
-            // Update the versioned files like releasePrepareComponent does.
-            if ( PluginUtils.isCore( strComponentName ) )
-            {
-                String strCoreXMLPath = PluginUtils.getCoreXMLFile( strLocalComponentPath );
-                if ( StringUtils.isNotBlank( strCoreXMLPath ) )
-                {
-                    PluginUtils.updatePluginXMLVersion( strCoreXMLPath, strTargetStableVersion, commandResult );
-                }
-                String strAppInfoFilePath = PluginUtils.getAppInfoFile( strLocalComponentPath );
-                if ( StringUtils.isNotBlank( strAppInfoFilePath ) )
-                {
-                    PluginUtils.updateAppInfoFile( strAppInfoFilePath, strTargetStableVersion, commandResult );
-                }
-            }
-            else
-            {
-                String [ ] pluginNames = PluginUtils.getPluginXMLFile( strLocalComponentPath );
-                for ( String pluginXMLPath : pluginNames )
-                {
-                    PluginUtils.updatePluginXMLVersion( pluginXMLPath, strTargetStableVersion, commandResult );
-                }
-            }
-
-            // Update the pom version only (no dependency rewrite).
-            PomUpdater.updatePomVersion( strLocalComponentPomPath, strTargetStableVersion );
-            commandResult.getLog( ).append( "Pom version set to " + strTargetStableVersion + "\n" );
+            setVersionedFiles( context, strTargetStableVersion );
 
             // Capture target JDK from the effective POM (needed for mvn deploy in the next task).
             String strLocalComponentPomEffectivePath = ReleaserUtils.getLocalEffectivePomPath( context );
@@ -1085,14 +1102,22 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         {
             cvsService.checkoutBranch( context, strDevelopBranch, locale );
 
-            // Next patch SNAPSHOT computed from the just-released stable version.
-            String strNextSnapshot = Version.parse( component.getTargetVersion( ) ).nextPatch( true ).getVersion( );
+            // Next patch SNAPSHOT, unless the branch is already beyond the released version.
+            String strBranchPom = FileUtils.readFile( strLocalComponentPomPath );
+            String strBranchVersion = strBranchPom != null ? new PomParser( ).parseVersion( strBranchPom ) : null;
+            String strNextSnapshot = Version.getBranchVersionAfterRelease( strBranchVersion, component.getTargetVersion( ) );
+            if ( strNextSnapshot == null )
+            {
+                commandResult.getLog( ).append( "Develop branch " + strDevelopBranch + " already at " + strBranchVersion + ", version left unchanged\n" );
+            }
+            else
+            {
+                setVersionedFiles( context, strNextSnapshot );
+                cvsService.updateBranch( context, strDevelopBranch, locale,
+                        "[release-from-tag] bump snapshot to " + strNextSnapshot + " after release " + component.getTargetVersion( ) );
 
-            PomUpdater.updatePomVersion( strLocalComponentPomPath, strNextSnapshot );
-            cvsService.updateBranch( context, strDevelopBranch, locale,
-                    "[release-from-tag] bump snapshot to " + strNextSnapshot + " after release " + component.getTargetVersion( ) );
-
-            commandResult.getLog( ).append( "Develop branch " + strDevelopBranch + " bumped to " + strNextSnapshot + "\n" );
+                commandResult.getLog( ).append( "Develop branch " + strDevelopBranch + " bumped to " + strNextSnapshot + "\n" );
+            }
         }
         catch( JAXBException | VersionParsingException e )
         {
