@@ -81,6 +81,7 @@ import fr.paris.lutece.plugins.releaser.business.platform.PlatformUntestedDecisi
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformVerificationCheck;
 import fr.paris.lutece.plugins.releaser.service.MavenRepoComponentInfoProvider;
 import fr.paris.lutece.plugins.releaser.service.ReleasePreparationService;
+import fr.paris.lutece.plugins.releaser.service.SiteService;
 import fr.paris.lutece.plugins.releaser.service.BugtrackerService;
 import fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
@@ -2867,28 +2868,146 @@ public final class PlatformReleaseService
     {
         for ( String strVersion : listTargetVersions )
         {
-            boolean bMatch;
-            if ( releaseType == PlatformReleaseType.RC )
-            {
-                bMatch = Version.isCandidate( strVersion );
-            }
-            else
-                if ( releaseType == PlatformReleaseType.BETA )
-                {
-                    bMatch = Version.isBeta( strVersion );
-                }
-                else
-                {
-                    bMatch = !Version.isCandidate( strVersion ) && !Version.isBeta( strVersion ) && !Version.isSnapshot( strVersion );
-                }
-
-            if ( bMatch )
+            if ( matchesReleaseType( strVersion, releaseType ) )
             {
                 return strVersion;
             }
         }
 
         return strDefaultVersion;
+    }
+
+    /**
+     * Tells whether a version is of a release type : an RC for RC, a beta for beta, a plain version otherwise.
+     *
+     * @param strVersion
+     *            the version
+     * @param releaseType
+     *            the release type
+     * @return true when the version is of the type
+     */
+    static boolean matchesReleaseType( String strVersion, PlatformReleaseType releaseType )
+    {
+        if ( releaseType == PlatformReleaseType.RC )
+        {
+            return Version.isCandidate( strVersion );
+        }
+        if ( releaseType == PlatformReleaseType.BETA )
+        {
+            return Version.isBeta( strVersion );
+        }
+
+        return !Version.isCandidate( strVersion ) && !Version.isBeta( strVersion ) && !Version.isSnapshot( strVersion );
+    }
+
+    /**
+     * Returns the index of the next candidate version of a release type after the current one, going round the list.
+     *
+     * @param listTargetVersions
+     *            the candidate versions, may be null
+     * @param nCurrentIndex
+     *            the index of the current target
+     * @param releaseType
+     *            the release type of the step
+     * @return the index, -1 when no other version of the type exists
+     */
+    static int getNextTargetIndex( List<String> listTargetVersions, int nCurrentIndex, PlatformReleaseType releaseType )
+    {
+        if ( CollectionUtils.isEmpty( listTargetVersions ) )
+        {
+            return -1;
+        }
+        int nSize = listTargetVersions.size( );
+        for ( int nOffset = 1; nOffset < nSize; nOffset++ )
+        {
+            int nIndex = Math.floorMod( nCurrentIndex + nOffset, nSize );
+            if ( matchesReleaseType( listTargetVersions.get( nIndex ), releaseType ) )
+            {
+                return nIndex;
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * Moves the target version of a component of a step to the next candidate of the release type of the step, unlike the site screen which
+     * goes through every candidate.
+     *
+     * @param campaign
+     *            the campaign
+     * @param nStepNumber
+     *            the step number
+     * @param site
+     *            the transient site of the step
+     * @param strArtifactId
+     *            the component artifactId
+     */
+    public static void cycleTargetVersion( PlatformRelease campaign, int nStepNumber, Site site, String strArtifactId )
+    {
+        PlatformReleaseType releaseType = getStepReleaseType( campaign, PlatformStepCode.fromStepNumber( nStepNumber ) );
+        for ( Component component : site.getComponents( ) )
+        {
+            if ( component.getArtifactId( ).equals( strArtifactId ) )
+            {
+                int nIndex = getNextTargetIndex( component.getTargetVersions( ), component.getTargetVersionIndex( ), releaseType );
+                if ( nIndex >= 0 )
+                {
+                    String strTargetVersion = component.getTargetVersions( ).get( nIndex );
+                    component.setTargetVersion( strTargetVersion );
+                    component.setTargetVersionIndex( nIndex );
+                    component.setNextSnapshotVersion( Version.getNextSnapshotVersion( strTargetVersion ) );
+                }
+            }
+        }
+    }
+
+    /**
+     * Moves the target version of the aggregate of a step to the next candidate of the release type of the step.
+     *
+     * @param campaign
+     *            the campaign
+     * @param nStepNumber
+     *            the step number
+     * @param site
+     *            the transient site of the step
+     */
+    public static void cycleTargetVersion( PlatformRelease campaign, int nStepNumber, Site site )
+    {
+        PlatformReleaseType releaseType = getStepReleaseType( campaign, PlatformStepCode.fromStepNumber( nStepNumber ) );
+        int nIndex = getNextTargetIndex( site.getTargetVersions( ), site.getTargetVersionIndex( ), releaseType );
+        if ( nIndex >= 0 )
+        {
+            String strTargetVersion = site.getTargetVersions( ).get( nIndex );
+            site.setNextReleaseVersion( strTargetVersion );
+            site.setTargetVersionIndex( nIndex );
+            site.setNextSnapshotVersion( Version.getNextSnapshotVersion( strTargetVersion ) );
+        }
+    }
+
+    /**
+     * Cancels the downgrade of a component of a step, its target being then chosen again for the release type of the step.
+     *
+     * @param campaign
+     *            the campaign
+     * @param nStepNumber
+     *            the step number
+     * @param site
+     *            the transient site of the step
+     * @param strArtifactId
+     *            the component artifactId
+     */
+    public static void cancelDowngradeComponent( PlatformRelease campaign, int nStepNumber, Site site, String strArtifactId )
+    {
+        SiteService.cancelDowngradeComponent( site, strArtifactId );
+        PlatformReleaseType releaseType = getStepReleaseType( campaign, PlatformStepCode.fromStepNumber( nStepNumber ) );
+        for ( Component component : site.getComponents( ) )
+        {
+            if ( component.getArtifactId( ).equals( strArtifactId ) )
+            {
+                applyReleaseType( component, releaseType );
+            }
+        }
     }
 
     /**

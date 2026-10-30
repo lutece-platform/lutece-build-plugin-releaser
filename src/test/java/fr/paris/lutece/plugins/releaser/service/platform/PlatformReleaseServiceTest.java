@@ -603,6 +603,24 @@ public class PlatformReleaseServiceTest
     }
 
     /**
+     * "Change the version" only goes through the candidates of the release type of the step.
+     */
+    @Test
+    public void testNextTargetIndex( )
+    {
+        List<String> listVersions = Arrays.asList( "1.0.5-RC-01", "1.0.5", "1.1.0", "2.0.0", "1.0.5-beta-01" );
+        assertEquals( 2, PlatformReleaseService.getNextTargetIndex( listVersions, 1, PlatformReleaseType.STABLE ) );
+        assertEquals( 3, PlatformReleaseService.getNextTargetIndex( listVersions, 2, PlatformReleaseType.STABLE ) );
+        assertEquals( 1, PlatformReleaseService.getNextTargetIndex( listVersions, 3, PlatformReleaseType.STABLE ) );
+        assertEquals( -1, PlatformReleaseService.getNextTargetIndex( listVersions, 4, PlatformReleaseType.BETA ) );
+        assertEquals( 4, PlatformReleaseService.getNextTargetIndex( listVersions, 1, PlatformReleaseType.BETA ) );
+        assertEquals( 0, PlatformReleaseService.getNextTargetIndex( listVersions, 3, PlatformReleaseType.RC ) );
+        assertEquals( -1, PlatformReleaseService.getNextTargetIndex( null, 0, PlatformReleaseType.STABLE ) );
+        assertTrue( PlatformReleaseService.matchesReleaseType( "1.0.5", PlatformReleaseType.STABLE ) );
+        assertFalse( PlatformReleaseService.matchesReleaseType( "1.0.5-SNAPSHOT", PlatformReleaseType.STABLE ) );
+    }
+
+    /**
      * Only "all" or a module of the aggregate is sent as release target to the lutece-platform pipeline.
      */
     @Test

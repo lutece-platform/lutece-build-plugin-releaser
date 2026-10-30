@@ -1070,9 +1070,10 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     @Action( ACTION_CHANGE_COMPONENT_VERSION )
     public String doChangeComponentVersion( HttpServletRequest request )
     {
-        if ( getPreparedCampaign( request ) != null )
+        PlatformRelease campaign = getPreparedCampaign( request );
+        if ( campaign != null )
         {
-            SiteService.changeNextReleaseVersion( _site, request.getParameter( PARAMETER_ARTIFACT_ID ) );
+            PlatformReleaseService.cycleTargetVersion( campaign, _nSiteStepNumber, _site, request.getParameter( PARAMETER_ARTIFACT_ID ) );
         }
 
         return redirectToPreparedStep( request );
@@ -1088,11 +1089,12 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     @Action( ACTION_CHANGE_AGGREGATE_VERSION )
     public String doChangeAggregateVersion( HttpServletRequest request )
     {
-        if ( getPreparedCampaign( request ) == null )
+        PlatformRelease campaign = getPreparedCampaign( request );
+        if ( campaign == null )
         {
             return redirectView( request, VIEW_MANAGE_PLATFORM_RELEASES );
         }
-        SiteService.changeNextReleaseVersion( _site );
+        PlatformReleaseService.cycleTargetVersion( campaign, _nSiteStepNumber, _site );
 
         return redirectToStep( request, VIEW_PREPARE_STEP, _nSiteCampaignId, _nSiteStepNumber, PARAMETER_OPEN_AGGREGATE_VERSION, "1" );
     }
@@ -1468,9 +1470,10 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     @Action( ACTION_CANCEL_DOWNGRADE_COMPONENT )
     public String doCancelDowngradeComponent( HttpServletRequest request )
     {
-        if ( getPreparedCampaign( request ) != null )
+        PlatformRelease campaign = getPreparedCampaign( request );
+        if ( campaign != null )
         {
-            SiteService.cancelDowngradeComponent( _site, request.getParameter( PARAMETER_ARTIFACT_ID ) );
+            PlatformReleaseService.cancelDowngradeComponent( campaign, _nSiteStepNumber, _site, request.getParameter( PARAMETER_ARTIFACT_ID ) );
         }
 
         return redirectToPreparedStep( request );
