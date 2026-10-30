@@ -3006,6 +3006,11 @@ public final class PlatformReleaseService
         }
 
         PlatformPlanResource aggregate = buildAggregateResource( campaign, nStepNumber, code, site );
+        aggregate.setSourceTag( getAggregateSourceTag( code, mapDecisions.get( aggregate.getCoordinates( ) ) ) );
+        if ( aggregate.getSourceTag( ) != null )
+        {
+            aggregate.setNextSnapshotVersion( getBranchVersionAfterRelease( site.getVersion( ), aggregate.getTargetVersion( ) ) );
+        }
         aggregate.setVerifiedCommit( getVerifiedCommit( aggregate, mapVerifications, mapPrechecks ) );
         aggregate.setDeployRepository( getDeployRepository( site.getRepoType( ) ) );
         if ( site.getRepoType( ) == RepositoryType.GITLAB && aggregate.getDeployRepository( ) == null )
@@ -3021,6 +3026,55 @@ public final class PlatformReleaseService
         plan.setAggregate( aggregate );
 
         return plan;
+    }
+
+    /**
+     * Tells whether the aggregate of a step may be released from a beta or RC tag : only the core, the other aggregates being stable only
+     * (global-pom, site-pom) or not released by their step (lutece-platform).
+     *
+     * @param code
+     *            the step code, null for the step 0
+     * @return true for the core step
+     */
+    public static boolean isAggregateFromTagAllowed( PlatformStepCode code )
+    {
+        return code == PlatformStepCode.CORE;
+    }
+
+    /**
+     * Returns the tag the aggregate of a step is released from, as decided for its untested commits.
+     *
+     * @param code
+     *            the step code
+     * @param decision
+     *            the decision on the aggregate, may be null
+     * @return the tag, null for a release from the SNAPSHOT or when the step does not allow it
+     */
+    static String getAggregateSourceTag( PlatformStepCode code, PlatformUntestedDecision decision )
+    {
+        return isAggregateFromTagAllowed( code ) && decision != null ? StringUtils.trimToNull( decision.getSourceTag( ) ) : null;
+    }
+
+    /**
+     * Returns the version of a branch after a release from a tag : the next patch SNAPSHOT, null when the branch is already beyond.
+     *
+     * @param strBranchVersion
+     *            the version of the POM of the branch
+     * @param strReleasedVersion
+     *            the released version
+     * @return the next SNAPSHOT, null when the branch must not change or a version is unreadable
+     */
+    static String getBranchVersionAfterRelease( String strBranchVersion, String strReleasedVersion )
+    {
+        try
+        {
+            return Version.getBranchVersionAfterRelease( strBranchVersion, strReleasedVersion );
+        }
+        catch( VersionParsingException e )
+        {
+            AppLogService.error( "Releaser : unreadable version " + strBranchVersion + " or " + strReleasedVersion + " after a release from a tag", e );
+            return null;
+        }
     }
 
     /**
@@ -3493,8 +3547,10 @@ public final class PlatformReleaseService
             }
         }
         String strAggregate = site.getGroupId( ) + COORDINATES_SEPARATOR + site.getArtifactId( );
-        mapStatuses.put( strAggregate,
-                getVerificationStatus( mapVerifications.get( strAggregate ), site.getNextReleaseVersion( ), mapBranchHeads.get( strAggregate ), null ) );
+        String strAggregateTag = step != null ? getAggregateSourceTag( PlatformStepCode.fromStepNumber( step.getStepNumber( ) ), mapDecisions.get( strAggregate ) )
+                : null;
+        mapStatuses.put( strAggregate, getVerificationStatus( mapVerifications.get( strAggregate ), site.getNextReleaseVersion( ),
+                mapBranchHeads.get( strAggregate ), strAggregateTag ) );
 
         return mapStatuses;
     }

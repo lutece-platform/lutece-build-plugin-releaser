@@ -104,7 +104,7 @@
 		<span class="label label-default">#i18n{releaser.prepare_platform_step.verification.NOT_VERIFIED}</span>
 	</#if>
 </#macro>
-<#macro verificationModal coordinates artifactId targetVersion removable>
+<#macro verificationModal coordinates artifactId targetVersion removable fromTagAllowed=true>
 	<#if verifications[coordinates]??>
 	<#local v = verifications[coordinates] />
 	<#local untested = ((verification_statuses[coordinates]!"") == "TO_FIX")?then(untestedCommitsDetails(v), "") />
@@ -144,7 +144,8 @@
 								<#if removable>
 								<li style="margin-bottom:8px"><a class="button transition border-red small" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=toggleComponent&artifact_id=${artifactId}"><i class="fa fa-minus-circle"></i> #i18n{releaser.prepare_platform_step.untestedCommitsApart}</a> <small class="text-muted">#i18n{releaser.prepare_platform_step.untestedCommitsApartHelp}</small></li>
 								</#if>
-								<#if (v.untestedSinceTag!"")?has_content>
+								<#if !fromTagAllowed>
+								<#elseif (v.untestedSinceTag!"")?has_content>
 								<li style="margin-bottom:8px"><a class="button transition border-lightblue small btn-accept-from-tag" href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?action=acceptUntestedFromTag&coordinates=${coordinates?url('UTF-8')}"><i class="fa fa-tag"></i> #i18n{releaser.prepare_platform_step.untestedCommitsFromTag} ${v.untestedSinceTag}</a> <small class="text-muted">#i18n{releaser.prepare_platform_step.untestedCommitsFromTagHelp}</small></li>
 								<#else>
 								<li style="margin-bottom:8px"><span class="button transition small fill-whitish-black" style="opacity:.5;cursor:not-allowed"><i class="fa fa-tag"></i> #i18n{releaser.prepare_platform_step.untestedCommitsFromTag}</span> <small class="text-muted">#i18n{releaser.prepare_platform_step.untestedCommitsNoTag}</small></li>
@@ -517,7 +518,7 @@
 </div>
 </section>
 <#if can_verify!false>
-<@verificationModal coordinates="${site.groupId!}:${site.artifactId!}" artifactId=site.artifactId! targetVersion=site.nextReleaseVersion! removable=false />
+<@verificationModal coordinates="${site.groupId!}:${site.artifactId!}" artifactId=site.artifactId! targetVersion=site.nextReleaseVersion! removable=false fromTagAllowed=aggregate_from_tag_allowed!false />
 <#list site.components as component>
 <#if component.project>
 <@verificationModal coordinates="${component.groupId!}:${component.artifactId!}" artifactId=component.artifactId! targetVersion=component.targetVersion! removable=true />

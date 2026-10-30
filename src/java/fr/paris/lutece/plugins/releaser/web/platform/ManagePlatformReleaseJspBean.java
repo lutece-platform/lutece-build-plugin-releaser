@@ -233,6 +233,8 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String MESSAGE_REMOVE_RUNNING = "releaser.message.platformRelease.removeRunning";
     private static final String MESSAGE_UNKNOWN_BRANCH = "releaser.message.platformRelease.unknownBranch";
     private static final String MESSAGE_EXPORT_VERIFICATION_NOT_ALLOWED = "releaser.message.platformRelease.exportVerificationNotAllowed";
+    private static final String MESSAGE_AGGREGATE_FROM_TAG_NOT_ALLOWED = "releaser.message.platformRelease.aggregateFromTagNotAllowed";
+    private static final String MARK_AGGREGATE_FROM_TAG_ALLOWED = "aggregate_from_tag_allowed";
     private static final String MESSAGE_LOAD_ERROR = "releaser.message.platformRelease.loadError";
     private static final String MESSAGE_CORE_MAJOR_REQUIRED = "releaser.message.platformRelease.coreMajorRequired";
     private static final String MESSAGE_RELEASE_TYPE_REQUIRED = "releaser.message.platformRelease.releaseTypeRequired";
@@ -757,6 +759,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
             PlatformReleaseStep step = PlatformReleaseService.getStep( campaign, nStepNumber );
             Map<String, String> mapStatuses = PlatformReleaseService.getVerificationStatuses( step, _site, _mapBranchHeads );
             model.put( MARK_CAN_VERIFY, true );
+            model.put( MARK_AGGREGATE_FROM_TAG_ALLOWED, PlatformReleaseService.isAggregateFromTagAllowed( code ) );
             model.put( MARK_BRANCH_HEADS, _mapBranchHeads );
             if ( request.getParameter( PARAMETER_OPEN_CONFIRM ) != null && _mapPendingConfirmation != null )
             {
@@ -1002,9 +1005,15 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private String setUntestedDecision( HttpServletRequest request, boolean bAccept, boolean bFromTag ) throws IOException
     {
         PlatformRelease campaign = getPreparedCampaign( request );
-        if ( campaign != null && PlatformReleaseService.setUntestedDecision( PlatformReleaseService.getStep( campaign, _nSiteStepNumber ),
-                request.getParameter( PARAMETER_COORDINATES ), AdminUserService.getAdminUser( request ).getAccessCode( ), bAccept, bFromTag )
-                && bAccept && bFromTag )
+        String strCoordinates = request.getParameter( PARAMETER_COORDINATES );
+        if ( campaign != null && bAccept && bFromTag && isAggregateCoordinates( strCoordinates )
+                && !PlatformReleaseService.isAggregateFromTagAllowed( PlatformStepCode.fromStepNumber( _nSiteStepNumber ) ) )
+        {
+            addError( MESSAGE_AGGREGATE_FROM_TAG_NOT_ALLOWED, getLocale( ) );
+            return redirectToPreparedStep( request );
+        }
+        if ( campaign != null && PlatformReleaseService.setUntestedDecision( PlatformReleaseService.getStep( campaign, _nSiteStepNumber ), strCoordinates,
+                AdminUserService.getAdminUser( request ).getAccessCode( ), bAccept, bFromTag ) && bAccept && bFromTag )
         {
             addInfo( INFO_REVERIFY_FROM_TAG, getLocale( ) );
         }
@@ -1663,6 +1672,18 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         }
 
         return redirectToStep( request, VIEW_PREPARE_STEP, _nSiteCampaignId, _nSiteStepNumber );
+    }
+
+    /**
+     * Tells whether coordinates are those of the aggregate of the step in session.
+     *
+     * @param strCoordinates
+     *            the "groupId:artifactId", may be null
+     * @return true for the aggregate
+     */
+    private boolean isAggregateCoordinates( String strCoordinates )
+    {
+        return _site != null && ( _site.getGroupId( ) + ":" + _site.getArtifactId( ) ).equals( strCoordinates );
     }
 
     /**

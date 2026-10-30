@@ -603,6 +603,27 @@ public class PlatformReleaseServiceTest
     }
 
     /**
+     * Only the core is released from a tag as an aggregate, and its branch never goes back.
+     */
+    @Test
+    public void testAggregateSourceTag( )
+    {
+        PlatformUntestedDecision decision = new PlatformUntestedDecision( );
+        decision.setSourceTag( "lutece-core-7.1.10-beta-03" );
+        assertEquals( "lutece-core-7.1.10-beta-03", PlatformReleaseService.getAggregateSourceTag( PlatformStepCode.CORE, decision ) );
+        assertNull( PlatformReleaseService.getAggregateSourceTag( PlatformStepCode.PLATFORM_PLUGINS, decision ) );
+        assertNull( PlatformReleaseService.getAggregateSourceTag( PlatformStepCode.GLOBAL_POM, decision ) );
+        assertNull( PlatformReleaseService.getAggregateSourceTag( null, decision ) );
+        assertNull( PlatformReleaseService.getAggregateSourceTag( PlatformStepCode.CORE, null ) );
+        decision.setSourceTag( null );
+        assertNull( PlatformReleaseService.getAggregateSourceTag( PlatformStepCode.CORE, decision ) );
+
+        assertEquals( "7.1.11-SNAPSHOT", PlatformReleaseService.getBranchVersionAfterRelease( "7.1.10-SNAPSHOT", "7.1.10" ) );
+        assertNull( PlatformReleaseService.getBranchVersionAfterRelease( "7.2.0-SNAPSHOT", "7.1.10" ) );
+        assertNull( PlatformReleaseService.getBranchVersionAfterRelease( "not a version", "7.1.10" ) );
+    }
+
+    /**
      * A component stayed in beta or RC in a stable step when the stable of its beta or RC, or a later release, is not in Nexus.
      */
     @Test
