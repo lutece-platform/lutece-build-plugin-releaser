@@ -49,6 +49,8 @@ public class PlatformResourceVerification implements Serializable
     private String _strVersion;
     private String _strCommit;
     private String _strNote;
+    private String _strSourceTag;
+    private String _strUntestedSinceTag;
     private int _nStep;
     private List<PlatformVerificationCheck> _listChecks = new ArrayList<>( );
 
@@ -134,6 +136,48 @@ public class PlatformResourceVerification implements Serializable
     public void setNote( String strNote )
     {
         _strNote = strNote;
+    }
+
+    /**
+     * Returns the beta or RC tag the resource was verified from, its commit being then the commit of the tag.
+     *
+     * @return the tag, null when verified from the head of its branch
+     */
+    public String getSourceTag( )
+    {
+        return _strSourceTag;
+    }
+
+    /**
+     * Sets the beta or RC tag the resource was verified from.
+     *
+     * @param strSourceTag
+     *            the tag
+     */
+    public void setSourceTag( String strSourceTag )
+    {
+        _strSourceTag = strSourceTag;
+    }
+
+    /**
+     * Returns the last beta or RC tag of the version, set when commits were made after it (untested-commits check to fix).
+     *
+     * @return the tag, null otherwise
+     */
+    public String getUntestedSinceTag( )
+    {
+        return _strUntestedSinceTag;
+    }
+
+    /**
+     * Sets the last beta or RC tag of the version, followed by untested commits.
+     *
+     * @param strUntestedSinceTag
+     *            the tag
+     */
+    public void setUntestedSinceTag( String strUntestedSinceTag )
+    {
+        _strUntestedSinceTag = strUntestedSinceTag;
     }
 
     /**

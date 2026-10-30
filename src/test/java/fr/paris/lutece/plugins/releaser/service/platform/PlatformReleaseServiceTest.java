@@ -411,14 +411,14 @@ public class PlatformReleaseServiceTest
         verification.setVersion( "1.0.5-beta-01" );
 
         verification.setCommit( "abc1234" );
-        assertEquals( PlatformVerificationCheck.STATUS_TO_FIX, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-01", "def5678" ) );
-        assertEquals( PlatformReleaseService.VERIFICATION_NOT_VERIFIED, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-02", null ) );
-        assertEquals( PlatformReleaseService.VERIFICATION_NOT_VERIFIED, PlatformReleaseService.getVerificationStatus( null, "1.0.5-beta-01", null ) );
+        assertEquals( PlatformVerificationCheck.STATUS_TO_FIX, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-01", "def5678", null ) );
+        assertEquals( PlatformReleaseService.VERIFICATION_NOT_VERIFIED, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-02", null, null ) );
+        assertEquals( PlatformReleaseService.VERIFICATION_NOT_VERIFIED, PlatformReleaseService.getVerificationStatus( null, "1.0.5-beta-01", null, null ) );
 
         verification.setStatus( PlatformVerificationCheck.STATUS_WARNING );
-        assertEquals( PlatformVerificationCheck.STATUS_WARNING, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-01", "abc1234" ) );
-        assertEquals( PlatformVerificationCheck.STATUS_WARNING, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-01", null ) );
-        assertEquals( PlatformReleaseService.VERIFICATION_STALE, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-01", "def5678" ) );
+        assertEquals( PlatformVerificationCheck.STATUS_WARNING, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-01", "abc1234", null ) );
+        assertEquals( PlatformVerificationCheck.STATUS_WARNING, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-01", null, null ) );
+        assertEquals( PlatformReleaseService.VERIFICATION_STALE, PlatformReleaseService.getVerificationStatus( verification, "1.0.5-beta-01", "def5678", null ) );
 
         Map<String, String> mapStatuses = new java.util.LinkedHashMap<>( );
         mapStatuses.put( "a", PlatformVerificationCheck.STATUS_OK );
@@ -562,6 +562,86 @@ public class PlatformReleaseServiceTest
 
         PlatformStepResult merged = PlatformReleaseService.mergeResults( result, new PlatformStepResult( ) );
         assertEquals( "abc1234", merged.getUntestedDecisions( ).get( "g:a" ).getCommit( ) );
+    }
+
+    /**
+     * A decision to release from a tag holds while the commits after that tag are found, then once the resource is verified from the tag.
+     *
+     * @throws IOException
+     *             if the result cannot be serialized
+     */
+    @Test
+    public void testUntestedDecisionFromTag( ) throws IOException
+    {
+        PlatformResourceVerification verification = new PlatformResourceVerification( );
+        verification.setStatus( PlatformVerificationCheck.STATUS_TO_FIX );
+        verification.setVersion( "1.0.5" );
+        verification.setCommit( "abc1234" );
+        verification.setUntestedSinceTag( "a-1.0.5-beta-02" );
+        PlatformVerificationCheck untested = new PlatformVerificationCheck( );
+        untested.setCheck( "untested-commits" );
+        untested.setStatus( PlatformVerificationCheck.STATUS_TO_FIX );
+        verification.getChecks( ).add( untested );
+        PlatformUntestedDecision decision = new PlatformUntestedDecision( );
+        decision.setCommit( "abc1234" );
+        decision.setSourceTag( "a-1.0.5-beta-02" );
+        PlatformStepResult result = new PlatformStepResult( );
+        result.getVerifications( ).put( "g:a", verification );
+        result.getUntestedDecisions( ).put( "g:a", decision );
+        PlatformReleaseStep step = new PlatformReleaseStep( );
+        step.setResultJson( MapperJsonUtil.getJson( result ) );
+        assertEquals( "a-1.0.5-beta-02", PlatformReleaseService.getUntestedDecisions( step ).get( "g:a" ).getSourceTag( ) );
+
+        verification.setUntestedSinceTag( "a-1.0.5-beta-03" );
+        assertFalse( PlatformReleaseService.isUntestedDecisionValid( decision, verification ) );
+
+        PlatformResourceVerification fromTag = testedVerification( "1.0.5", "tag1111" );
+        fromTag.setSourceTag( "a-1.0.5-beta-02" );
+        assertTrue( PlatformReleaseService.isUntestedDecisionValid( decision, fromTag ) );
+        fromTag.setSourceTag( "a-1.0.5-beta-03" );
+        assertFalse( PlatformReleaseService.isUntestedDecisionValid( decision, fromTag ) );
+    }
+
+    /**
+     * A verification from a tag counts only for a release from that tag, and never becomes stale when the branch moves.
+     */
+    @Test
+    public void testVerificationStatusFromTag( )
+    {
+        PlatformResourceVerification verification = testedVerification( "1.0.5", "tag1111" );
+        assertEquals( PlatformReleaseService.VERIFICATION_NOT_VERIFIED,
+                PlatformReleaseService.getVerificationStatus( verification, "1.0.5", "tag1111", "a-1.0.5-beta-02" ) );
+
+        verification.setSourceTag( "a-1.0.5-beta-02" );
+        assertEquals( PlatformVerificationCheck.STATUS_OK, PlatformReleaseService.getVerificationStatus( verification, "1.0.5", "head999", "a-1.0.5-beta-02" ) );
+        assertEquals( PlatformReleaseService.VERIFICATION_NOT_VERIFIED,
+                PlatformReleaseService.getVerificationStatus( verification, "1.0.5", "head999", "a-1.0.5-beta-03" ) );
+        assertEquals( PlatformReleaseService.VERIFICATION_NOT_VERIFIED, PlatformReleaseService.getVerificationStatus( verification, "1.0.5", "tag1111", null ) );
+    }
+
+    /**
+     * A resource released from a tag skips the tests only after a verification from the same tag, never after the step 0 on the SNAPSHOT.
+     */
+    @Test
+    public void testVerifiedCommitFromTag( )
+    {
+        PlatformPlanResource resource = new PlatformPlanResource( );
+        resource.setGroupId( "g" );
+        resource.setArtifactId( "a" );
+        resource.setCurrentVersion( "1.0.5-SNAPSHOT" );
+        resource.setTargetVersion( "1.0.5" );
+        resource.setSourceTag( "a-1.0.5-beta-02" );
+        Map<String, PlatformResourceVerification> mapVerifications = new LinkedHashMap<>( );
+        Map<String, PlatformResourceVerification> mapPrechecks = new LinkedHashMap<>( );
+        mapPrechecks.put( "g:a", testedVerification( "1.0.5-SNAPSHOT", "aaa1111" ) );
+        mapVerifications.put( "g:a", testedVerification( "1.0.5", "bbb2222" ) );
+        assertNull( PlatformReleaseService.getVerifiedCommit( resource, mapVerifications, mapPrechecks ) );
+
+        mapVerifications.get( "g:a" ).setSourceTag( "a-1.0.5-beta-02" );
+        assertEquals( "bbb2222", PlatformReleaseService.getVerifiedCommit( resource, mapVerifications, mapPrechecks ) );
+
+        resource.setSourceTag( null );
+        assertEquals( "aaa1111", PlatformReleaseService.getVerifiedCommit( resource, mapVerifications, mapPrechecks ) );
     }
 
     /**

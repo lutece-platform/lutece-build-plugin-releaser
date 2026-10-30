@@ -980,7 +980,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         if ( campaign != null )
         {
             PlatformReleaseService.setUntestedDecision( PlatformReleaseService.getStep( campaign, _nSiteStepNumber ),
-                    request.getParameter( PARAMETER_COORDINATES ), AdminUserService.getAdminUser( request ).getAccessCode( ), bAccept );
+                    request.getParameter( PARAMETER_COORDINATES ), AdminUserService.getAdminUser( request ).getAccessCode( ), bAccept, false );
         }
 
         return redirectToPreparedStep( request );

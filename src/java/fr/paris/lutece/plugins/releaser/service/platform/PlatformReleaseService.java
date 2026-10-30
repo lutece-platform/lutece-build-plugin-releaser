@@ -2645,11 +2645,14 @@ public final class PlatformReleaseService
                 : getStepVerifications( getStep( campaign, nStepNumber ) );
         Map<String, PlatformResourceVerification> mapPrechecks = mode == PlatformStepMode.VERIFY ? new HashMap<>( )
                 : getStepVerifications( getStep( campaign, PlatformPrecheckService.STEP_NUMBER ) );
+        Map<String, PlatformUntestedDecision> mapDecisions = getUntestedDecisions( getStep( campaign, nStepNumber ) );
         List<String> listNoPrivateRepository = new ArrayList<>( );
         for ( Component component : sortComponents( listToRelease ) )
         {
             PlatformPlanResource resource = toResource( component );
             resource.setVersionProperty( mapVersionProperties.get( getCoordinates( component ) ) );
+            PlatformUntestedDecision decision = mapDecisions.get( resource.getCoordinates( ) );
+            resource.setSourceTag( decision != null ? StringUtils.trimToNull( decision.getSourceTag( ) ) : null );
             resource.setVerifiedCommit( getVerifiedCommit( resource, mapVerifications, mapPrechecks ) );
             resource.setDeployRepository( getDeployRepository( component.getRepoType( ) ) );
             if ( component.getRepoType( ) == RepositoryType.GITLAB && resource.getDeployRepository( ) == null )
@@ -2679,7 +2682,8 @@ public final class PlatformReleaseService
 
     /**
      * Returns the commit whose tests passed for a resource of the plan : at the verification of the step for its target version, otherwise at
-     * the step 0 for its SNAPSHOT version. The pipeline skips the tests when the head of the branch is still that commit.
+     * the step 0 for its SNAPSHOT version. The pipeline skips the tests when the head of the branch is still that commit. A resource released
+     * from a tag reuses only a verification made from the same tag.
      *
      * @param resource
      *            the resource of the plan
@@ -2692,9 +2696,28 @@ public final class PlatformReleaseService
     static String getVerifiedCommit( PlatformPlanResource resource, Map<String, PlatformResourceVerification> mapVerifications,
             Map<String, PlatformResourceVerification> mapPrechecks )
     {
-        String strCommit = getTestedCommit( mapVerifications.get( resource.getCoordinates( ) ), resource.getTargetVersion( ) );
+        PlatformResourceVerification verification = mapVerifications.get( resource.getCoordinates( ) );
+        String strCommit = isSameSource( verification, resource.getSourceTag( ) ) ? getTestedCommit( verification, resource.getTargetVersion( ) ) : null;
+        if ( strCommit != null || StringUtils.isNotBlank( resource.getSourceTag( ) ) )
+        {
+            return strCommit;
+        }
 
-        return strCommit != null ? strCommit : getTestedCommit( mapPrechecks.get( resource.getCoordinates( ) ), resource.getCurrentVersion( ) );
+        return getTestedCommit( mapPrechecks.get( resource.getCoordinates( ) ), resource.getCurrentVersion( ) );
+    }
+
+    /**
+     * Tells whether a verification was made from the given source : the same beta or RC tag, or both from the head of the branch.
+     *
+     * @param verification
+     *            the verification, may be null
+     * @param strSourceTag
+     *            the tag to release from, null for the SNAPSHOT
+     * @return true when the sources match, false when the verification is null
+     */
+    static boolean isSameSource( PlatformResourceVerification verification, String strSourceTag )
+    {
+        return verification != null && StringUtils.equals( StringUtils.trimToNull( verification.getSourceTag( ) ), StringUtils.trimToNull( strSourceTag ) );
     }
 
     /**
@@ -3112,19 +3135,21 @@ public final class PlatformReleaseService
     public static Map<String, String> getVerificationStatuses( PlatformReleaseStep step, Site site, Map<String, String> mapBranchHeads )
     {
         Map<String, PlatformResourceVerification> mapVerifications = getStepVerifications( step );
+        Map<String, PlatformUntestedDecision> mapDecisions = getUntestedDecisions( step );
         Map<String, String> mapStatuses = new LinkedHashMap<>( );
         for ( Component component : site.getComponents( ) )
         {
             if ( component.isProject( ) )
             {
                 String strCoordinates = component.getGroupId( ) + COORDINATES_SEPARATOR + component.getArtifactId( );
+                PlatformUntestedDecision decision = mapDecisions.get( strCoordinates );
                 mapStatuses.put( strCoordinates, getVerificationStatus( mapVerifications.get( strCoordinates ), component.getTargetVersion( ),
-                        mapBranchHeads.get( strCoordinates ) ) );
+                        mapBranchHeads.get( strCoordinates ), decision != null ? decision.getSourceTag( ) : null ) );
             }
         }
         String strAggregate = site.getGroupId( ) + COORDINATES_SEPARATOR + site.getArtifactId( );
         mapStatuses.put( strAggregate,
-                getVerificationStatus( mapVerifications.get( strAggregate ), site.getNextReleaseVersion( ), mapBranchHeads.get( strAggregate ) ) );
+                getVerificationStatus( mapVerifications.get( strAggregate ), site.getNextReleaseVersion( ), mapBranchHeads.get( strAggregate ), null ) );
 
         return mapStatuses;
     }
@@ -3189,7 +3214,8 @@ public final class PlatformReleaseService
     }
 
     /**
-     * Adds the repository and branch of a resource verified OK or with a warning, the only ones that can become stale.
+     * Adds the repository and branch of a resource verified OK or with a warning from its branch, the only ones that can become stale : a tag
+     * does not move.
      *
      * @param mapRepositories
      *            "groupId:artifactId" to its repository URL and branch
@@ -3206,7 +3232,8 @@ public final class PlatformReleaseService
             String strCoordinates, String strScmUrl, String strBranch )
     {
         PlatformResourceVerification verification = mapVerifications.get( strCoordinates );
-        if ( verification != null && StringUtils.isNotBlank( verification.getCommit( ) ) && StringUtils.isNotBlank( strScmUrl )
+        if ( verification != null && StringUtils.isNotBlank( verification.getCommit( ) ) && StringUtils.isBlank( verification.getSourceTag( ) )
+                && StringUtils.isNotBlank( strScmUrl )
                 && StringUtils.isNotBlank( strBranch ) && ( PlatformVerificationCheck.STATUS_OK.equals( verification.getStatus( ) )
                         || PlatformVerificationCheck.STATUS_WARNING.equals( verification.getStatus( ) ) ) )
         {
@@ -3284,7 +3311,8 @@ public final class PlatformReleaseService
     }
 
     /**
-     * Tells whether a decision still holds : the last verification of the resource still finds untested commits, on the commit of the decision.
+     * Tells whether a decision still holds : the last verification of the resource still finds untested commits, on the commit of the decision
+     * and after the tag of the decision if any. A decision to release from a tag also holds once the resource is verified from that tag.
      *
      * @param decision
      *            the decision, may be null
@@ -3294,8 +3322,18 @@ public final class PlatformReleaseService
      */
     static boolean isUntestedDecisionValid( PlatformUntestedDecision decision, PlatformResourceVerification verification )
     {
-        return decision != null && hasUntestedCommits( verification ) && StringUtils.isNotBlank( decision.getCommit( ) )
-                && decision.getCommit( ).equals( verification.getCommit( ) );
+        if ( decision == null || verification == null )
+        {
+            return false;
+        }
+        String strSourceTag = StringUtils.trimToNull( decision.getSourceTag( ) );
+        if ( strSourceTag != null && strSourceTag.equals( StringUtils.trimToNull( verification.getSourceTag( ) ) ) )
+        {
+            return true;
+        }
+
+        return hasUntestedCommits( verification ) && StringUtils.isNotBlank( decision.getCommit( ) ) && decision.getCommit( ).equals( verification.getCommit( ) )
+                && ( strSourceTag == null || strSourceTag.equals( StringUtils.trimToNull( verification.getUntestedSinceTag( ) ) ) );
     }
 
     /**
@@ -3350,8 +3388,8 @@ public final class PlatformReleaseService
     }
 
     /**
-     * Records the decision to release a resource from the SNAPSHOT despite its untested commits, on the commit of its last verification, or
-     * cancels it.
+     * Records the decision to release a resource from the SNAPSHOT despite its untested commits, or from the beta or RC tag they follow, on
+     * the commit of its last verification, or cancels it.
      *
      * @param step
      *            the step
@@ -3361,15 +3399,18 @@ public final class PlatformReleaseService
      *            the user who takes the decision
      * @param bAccept
      *            true to record the decision, false to cancel it
-     * @return false when the last verification of the resource found no untested commits
+     * @param bFromTag
+     *            true to release from the tag, false from the SNAPSHOT
+     * @return false when the last verification of the resource found no untested commits, or no tag for a release from the tag
      * @throws IOException
      *             if the result cannot be serialized
      */
-    public static boolean setUntestedDecision( PlatformReleaseStep step, String strCoordinates, String strUserName, boolean bAccept ) throws IOException
+    public static boolean setUntestedDecision( PlatformReleaseStep step, String strCoordinates, String strUserName, boolean bAccept, boolean bFromTag )
+            throws IOException
     {
         PlatformStepResult result = parseResult( step );
         PlatformResourceVerification verification = result != null ? result.getVerifications( ).get( strCoordinates ) : null;
-        if ( !hasUntestedCommits( verification ) )
+        if ( !hasUntestedCommits( verification ) || ( bAccept && bFromTag && StringUtils.isBlank( verification.getUntestedSinceTag( ) ) ) )
         {
             return false;
         }
@@ -3379,6 +3420,7 @@ public final class PlatformReleaseService
             decision.setCommit( verification.getCommit( ) );
             decision.setUserName( strUserName );
             decision.setDate( new Timestamp( System.currentTimeMillis( ) ).toString( ) );
+            decision.setSourceTag( bFromTag ? verification.getUntestedSinceTag( ).trim( ) : null );
             result.getUntestedDecisions( ).put( strCoordinates, decision );
         }
         else
@@ -3429,7 +3471,8 @@ public final class PlatformReleaseService
 
     /**
      * Returns the status of a resource : the status of its verification, NOT_VERIFIED when it was never verified or was verified for another
-     * version than its current target, STALE when it passed (OK or warning) on a commit its branch no longer points to.
+     * version than its current target or from another source than the one to release from, STALE when it passed (OK or warning) on a commit
+     * its branch no longer points to. A verification from a tag never becomes stale : a tag does not move.
      *
      * @param verification
      *            the last verification of the resource, may be null
@@ -3437,17 +3480,20 @@ public final class PlatformReleaseService
      *            the current target version of the resource
      * @param strBranchHead
      *            the current commit of its branch, null when unknown
+     * @param strSourceTag
+     *            the beta or RC tag to release from, null for the SNAPSHOT
      * @return OK, TO_FIX, WARNING, NOT_VERIFIED or STALE
      */
-    static String getVerificationStatus( PlatformResourceVerification verification, String strTargetVersion, String strBranchHead )
+    static String getVerificationStatus( PlatformResourceVerification verification, String strTargetVersion, String strBranchHead, String strSourceTag )
     {
-        if ( verification == null || verification.getStatus( ) == null || !StringUtils.equals( verification.getVersion( ), strTargetVersion ) )
+        if ( verification == null || verification.getStatus( ) == null || !StringUtils.equals( verification.getVersion( ), strTargetVersion )
+                || !isSameSource( verification, strSourceTag ) )
         {
             return VERIFICATION_NOT_VERIFIED;
         }
         boolean bPassed = PlatformVerificationCheck.STATUS_OK.equals( verification.getStatus( ) )
                 || PlatformVerificationCheck.STATUS_WARNING.equals( verification.getStatus( ) );
-        if ( bPassed && strBranchHead != null && !strBranchHead.equals( verification.getCommit( ) ) )
+        if ( bPassed && StringUtils.isBlank( verification.getSourceTag( ) ) && strBranchHead != null && !strBranchHead.equals( verification.getCommit( ) ) )
         {
             return VERIFICATION_STALE;
         }

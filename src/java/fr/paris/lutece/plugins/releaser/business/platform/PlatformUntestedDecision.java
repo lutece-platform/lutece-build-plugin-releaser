@@ -37,7 +37,7 @@ import java.io.Serializable;
 
 /**
  * The decision taken on a resource whose branch holds commits made after the last beta or RC of its version, for a stable release : release
- * it from the SNAPSHOT anyway. It holds for the verified commit only.
+ * it from the SNAPSHOT anyway, or from that beta or RC tag. It holds for the verified commit only.
  */
 public class PlatformUntestedDecision implements Serializable
 {
@@ -46,6 +46,7 @@ public class PlatformUntestedDecision implements Serializable
     private String _strCommit;
     private String _strUserName;
     private String _strDate;
+    private String _strSourceTag;
 
     /**
      * Returns the verified commit the decision was taken on.
@@ -108,5 +109,26 @@ public class PlatformUntestedDecision implements Serializable
     public void setDate( String strDate )
     {
         _strDate = strDate;
+    }
+
+    /**
+     * Returns the beta or RC tag to release from.
+     *
+     * @return the tag, null for a release from the SNAPSHOT
+     */
+    public String getSourceTag( )
+    {
+        return _strSourceTag;
+    }
+
+    /**
+     * Sets the beta or RC tag to release from.
+     *
+     * @param strSourceTag
+     *            the tag, null for a release from the SNAPSHOT
+     */
+    public void setSourceTag( String strSourceTag )
+    {
+        _strSourceTag = strSourceTag;
     }
 }

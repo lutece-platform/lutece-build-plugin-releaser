@@ -57,6 +57,7 @@ public class PlatformPlanResource implements Serializable
     private String _strVersionProperty;
     private String _strVerifiedCommit;
     private String _strDeployRepository;
+    private String _strSourceTag;
     private PlatformVersionUpdates _versionUpdates = new PlatformVersionUpdates( );
 
     /**
@@ -373,6 +374,27 @@ public class PlatformPlanResource implements Serializable
     public void setDeployRepository( String strDeployRepository )
     {
         _strDeployRepository = strDeployRepository;
+    }
+
+    /**
+     * Returns the beta or RC tag the resource is released from, instead of the head of its branch.
+     *
+     * @return the tag, null for a release from the SNAPSHOT
+     */
+    public String getSourceTag( )
+    {
+        return _strSourceTag;
+    }
+
+    /**
+     * Sets the beta or RC tag the resource is released from.
+     *
+     * @param strSourceTag
+     *            the tag, null for a release from the SNAPSHOT
+     */
+    public void setSourceTag( String strSourceTag )
+    {
+        _strSourceTag = strSourceTag;
     }
 
     /**
