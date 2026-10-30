@@ -113,9 +113,19 @@
                                     <a class="button transition border-lightblue small" title="Modifier la version pour la release" id="btn-upgrade-version-${component.artifactId!}" href='jsp/admin/plugins/releaser/ManageComponent.jsp?action=versionComponent&artifact_id=${component.artifactId!}'>
                                         <i class="fa fa-level-up fa-fw"></i> Modifier la version
                                     </a>
+                                    <#assign fromTagBlocked = component.blockingReleaseComment!''>
+                                    <#if !fromTagBlocked?has_content && ((component.getRepoType().name())!'') == 'GITLAB'>
+                                    <#assign fromTagBlocked = 'Release from tag non disponible pour un composant GitLab : passer par une release classique.'>
+                                    </#if>
+                                    <#if fromTagBlocked?has_content>
+                                    <span class="button transition border-purple small disabled" title="${fromTagBlocked?html}" id="btn-release-from-tag-${component.artifactId!}" style="opacity:0.5;cursor:not-allowed;">
+                                        <i class="fa fa-ban fa-fw"></i> Release from tag
+                                    </span>
+                                    <#else>
                                     <a class="button transition border-purple small" title="Releaser depuis un tag beta/RC existant" id="btn-release-from-tag-${component.artifactId!}" href='jsp/admin/plugins/releaser/ManageComponent.jsp?view=releaseFromTag&artifact_id=${component.artifactId!}'>
                                         <i class="fa fa-tag fa-fw"></i> Release from tag
                                     </a>
+                                    </#if>
                                 </td> 
                                 </tr>
                                 </#list>

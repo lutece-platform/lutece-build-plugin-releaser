@@ -123,6 +123,9 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
     /** The Constant ACTION_RELEASE_FROM_TAG. */
     private static final String ACTION_RELEASE_FROM_TAG = "doReleaseFromTag";
 
+    /** Release from tag not available for GitLab : it would deploy to the public Nexus repository. */
+    private static final String MESSAGE_RELEASE_FROM_TAG_GITLAB = "Release from tag non disponible pour un composant GitLab : passer par une release classique.";
+
     /** The Constant PARAMETER_ARTIFACT_ID. */
     private static final String PARAMETER_ARTIFACT_ID = "artifact_id";
 
@@ -400,6 +403,16 @@ public class ManageComponentReleaseJspBean extends MVCAdminJspBean
         Component component = getCurrentComponent( strArtifactId );
         if ( component != null )
         {
+            // Blocking anomaly or GitLab component : refuse before launching anything.
+            if ( component.getBlockingReleaseComment( ) != null )
+            {
+                return JsonUtil.buildJsonResponse( new ErrorJsonResponse( "RELEASE_BLOCKED", component.getBlockingReleaseComment( ) ) );
+            }
+            if ( component.getRepoType( ) == RepositoryType.GITLAB )
+            {
+                return JsonUtil.buildJsonResponse( new ErrorJsonResponse( "RELEASE_FROM_TAG_GITLAB", MESSAGE_RELEASE_FROM_TAG_GITLAB ) );
+            }
+
             // Realign lastAvailableSnapshotVersion on the chosen branch's major (via
             // updateComponentForReleaseBranchFrom). Without this, the catalog's default-branch value
             // mismatches the cloned branch pom and TaskCloneRepository would abort with
