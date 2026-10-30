@@ -233,7 +233,8 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String MESSAGE_REMOVE_RUNNING = "releaser.message.platformRelease.removeRunning";
     private static final String MESSAGE_UNKNOWN_BRANCH = "releaser.message.platformRelease.unknownBranch";
     private static final String MESSAGE_EXPORT_VERIFICATION_NOT_ALLOWED = "releaser.message.platformRelease.exportVerificationNotAllowed";
-    private static final String MESSAGE_AGGREGATE_FROM_TAG_NOT_ALLOWED = "releaser.message.platformRelease.aggregateFromTagNotAllowed";
+    private static final String MESSAGE_UNKNOWN_RELEASE_TARGET = "releaser.message.platformRelease.unknownReleaseTarget";
+    private static final String MESSAGE_AGGREGATE_FROM_TAG_NOT_ALLOWED ="releaser.message.platformRelease.aggregateFromTagNotAllowed";
     private static final String MARK_AGGREGATE_FROM_TAG_ALLOWED = "aggregate_from_tag_allowed";
     private static final String MESSAGE_LOAD_ERROR = "releaser.message.platformRelease.loadError";
     private static final String MESSAGE_CORE_MAJOR_REQUIRED = "releaser.message.platformRelease.coreMajorRequired";
@@ -374,7 +375,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
             addError( MESSAGE_RELEASE_TYPE_REQUIRED, getLocale( ) );
             return redirectView( request, VIEW_CREATE_PLATFORM_RELEASE );
         }
-        if ( _campaign.getCoreMajor( ) <= 0 )
+        if ( !Arrays.asList( CORE_MAJORS ).contains( _campaign.getCoreMajor( ) ) )
         {
             addError( MESSAGE_CORE_MAJOR_REQUIRED, getLocale( ) );
             return redirectView( request, VIEW_CREATE_PLATFORM_RELEASE );
@@ -1144,6 +1145,12 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         {
             return;
         }
+        if ( !PlatformReleaseService.isValidReleaseTarget( strReleaseTarget, _site ) )
+        {
+            throw new AppException( I18nService.getLocalizedString( MESSAGE_UNKNOWN_RELEASE_TARGET, new String [ ] {
+                    strReleaseTarget
+            }, getLocale( ) ) );
+        }
         Map<String, String> mapParameters = new LinkedHashMap<>( );
         mapParameters.put( PlatformStepTask.PARAM_RELEASE_TARGET, strReleaseTarget );
         mapParameters.put( PlatformStepTask.PARAM_ALLOW_SNAPSHOT_DEPENDENCIES,
@@ -1156,11 +1163,23 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
      *
      * @param strReleaseType
      *            the submitted value
-     * @return the release type, null when none was chosen
+     * @return the release type, null when none was chosen or the value is unknown
      */
-    private static PlatformReleaseType parseReleaseType( String strReleaseType )
+    static PlatformReleaseType parseReleaseType( String strReleaseType )
     {
-        return StringUtils.isBlank( strReleaseType ) ? null : PlatformReleaseType.valueOf( strReleaseType );
+        if ( StringUtils.isBlank( strReleaseType ) )
+        {
+            return null;
+        }
+        try
+        {
+            return PlatformReleaseType.valueOf( strReleaseType );
+        }
+        catch( IllegalArgumentException e )
+        {
+            AppLogService.error( "Releaser : unknown release type received : " + strReleaseType );
+            return null;
+        }
     }
 
     /**

@@ -4389,7 +4389,22 @@ public final class PlatformReleaseService
     }
 
     /**
-     * Returns the pipeline parameters shown on the screen of a step : the chosen ones (target, SNAPSHOT tolerance), completed with the values
+     * Tells whether a release target sent for the lutece-platform pipeline is one the screen offers : all, or a module of the aggregate.
+     *
+     * @param strReleaseTarget
+     *            the release target, may be null
+     * @param site
+     *            the prepared aggregate, may be null
+     * @return true when the target is known
+     */
+    public static boolean isValidReleaseTarget( String strReleaseTarget, Site site )
+    {
+        return PlatformStepTask.RELEASE_TARGET_ALL.equals( strReleaseTarget )
+                || ( strReleaseTarget != null && site != null && site.getModules( ) != null && site.getModules( ).contains( strReleaseTarget ) );
+    }
+
+    /**
+     * Returns the pipeline parameters shown on the screen of a step :the chosen ones (target, SNAPSHOT tolerance), completed with the values
      * computed from the campaign and the prepared aggregate (core, next snapshot), shown for information only.
      *
      * @param campaign

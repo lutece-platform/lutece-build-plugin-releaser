@@ -603,6 +603,23 @@ public class PlatformReleaseServiceTest
     }
 
     /**
+     * Only "all" or a module of the aggregate is sent as release target to the lutece-platform pipeline.
+     */
+    @Test
+    public void testValidReleaseTarget( )
+    {
+        Site site = new Site( );
+        assertTrue( PlatformReleaseService.isValidReleaseTarget( "all", site ) );
+        assertFalse( PlatformReleaseService.isValidReleaseTarget( "forms-starter", site ) );
+        site.setModules( Arrays.asList( "lutece-bom", "forms-starter" ) );
+        assertTrue( PlatformReleaseService.isValidReleaseTarget( "forms-starter", site ) );
+        assertFalse( PlatformReleaseService.isValidReleaseTarget( "forms-starter;rm", site ) );
+        assertFalse( PlatformReleaseService.isValidReleaseTarget( "", site ) );
+        assertFalse( PlatformReleaseService.isValidReleaseTarget( null, site ) );
+        assertFalse( PlatformReleaseService.isValidReleaseTarget( "forms-starter", null ) );
+    }
+
+    /**
      * Only the core is released from a tag as an aggregate, and its branch never goes back.
      */
     @Test
