@@ -45,7 +45,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
+
+import org.xml.sax.InputSource;
 
 import fr.paris.lutece.plugins.releaser.business.Component;
 import fr.paris.lutece.plugins.releaser.business.Site;
@@ -311,11 +312,7 @@ public class PomUpdater
      */
     public static <T> T unmarshal( Class<T> docClass, InputStream inputStream ) throws JAXBException
     {
-        String packageName = docClass.getPackage( ).getName( );
-        JAXBContext jc = JAXBContext.newInstance( packageName );
-        Unmarshaller u = jc.createUnmarshaller( );
-        JAXBElement<T> doc = (JAXBElement<T>) u.unmarshal( inputStream );
-        return doc.getValue( );
+        return PomParser.unmarshal( docClass, new InputSource( inputStream ) );
     }
 
 }

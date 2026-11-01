@@ -54,6 +54,40 @@ public interface IJenkinsService
     JenkinsBuild waitForBuild( String strQueueUrl ) throws HttpAccessException, IOException, InterruptedException;
 
     /**
+     * Reads a queue item once.
+     *
+     * @param strQueueUrl
+     *            the URL of the queue item
+     * @return the build once Jenkins has started it, null while the item is still queued
+     * @throws HttpAccessException
+     *             if Jenkins cannot be reached
+     * @throws QueueItemCancelledException
+     *             if the item was cancelled before it started : no build will ever run
+     * @throws IOException
+     *             if the Jenkins answer cannot be read
+     */
+    JenkinsBuild getQueuedBuild( String strQueueUrl ) throws HttpAccessException, IOException;
+
+    /**
+     * A queue item cancelled before it started : no build will run.
+     */
+    final class QueueItemCancelledException extends IOException
+    {
+        private static final long serialVersionUID = 1L;
+
+        /**
+         * Constructor.
+         *
+         * @param strMessage
+         *            the message
+         */
+        public QueueItemCancelledException( String strMessage )
+        {
+            super( strMessage );
+        }
+    }
+
+    /**
      * Returns the result of a build.
      *
      * @param strBuildUrl

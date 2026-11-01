@@ -48,11 +48,18 @@ import java.util.Optional;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
+import javax.xml.XMLConstants;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.sax.SAXSource;
 
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 
 import fr.paris.lutece.plugins.releaser.business.jaxb.maven.Build;
 import fr.paris.lutece.plugins.releaser.business.jaxb.maven.DependencyManagement;
@@ -70,6 +77,11 @@ import fr.paris.lutece.portal.service.util.AppLogService;
  */
 public class PomParser
 {
+    private static final String FEATURE_DISALLOW_DOCTYPE = "http://apache.org/xml/features/disallow-doctype-decl";
+    private static final String FEATURE_EXTERNAL_GENERAL_ENTITIES = "http://xml.org/sax/features/external-general-entities";
+    private static final String FEATURE_EXTERNAL_PARAMETER_ENTITIES = "http://xml.org/sax/features/external-parameter-entities";
+    private static final String FEATURE_LOAD_EXTERNAL_DTD = "http://apache.org/xml/features/nonvalidating/load-external-dtd";
+
     // Tags
 
     /** Start of a Maven property placeholder. */
@@ -770,9 +782,67 @@ public class PomParser
         String packageName = docClass.getPackage( ).getName( );
         JAXBContext jc = JAXBContext.newInstance( packageName );
         Unmarshaller u = jc.createUnmarshaller( );
-        JAXBElement<T> doc = (JAXBElement<T>) u.unmarshal( inputSource );
+        XMLReader reader;
+        try
+        {
+            reader = newSaxParserFactory( ).newSAXParser( ).getXMLReader( );
+        }
+        catch( ParserConfigurationException | SAXException e )
+        {
+            throw new JAXBException( "No secure XML parser available", e );
+        }
+        JAXBElement<T> doc = u.unmarshal( new SAXSource( reader, inputSource ), docClass );
 
         return doc.getValue( );
+    }
+
+    /**
+     * Returns a SAX parser factory that refuses DOCTYPE declarations and never resolves external entities : the POMs read come from
+     * repositories and Nexus, an external entity could read a file of the server or call any URL.
+     *
+     * @return the namespace aware factory
+     * @throws ParserConfigurationException
+     *             if the parser cannot be secured
+     */
+    public static SAXParserFactory newSaxParserFactory( ) throws ParserConfigurationException
+    {
+        SAXParserFactory factory = SAXParserFactory.newInstance( );
+        factory.setNamespaceAware( true );
+        factory.setXIncludeAware( false );
+        try
+        {
+            factory.setFeature( FEATURE_DISALLOW_DOCTYPE, true );
+            factory.setFeature( FEATURE_EXTERNAL_GENERAL_ENTITIES, false );
+            factory.setFeature( FEATURE_EXTERNAL_PARAMETER_ENTITIES, false );
+            factory.setFeature( FEATURE_LOAD_EXTERNAL_DTD, false );
+        }
+        catch( SAXException e )
+        {
+            throw new ParserConfigurationException( "XML parser cannot be secured : " + e.getMessage( ) );
+        }
+
+        return factory;
+    }
+
+    /**
+     * Returns a DOM builder factory that never resolves external entities nor external DTDs. A DOCTYPE stays allowed : old plugin.xml
+     * descriptors may declare one.
+     *
+     * @return the factory
+     * @throws ParserConfigurationException
+     *             if the parser cannot be secured
+     */
+    public static DocumentBuilderFactory newDocumentBuilderFactory( ) throws ParserConfigurationException
+    {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance( );
+        factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
+        factory.setFeature( FEATURE_EXTERNAL_GENERAL_ENTITIES, false );
+        factory.setFeature( FEATURE_EXTERNAL_PARAMETER_ENTITIES, false );
+        factory.setFeature( FEATURE_LOAD_EXTERNAL_DTD, false );
+        factory.setXIncludeAware( false );
+        factory.setExpandEntityReferences( false );
+
+        return factory;
     }
 
 }

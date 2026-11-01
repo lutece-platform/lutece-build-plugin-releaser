@@ -38,7 +38,7 @@
 			<tbody>
 			<#list platform_release_list as campaign>
 				<tr>
-					<td><a href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?view=platformRelease&id=${campaign.id}"><strong>${campaign.name}</strong></a></td>
+					<td><a href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?view=platformRelease&id=${campaign.id}"><strong>${campaign.name?html}</strong></a></td>
 					<td><span class="label label-info">#i18n{releaser.platform_release.type.${campaign.releaseType}}</span></td>
 					<td>Core ${campaign.coreMajor}</td>
 					<td>${campaign.currentStep} / 5</td>

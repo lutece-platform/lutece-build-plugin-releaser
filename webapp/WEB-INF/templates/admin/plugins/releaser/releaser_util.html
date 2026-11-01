@@ -182,11 +182,13 @@ $( function(){
                 <blockquote>
                 <div class="form-group">
                     <label for="${type.name()}_account_login">#i18n{releaser.manage_clusters.modalAuthLoginTitle${type.name()}}</label>
-                    <input type="text" name="${type.name()}_account_login" id="${type.name()}_account_login" value="${(user.getCredential(type).login)!}" class="form-control"<#if required> required</#if>>
+                    <input type="text" name="${type.name()}_account_login" id="${type.name()}_account_login" value="${((user.getCredential(type).login)!)?html}" class="form-control"<#if required> required</#if>>
                 </div>
                 <div class="form-group">
                     <label for="${type.name()}_account_password">#i18n{releaser.manage_clusters.modalAuthPasswordTitle${type.name()}}</label>
-                    <input type="password" name="${type.name()}_account_password" id="${type.name()}_account_password" value="${(user.getCredential(type).password)!}" class="form-control"<#if required> required</#if>>
+                    <#-- The stored password is never written in the page : an empty field keeps it (see ReleaserUtils.populateReleaserUser) -->
+                    <#assign hasPassword = ((user.getCredential(type).password)!)?has_content>
+                    <input type="password" name="${type.name()}_account_password" id="${type.name()}_account_password" value="" autocomplete="new-password" class="form-control"<#if hasPassword> placeholder="#i18n{releaser.manage_clusters.modalAuthPasswordKept}"<#elseif required> required</#if>>
                 </div>
                 </blockquote>
 	 </fieldset>
@@ -195,7 +197,7 @@ $( function(){
 <#-- Redmine cell of a component : roadmap link with the closed / opened issue counters of the current version, shared by the site and platform screens -->
 <#macro bugtrackerCell component emptyDash=false>
 	<#if component.bugtrackerRoadmapUrl?has_content>
-	<a href="${component.bugtrackerRoadmapUrl}" target="_blank" title="Roadmap Redmine">
+	<a href="${component.bugtrackerRoadmapUrl?html}" target="_blank" title="Roadmap Redmine">
 		Roadmap
 		<#if component.bugtrackerCurrentVersionClosedIssues gte 0>
 			<span class="label label-success">${component.bugtrackerCurrentVersionClosedIssues}</span>

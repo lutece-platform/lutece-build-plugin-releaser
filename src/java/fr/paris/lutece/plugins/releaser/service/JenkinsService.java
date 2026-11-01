@@ -1,8 +1,13 @@
 package fr.paris.lutece.plugins.releaser.service;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.paris.lutece.plugins.releaser.business.WorkflowReleaseContext;
@@ -38,6 +43,9 @@ public class JenkinsService implements IJenkinsService
 
     /** The Constant json.url */
     private static final String CST_JSON_URL = "url";
+
+    /** The Constant json.cancelled : queue item cancelled before it started */
+    private static final String CST_JSON_CANCELLED = "cancelled";
 
     /** The Constant artifact/ : path of the archived artifacts of a build */
     private static final String CST_ARTIFACT_PATH = "artifact/";
@@ -151,23 +159,37 @@ public class JenkinsService implements IJenkinsService
         String strUrl = JENKINS_BASE_URL + "/" + strJobPath + "/" + JENKINS_BUILD_TYPE;
         httpaccess.doPost( strUrl, mapParams, getAuthenticator( ), null, null, headersResponse );
 
-        return headersResponse.get( CST_JSON_LOCATION );
+        // The queue item is polled with the Jenkins account : only on the configured server
+        String strLocation = headersResponse.get( CST_JSON_LOCATION );
+        if ( StringUtils.isBlank( strLocation ) )
+        {
+            throw new HttpAccessException( "Jenkins answered the trigger of " + strJobPath + " without a Location header : the queue item is unknown", null );
+        }
+
+        return rebaseOnJenkinsUrl( strLocation );
     }
 
     @Override
     public JenkinsBuild waitForBuild( String strQueueUrl ) throws HttpAccessException, IOException, InterruptedException
     {
-        HttpAccess httpaccess = new HttpAccess( );
         JenkinsBuild build = null;
 
         while ( build == null )
         {
             Thread.sleep( QUEUE_POLL_DELAY );
-            String strJsonQueueItem = httpaccess.doGet( strQueueUrl + "/" + CST_API_JSON, getAuthenticator( ), null );
-            build = parseQueuedBuild( strJsonQueueItem );
+            build = getQueuedBuild( strQueueUrl );
         }
 
         return build;
+    }
+
+    @Override
+    public JenkinsBuild getQueuedBuild( String strQueueUrl ) throws HttpAccessException, IOException
+    {
+        HttpAccess httpaccess = new HttpAccess( );
+        String strJsonQueueItem = httpaccess.doGet( strQueueUrl + "/" + CST_API_JSON, getAuthenticator( ), null );
+
+        return parseQueuedBuild( strJsonQueueItem );
     }
 
     @Override
@@ -204,14 +226,50 @@ public class JenkinsService implements IJenkinsService
         }
 
         JsonNode queueItem = _mapper.readTree( strJsonQueueItem );
-        if ( !queueItem.has( CST_JSON_EXECUTABLE ) )
+        if ( queueItem.path( CST_JSON_CANCELLED ).asBoolean( ) )
+        {
+            throw new IJenkinsService.QueueItemCancelledException( "Jenkins queue item cancelled" );
+        }
+        String strUrl = queueItem.path( CST_JSON_EXECUTABLE ).path( CST_JSON_URL ).asText( null );
+        if ( StringUtils.isBlank( strUrl ) )
         {
             return null;
         }
 
-        JsonNode executable = queueItem.get( CST_JSON_EXECUTABLE );
+        return new JenkinsBuild( rebaseOnJenkinsUrl( strUrl ), queueItem.path( CST_JSON_EXECUTABLE ).path( CST_JSON_NUMBER ).asInt( ) );
+    }
 
-        return new JenkinsBuild( executable.path( CST_JSON_URL ).asText( null ), executable.path( CST_JSON_NUMBER ).asInt( ) );
+    /**
+     * Puts a build URL given by Jenkins on the configured Jenkins server (scheme, host and port of releaser.JenkinsBaseUrl) : the root URL
+     * set in Jenkins may name another host (internal name, http), and the credentials must only go to the configured one.
+     *
+     * @param strUrl
+     *            the URL given by Jenkins
+     * @return the URL on the configured server, unchanged when no base URL is configured
+     */
+    static String rebaseOnJenkinsUrl( String strUrl )
+    {
+        if ( StringUtils.isBlank( JENKINS_BASE_URL ) )
+        {
+            return strUrl;
+        }
+        if ( strUrl == null )
+        {
+            return null;
+        }
+        try
+        {
+            URI base = new URI( JENKINS_BASE_URL );
+            URI url = new URI( strUrl );
+            // Raw parts : an encoded "/" of a branch name in a multibranch job URL must stay encoded
+            String strRebased = base.getScheme( ) + "://" + base.getRawAuthority( ) + StringUtils.defaultString( url.getRawPath( ) );
+
+            return url.getRawQuery( ) != null ? strRebased + "?" + url.getRawQuery( ) : strRebased;
+        }
+        catch( URISyntaxException e )
+        {
+            return strUrl;
+        }
     }
 
     /**

@@ -123,12 +123,33 @@ public final class ReleasePreparationService
     public static String getOriginVersion( String strLastRelease, String strCurrentVersion )
     {
         String strOriginVersion = strCurrentVersion;
-        if ( ( strLastRelease != null ) && Version.isCandidate( strLastRelease ) )
+        if ( ( strLastRelease != null ) && Version.isCandidate( strLastRelease ) && hasSameBase( strLastRelease, strCurrentVersion ) )
         {
             strOriginVersion = strLastRelease;
         }
 
         return strOriginVersion;
+    }
+
+    /**
+     * Whether two versions have the same major.minor.patch : a RC of another version is not the origin of the current one.
+     *
+     * @param strVersion1
+     *            the first version
+     * @param strVersion2
+     *            the second version
+     * @return true when both parse and have the same base
+     */
+    private static boolean hasSameBase( String strVersion1, String strVersion2 )
+    {
+        try
+        {
+            return Version.parse( strVersion1 ).hasSameBase( Version.parse( strVersion2 ) );
+        }
+        catch( VersionParsingException e )
+        {
+            return false;
+        }
     }
 
     /**
@@ -528,7 +549,10 @@ public final class ReleasePreparationService
             return strDefaultBranch;
         }
 
-        if ( ConstanteUtils.TAG_LUTECE_CORE.equals( component.getArtifactId( ) ) )
+        // Only the artifacts listed in releaser.branch.componentsOnCore7Branch (core, global and site POMs) use the core 7 branch of the core
+        String strCore7Components = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_BRANCH_COMPONENTS_ON_CORE7_BRANCH,
+                ConstanteUtils.DEFAULT_BRANCH_COMPONENTS_ON_CORE7_BRANCH );
+        if ( Arrays.asList( strCore7Components.trim( ).split( "\\s*,\\s*" ) ).contains( component.getArtifactId( ) ) )
         {
             return AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_BRANCH_DEVELOPMENT_FOR_CORE7 );
         }
@@ -537,12 +561,6 @@ public final class ReleasePreparationService
         if ( component.getBranches( ) != null && component.getBranches( ).contains( strLegacyComponentBranch ) )
         {
             return strLegacyComponentBranch;
-        }
-
-        String strLegacyCoreBranch = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_BRANCH_DEVELOPMENT_FOR_CORE7 );
-        if ( component.getBranches( ) != null && component.getBranches( ).contains( strLegacyCoreBranch ) )
-        {
-            return strLegacyCoreBranch;
         }
 
         return strDefaultBranch;

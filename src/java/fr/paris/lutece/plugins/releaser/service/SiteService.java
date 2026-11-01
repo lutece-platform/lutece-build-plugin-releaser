@@ -83,6 +83,9 @@ public class SiteService
     /** The Constant MESSAGE_WRONG_POM_PARENT_SITE_VERSION. */
     private static final String MESSAGE_WRONG_POM_PARENT_SITE_VERSION = "releaser.message.wrongPomParentSiteVersion";
 
+    /** The Constant MESSAGE_SITE_REPOSITORY_NOT_ALLOWED. */
+    private static final String MESSAGE_SITE_REPOSITORY_NOT_ALLOWED = "releaser.message.siteRepositoryNotAllowed";
+
     /** Minimum pom parent version to create docker image. */
     public static String POM_PARENT_MIN_VERSION_TO_CREATE_DOCKET_IMAGE = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_POM_PARENT_MIN_VERSION_TO_CREATE_DOCKET_IMAGE );
 
@@ -101,6 +104,13 @@ public class SiteService
     public static Site getSite( int nSiteId, HttpServletRequest request, Locale locale )
     {
         Site site = SiteHome.findByPrimaryKey( nSiteId );
+        // A repository outside releaser.allowedRepositoryUrls has no type : refused with a message rather than a failure further down
+        if ( site != null && site.getRepoType( ) == null )
+        {
+            throw new AppException( I18nService.getLocalizedString( MESSAGE_SITE_REPOSITORY_NOT_ALLOWED, new String [ ] {
+                    org.apache.commons.lang3.StringEscapeUtils.escapeHtml4( StringUtils.defaultString( site.getScmUrl( ) ) )
+            }, locale ) );
+        }
         String strPom = null;
         ReleaserUser user = ReleaserUtils.getReleaserUser( request, locale );
 

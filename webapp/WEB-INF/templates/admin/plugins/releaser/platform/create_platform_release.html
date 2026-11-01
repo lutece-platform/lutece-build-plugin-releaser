@@ -12,7 +12,7 @@
 		<@tform name='create_platform_release' action='jsp/admin/plugins/releaser/ManagePlatformRelease.jsp'>
 			<@messages errors=errors />
 			<@formGroup labelKey='#i18n{releaser.create_platform_release.labelName}' helpKey='#i18n{releaser.create_platform_release.labelName.help}' mandatory=true>
-				<@input type='text' name='name' value='${platform_release.name!\'\'}' />
+				<@input type='text' name='name' value='${(platform_release.name!\'\')?html}' />
 			</@formGroup>
 			<@formGroup labelKey='#i18n{releaser.create_platform_release.labelReleaseType}' helpKey='#i18n{releaser.create_platform_release.labelReleaseType.help}' mandatory=true>
 				<select name="release_type" id="release_type" class="form-control">

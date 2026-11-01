@@ -86,6 +86,18 @@ public class ReleasePreparationServiceTest
      * The core of an aggregate is the major of its parent version, brackets of a site-pom range stripped ; unreadable gives null. The core
      * line maps the parent numbering onto the core : site-pom 3.x and global-pom 6.x are core 7, 8.x is core 8.
      */
+    /**
+     * A RC is the origin of the next release only when it is a RC of the current version.
+     */
+    @Test
+    public void testOriginVersion( )
+    {
+        assertEquals( "3.2.2-SNAPSHOT", ReleasePreparationService.getOriginVersion( "3.2.1", "3.2.2-SNAPSHOT" ) );
+        assertEquals( "3.2.1-RC-02", ReleasePreparationService.getOriginVersion( "3.2.1-RC-02", "3.2.1-SNAPSHOT" ) );
+        assertEquals( "7.1.0-SNAPSHOT", ReleasePreparationService.getOriginVersion( "7.0.16-RC-01", "7.1.0-SNAPSHOT" ) );
+        assertEquals( "3.2.1-SNAPSHOT", ReleasePreparationService.getOriginVersion( null, "3.2.1-SNAPSHOT" ) );
+    }
+
     @Test
     public void testCoreMajorAndLine( )
     {

@@ -53,6 +53,7 @@ import fr.paris.lutece.plugins.releaser.business.platform.PlatformPlanResource;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformRelease;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseHome;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleasePlan;
+import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseStatus;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseStep;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseType;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformResourceVerification;
@@ -61,6 +62,7 @@ import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepResult;
 import fr.paris.lutece.plugins.releaser.service.IJenkinsService;
 import fr.paris.lutece.plugins.releaser.service.JenkinsBuild;
 import fr.paris.lutece.plugins.releaser.service.JenkinsService;
+import fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
@@ -130,11 +132,15 @@ public class PlatformStepTask implements Runnable
     static final String PARAM_GITLAB_TOKEN = "GITLAB_TOKEN";
 
     private static final int MAX_POLL_FAILURES = 40;
+    private static final int MAX_QUEUE_POLL_FAILURES = 160;
     private static final long MAX_QUEUE_WAIT = 60L * 60L * 1000L;
     private static final long MAX_BUILD_DURATION = 6L * 60L * 60L * 1000L;
     private static final String RESULT_JENKINS_UNREACHABLE = "ERROR : Jenkins unreachable, the build may still run : rearm the step once Jenkins is back";
     private static final String RESULT_BUILD_TOO_LONG = "ERROR : build still running after 6 hours : rearm the step to follow it again";
-    private static final String RESULT_QUEUE_TOO_LONG = "ERROR : build not started by Jenkins within 1 hour";
+    private static final String RESULT_QUEUE_TOO_LONG = "ERROR : build not started by Jenkins within 1 hour : cancel the item in the Jenkins queue, if any, before launching the step again";
+    private static final String RESULT_QUEUE_LOST = "ERROR : Jenkins unreachable before the build started : cancel the item in the Jenkins queue, if any, before launching the step again";
+    private static final String RESULT_QUEUE_CANCELLED = "ERROR : build cancelled in the Jenkins queue, nothing was run";
+    private static final long QUEUE_POLL_DELAY = 2000L;
 
     private static final ConcurrentMap<Integer, PlatformStepTask> LIVE_TASKS = new ConcurrentHashMap<>( );
 
@@ -210,7 +216,29 @@ public class PlatformStepTask implements Runnable
     }
 
     /**
-     * Whether a task of this webapp is following the build of a step right now. False after a restart : the step must be rearmed.
+     * Hands the task over to the release thread pool. The task counts as following the step as soon as it is queued, so that a step whose
+     * task waits for a free thread can neither be rearmed nor launched again.
+     *
+     * @param nIdStep
+     *            the step id
+     */
+    public void submit( int nIdStep )
+    {
+        LIVE_TASKS.put( nIdStep, this );
+        try
+        {
+            WorkflowReleaseContextService.getService( ).execute( this );
+        }
+        catch( RuntimeException e )
+        {
+            LIVE_TASKS.remove( nIdStep, this );
+            throw e;
+        }
+    }
+
+    /**
+     * Whether a task of this webapp is following the build of a step right now, or waits for a thread to do so. False after a restart : the
+     * step must be rearmed.
      *
      * @param nIdStep
      *            the step id
@@ -275,10 +303,23 @@ public class PlatformStepTask implements Runnable
         if ( step == null )
         {
             AppLogService.error( "Releaser : platform step " + _nStepNumber + " of campaign " + _nIdPlatformRelease + " not found, Jenkins job not triggered" );
+            LIVE_TASKS.values( ).remove( this );
             return;
         }
 
-        LIVE_TASKS.put( step.getId( ), this );
+        PlatformStepTask current = LIVE_TASKS.putIfAbsent( step.getId( ), this );
+        boolean bReplaced = current != null && current != this;
+        boolean bNoLongerWaiting = _strBuildUrl == null
+                && ( step.getStatus( ) != PlatformReleaseStatus.RUNNING || StringUtils.isNotBlank( step.getJenkinsBuildUrl( ) ) );
+        if ( bReplaced || bNoLongerWaiting )
+        {
+            AppLogService.error( "Releaser : platform step " + _nStepNumber + " of campaign " + _nIdPlatformRelease
+                    + " is no longer waiting for this task, Jenkins job not triggered" );
+            LIVE_TASKS.remove( step.getId( ), this );
+            return;
+        }
+        boolean bBuildKnown = _strBuildUrl != null;
+        boolean bClosed = false;
         try
         {
             IJenkinsService jenkins = JenkinsService.getService( );
@@ -294,9 +335,22 @@ public class PlatformStepTask implements Runnable
                 String strQueueUrl = jenkins.triggerJob( getJobPath( _plan ), mapParams );
                 build = waitForQueuedBuild( jenkins, strQueueUrl );
                 PlatformReleaseService.attachBuild( step, build.getUrl( ), build.getNumber( ) );
+                bBuildKnown = true;
             }
 
             String strResult = waitForResult( jenkins, build.getUrl( ) );
+            // The build is over, maybe published : from here an error must never turn the step into a FAILED one
+            bClosed = true;
+
+            // Fresh state : the step may have been changed by the screens during the build
+            campaign = PlatformReleaseHome.findByPrimaryKeyWithSteps( _nIdPlatformRelease );
+            step = campaign != null ? PlatformReleaseService.getStep( campaign, _nStepNumber ) : null;
+            if ( step == null || step.getStatus( ) != PlatformReleaseStatus.RUNNING )
+            {
+                AppLogService.error( "Releaser : platform step " + _nStepNumber + " of campaign " + _nIdPlatformRelease
+                        + " is no longer running, result " + strResult + " of " + build.getUrl( ) + " not recorded" );
+                return;
+            }
 
             if ( _plan.isVerify( ) )
             {
@@ -324,11 +378,33 @@ public class PlatformStepTask implements Runnable
         catch( Exception e )
         {
             AppLogService.error( "Releaser : platform step " + _nStepNumber + " of campaign " + _nIdPlatformRelease + " failed : " + e.getMessage( ), e );
-            markFailed( campaign, step, e instanceof FollowUpException ? e.getMessage( ) : RESULT_ERROR_PREFIX + describe( e ) );
+            if ( bClosed )
+            {
+                // The build is over : the step stays running, no longer followed, to be rearmed and recorded again
+                AppLogService.error( "Releaser : result of platform step " + _nStepNumber + " of campaign " + _nIdPlatformRelease
+                        + " could not be recorded, the step is left running to be rearmed" );
+            }
+            else
+                if ( bBuildKnown )
+                {
+                    // The build goes on in Jenkins whatever the error here : the step stays RUNNING, no longer followed, to be rearmed
+                    AppLogService.error( "Releaser : follow-up of platform step " + _nStepNumber + " of campaign " + _nIdPlatformRelease
+                            + " given up (" + e.getMessage( ) + "), the step stays running and must be rearmed" );
+                    recordFollowUpResult( step, e instanceof FollowUpException ? e.getMessage( ) : RESULT_ERROR_PREFIX + describe( e ) );
+                }
+                else
+                    if ( RESULT_JENKINS_UNREACHABLE.equals( e.getMessage( ) ) )
+                    {
+                        markFailed( campaign, step, RESULT_QUEUE_LOST );
+                    }
+                    else
+                    {
+                        markFailed( campaign, step, e instanceof FollowUpException ? e.getMessage( ) : RESULT_ERROR_PREFIX + describe( e ) );
+                    }
         }
         finally
         {
-            LIVE_TASKS.remove( step.getId( ) );
+            LIVE_TASKS.values( ).remove( this );
         }
     }
 
@@ -352,15 +428,25 @@ public class PlatformStepTask implements Runnable
         int nFailures = 0;
         while ( System.currentTimeMillis( ) < lDeadline )
         {
+            Thread.sleep( QUEUE_POLL_DELAY );
             try
             {
-                return jenkins.waitForBuild( strQueueUrl );
+                JenkinsBuild build = jenkins.getQueuedBuild( strQueueUrl );
+                nFailures = 0;
+                if ( build != null )
+                {
+                    return build;
+                }
+            }
+            catch( IJenkinsService.QueueItemCancelledException e )
+            {
+                throw new FollowUpException( RESULT_QUEUE_CANCELLED );
             }
             catch( HttpAccessException | IOException e )
             {
-                nFailures = logPollFailure( strQueueUrl, nFailures, e );
+                // Polled every 2 seconds : as many minutes of tolerance as the build follow-up
+                nFailures = logPollFailure( strQueueUrl, nFailures, e, MAX_QUEUE_POLL_FAILURES );
             }
-            Thread.sleep( BUILD_POLL_DELAY );
         }
         throw new FollowUpException( RESULT_QUEUE_TOO_LONG );
     }
@@ -397,7 +483,7 @@ public class PlatformStepTask implements Runnable
             }
             catch( HttpAccessException | IOException e )
             {
-                nFailures = logPollFailure( strBuildUrl, nFailures, e );
+                nFailures = logPollFailure( strBuildUrl, nFailures, e, MAX_POLL_FAILURES );
             }
         }
         throw new FollowUpException( RESULT_BUILD_TOO_LONG );
@@ -412,15 +498,17 @@ public class PlatformStepTask implements Runnable
      *            the failures in a row so far
      * @param e
      *            the failure
+     * @param nMaxFailures
+     *            the failures in a row tolerated
      * @return the failures in a row
      * @throws FollowUpException
      *             after too many failures in a row
      */
-    private static int logPollFailure( String strUrl, int nFailures, Exception e )
+    private static int logPollFailure( String strUrl, int nFailures, Exception e, int nMaxFailures )
     {
         int nCount = nFailures + 1;
-        AppLogService.error( "Releaser : Jenkins unreachable (" + nCount + "/" + MAX_POLL_FAILURES + ") on " + strUrl + " : " + e.getMessage( ) );
-        if ( nCount >= MAX_POLL_FAILURES )
+        AppLogService.error( "Releaser : Jenkins unreachable (" + nCount + "/" + nMaxFailures + ") on " + strUrl + " : " + e.getMessage( ) );
+        if ( nCount >= nMaxFailures )
         {
             throw new FollowUpException( RESULT_JENKINS_UNREACHABLE );
         }
@@ -444,6 +532,26 @@ public class PlatformStepTask implements Runnable
         FollowUpException( String strMessage )
         {
             super( strMessage );
+        }
+    }
+
+    /**
+     * Records why the follow-up of a running step gave up, without changing its status : the screen shows it beside the rearm button.
+     *
+     * @param step
+     *            the step
+     * @param strResult
+     *            the cause to store
+     */
+    private static void recordFollowUpResult( PlatformReleaseStep step, String strResult )
+    {
+        try
+        {
+            PlatformReleaseService.recordFollowUpGivenUp( step, strResult );
+        }
+        catch( RuntimeException e )
+        {
+            AppLogService.error( "Releaser : unable to record the lost follow-up of platform step " + step.getStepNumber( ), e );
         }
     }
 

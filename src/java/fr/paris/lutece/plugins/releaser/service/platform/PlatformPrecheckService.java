@@ -40,6 +40,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import fr.paris.lutece.plugins.releaser.business.AbstractReleaserResource;
 import fr.paris.lutece.plugins.releaser.business.Component;
@@ -48,6 +50,7 @@ import fr.paris.lutece.plugins.releaser.business.RepositoryType;
 import fr.paris.lutece.plugins.releaser.business.Site;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformPlanResource;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformRelease;
+import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseHome;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleasePlan;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseStatus;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformReleaseStep;
@@ -61,6 +64,7 @@ import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.MapperJsonUtil;
 import fr.paris.lutece.plugins.releaser.util.git.GitUtils;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import fr.paris.lutece.portal.service.i18n.I18nService;
@@ -80,10 +84,14 @@ public final class PlatformPrecheckService
     static final String CHECK_RELEASABLE = "releasable";
     static final String CHECK_CREDENTIALS = "credentials";
     static final String CHECK_RELEASE_COMMENTS = "release-comments";
+    static final String CHECK_PLAN_VALUES = "plan-values";
+    private static final Set<Integer> CENSUS_RUNNING = ConcurrentHashMap.newKeySet( );
+    private static final ThreadLocal<Boolean> CENSUS_THREAD = new ThreadLocal<>( );
 
     private static final String MESSAGE_CREDENTIALS_MISSING = "releaser.message.platform.precheck.credentialsMissing";
     private static final String MESSAGE_CREDENTIALS_REFUSED = "releaser.message.platform.precheck.credentialsRefused";
     private static final String MESSAGE_STEP_UNAVAILABLE = "releaser.message.platform.precheck.stepUnavailable";
+    private static final String MESSAGE_PRECHECK_RUNNING = "releaser.message.platformRelease.stepLockedRunning";
     private static final String MESSAGE_CENSUS_SUMMARY = "releaser.message.platform.precheck.censusSummary";
     private static final String TYPE_POM = "pom";
     private static final String COORDINATES_SEPARATOR = ":";
@@ -268,21 +276,42 @@ public final class PlatformPrecheckService
         String strBlocking = resource.getBlockingReleaseComment( );
         if ( strBlocking != null )
         {
-            item.getChecks( ).add( newCheck( CHECK_RELEASABLE, PlatformVerificationCheck.STATUS_TO_FIX, strBlocking ) );
+            item.getChecks( ).add( newCheck( CHECK_RELEASABLE, PlatformVerificationCheck.STATUS_TO_FIX, toText( strBlocking ) ) );
         }
         if ( strCredentialProblem != null )
         {
-            item.getChecks( ).add( newCheck( CHECK_CREDENTIALS, PlatformVerificationCheck.STATUS_TO_FIX, strCredentialProblem ) );
+            item.getChecks( ).add( newCheck( CHECK_CREDENTIALS, PlatformVerificationCheck.STATUS_TO_FIX, toText( strCredentialProblem ) ) );
+        }
+        PlatformReleasePlan single = new PlatformReleasePlan( );
+        single.setMode( PlatformStepMode.PRECHECK );
+        single.getComponents( ).add( planResource );
+        List<String> listUnexpected = strBlocking == null ? PlatformReleaseService.getUnexpectedPlanValues( single ) : new ArrayList<>( );
+        if ( !listUnexpected.isEmpty( ) )
+        {
+            item.getChecks( ).add( newCheck( CHECK_PLAN_VALUES, PlatformVerificationCheck.STATUS_TO_FIX, String.join( LINE_SEPARATOR, listUnexpected ) ) );
         }
         List<String> listComments = new ArrayList<>( resource.getReleaseComments( ) );
         listComments.remove( strBlocking );
         if ( !listComments.isEmpty( ) )
         {
+            listComments.replaceAll( PlatformPrecheckService::toText );
             item.getChecks( ).add( newCheck( CHECK_RELEASE_COMMENTS, PlatformVerificationCheck.STATUS_WARNING, String.join( LINE_SEPARATOR, listComments ) ) );
         }
         item.setStatus( getStatus( item.getChecks( ) ) );
         mapItems.put( strCoordinates, item );
         mapResources.put( strCoordinates, planResource );
+    }
+
+    /**
+     * Turns a release comment, HTML with escaped values, into the plain text of a check : the details are escaped when shown.
+     *
+     * @param strComment
+     *            the comment
+     * @return the plain text
+     */
+    static String toText( String strComment )
+    {
+        return StringEscapeUtils.unescapeHtml4( strComment.replaceAll( "<[^>]*>", "" ) );
     }
 
     /**
@@ -354,14 +383,20 @@ public final class PlatformPrecheckService
         plan.setReleaseType( campaign.getReleaseType( ) );
         plan.setCoreMajor( campaign.getCoreMajor( ) );
         plan.setMode( PlatformStepMode.PRECHECK );
+        List<String> listCoordinates = new ArrayList<>( );
         for ( Map.Entry<String, PlatformResourceVerification> entry : mapItems.entrySet( ) )
         {
             if ( !PlatformVerificationCheck.STATUS_TO_FIX.equals( entry.getValue( ).getStatus( ) ) )
             {
                 plan.getComponents( ).add( mapResources.get( entry.getKey( ) ) );
             }
+            // The coordinates alone go to the pipeline (SNAPSHOT outside the campaign) : only their own shape matters
+            if ( PlatformReleaseService.isSafeCoordinates( entry.getKey( ) ) )
+            {
+                listCoordinates.add( entry.getKey( ) );
+            }
         }
-        plan.setCampaignCoordinates( new ArrayList<>( mapItems.keySet( ) ) );
+        plan.setCampaignCoordinates( listCoordinates );
 
         return plan;
     }
@@ -429,6 +464,28 @@ public final class PlatformPrecheckService
     }
 
     /**
+     * Whether the census of the step 0 of a campaign is being taken : the step 0 is still READY, but its rows and the local clones are in use.
+     *
+     * @param nIdPlatformRelease
+     *            the campaign id
+     * @return true during the census
+     */
+    public static boolean isCensusRunning( int nIdPlatformRelease )
+    {
+        return CENSUS_RUNNING.contains( nIdPlatformRelease );
+    }
+
+    /**
+     * Whether the current thread is taking a census : it loads the aggregates itself and must not be refused by the census guard.
+     *
+     * @return true in the census thread
+     */
+    public static boolean isCensusThread( )
+    {
+        return Boolean.TRUE.equals( CENSUS_THREAD.get( ) );
+    }
+
+    /**
      * Launches the step 0 : takes the census, then sends the resources not already to fix to the step pipeline.
      *
      * @param campaign
@@ -443,19 +500,34 @@ public final class PlatformPrecheckService
      */
     public static boolean launch( PlatformRelease campaign, ReleaserUser user, Locale locale ) throws IOException
     {
-        if ( !canLaunch( campaign ) )
+        // The census lasts minutes and rewrites the step 0 : one at a time per campaign, never over a running step 0
+        if ( !CENSUS_RUNNING.add( campaign.getId( ) ) )
         {
-            throw new AppException( "Platform step " + STEP_NUMBER + " of campaign " + campaign.getId( ) + " is already running" );
+            throw new AppException( I18nService.getLocalizedString( MESSAGE_PRECHECK_RUNNING, locale ) );
         }
-        runCensus( campaign, user, locale );
-        PlatformReleasePlan plan = MapperJsonUtil.parse( campaign.getPrecheckStep( ).getPlanJson( ), PlatformReleasePlan.class );
-        if ( plan.getComponents( ).isEmpty( ) )
+        CENSUS_THREAD.set( Boolean.TRUE );
+        try
         {
-            return false;
-        }
-        PlatformReleaseService.launchStep( campaign, STEP_NUMBER, plan, user, locale );
+            PlatformRelease stored = PlatformReleaseHome.findByPrimaryKeyWithSteps( campaign.getId( ) );
+            if ( stored == null || !canLaunch( stored ) )
+            {
+                throw new AppException( I18nService.getLocalizedString( MESSAGE_PRECHECK_RUNNING, locale ) );
+            }
+            runCensus( campaign, user, locale );
+            PlatformReleasePlan plan = MapperJsonUtil.parse( campaign.getPrecheckStep( ).getPlanJson( ), PlatformReleasePlan.class );
+            if ( plan.getComponents( ).isEmpty( ) )
+            {
+                return false;
+            }
+            PlatformReleaseService.launchStep( campaign, STEP_NUMBER, plan, user, locale );
 
-        return true;
+            return true;
+        }
+        finally
+        {
+            CENSUS_RUNNING.remove( campaign.getId( ) );
+            CENSUS_THREAD.remove( );
+        }
     }
 
     /**

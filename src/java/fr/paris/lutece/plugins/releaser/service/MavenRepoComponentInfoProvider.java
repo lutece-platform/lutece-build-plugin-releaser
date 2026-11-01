@@ -184,6 +184,14 @@ public final class MavenRepoComponentInfoProvider
             {
                 getPomParent( component, getSnapshotPomUrl( strSnapshotUrl, strArtifactId, strCurrentVersion ) );
             }
+            else
+                if ( strReleaseUrl != null && strCurrentVersion != null && component.getReleaseVersions( ) != null
+                        && component.getReleaseVersions( ).contains( strCurrentVersion )
+                        && ( Version.isBeta( strCurrentVersion ) || Version.isCandidate( strCurrentVersion ) ) )
+                {
+                    // A beta or RC referenced as such : its parent is the one a release in stable from its tag keeps
+                    getPomParent( component, getSnapshotPomUrl( strReleaseUrl, strArtifactId, strCurrentVersion ) );
+                }
 
             // Balise <scm> absente du POM.
             if ( StringUtils.isBlank( component.getScmDeveloperConnection( ) ) )
@@ -196,7 +204,7 @@ public final class MavenRepoComponentInfoProvider
             // Dépôt non supporté (ni GitHub ni GitLab).
             if ( component.getRepoType( ) == null )
             {
-                component.setBlockingReleaseComment( "Le dépôt n'est ni GitHub ni GitLab : release impossible." );
+                component.setBlockingReleaseComment( "Le dépôt n'est pas dans les préfixes autorisés (releaser.allowedRepositoryUrls) : release impossible." );
                 AppLogService.error( "MavenRepoComponentInfoProvider - Unsupported repository for " + strArtifactId + " : "
                         + component.getScmDeveloperConnection( ) );
                 return;
@@ -432,7 +440,7 @@ public final class MavenRepoComponentInfoProvider
        
         	strPom = httpAccess.doGet( strPomUrl );
                       
-            SAXParserFactory saxParserFactory = SAXParserFactory.newInstance( );
+            SAXParserFactory saxParserFactory = PomParser.newSaxParserFactory( );
             SAXParser saxParser = saxParserFactory.newSAXParser( );
             SaxPomHandler handler = new SaxPomHandler( );
             saxParser.parse( new InputSource( new StringReader( strPom ) ), handler );

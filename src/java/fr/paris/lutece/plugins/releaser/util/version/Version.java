@@ -494,7 +494,7 @@ public class Version implements Comparable
      *            the version to compare with
      * @return true if major, minor and patch are identical
      */
-    private boolean hasSameBase( Version version )
+    public boolean hasSameBase( Version version )
     {
         return _nMajor == version._nMajor && _nMinor == version._nMinor && _nPatch == version._nPatch;
     }
@@ -707,7 +707,8 @@ public class Version implements Comparable
 
     /**
      * Returns the development version of a branch after a release made apart from it (release from tag) : the next patch SNAPSHOT of the
-     * released version, or null when the branch is already beyond the released version and must be left as it is.
+     * released version (the SNAPSHOT of the same version for a beta or RC), or null when the branch is already beyond the released version
+     * and must be left as it is.
      *
      * @param strBranchVersion
      *            the current version of the branch, null if unknown
@@ -720,9 +721,15 @@ public class Version implements Comparable
     public static String getBranchVersionAfterRelease( String strBranchVersion, String strReleasedVersion ) throws VersionParsingException
     {
         Version released = Version.parse( strReleasedVersion );
-        if ( strBranchVersion != null && Version.parse( strBranchVersion ).nextRelease( ).compareTo( released ) > 0 )
+        boolean bPrerelease = released.isBeta( ) || released.isCandidate( );
+        Version stable = bPrerelease ? new Version( released.getMajor( ), released.getMinor( ), released.getPatch( ), null ) : released;
+        if ( strBranchVersion != null && Version.parse( strBranchVersion ).nextRelease( ).compareTo( stable ) > 0 )
         {
             return null;
+        }
+        if ( bPrerelease )
+        {
+            return new Version( released.getMajor( ), released.getMinor( ), released.getPatch( ), QUALIFIER_SNAPSHOT ).getVersion( );
         }
 
         return released.nextPatch( true ).getVersion( );

@@ -115,6 +115,24 @@ public class GitUtilsReleaseFromTagTest
     }
 
     /**
+     * Only the repositories of the Lutece organizations and of the Lutece GitLab are allowed : credentials are never sent elsewhere.
+     */
+    @Test
+    public void testAllowedRepository( )
+    {
+        assertTrue( GitUtils.isAllowedRepository( "scm:git:https://github.com/lutece-platform/lutece-core.git" ) );
+        assertTrue( GitUtils.isAllowedRepository( "https://github.com/lutece-secteur-public/gru-plugin-x.git" ) );
+        assertTrue( GitUtils.isAllowedRepository( "https://dev.lutece.paris.fr/gitlab/bild/u06/site-releaser.git" ) );
+        assertTrue( GitUtils.isAllowedRepository( "https://github.com/citelibre/citelibre-plugin-x.git" ) );
+        assertTrue( !GitUtils.isAllowedRepository( "https://github.com/someone/lutece-core.git" ) );
+        assertTrue( !GitUtils.isAllowedRepository( "https://github.evil.com/lutece-platform/x.git" ) );
+        assertTrue( !GitUtils.isAllowedRepository( "https://evil.example/gitlab/x.git" ) );
+        assertTrue( !GitUtils.isAllowedRepository( "http://dev.lutece.paris.fr/gitlab/bild/x.git" ) );
+        assertTrue( !GitUtils.isAllowedRepository( "https://dev.lutece.paris.fr/gitlab@evil.com/x.git" ) );
+        assertTrue( !GitUtils.isAllowedRepository( null ) );
+    }
+
+    /**
      * Beta released the classic way, then the stable version released from the beta tag with the new flow, then the next classic release :
      * the merge back into master is clean and master carries the exact content of the new tag.
      *

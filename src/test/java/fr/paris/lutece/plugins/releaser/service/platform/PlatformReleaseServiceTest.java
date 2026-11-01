@@ -344,6 +344,7 @@ public class PlatformReleaseServiceTest
         Component alreadyReleased = component( "plugin-workflow", "1.0.13-SNAPSHOT" );
         alreadyReleased.setIsProject( true );
         alreadyReleased.setLastAvailableSnapshotVersion( "1.0.14-SNAPSHOT" );
+        alreadyReleased.setReleaseVersions( new ArrayList<>( Arrays.asList( "1.0.12", "1.0.13" ) ) );
         alreadyReleased.setTargetVersion( "1.0.13" );
         alreadyReleased.setBranchReleaseFrom( "release-1.0.x" );
         site.addComponent( alreadyReleased );
@@ -705,6 +706,9 @@ public class PlatformReleaseServiceTest
         component.setLastAvailableVersion( "1.0.6" );
         assertFalse( PlatformReleaseService.isStayedInPrerelease( component, PlatformReleaseType.STABLE ) );
 
+        component.setLastAvailableVersion( "1.0.5-RC-01" );
+        assertFalse( PlatformReleaseService.isStayedInPrerelease( component, PlatformReleaseType.STABLE ) );
+
         component.setLastAvailableVersion( "1.0.5-beta-02" );
         component.getReleaseVersions( ).add( "1.0.5" );
         assertFalse( PlatformReleaseService.isStayedInPrerelease( component, PlatformReleaseType.STABLE ) );
@@ -772,6 +776,139 @@ public class PlatformReleaseServiceTest
     /**
      * A retest plan keeps only the resources to verify again, without the aggregate when it already passed.
      */
+    /**
+     * The values the pipeline would refuse are detected before the launch.
+     */
+    @Test
+    public void testUnexpectedPlanValues( )
+    {
+        PlatformReleasePlan plan = new PlatformReleasePlan( );
+        plan.setMode( PlatformStepMode.RELEASE );
+        PlatformPlanResource component = new PlatformPlanResource( );
+        component.setGroupId( "fr.paris.lutece.plugins" );
+        component.setArtifactId( "plugin-a" );
+        component.setScmUrl( "scm:git:https://github.com/lutece-platform/lutece-plugin-a.git" );
+        component.setBranch( "feature/x" );
+        component.setTargetVersion( "1.0.5-beta-01" );
+        plan.getComponents( ).add( component );
+        assertTrue( PlatformReleaseService.getUnexpectedPlanValues( plan ).isEmpty( ) );
+
+        component.setScmUrl( "http://github.com/lutece-platform/lutece-plugin-a.git" );
+        component.setTargetVersion( "Not available" );
+        component.setBranch( "develop;rm" );
+        assertEquals( 4, PlatformReleaseService.getUnexpectedPlanValues( plan ).size( ) );
+        component.setBranch( "develop" );
+        component.setTargetVersion( "1.0.5" );
+        component.setScmUrl( "https://github.com/someone/lutece-plugin-a.git" );
+        assertEquals( 1, PlatformReleaseService.getUnexpectedPlanValues( plan ).size( ) );
+
+        plan.setMode( PlatformStepMode.PRECHECK );
+        component.setScmUrl( "https://dev.lutece.paris.fr/gitlab/bild/u06/plugin-a.git" );
+        component.setBranch( "develop_core7" );
+        component.setTargetVersion( null );
+        assertTrue( PlatformReleaseService.getUnexpectedPlanValues( plan ).isEmpty( ) );
+    }
+
+    /**
+     * The aggregate never references a version that will not exist.
+     */
+    @Test
+    public void testUnpublishedTargets( )
+    {
+        Site site = new Site( );
+        Component neverReleased = component( "plugin-a", "1.0.5-SNAPSHOT" );
+        neverReleased.setTargetVersion( "1.0.5" );
+        site.addComponent( neverReleased );
+        Component inNexus = component( "plugin-b", "2.0.1-SNAPSHOT" );
+        inNexus.setTargetVersion( "2.0.0" );
+        inNexus.setReleaseVersions( new ArrayList<>( Arrays.asList( "2.0.0" ) ) );
+        site.addComponent( inNexus );
+        Component unchanged = component( "plugin-c", "3.0.0" );
+        unchanged.setTargetVersion( "3.0.0" );
+        site.addComponent( unchanged );
+
+        PlatformReleasePlan plan = new PlatformReleasePlan( );
+        Map<String, String> mapReleased = new LinkedHashMap<>( );
+        assertEquals( Arrays.asList( "plugin-a 1.0.5" ), PlatformReleaseService.getUnpublishedTargets( site, plan, mapReleased ) );
+
+        mapReleased.put( "fr.paris.lutece.plugins:plugin-a", "1.0.5" );
+        assertTrue( PlatformReleaseService.getUnpublishedTargets( site, plan, mapReleased ).isEmpty( ) );
+    }
+
+    /**
+     * A version already in Nexus, or not of the release type of the step, cannot be released.
+     */
+    @Test
+    public void testWrongTargets( )
+    {
+        Component alreadyInNexus = component( "plugin-a", "1.0.5-SNAPSHOT" );
+        alreadyInNexus.setTargetVersion( "1.0.5" );
+        alreadyInNexus.setReleaseVersions( new ArrayList<>( Arrays.asList( "1.0.4", "1.0.5" ) ) );
+        Component stableInBeta = component( "plugin-b", "2.0.0-SNAPSHOT" );
+        stableInBeta.setTargetVersion( "2.0.0" );
+        Component beta = component( "plugin-c", "3.0.0-SNAPSHOT" );
+        beta.setTargetVersion( "3.0.0-beta-01" );
+        PlatformReleasePlan plan = new PlatformReleasePlan( );
+        Site site = new Site( );
+        site.setArtifactId( "lutece-parent" );
+
+        List<String> listWrong = PlatformReleaseService.getWrongTargets( plan, site, PlatformStepCode.PLATFORM_PLUGINS, PlatformReleaseType.BETA, null,
+                Arrays.asList( alreadyInNexus, stableInBeta, beta ) );
+        assertEquals( 2, listWrong.size( ) );
+        assertTrue( listWrong.get( 0 ).startsWith( "plugin-a 1.0.5" ) );
+        assertTrue( listWrong.get( 1 ).startsWith( "plugin-b 2.0.0" ) );
+
+        PlatformPlanResource aggregate = resource( "lutece-core" );
+        aggregate.setTargetVersion( "8.0.0" );
+        plan.setAggregate( aggregate );
+        PlatformStepResult previous = new PlatformStepResult( );
+        previous.setAggregateVersion( "8.0.0" );
+        assertEquals( 1, PlatformReleaseService.getWrongTargets( plan, site, PlatformStepCode.CORE, PlatformReleaseType.STABLE, previous,
+                new ArrayList<>( ) ).size( ) );
+    }
+
+    /**
+     * The expected parent or core version is a stable one, a beta or RC only when the major has no stable version yet.
+     */
+    @Test
+    public void testLastVersionPreferringStable( )
+    {
+        assertEquals( "7.0.15", PlatformReleaseService.getLastVersionPreferringStable( Arrays.asList( "7.0.14", "7.0.15", "7.0.16-RC-01" ), 7 ) );
+        assertEquals( "8.0.0-beta-02", PlatformReleaseService.getLastVersionPreferringStable( Arrays.asList( "7.0.15", "8.0.0-beta-01", "8.0.0-beta-02" ), 8 ) );
+        assertNull( PlatformReleaseService.getLastVersionPreferringStable( null, 8 ) );
+    }
+
+    /**
+     * A component maintained for core 7 and core 8 keeps the versions of the line the aggregate references.
+     */
+    @Test
+    public void testRestrictToCurrentLine( )
+    {
+        Component component = component( "plugin-a", "1.0.5-SNAPSHOT" );
+        component.setReleaseVersions( new ArrayList<>( Arrays.asList( "1.0.4", "2.0.0-beta-01" ) ) );
+        component.setSnapshotVersions( new ArrayList<>( Arrays.asList( "1.0.5-SNAPSHOT", "2.0.0-SNAPSHOT" ) ) );
+        component.setLastAvailableVersion( "2.0.0-beta-01" );
+        component.setLastAvailableSnapshotVersion( "2.0.0-SNAPSHOT" );
+
+        assertTrue( PlatformReleaseService.restrictToCurrentLine( component ) );
+        assertEquals( "1.0.4", component.getLastAvailableVersion( ) );
+        assertEquals( "1.0.5-SNAPSHOT", component.getLastAvailableSnapshotVersion( ) );
+        assertFalse( PlatformReleaseService.restrictToCurrentLine( component ) );
+    }
+
+    /**
+     * A CSV cell can neither become a formula nor shift the columns.
+     */
+    @Test
+    public void testCsvField( )
+    {
+        assertEquals( "1.0.5", PlatformReleaseService.csvField( "1.0.5" ) );
+        assertEquals( "", PlatformReleaseService.csvField( null ) );
+        assertEquals( "'=HYPERLINK(1)", PlatformReleaseService.csvField( "=HYPERLINK(1)" ) );
+        assertEquals( "\"a;b\"", PlatformReleaseService.csvField( "a;b" ) );
+        assertEquals( "\"a\"\"b\"", PlatformReleaseService.csvField( "a\"b" ) );
+    }
+
     @Test
     public void testRestrictPlan( )
     {
@@ -1157,7 +1294,17 @@ public class PlatformReleaseServiceTest
         assertEquals( mismatch, PlatformReleaseService.getPomVersionProblem( "8.0.1-SNAPSHOT", "8.0.1", 8 ) );
         assertEquals( null, PlatformReleaseService.getPomVersionProblem( "8.0.1-SNAPSHOT", null, 8 ) );
         assertEquals( wrongCore, PlatformReleaseService.getPomVersionProblem( "7.1.10", null, 8 ) );
+        assertEquals( wrongCore, PlatformReleaseService.getPomVersionProblem( "7.1.10", "8.0.1", 8 ) );
         assertEquals( null, PlatformReleaseService.getPomVersionProblem( null, "8.0.1", 8 ) );
+
+        PomVersionDecision core7Kept = PlatformReleaseService.decidePomVersion( "7.0.5", null, Arrays.asList( "8.0.1" ), 8, "keep" );
+        assertFalse( core7Kept.isKeepAllowed( ) );
+        assertFalse( core7Kept.isKept( ) );
+        assertTrue( core7Kept.isBlocked( ) );
+        PomVersionDecision snapshotKept = PlatformReleaseService.decidePomVersion( "8.0.0-SNAPSHOT", null, Arrays.asList( "8.0.1" ), 8, "keep" );
+        assertFalse( snapshotKept.isKeepAllowed( ) );
+        assertFalse( snapshotKept.isKept( ) );
+        assertTrue( snapshotKept.isBlocked( ) );
 
         assertFalse( PlatformReleaseService.isPomVersionChoiceApplicable( null, "8.0.1", mismatch ) );
         assertTrue( PlatformReleaseService.isPomVersionChoiceApplicable( "8.0.1", "8.0.1", mismatch ) );

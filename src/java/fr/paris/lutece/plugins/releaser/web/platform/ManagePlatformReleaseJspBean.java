@@ -45,6 +45,7 @@ import fr.paris.lutece.portal.service.i18n.I18nService;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import fr.paris.lutece.plugins.releaser.business.ReleaserUser;
@@ -62,12 +63,12 @@ import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepDefinition
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformStepDefinitionHome;
 import fr.paris.lutece.plugins.releaser.business.platform.PlatformUntestedDecision;
 import fr.paris.lutece.plugins.releaser.service.ReleasePreparationService;
-import fr.paris.lutece.plugins.releaser.service.SiteService;
 import fr.paris.lutece.plugins.releaser.service.platform.PlatformPrecheckService;
 import fr.paris.lutece.plugins.releaser.service.platform.PlatformReleaseService;
 import fr.paris.lutece.plugins.releaser.service.platform.PlatformStepTask;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
+import fr.paris.lutece.plugins.releaser.util.git.GitUtils;
 import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.admin.AccessDeniedException;
 import fr.paris.lutece.portal.service.admin.AdminUserService;
@@ -125,6 +126,8 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String VIEW_PLATFORM_RELEASE = "platformRelease";
     private static final String VIEW_PREPARE_STEP = "prepareStep";
     private static final String VIEW_STEP_STATUS_JSON = "stepStatusJson";
+    private static final String JSON_STATUS = "status";
+    private static final String JSON_FOLLOWED = "followed";
     private static final String VIEW_EXPORT_CSV = "exportCsv";
     private static final String VIEW_STEP_DEFINITIONS = "stepDefinitions";
     private static final String VIEW_PRECHECK = "precheck";
@@ -226,7 +229,9 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     private static final String MARK_CREATE_AUTHORIZED = "create_authorized";
 
     // Messages
-    private static final String MESSAGE_ACCESS_DENIED = "releaser.message.accesDenied";
+    private static final String MESSAGE_ACCESS_DENIED = "releaser.message.accessDenied";
+    private static final String MESSAGE_STEP_CHANGED = "releaser.message.platformRelease.stepChanged";
+    private static final String MESSAGE_STEP_REPOSITORY_NOT_ALLOWED = "releaser.message.platformRelease.stepRepositoryNotAllowed";
     private static final String MESSAGE_CONFIRM_REMOVE = "releaser.message.confirmRemovePlatformRelease";
     private static final String MESSAGE_NOT_FOUND = "releaser.message.platformRelease.notFound";
     private static final String MESSAGE_REMOVE_RUNNING = "releaser.message.platformRelease.removeRunning";
@@ -291,6 +296,8 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     @View( value = VIEW_MANAGE_PLATFORM_RELEASES, defaultView = true )
     public String getManagePlatformReleases( HttpServletRequest request )
     {
+        // A creation left with "cancel" must not refill the next one
+        _campaign = null;
         AdminUser user = AdminUserService.getAdminUser( request );
         List<PlatformRelease> listCampaigns = new ArrayList<>( );
         for ( PlatformRelease campaign : PlatformReleaseHome.getPlatformReleasesList( ) )
@@ -431,13 +438,12 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
             return redirectView( request, VIEW_MANAGE_PLATFORM_RELEASES );
         }
         checkAuthorized( request, campaign );
-        if ( PlatformReleaseService.isRunning( PlatformReleaseHome.findByPrimaryKeyWithSteps( campaign.getId( ) ) ) )
+        if ( !PlatformReleaseService.removePlatformReleaseIfIdle( campaign.getId( ) ) )
         {
             addError( MESSAGE_REMOVE_RUNNING, getLocale( ) );
             return redirectView( request, VIEW_MANAGE_PLATFORM_RELEASES );
         }
 
-        PlatformReleaseService.removePlatformRelease( campaign.getId( ) );
         if ( _nSiteCampaignId == campaign.getId( ) )
         {
             _site = null;
@@ -522,8 +528,12 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
                 model.put( MARK_PRECHECK_SUMMARY, mapSummary );
             }
         }
-        model.put( MARK_OPEN_AUTH_STEP, request.getParameter( PARAMETER_AUTH ) );
-        RepositoryType stepRepositoryType = PlatformReleaseService.getStepRepositoryType( ReleaserUtils.convertStringToInt( request.getParameter( PARAMETER_AUTH ) ) );
+        int nAuthStep = ReleaserUtils.convertStringToInt( request.getParameter( PARAMETER_AUTH ) );
+        if ( nAuthStep >= 0 )
+        {
+            model.put( MARK_OPEN_AUTH_STEP, Integer.toString( nAuthStep ) );
+        }
+        RepositoryType stepRepositoryType = PlatformReleaseService.getStepRepositoryType( nAuthStep );
         putRepositoryTypeMarks( model, stepRepositoryType != null ? Arrays.asList( stepRepositoryType ) : Arrays.asList( RepositoryType.values( ) ) );
         model.put( ConstanteUtils.MARK_USER, ReleaserUtils.getReleaserUser( request, getLocale( ) ) );
 
@@ -799,7 +809,11 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         }
         else
         {
-            jsonResponse = new JsonResponse( step );
+            // Only what the follow-up needs : the plan and the report stay out of the answer
+            Map<String, Object> mapStatus = new LinkedHashMap<>( );
+            mapStatus.put( JSON_STATUS, step.getStatus( ).name( ) );
+            mapStatus.put( JSON_FOLLOWED, PlatformReleaseService.isStepFollowed( step ) );
+            jsonResponse = new JsonResponse( mapStatus );
         }
 
         return JsonUtil.buildJsonResponse( jsonResponse );
@@ -862,7 +876,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     }
 
     /**
-     * Skips a stable-only step of a pre-release campaign.
+     * Skips the global-pom, site-pom or core step when it has nothing to release.
      *
      * @param request
      *            the request
@@ -919,8 +933,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
             return redirect( request, VIEW_PLATFORM_RELEASE, PARAMETER_ID, campaign.getId( ) );
         }
 
-        campaign.setExportVerified( true );
-        PlatformReleaseHome.update( campaign );
+        PlatformReleaseService.markExportVerified( campaign.getId( ) );
         addInfo( INFO_EXPORT_VERIFIED, getLocale( ) );
 
         return redirect( request, VIEW_PLATFORM_RELEASE, PARAMETER_ID, campaign.getId( ) );
@@ -1100,7 +1113,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         PlatformRelease campaign = getPreparedCampaign( request );
         if ( campaign == null )
         {
-            return redirectView( request, VIEW_MANAGE_PLATFORM_RELEASES );
+            return redirectAfterRefusal( request );
         }
         PlatformReleaseService.cycleTargetVersion( campaign, _nSiteStepNumber, _site );
 
@@ -1123,14 +1136,14 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         PlatformRelease campaign = getPreparedCampaign( request );
         if ( campaign == null )
         {
-            return redirectView( request, VIEW_MANAGE_PLATFORM_RELEASES );
+            return redirectAfterRefusal( request );
         }
         checkAuthorized( request, campaign );
         String strBranch = StringUtils.trimToNull( request.getParameter( PARAMETER_RELEASE_BRANCH ) );
         if ( strBranch != null && !strBranch.equals( _site.getBranchReleaseFrom( ) ) && ( _site.getBranches( ) == null || !_site.getBranches( ).contains( strBranch ) ) )
         {
             addError( I18nService.getLocalizedString( MESSAGE_UNKNOWN_BRANCH, new String [ ] {
-                    strBranch
+                    StringEscapeUtils.escapeHtml4( strBranch )
             }, getLocale( ) ) );
             return redirectToPreparedStep( request );
         }
@@ -1158,7 +1171,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         if ( !PlatformReleaseService.isValidReleaseTarget( strReleaseTarget, _site ) )
         {
             throw new AppException( I18nService.getLocalizedString( MESSAGE_UNKNOWN_RELEASE_TARGET, new String [ ] {
-                    strReleaseTarget
+                    StringEscapeUtils.escapeHtml4( strReleaseTarget )
             }, getLocale( ) ) );
         }
         Map<String, String> mapParameters = new LinkedHashMap<>( );
@@ -1202,9 +1215,10 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     @Action( ACTION_UPGRADE_COMPONENT )
     public String doUpgradeComponent( HttpServletRequest request )
     {
-        if ( getPreparedCampaign( request ) != null )
+        PlatformRelease campaign = getPreparedCampaign( request );
+        if ( campaign != null )
         {
-            SiteService.upgradeComponent( _site, request.getParameter( PARAMETER_ARTIFACT_ID ) );
+            PlatformReleaseService.upgradeComponent( campaign, _nSiteStepNumber, _site, request.getParameter( PARAMETER_ARTIFACT_ID ) );
         }
 
         return redirectToPreparedStep( request );
@@ -1220,9 +1234,10 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     @Action( ACTION_CANCEL_UPGRADE_COMPONENT )
     public String doCancelUpgradeComponent( HttpServletRequest request )
     {
-        if ( getPreparedCampaign( request ) != null )
+        PlatformRelease campaign = getPreparedCampaign( request );
+        if ( campaign != null )
         {
-            SiteService.cancelUpgradeComponent( _site, request.getParameter( PARAMETER_ARTIFACT_ID ) );
+            PlatformReleaseService.cancelUpgradeComponent( campaign, _nSiteStepNumber, _site, request.getParameter( PARAMETER_ARTIFACT_ID ) );
         }
 
         return redirectToPreparedStep( request );
@@ -1414,7 +1429,7 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         PlatformRelease campaign = getPreparedCampaign( request );
         if ( campaign == null )
         {
-            return redirectView( request, VIEW_MANAGE_PLATFORM_RELEASES );
+            return redirectAfterRefusal( request );
         }
         try
         {
@@ -1460,9 +1475,10 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
     @Action( ACTION_DOWNGRADE_COMPONENT )
     public String doDowngradeComponent( HttpServletRequest request )
     {
-        if ( getPreparedCampaign( request ) != null )
+        PlatformRelease campaign = getPreparedCampaign( request );
+        if ( campaign != null )
         {
-            SiteService.downgradeComponent( _site, request.getParameter( PARAMETER_ARTIFACT_ID ) );
+            PlatformReleaseService.downgradeComponent( campaign, _nSiteStepNumber, _site, request.getParameter( PARAMETER_ARTIFACT_ID ) );
         }
 
         return redirectToPreparedStep( request );
@@ -1502,26 +1518,37 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         PlatformRelease campaign = getPreparedCampaign( request );
         if ( campaign == null )
         {
-            return redirectView( request, VIEW_MANAGE_PLATFORM_RELEASES );
+            return redirectAfterRefusal( request );
         }
         checkAuthorized( request, campaign );
+        // The prepared step is read once : another tab of the same session may replace it while this launch calls the repositories
+        Site site = _site;
+        int nStepNumber = _nSiteStepNumber;
+        String strStepStamp = _strSiteStepStamp;
+        if ( site == null || !PlatformReleaseService.getStepStamp( PlatformReleaseService.getStep( campaign, nStepNumber ) ).equals( strStepStamp ) )
+        {
+            addError( MESSAGE_STEP_CHANGED, getLocale( ) );
+            return redirectToStep( request, VIEW_PREPARE_STEP, campaign.getId( ), nStepNumber, PARAMETER_RELOAD, "1" );
+        }
 
         PlatformStepMode mode = getLaunchMode( request );
         boolean bNothingPushed = mode != PlatformStepMode.RELEASE;
         ReleaserUser user = ReleaserUtils.getReleaserUser( request, getLocale( ) );
-        String strPermissionError = bNothingPushed ? null : PlatformReleaseService.checkLaunchPermissions( _site, user );
+        String strPermissionError = bNothingPushed ? null : PlatformReleaseService.checkLaunchPermissions( site, user );
         if ( strPermissionError != null )
         {
             addError( strPermissionError );
             return redirectToPreparedStep( request );
         }
-        PlatformReleaseStep step = PlatformReleaseService.getStep( campaign, _nSiteStepNumber );
-        boolean bVerifiable = PlatformReleaseService.canVerify( PlatformStepCode.fromStepNumber( _nSiteStepNumber ) );
+        PlatformReleaseStep step = PlatformReleaseService.getStep( campaign, nStepNumber );
+        boolean bVerifiable = PlatformReleaseService.canVerify( PlatformStepCode.fromStepNumber( nStepNumber ) );
         Map<String, String> mapToConfirm = new LinkedHashMap<>( );
+        Map<String, String> mapBranchHeads = _mapBranchHeads;
         if ( mode == PlatformStepMode.RELEASE && bVerifiable )
         {
-            _mapBranchHeads = PlatformReleaseService.getBranchHeads( step, _site, user );
-            Map<String, String> mapStatuses = PlatformReleaseService.getVerificationStatuses( step, _site, _mapBranchHeads );
+            mapBranchHeads = PlatformReleaseService.getBranchHeads( step, site, user );
+            _mapBranchHeads = mapBranchHeads;
+            Map<String, String> mapStatuses = PlatformReleaseService.getVerificationStatuses( step, site, mapBranchHeads );
             List<String> listUndecided = PlatformReleaseService.getUndecidedUntestedResources( step, mapStatuses );
             if ( !listUndecided.isEmpty( ) )
             {
@@ -1531,21 +1558,23 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
                 return redirectToPreparedStep( request );
             }
             mapToConfirm = PlatformReleaseService.getResourcesToConfirm( mapStatuses );
-            if ( !mapToConfirm.isEmpty( ) && !Boolean.parseBoolean( request.getParameter( PARAMETER_CONFIRM_UNVERIFIED ) ) )
+            boolean bConfirmed = Boolean.parseBoolean( request.getParameter( PARAMETER_CONFIRM_UNVERIFIED ) ) && _mapPendingConfirmation != null
+                    && _mapPendingConfirmation.entrySet( ).containsAll( mapToConfirm.entrySet( ) );
+            if ( !mapToConfirm.isEmpty( ) && !bConfirmed )
             {
                 _mapPendingConfirmation = mapToConfirm;
-                return redirectToStep( request, VIEW_PREPARE_STEP, campaign.getId( ), _nSiteStepNumber, PARAMETER_OPEN_CONFIRM, "1" );
+                return redirectToStep( request, VIEW_PREPARE_STEP, campaign.getId( ), nStepNumber, PARAMETER_OPEN_CONFIRM, "1" );
             }
         }
         _mapPendingConfirmation = null;
         try
         {
             savePipelineParameters( request, campaign );
-            PlatformReleasePlan plan = PlatformReleaseService.buildPlan( campaign, _nSiteStepNumber, _site, mode, getLocale( ) );
+            PlatformReleasePlan plan = PlatformReleaseService.buildPlan( campaign, nStepNumber, site, mode, getLocale( ) );
             if ( mode == PlatformStepMode.VERIFY && SCOPE_TO_RETEST.equals( request.getParameter( PARAMETER_SCOPE ) ) )
             {
                 PlatformReleaseService.restrictPlan( plan, PlatformReleaseService
-                        .getResourcesToConfirm( PlatformReleaseService.getVerificationStatuses( step, _site, _mapBranchHeads ) ).keySet( ) );
+                        .getResourcesToConfirm( PlatformReleaseService.getVerificationStatuses( step, site, mapBranchHeads ) ).keySet( ) );
                 if ( plan.getComponents( ).isEmpty( ) && plan.getAggregate( ) == null )
                 {
                     addInfo( INFO_NOTHING_TO_RETEST, getLocale( ) );
@@ -1565,19 +1594,19 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
                 }
                 plan.getLaunchedDespite( ).add( entry.getKey( ) + " : " + entry.getValue( ) + strDecision );
             }
-            PlatformReleaseService.applyPipelineParameters( campaign, _nSiteStepNumber, plan );
+            PlatformReleaseService.applyPipelineParameters( campaign, nStepNumber, plan );
             String strMasterError = bNothingPushed ? null : PlatformReleaseService.checkMasterBranches( plan, user, getLocale( ) );
             if ( strMasterError != null )
             {
                 addError( strMasterError );
                 return redirectToPreparedStep( request );
             }
-            PlatformReleaseService.launchStep( campaign, _nSiteStepNumber, plan, user, getLocale( ) );
+            PlatformReleaseService.launchStep( campaign, nStepNumber, plan, user, getLocale( ) );
             addInfo( mode == PlatformStepMode.VERIFY ? INFO_VERIFY_LAUNCHED : ( bNothingPushed ? INFO_DRY_RUN_LAUNCHED : INFO_STEP_LAUNCHED ), getLocale( ) );
         }
         catch( IOException | AppException e )
         {
-            AppLogService.error( "Releaser : unable to launch platform step " + _nSiteStepNumber + " of campaign " + campaign.getId( ), e );
+            AppLogService.error( "Releaser : unable to launch platform step " + nStepNumber + " of campaign " + campaign.getId( ), e );
             addError( e.getMessage( ) );
         }
 
@@ -1646,6 +1675,14 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
             definition.setName( StringUtils.trim( request.getParameter( PARAMETER_STEP_NAME_PREFIX + definition.getStepNumber( ) ) ) );
             definition.setScmUrl( StringUtils.trim( request.getParameter( PARAMETER_STEP_SCM_URL_PREFIX + definition.getStepNumber( ) ) ) );
             bValid = validateBean( definition, VALIDATION_STEP_DEFINITION_PREFIX ) && bValid;
+            // The aggregate is cloned with the credentials of the person : only an allowed repository
+            if ( !GitUtils.isAllowedRepository( definition.getScmUrl( ) ) )
+            {
+                addError( I18nService.getLocalizedString( MESSAGE_STEP_REPOSITORY_NOT_ALLOWED, new String [ ] {
+                        Integer.toString( definition.getStepNumber( ) ), StringEscapeUtils.escapeHtml4( StringUtils.defaultString( definition.getScmUrl( ) ) )
+                }, getLocale( ) ) );
+                bValid = false;
+            }
         }
 
         if ( !bValid )
@@ -1683,6 +1720,18 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
             _site = null;
             return null;
         }
+        // The screen of another tab may show another campaign or step than the one in session
+        if ( ReleaserUtils.convertStringToInt( request.getParameter( PARAMETER_ID ) ) != _nSiteCampaignId || getStepNumber( request ) != _nSiteStepNumber )
+        {
+            addError( MESSAGE_STEP_CHANGED, getLocale( ) );
+            return null;
+        }
+        String strLockReason = PlatformReleaseService.getStepLockReason( campaign, _nSiteStepNumber, false );
+        if ( strLockReason != null )
+        {
+            addError( strLockReason, getLocale( ) );
+            return null;
+        }
 
         return campaign;
     }
@@ -1702,6 +1751,20 @@ public class ManagePlatformReleaseJspBean extends MVCAdminJspBean
         }
 
         return redirectToStep( request, VIEW_PREPARE_STEP, _nSiteCampaignId, _nSiteStepNumber );
+    }
+
+    /**
+     * Redirects, after a refused action, to the campaign of the request when it names one, else to the list : the message is shown there.
+     *
+     * @param request
+     *            the request
+     * @return the redirection
+     */
+    private String redirectAfterRefusal( HttpServletRequest request )
+    {
+        int nRequestedId = ReleaserUtils.convertStringToInt( request.getParameter( PARAMETER_ID ) );
+
+        return nRequestedId > 0 ? redirect( request, VIEW_PLATFORM_RELEASE, PARAMETER_ID, nRequestedId ) : redirectView( request, VIEW_MANAGE_PLATFORM_RELEASES );
     }
 
     /**

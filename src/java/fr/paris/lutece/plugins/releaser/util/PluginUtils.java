@@ -58,6 +58,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
+
 // TODO: Auto-generated Javadoc
 /**
  * The Class PluginUtils.
@@ -285,7 +287,7 @@ public class PluginUtils
         boolean bFileClosed = false;
         try
         {
-            DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance( );
+            DocumentBuilderFactory docBuilderFactory = PomParser.newDocumentBuilderFactory( );
             DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder( );
             Document doc = docBuilder.parse( strFile );
 

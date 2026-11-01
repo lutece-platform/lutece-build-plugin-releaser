@@ -494,9 +494,9 @@ public class ComponentService implements IComponentService
     public Component getComponentBranchList( Component component, RepositoryType repositoryType, ReleaserUser user )
     {
     	
-        Credential credential = user.getCredential( repositoryType );
-        String strLogin = credential.getLogin( );
-        String strPwd = credential.getPassword( );
+        Credential credential = repositoryType != null ? user.getCredential( repositoryType ) : null;
+        String strLogin = credential != null ? credential.getLogin( ) : null;
+        String strPwd = credential != null ? credential.getPassword( ) : null;
         
     	CommandResult commandResult = new CommandResult( );
         WorkflowReleaseContext context = new WorkflowReleaseContext( );
@@ -554,9 +554,9 @@ public class ComponentService implements IComponentService
     @Override
     public Component getComponentTagList( Component component, RepositoryType repositoryType, ReleaserUser user )
     {
-        Credential credential = user.getCredential( repositoryType );
-        String strLogin = credential.getLogin( );
-        String strPwd = credential.getPassword( );
+        Credential credential = repositoryType != null ? user.getCredential( repositoryType ) : null;
+        String strLogin = credential != null ? credential.getLogin( ) : null;
+        String strPwd = credential != null ? credential.getPassword( ) : null;
 
         CommandResult commandResult = new CommandResult( );
         WorkflowReleaseContext context = new WorkflowReleaseContext( );
@@ -588,7 +588,7 @@ public class ComponentService implements IComponentService
                     return component;
                 }
                 git = Git.cloneRepository( )
-                        .setCredentialsProvider( new org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider( strLogin, strPwd ) )
+                        .setCredentialsProvider( GitUtils.credentialsFor( strRepoUrl, strLogin, strPwd ) )
                         .setURI( strRepoUrl ).setDirectory( fLocalRepo ).setCloneAllBranches( true ).call( );
             }
 

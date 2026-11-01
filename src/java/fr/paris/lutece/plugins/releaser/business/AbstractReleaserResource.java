@@ -38,6 +38,9 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
+import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
+import fr.paris.lutece.plugins.releaser.util.git.GitUtils;
+
 /**
  * AbstractReleaserResource
  *
@@ -173,19 +176,15 @@ public abstract class AbstractReleaserResource implements IReleaserResource
     public RepositoryType getRepoType( )
     {
 
-        if ( !StringUtils.isEmpty( getScmUrl( ) ) )
+        // Unsupported repository (outside the allowed prefixes) or missing scm.
+        if ( !GitUtils.isAllowedRepository( getScmUrl( ) ) )
         {
-            if ( getScmUrl( ).contains( "https://github." ) )
-            {
-                return RepositoryType.GITHUB;
-            }
-            if ( getScmUrl( ).contains( "gitlab" ) )
-            {
-                return RepositoryType.GITLAB;
-            }
+            return null;
         }
-        // Unsupported repository or missing scm.
-        return null;
+
+        return StringUtils.trimToEmpty( GitUtils.getRepoUrl( getScmUrl( ).trim( ) ) ).toLowerCase( java.util.Locale.ROOT ).startsWith( ConstanteUtils.GITHUB_URL_PREFIX )
+                ? RepositoryType.GITHUB
+                : RepositoryType.GITLAB;
 
     }
 

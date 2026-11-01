@@ -51,8 +51,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -117,6 +119,12 @@ public class GitUtils
 
     /** The Constant CONSTANTE_REF_TAG. */
     private static final String CONSTANTE_REF_TAG = "refs/tags/";
+
+    /** An allowed prefix : https, a host and one organization or group segment. */
+    private static final Pattern SAFE_REPOSITORY_PREFIX = Pattern.compile( "https://[a-z0-9.-]+/([a-z0-9_-][a-z0-9._-]*/)+" );
+
+    /** The path of a repository under its prefix : plain segments, no ".", "..", empty or encoded segment, optional ".git" and slash. */
+    private static final Pattern SAFE_REPOSITORY_PATH = Pattern.compile( "([a-z0-9_-][a-z0-9._-]*/)*[a-z0-9_-][a-z0-9._-]*/?" );
 
     /** The Constant CONSTANTE_REF_HEADS. */
     private static final String CONSTANTE_REF_HEADS = "refs/heads/";
@@ -200,7 +208,7 @@ public class GitUtils
             FileRepositoryBuilder builder = new FileRepositoryBuilder( );
             File fGitDir = new File( sClonePath );
            
-            CloneCommand clone = Git.cloneRepository( ).setCredentialsProvider( new UsernamePasswordCredentialsProvider( strUserName, strPassword ) )
+            CloneCommand clone = Git.cloneRepository( ).setCredentialsProvider( credentialsFor( sRepoURL, strUserName, strPassword ) )
                     .setBare( false ).setCloneAllBranches( true ).setDirectory( fGitDir ).setURI( getRepoUrl( sRepoURL ) );
 
             git = clone.call( );
@@ -381,7 +389,7 @@ public class GitUtils
     {
 
         git.push( ).setRemote( "origin" ).setRefSpecs( new RefSpec( strRefSpec ) ).setForce( true )
-                .setCredentialsProvider( new UsernamePasswordCredentialsProvider( strUserName, strPassword ) ).call( );
+                .setCredentialsProvider( credentialsFor( git, strUserName, strPassword ) ).call( );
 
     }
 
@@ -422,7 +430,7 @@ public class GitUtils
             throws IOException, WrongRepositoryStateException, InvalidConfigurationException, DetachedHeadException, InvalidRemoteException, CanceledException,
             RefNotFoundException, NoHeadException, TransportException, GitAPIException
     {
-        PullResult pPullResult = git.pull( ).setCredentialsProvider( new UsernamePasswordCredentialsProvider( strUserName, strPassword ) ).setRemote( "origin" )
+        PullResult pPullResult = git.pull( ).setCredentialsProvider( credentialsFor( git, strUserName, strPassword ) ).setRemote( "origin" )
                 .setRemoteBranchName( sBranchName ).call( );
 
         return pPullResult;
@@ -628,7 +636,7 @@ public class GitUtils
         }
         else
         {
-            git.push( ).setCredentialsProvider( new UsernamePasswordCredentialsProvider( strUserName, strPassword ) ).call( );
+            git.push( ).setCredentialsProvider( credentialsFor( git, strUserName, strPassword ) ).call( );
             commandResult.getLog( ).append( mergeResult.getMergeStatus( ) );
         }
         return mergeResult;
@@ -787,7 +795,7 @@ public class GitUtils
             tempDir = Files.createTempDirectory( "releaser-read-" );
             try ( Git git = Git.cloneRepository( ).setURI( strRepoUrl ).setDirectory( tempDir.toFile( ) ).setBare( true ).setBranch( strRef )
                     .setBranchesToClone( Collections.singletonList( strRef ) ).setCloneAllBranches( false )
-                    .setCredentialsProvider( new UsernamePasswordCredentialsProvider( strUserName, strPassword ) ).call( );
+                    .setCredentialsProvider( credentialsFor( strRepoUrl, strUserName, strPassword ) ).call( );
                     RevWalk revWalk = new RevWalk( git.getRepository( ) ) )
             {
                 ObjectId objectId = git.getRepository( ).resolve( strRef );
@@ -929,6 +937,113 @@ public class GitUtils
 
         return strRepoUrl;
 
+    }
+
+    /**
+     * Whether a repository URL ("scm:git:" prefix accepted) starts with one of the allowed prefixes ({@link ConstanteUtils#PROPERTY_ALLOWED_REPOSITORY_URLS}) :
+     * the releaser reads and sends credentials only there, an URL taken from a POM may name any server.
+     *
+     * @param strRepoUrl
+     *            the repository URL, null tolerated
+     * @return true when allowed
+     */
+    public static boolean isAllowedRepository( String strRepoUrl )
+    {
+        String strUrl = StringUtils.trimToEmpty( getRepoUrl( StringUtils.trimToEmpty( strRepoUrl ) ) ).toLowerCase( Locale.ROOT );
+        if ( strUrl.isEmpty( ) || strUrl.chars( ).anyMatch( c -> c <= ' ' ) )
+        {
+            return false;
+        }
+        for ( String strAllowed : getAllowedRepositoryPrefixes( ) )
+        {
+            // The path after the prefix is made of plain segments : "..", ".", an empty segment or an encoded one would leave the organization
+            if ( strUrl.startsWith( strAllowed ) && SAFE_REPOSITORY_PATH.matcher( strUrl.substring( strAllowed.length( ) ) ).matches( ) )
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns the allowed repository URL prefixes, lower case and ending with a slash : the property, or the default ones when the property
+     * is blank or not loaded (unit tests). A prefix that is not an https URL is ignored and logged.
+     *
+     * @return the prefixes
+     */
+    static List<String> getAllowedRepositoryPrefixes( )
+    {
+        String strPrefixes;
+        try
+        {
+            strPrefixes = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_ALLOWED_REPOSITORY_URLS, ConstanteUtils.DEFAULT_ALLOWED_REPOSITORY_URLS );
+        }
+        catch( RuntimeException e )
+        {
+            strPrefixes = ConstanteUtils.DEFAULT_ALLOWED_REPOSITORY_URLS;
+        }
+        List<String> listPrefixes = new ArrayList<>( );
+        for ( String strPrefix : StringUtils.defaultIfBlank( strPrefixes, ConstanteUtils.DEFAULT_ALLOWED_REPOSITORY_URLS ).split( "," ) )
+        {
+            String strAllowed = StringUtils.trimToEmpty( strPrefix ).toLowerCase( Locale.ROOT );
+            if ( strAllowed.isEmpty( ) )
+            {
+                continue;
+            }
+            if ( !strAllowed.endsWith( "/" ) )
+            {
+                strAllowed += "/";
+            }
+            if ( !strAllowed.startsWith( "https://" ) || !SAFE_REPOSITORY_PREFIX.matcher( strAllowed ).matches( ) )
+            {
+                AppLogService.error( "Releaser : prefix '" + strPrefix + "' of " + ConstanteUtils.PROPERTY_ALLOWED_REPOSITORY_URLS
+                        + " ignored, expected https://host/organization/" );
+                continue;
+            }
+            listPrefixes.add( strAllowed );
+        }
+
+        return listPrefixes;
+    }
+
+    /**
+     * Builds the credentials of a remote operation, only for an allowed repository : the login and token never leave toward another server.
+     *
+     * @param strRepoUrl
+     *            the repository URL
+     * @param strLogin
+     *            the login
+     * @param strPassword
+     *            the password or token
+     * @return the credentials, null (anonymous) when the repository is not allowed
+     */
+    public static CredentialsProvider credentialsFor( String strRepoUrl, String strLogin, String strPassword )
+    {
+        if ( !isAllowedRepository( strRepoUrl ) )
+        {
+            AppLogService.error( "Releaser : repository " + strRepoUrl + " is not allowed (" + ConstanteUtils.PROPERTY_ALLOWED_REPOSITORY_URLS
+                    + "), no credentials sent" );
+            return null;
+        }
+
+        return new UsernamePasswordCredentialsProvider( strLogin, strPassword );
+    }
+
+    /**
+     * Builds the credentials of a remote operation on the origin of a local clone, see {@link #credentialsFor(String, String, String)}.
+     *
+     * @param git
+     *            the local clone
+     * @param strLogin
+     *            the login
+     * @param strPassword
+     *            the password or token
+     * @return the credentials, null (anonymous) when the origin is not allowed
+     */
+    private static CredentialsProvider credentialsFor( Git git, String strLogin, String strPassword )
+    {
+        return credentialsFor( git.getRepository( ).getConfig( ).getString( "remote", "origin", "url" ), strLogin, strPassword );
     }
 
     /**
@@ -1079,7 +1194,7 @@ public class GitUtils
         try
         {
             Collection<Ref> refs = Git.lsRemoteRepository( ).setHeads( true ).setRemote( repoUrl )
-                    .setCredentialsProvider( new UsernamePasswordCredentialsProvider( login, pwd ) ).call( );
+                    .setCredentialsProvider( credentialsFor( repoUrl, login, pwd ) ).call( );
             for ( Ref ref : refs )
             {
                 String strName = ref.getName( );
@@ -1121,7 +1236,7 @@ public class GitUtils
         try
         {
             Collection<Ref> refs = Git.lsRemoteRepository( ).setTags( true ).setRemote( repoUrl )
-                    .setCredentialsProvider( new UsernamePasswordCredentialsProvider( login, pwd ) ).call( );
+                    .setCredentialsProvider( credentialsFor( repoUrl, login, pwd ) ).call( );
             for ( Ref ref : refs )
             {
                 String strName = ref.getName( );
@@ -1163,7 +1278,7 @@ public class GitUtils
 
         try
         {
-            CredentialsProvider credential = new UsernamePasswordCredentialsProvider( login, pwd );
+            CredentialsProvider credential = credentialsFor( repoUrl, login, pwd );
 
             git = Git.cloneRepository( ).setCredentialsProvider( credential ).setURI( repoUrl ).setDirectory( localRepo ).setCloneAllBranches( true ).call( );
 
@@ -1253,7 +1368,7 @@ public class GitUtils
         {
             String strRef = CONSTANTE_REF_TAG + strTagName;
             git.push( ).setRemote( "origin" ).setRefSpecs( new RefSpec( strRef + ":" + strRef ) )
-                    .setCredentialsProvider( new UsernamePasswordCredentialsProvider( strUserName, strPassword ) ).call( );
+                    .setCredentialsProvider( credentialsFor( git, strUserName, strPassword ) ).call( );
         }
         catch( GitAPIException e )
         {

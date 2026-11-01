@@ -257,6 +257,23 @@ public class PomParserTest
         assertNull( parser.parseProperty( loadFile( POM_PLATFORM_LIKE_FILE ), "does.not.exist" ) );
     }
 
+    /**
+     * A POM declaring an external entity is refused : a file of the server must never be read through a POM taken from a repository.
+     */
+    @Test
+    public void testExternalEntityRefused( ) throws IOException
+    {
+        java.io.File secret = java.io.File.createTempFile( "releaser-xxe", ".txt" );
+        secret.deleteOnExit( );
+        java.nio.file.Files.write( secret.toPath( ), "SECRET".getBytes( java.nio.charset.StandardCharsets.UTF_8 ) );
+        String strPom = "<?xml version=\"1.0\"?><!DOCTYPE p [<!ENTITY x SYSTEM \"" + secret.toURI( ) + "\">]>"
+                + "<project xmlns=\"http://maven.apache.org/POM/4.0.0\"><modelVersion>4.0.0</modelVersion><groupId>g</groupId>"
+                + "<artifactId>a</artifactId><version>&x;</version></project>";
+
+        assertNull( new PomParser( ).parseVersion( strPom ) );
+        assertEquals( "8.0.2-SNAPSHOT", new PomParser( ).parseProperty( loadFile( POM_PLATFORM_LIKE_FILE ), "lutece.core.version" ) );
+    }
+
     private String loadFile( String strFilePath ) throws IOException
     {
         return IOUtils.toString( this.getClass( ).getResourceAsStream( strFilePath ), "UTF-8" );

@@ -46,6 +46,7 @@ import fr.paris.lutece.plugins.releaser.service.SiteResourceIdService;
 import fr.paris.lutece.plugins.releaser.service.SiteService;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.ReleaserUtils;
+import fr.paris.lutece.plugins.releaser.util.git.GitUtils;
 import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.admin.AccessDeniedException;
 import fr.paris.lutece.portal.service.admin.AdminUserService;
@@ -81,7 +82,21 @@ public class ClusterJspBean extends ManageSitesJspBean
     private static final String PARAMETER_ID_SITE = "id";
     private static final String PARAMETER_ID_SITE_ERROR = "id_site_error";
 
-    private static final String PARAMETER_ERROR = "error";
+    private static final String SESSION_PENDING_SITE_ERROR = "releaser.pendingSiteError";
+    private static final String MESSAGE_SITE_REPOSITORY_NOT_ALLOWED = "releaser.message.siteRepositoryNotAllowed";
+
+    /**
+     * Keeps, for the next display of the clusters screen, the error met while preparing a site : the message is already HTML-escaped.
+     *
+     * @param request
+     *            the request
+     * @param strMessage
+     *            the escaped message
+     */
+    public static void setPendingSiteError( HttpServletRequest request, String strMessage )
+    {
+        request.getSession( ).setAttribute( SESSION_PENDING_SITE_ERROR, strMessage );
+    }
 
     // Properties for page titles
     private static final String PROPERTY_PAGE_TITLE_MANAGE_CLUSTERS = "releaser.manage_clusters.pageTitle";
@@ -292,7 +307,9 @@ public class ClusterJspBean extends ManageSitesJspBean
 
         ReleaserUser user = ReleaserUtils.getReleaserUser( request, getLocale( ) );
         String strIdSite = request.getParameter( PARAMETER_ID_SITE );
-        String strError = request.getParameter( PARAMETER_ERROR );
+        // The error of the site preparation is taken from the session, never from the request
+        String strError = (String) request.getSession( ).getAttribute( SESSION_PENDING_SITE_ERROR );
+        request.getSession( ).removeAttribute( SESSION_PENDING_SITE_ERROR );
         if ( user == null )
         {
             user = new ReleaserUser( );
@@ -481,6 +498,13 @@ public class ClusterJspBean extends ManageSitesJspBean
         {
             return redirectView( request, VIEW_CREATE_SITE );
         }
+        if ( !GitUtils.isAllowedRepository( _site.getScmUrl( ) ) )
+        {
+            addError( I18nService.getLocalizedString( MESSAGE_SITE_REPOSITORY_NOT_ALLOWED, new String [ ] {
+                    org.apache.commons.lang3.StringEscapeUtils.escapeHtml4( _site.getScmUrl( ) )
+            }, getLocale( ) ) );
+            return redirectView( request, VIEW_CREATE_SITE );
+        }
 
         if ( SiteService.IsSiteAlreadyExist( _site.getName( ), _site.getArtifactId( ), _site.getScmUrl( ) ) )
         {
@@ -603,6 +627,13 @@ public class ClusterJspBean extends ManageSitesJspBean
         // Check constraints
         if ( !validateBean( _site, VALIDATION_ATTRIBUTES_SITE_PREFIX ) )
         {
+            return redirect( request, VIEW_MODIFY_SITE, PARAMETER_ID_SITE, _site.getId( ) );
+        }
+        if ( !GitUtils.isAllowedRepository( _site.getScmUrl( ) ) )
+        {
+            addError( I18nService.getLocalizedString( MESSAGE_SITE_REPOSITORY_NOT_ALLOWED, new String [ ] {
+                    org.apache.commons.lang3.StringEscapeUtils.escapeHtml4( _site.getScmUrl( ) )
+            }, getLocale( ) ) );
             return redirect( request, VIEW_MODIFY_SITE, PARAMETER_ID_SITE, _site.getId( ) );
         }
 

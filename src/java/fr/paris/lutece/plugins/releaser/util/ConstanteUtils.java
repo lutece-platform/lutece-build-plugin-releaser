@@ -197,6 +197,15 @@ public class ConstanteUtils
     /** The Constant PROPERTY_GITHUB_REPOSITORY_BASE_URL. */
     public static final String PROPERTY_GITHUB_REPOSITORY_BASE_URL = "releaser.githubRepositoryBaseUrl";
 
+    /** Prefixes of the repository URLs the releaser works with and sends credentials to, comma separated. */
+    public static final String PROPERTY_ALLOWED_REPOSITORY_URLS = "releaser.allowedRepositoryUrls";
+
+    /** Default of {@link #PROPERTY_ALLOWED_REPOSITORY_URLS}. */
+    public static final String DEFAULT_ALLOWED_REPOSITORY_URLS = "https://github.com/lutece-platform/,https://github.com/lutece-secteur-public/,https://github.com/citelibre/,https://dev.lutece.paris.fr/gitlab/";
+
+    /** Prefix of the GitHub repository URLs. */
+    public static final String GITHUB_URL_PREFIX = "https://github.com/";
+
     /** The Constant PROPERTY_GITHUB_REPO_API. */
     public static final String PROPERTY_GITHUB_REPO_API = "releaser.githubRepoApi";
 
@@ -214,6 +223,12 @@ public class ConstanteUtils
 
     /** The Constant PROPERTY_BRANCH_DEVELOPMENT_FOR_CORE7 — branch of lutece-core for the legacy core 7 line. */
     public static final String PROPERTY_BRANCH_DEVELOPMENT_FOR_CORE7 = "releaser.branch.developmentBranchForCore7";
+
+    /** Artifacts released from {@link #PROPERTY_BRANCH_DEVELOPMENT_FOR_CORE7} on the core 7 line, comma separated ; the others use develop_core7 or develop. */
+    public static final String PROPERTY_BRANCH_COMPONENTS_ON_CORE7_BRANCH = "releaser.branch.componentsOnCore7Branch";
+
+    /** Default of {@link #PROPERTY_BRANCH_COMPONENTS_ON_CORE7_BRANCH}. */
+    public static final String DEFAULT_BRANCH_COMPONENTS_ON_CORE7_BRANCH = "lutece-core,lutece-global-pom,lutece-site-pom";
 
     /** The Constant PROPERTY_PLATFORM_GROUP_ID_PREFIX — groupId prefix of the Lutece artifacts referenced by a platform aggregate POM. */
     public static final String PROPERTY_PLATFORM_GROUP_ID_PREFIX = "releaser.platform.groupIdPrefix";

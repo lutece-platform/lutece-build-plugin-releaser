@@ -229,6 +229,7 @@ public class PlatformPrecheckServiceTest
         component.setCurrentVersion( strCurrentVersion );
         component.setLastAvailableSnapshotVersion( strCurrentVersion );
         component.setScmDeveloperConnection( strScmBase + strArtifactId + ".git" );
+        component.setBranchReleaseFrom( "develop_core7" );
 
         return component;
     }

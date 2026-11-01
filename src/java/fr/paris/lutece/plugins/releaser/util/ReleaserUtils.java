@@ -34,6 +34,7 @@
 package fr.paris.lutece.plugins.releaser.util;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -64,6 +65,9 @@ import fr.paris.lutece.portal.service.util.AppPropertiesService;
  */
 public class ReleaserUtils
 {
+    /** A local clone directory name : an artifactId or a component name, nothing that could leave the base path. */
+    private static final Pattern SAFE_LOCAL_NAME = Pattern.compile( "[A-Za-z0-9][A-Za-z0-9._-]*" );
+
 
     /** The Constant REGEX_ID. */
     public static final String REGEX_ID = "^[\\d]+$";
@@ -91,21 +95,12 @@ public class ReleaserUtils
      */
     public static String getLocalPath( WorkflowReleaseContext context )
     {
-        String strPath = null;
         if ( context.getSite( ) != null )
         {
-            strPath = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_LOCAL_SITE_BASE_PAH ) + File.separator + context.getSite( ).getArtifactId( );
-
-        }
-        else
-        {
-
-            strPath = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_LOCAL_COMPONENT_BASE_PAH ) + File.separator
-                    + context.getComponent( ).getName( );
-
+            return getLocalPathUnderBase( context.getSite( ).getArtifactId( ) );
         }
 
-        return strPath;
+        return getLocalPathUnder( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_LOCAL_COMPONENT_BASE_PAH ), context.getComponent( ).getName( ) );
 
     }
 
@@ -148,9 +143,52 @@ public class ReleaserUtils
      */
     public static String getLocalSitePath( Site site )
     {
-        String strCheckoutBasePath = AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_LOCAL_SITE_BASE_PAH );
+        return getLocalPathUnderBase( site.getArtifactId( ) );
+    }
 
-        return strCheckoutBasePath + File.separator + site.getArtifactId( );
+    /**
+     * Returns a local directory under the site base path, refusing any name that would leave it : the directory is deleted and recreated at
+     * each clone.
+     *
+     * @param strName
+     *            the directory name, an artifactId
+     * @return the path
+     */
+    public static String getLocalPathUnderBase( String strName )
+    {
+        return getLocalPathUnder( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_LOCAL_SITE_BASE_PAH ), strName );
+    }
+
+    /**
+     * Returns a local directory under a base path, refusing any name that would leave it.
+     *
+     * @param strBase
+     *            the base path
+     * @param strName
+     *            the directory name
+     * @return the path
+     */
+    public static String getLocalPathUnder( String strBase, String strName )
+    {
+        if ( StringUtils.isBlank( strName ) || !SAFE_LOCAL_NAME.matcher( strName ).matches( ) )
+        {
+            throw new AppException( "Unsafe local directory name '" + strName + "'" );
+        }
+        try
+        {
+            File fileBase = new File( strBase ).getCanonicalFile( );
+            File fileDir = new File( fileBase, strName ).getCanonicalFile( );
+            if ( !fileDir.getPath( ).startsWith( fileBase.getPath( ) + File.separator ) )
+            {
+                throw new AppException( "Local directory '" + strName + "' outside the site base path" );
+            }
+
+            return fileDir.getPath( );
+        }
+        catch( IOException e )
+        {
+            throw new AppException( "Unresolvable local directory '" + strName + "' : " + e.getMessage( ), e );
+        }
     }
 
     /**
@@ -438,10 +476,10 @@ public class ReleaserUtils
             releaserUser = new ReleaserUser( );
             releaserUser.addCredential( RepositoryType.GITHUB,
                     releaserUser.new Credential( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_ACCOUNT_LOGIN ),
-                            ConstanteUtils.PROPERTY_GITHUB_RELEASE_ACCOUNT_PASSWORD ) );
+                            AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITHUB_RELEASE_ACCOUNT_PASSWORD ) ) );
             releaserUser.addCredential( RepositoryType.GITLAB,
                     releaserUser.new Credential( AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITLAB_RELEASE_ACCOUNT_LOGIN ),
-                            ConstanteUtils.PROPERTY_GITLAB_RELEASE_ACCOUNT_PASSWORD ) );
+                            AppPropertiesService.getProperty( ConstanteUtils.PROPERTY_GITLAB_RELEASE_ACCOUNT_PASSWORD ) ) );
 
         }
         else
@@ -476,8 +514,14 @@ public class ReleaserUtils
 
             if ( !StringUtils.isEmpty( request.getParameter( tabCredentialType [i] + "_account_login" ) ) )
             {
-                user.addCredential( tabCredentialType [i], user.new Credential( request.getParameter( tabCredentialType [i] + "_account_login" ),
-                        request.getParameter( tabCredentialType [i] + "_account_password" ) ) );
+                // The modal never shows the stored password : an empty field keeps it
+                String strPassword = request.getParameter( tabCredentialType [i] + "_account_password" );
+                ReleaserUser.Credential current = user.getCredential( tabCredentialType [i] );
+                if ( StringUtils.isEmpty( strPassword ) && current != null )
+                {
+                    strPassword = current.getPassword( );
+                }
+                user.addCredential( tabCredentialType [i], user.new Credential( request.getParameter( tabCredentialType [i] + "_account_login" ), strPassword ) );
 
             }
 

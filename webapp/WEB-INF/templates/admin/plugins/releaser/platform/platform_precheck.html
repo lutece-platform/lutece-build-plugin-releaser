@@ -9,7 +9,7 @@
 </#function>
 <section class="content-header">
 	<h1>
-		<a href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?view=platformRelease&id=${platform_release.id}" title="${platform_release.name}">${platform_release.name}</a>
+		<a href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?view=platformRelease&id=${platform_release.id}" title="${platform_release.name?html}">${platform_release.name?html}</a>
 		<small class="hidden-xs hidden-sm">#i18n{releaser.platform_precheck.title}</small>
 	</h1>
 </section>
@@ -45,10 +45,10 @@
 			<span class="label label-warning">${verification_counts["WARNING"]} #i18n{releaser.prepare_platform_step.countWarning}</span>
 			<span class="label label-default">${verification_counts["NOT_VERIFIED"]} #i18n{releaser.prepare_platform_step.countNotVerified}</span>
 		</p>
+		</#if>
 		<#if precheck_step?? && precheck_step.status == "RUNNING">
 		<p class="text-info"><i class="fa fa-refresh fa-spin"></i> #i18n{releaser.platform_precheck.running}</p>
-		</#if>
-		<#else>
+		<#elseif !verification_date??>
 		<p class="text-muted">#i18n{releaser.platform_precheck.never}</p>
 		</#if>
 	</div>
@@ -69,10 +69,10 @@
 				<#assign v = verifications[coordinates] />
 				<#assign status = v.status!"NOT_VERIFIED" />
 				<tr>
-					<td><strong>${v.step}</strong><#if (v.step > 0) && step_definitions[v.step - 1]??> <small class="text-muted">${step_definitions[v.step - 1].name}</small></#if></td>
-					<td><strong>${coordinates?keep_after(":")}</strong><br><small class="text-muted">${coordinates?keep_before(":")}</small></td>
-					<td>${v.version!}<#if (v.commit!"")?length gt 7><br><small class="text-muted">${v.commit?substring(0, 7)}</small></#if></td>
-					<td><#if precheck_resources[coordinates]??>${precheck_resources[coordinates].branch!}</#if></td>
+					<td><strong>${v.step}</strong><#if (v.step > 0) && step_definitions[v.step - 1]??> <small class="text-muted">${step_definitions[v.step - 1].name?html}</small></#if></td>
+					<td><strong>${coordinates?keep_after(":")?html}</strong><br><small class="text-muted">${coordinates?keep_before(":")?html}</small></td>
+					<td>${(v.version!)?html}<#if (v.commit!"")?length gt 7><br><small class="text-muted">${v.commit?substring(0, 7)?html}</small></#if></td>
+					<td><#if precheck_resources[coordinates]??>${(precheck_resources[coordinates].branch!)?html}</#if></td>
 					<td>
 						<#if v.checks?has_content>
 						<a href="#" data-toggle="modal" data-target="#modalPrecheck-${coordinates?replace('[^A-Za-z0-9]', '-', 'r')}" class="label ${precheckLabelClass(status)}" title="#i18n{releaser.prepare_platform_step.verificationDetailHelp}">#i18n{releaser.prepare_platform_step.verification.${status}}</a>
@@ -97,7 +97,7 @@
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title"><i class="fa fa-stethoscope"></i> ${coordinates?keep_after(":")} ${v.version!} <span class="label ${precheckLabelClass(v.status!"")}">#i18n{releaser.prepare_platform_step.verification.${v.status!"NOT_VERIFIED"}}</span></h4>
+				<h4 class="modal-title"><i class="fa fa-stethoscope"></i> ${coordinates?keep_after(":")?html} ${(v.version!)?html} <span class="label ${precheckLabelClass(v.status!"")}">#i18n{releaser.prepare_platform_step.verification.${v.status!"NOT_VERIFIED"}}</span></h4>
 			</div>
 			<div class="modal-body">
 				<table class="table table-condensed">

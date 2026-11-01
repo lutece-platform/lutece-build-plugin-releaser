@@ -38,7 +38,8 @@ jenkins_build_number int default 0,
 jenkins_result varchar(255) default '',
 date_begin TIMESTAMP DEFAULT NULL NULL,
 date_end TIMESTAMP DEFAULT NULL NULL,
-PRIMARY KEY (id_step)
+PRIMARY KEY (id_step),
+UNIQUE (id_platform_release, step_number)
 );
 
 --

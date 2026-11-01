@@ -23,7 +23,7 @@
 <section class="content-header">
 	<h1>
 		<a href="jsp/admin/plugins/releaser/ManagePlatformRelease.jsp" title="#i18n{releaser.adminFeature.ManagePlatformRelease.name}">#i18n{releaser.adminFeature.ManagePlatformRelease.name}</a>
-		<small class="hidden-xs hidden-sm">${platform_release.name}</small>
+		<small class="hidden-xs hidden-sm">${platform_release.name?html}</small>
 	</h1>
 </section>
 <section class="content">
@@ -33,7 +33,7 @@
 <div class="box box-info box-solid">
 	<div class="box-header">
 		<h3 class="box-title">
-			<i class="fa fa-rocket"></i> ${platform_release.name}
+			<i class="fa fa-rocket"></i> ${platform_release.name?html}
 			<span class="label label-info">#i18n{releaser.platform_release.type.${platform_release.releaseType}}</span>
 			<span class="label label-default">Core ${platform_release.coreMajor}</span>
 			<@platformStatusLabel status=platform_release.status />
@@ -61,7 +61,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr id="step-row-0" data-status="${(precheck_step.status)!'NONE'}">
+				<tr id="step-row-0" data-status="${(precheck_step.status)!'NONE'}"<#if precheck_orphan!false> data-orphan="true"</#if>>
 					<td><strong>0</strong></td>
 					<td>
 						<strong>#i18n{releaser.platform_release.precheckName}</strong><br>
@@ -117,13 +117,13 @@
 			<#list platform_release.steps as step>
 				<#assign definition = step_definitions[step.stepNumber - 1] />
 				<#assign isPlatformStarters = ( step.stepNumber == 5 ) />
-				<tr id="step-row-${step.stepNumber}" data-status="${step.status}"<#if verifying_steps[step.stepNumber - 1]> data-verify="true"</#if>>
+				<tr id="step-row-${step.stepNumber}" data-status="${step.status}"<#if verifying_steps[step.stepNumber - 1]> data-verify="true"</#if><#if orphan_steps[step.stepNumber - 1]> data-orphan="true"</#if>>
 					<td><strong>${step.stepNumber}</strong></td>
 					<td>
-						<strong>${definition.name}</strong><br>
+						<strong>${definition.name?html}</strong><br>
 						<small class="text-muted">${definition.code}</small>
 					</td>
-					<td><a href="${definition.scmUrl}" target="_blank"><small>${definition.scmUrl}</small></a></td>
+					<td><#if definition.scmUrl?starts_with("https://")><a href="${definition.scmUrl?html}" target="_blank" rel="noopener"><small>${definition.scmUrl?html}</small></a><#else><small>${definition.scmUrl?html}</small></#if></td>
 					<td>
 						<@platformStatusLabel status=step.status />
 						<#if step.jenkinsResult?has_content><br><small class="text-muted"><@jenkinsResultLabel raw=step.jenkinsResult /></small></#if>
@@ -193,13 +193,13 @@
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title" id="modalStepReportLabel${step.stepNumber}"><i class="fa fa-file-text-o"></i> #i18n{releaser.platform_release.reportTitle} ${step.stepNumber} - ${step_definitions[step.stepNumber - 1].name}<#if step.jenkinsResult?has_content> <small class="text-muted"><@jenkinsResultLabel raw=step.jenkinsResult /></small></#if></h4>
+				<h4 class="modal-title" id="modalStepReportLabel${step.stepNumber}"><i class="fa fa-file-text-o"></i> #i18n{releaser.platform_release.reportTitle} ${step.stepNumber} - ${step_definitions[step.stepNumber - 1].name?html}<#if step.jenkinsResult?has_content> <small class="text-muted"><@jenkinsResultLabel raw=step.jenkinsResult /></small></#if></h4>
 			</div>
 			<div class="modal-body">
 				<pre style="white-space:pre-wrap;max-height:60vh;overflow:auto;">${step_reports[step.stepNumber?string]?html}</pre>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Fermer</button>
+				<button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">#i18n{releaser.platform_release.buttonClose}</button>
 			</div>
 		</div>
 	</div>
@@ -218,7 +218,7 @@
 				<pre style="white-space:pre-wrap;max-height:60vh;overflow:auto;">${precheck_report?html}</pre>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Fermer</button>
+				<button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">#i18n{releaser.platform_release.buttonClose}</button>
 			</div>
 		</div>
 	</div>
@@ -232,7 +232,7 @@
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title" id="modalAuthPlatformLabel"><i class="fa fa-address-card-o"></i> Information d'authentification</h4>
+				<h4 class="modal-title" id="modalAuthPlatformLabel"><i class="fa fa-address-card-o"></i> #i18n{releaser.platform_release.authenticationTitle}</h4>
 			</div>
 			<div class="modal-body">
 				<p class="help-block">#i18n{releaser.platform_release.authHelp}</p>
@@ -240,8 +240,8 @@
 				<#if repo_type_gitlab?has_content><@formAuthCredential type=repo_type_gitlab /></#if>
 			</div>
 			<div class="modal-footer">
-				<button type="submit" class="button transition small fill-blue" name="action_authenticate">Ok</button>
-				<button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">Fermer</button>
+				<button type="submit" class="button transition small fill-blue" name="action_authenticate">#i18n{releaser.platform_release.buttonOk}</button>
+				<button type="button" class="button transition small fill-whitish-black" data-dismiss="modal">#i18n{releaser.platform_release.buttonClose}</button>
 			</div>
 		</div>
 		</@tform>
@@ -255,21 +255,33 @@ $(function() {
 		$('#modalAuthPlatform').modal();
 	</#if>
 
-	var runningSteps = $("tr[data-status='RUNNING']");
+	// A running step nobody follows any more waits for its rearm button : no automatic reload loop
+	var runningSteps = $("tr[data-status='RUNNING']").not("[data-orphan='true']");
 	if ( runningSteps.length > 0 ) {
 		var stepNumber = runningSteps.first().attr("id").replace("step-row-", "");
 		setTimeout( function(){ refreshStep( stepNumber ); }, 10000 );
 	}
 
+	var refreshFailures = 0;
 	function refreshStep( stepNumber ) {
 		$.ajax({
 			url: "jsp/admin/plugins/releaser/PlatformReleaseJson.jsp?view=stepStatusJson&id=${platform_release.id}&step=" + stepNumber,
 			type: "GET",
 			dataType: "json",
+			error: function() {
+				// Session expired, server or network down : retry a few times, then say so
+				refreshFailures++;
+				if ( refreshFailures < 6 ) {
+					setTimeout( function(){ refreshStep( stepNumber ); }, 10000 * refreshFailures );
+				} else {
+					$("#step-row-" + stepNumber).after( '<tr><td colspan="7" class="text-danger"><i class="fa fa-warning"></i> #i18n{releaser.platform_release.followUpInterrupted}</td></tr>' );
+				}
+			},
 			success: function( data ) {
+				refreshFailures = 0;
 				if ( data.status != 'OK' ) {
 					$("#step-row-" + stepNumber).after( '<tr><td colspan="7" class="text-danger"><i class="fa fa-warning"></i> #i18n{releaser.platform_release.campaignGone}</td></tr>' );
-				} else if ( data.result.status != 'RUNNING' ) {
+				} else if ( data.result.status != 'RUNNING' || !data.result.followed ) {
 					if ( $("#step-row-" + stepNumber).data("verify") ) {
 						window.location.href = "jsp/admin/plugins/releaser/ManagePlatformRelease.jsp?view=prepareStep&id=${platform_release.id}&step=" + stepNumber;
 					} else {

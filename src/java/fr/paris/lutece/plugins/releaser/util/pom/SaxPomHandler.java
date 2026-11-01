@@ -55,7 +55,7 @@ public class SaxPomHandler extends DefaultHandler
      */
     public String getScmUrl( )
     {
-        return _sbScmUrl.toString( );
+        return _sbScmUrl.toString( ).trim( );
     }
 
     /**
@@ -65,7 +65,7 @@ public class SaxPomHandler extends DefaultHandler
      */
     public String getScmConnection( )
     {
-        return _sbScmConnection.toString( );
+        return _sbScmConnection.toString( ).trim( );
     }
 
     /**
@@ -75,7 +75,7 @@ public class SaxPomHandler extends DefaultHandler
      */
     public String getScmDeveloperConnection( )
     {
-        return _sbScmDeveloperConnection.toString( );
+        return _sbScmDeveloperConnection.toString( ).trim( );
     }
 
     /**

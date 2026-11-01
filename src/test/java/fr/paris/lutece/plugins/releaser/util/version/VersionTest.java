@@ -206,6 +206,8 @@ public class VersionTest
         assertNull( Version.getBranchVersionAfterRelease( "1.1.0-SNAPSHOT", "1.0.5" ) );
         assertNull( Version.getBranchVersionAfterRelease( "1.0.6-SNAPSHOT", "1.0.5" ) );
         assertNull( Version.getBranchVersionAfterRelease( "2.0.0-SNAPSHOT", "1.0.5" ) );
+        assertEquals( "1.0.5-SNAPSHOT", Version.getBranchVersionAfterRelease( null, "1.0.5-beta-02" ) );
+        assertEquals( "1.0.5-SNAPSHOT", Version.getBranchVersionAfterRelease( "1.0.5-SNAPSHOT", "1.0.5-RC-01" ) );
     }
 
 }

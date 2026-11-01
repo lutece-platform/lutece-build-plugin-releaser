@@ -36,8 +36,8 @@
 				<tr>
 					<td><strong>${definition.stepNumber}</strong></td>
 					<td><code>${definition.code}</code></td>
-					<td><input type="text" class="form-control" name="name_${definition.stepNumber}" id="name_${definition.stepNumber}" value="${definition.name!}" maxlength="100" required></td>
-					<td><input type="url" class="form-control" name="scm_url_${definition.stepNumber}" id="scm_url_${definition.stepNumber}" value="${definition.scmUrl!}" maxlength="255" required></td>
+					<td><input type="text" class="form-control" name="name_${definition.stepNumber}" id="name_${definition.stepNumber}" value="${(definition.name!)?html}" maxlength="100" required></td>
+					<td><input type="url" class="form-control" name="scm_url_${definition.stepNumber}" id="scm_url_${definition.stepNumber}" value="${(definition.scmUrl!)?html}" maxlength="255" required></td>
 				</tr>
 			</#list>
 			</tbody>

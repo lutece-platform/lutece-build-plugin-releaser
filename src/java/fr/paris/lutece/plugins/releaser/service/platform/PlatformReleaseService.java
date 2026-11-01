@@ -45,13 +45,16 @@ import java.util.Locale;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 
@@ -83,7 +86,6 @@ import fr.paris.lutece.plugins.releaser.service.MavenRepoComponentInfoProvider;
 import fr.paris.lutece.plugins.releaser.service.ReleasePreparationService;
 import fr.paris.lutece.plugins.releaser.service.SiteService;
 import fr.paris.lutece.plugins.releaser.service.BugtrackerService;
-import fr.paris.lutece.plugins.releaser.service.WorkflowReleaseContextService;
 import fr.paris.lutece.plugins.releaser.util.CommandResult;
 import fr.paris.lutece.plugins.releaser.util.CVSFactoryService;
 import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
@@ -116,6 +118,8 @@ public final class PlatformReleaseService
     private static final String MESSAGE_BRANCH_POM_UNREADABLE = "releaser.message.platform.branchPomUnreadable";
     private static final String MESSAGE_BRANCH_VERSION_MISMATCH = "releaser.message.platform.branchVersionMismatch";
     private static final String MESSAGE_BRANCH_PARENT_MISMATCH = "releaser.message.platform.branchParentMismatch";
+    private static final String MESSAGE_TAG_PARENT_MISMATCH = "releaser.message.platform.tagParentMismatch";
+    private static final String MESSAGE_TAG_PARENT_UNKNOWN = "releaser.message.platform.tagParentUnknown";
     private static final String MESSAGE_BLOCKED_COMPONENTS = "releaser.message.platform.blockedComponents";
     private static final String MESSAGE_SNAPSHOT_UNKNOWN_IN_NEXUS = "releaser.message.platform.snapshotUnknownInNexus";
     private static final String MESSAGE_CREDENTIALS_REQUIRED = "releaser.message.platform.credentialsRequired";
@@ -124,6 +128,12 @@ public final class PlatformReleaseService
     private static final String MESSAGE_AGGREGATE_BLOCKED = "releaser.message.platform.aggregateBlocked";
     private static final String MESSAGE_VERIFY_NOT_AVAILABLE = "releaser.message.platform.verifyNotAvailable";
     private static final String MESSAGE_PRIVATE_REPOSITORY_MISSING = "releaser.message.platform.privateRepositoryMissing";
+    private static final String MESSAGE_UNPUBLISHED_TARGETS = "releaser.message.platform.unpublishedTargets";
+    private static final String MESSAGE_WRONG_TARGETS = "releaser.message.platform.wrongTargets";
+    private static final String MESSAGE_FROM_TAG_DROPPED = "releaser.message.platform.fromTagDropped";
+    private static final String REASON_ALREADY_IN_NEXUS = "already in Nexus";
+    private static final String REASON_NOT_OF_TYPE = "not a version of type ";
+    private static final String REASON_ALREADY_RELEASED_BY_STEP = "already released by a previous attempt of the step";
     private static final String PRIVATE_DEPLOY_REPOSITORY = "lutece_releases_private_repository::default::";
     private static final String CHECK_TESTS = "tests";
     private static final String CHECK_UNTESTED_COMMITS = "untested-commits";
@@ -139,12 +149,28 @@ public final class PlatformReleaseService
     private static final String POM_FILE = "pom.xml";
     private static final String LATEST_SNAPSHOT_KEY = "latest";
     private static final String FROM_TAG_KEY = "fromTag";
+    private static final String VERSION_CHOICE_KEY = "versionchoice";
+    private static final String AGGREGATE_CHOICE_NAME = "_aggregate";
+    private static final String CHOICE_TARGET_PREFIX = "target:";
+    private static final String CHOICE_DOWNGRADE = "downgrade";
+    private static final String CHOICE_UPGRADE = "upgrade";
     private static final String MESSAGE_TOGGLE_ALREADY_RELEASED = "releaser.message.platformRelease.toggleAlreadyReleased";
     private static final String MESSAGE_LOAD_UNKNOWN_STEP ="releaser.message.platformRelease.loadUnknownStep";
     private static final String MESSAGE_LOAD_UNSUPPORTED_REPOSITORY = "releaser.message.platformRelease.loadUnsupportedRepository";
     private static final String MESSAGE_LOAD_POM_UNREADABLE = "releaser.message.platformRelease.loadPomUnreadable";
     private static final String MESSAGE_STEP_LOCKED_UNKNOWN ="releaser.message.platformRelease.stepLockedUnknown";
     private static final String MESSAGE_STEP_LOCKED_RUNNING = "releaser.message.platformRelease.stepLockedRunning";
+    private static final String MESSAGE_STEP_CHANGED = "releaser.message.platformRelease.stepChanged";
+    private static final String MESSAGE_PLAN_UNEXPECTED_VALUES = "releaser.message.platform.planUnexpectedValues";
+    private static final Pattern SAFE_PLAN_NAME = Pattern.compile( "[A-Za-z0-9][A-Za-z0-9._-]*" );
+    private static final Pattern SAFE_PLAN_BRANCH = Pattern.compile( "[A-Za-z0-9][A-Za-z0-9._/-]*" );
+    private static final Pattern SAFE_PLAN_COORDINATES = Pattern.compile( "[A-Za-z0-9][A-Za-z0-9._-]*:[A-Za-z0-9][A-Za-z0-9._-]*" );
+    private static final Pattern SAFE_PLAN_SCM_URL = Pattern.compile( "(scm:git:)?https://[a-z0-9.-]+(/[A-Za-z0-9_-][A-Za-z0-9._-]*)+/?" );
+    private static final Pattern SAFE_PLAN_COMMIT = Pattern.compile( "[0-9a-f]{7,40}" );
+    private static final Pattern SAFE_PLAN_DEPLOY_REPOSITORY = Pattern.compile( "lutece_releases_private_repository::default::https://[A-Za-z0-9.-]+/[A-Za-z0-9._/~-]+" );
+    private static final Object LAUNCH_LOCK = new Object( );
+    private static final ConcurrentHashMap<String, Object> CLONE_LOCKS = new ConcurrentHashMap<>( );
+    private static final Set<Integer> LOADING = ConcurrentHashMap.newKeySet( );
     private static final String MESSAGE_STEP_LOCKED_COMPLETED = "releaser.message.platformRelease.stepLockedCompleted";
     private static final String MESSAGE_STEP_LOCKED_NOT_SKIPPABLE = "releaser.message.platformRelease.stepLockedNotSkippable";
     private static final String MESSAGE_STEP_LOCKED_EXPORT = "releaser.message.platformRelease.stepLockedExport";
@@ -394,12 +420,58 @@ public final class PlatformReleaseService
      */
     public static void skipStep( PlatformRelease campaign, int nStepNumber )
     {
-        if ( !canSkipStep( campaign, nStepNumber ) )
+        synchronized( LAUNCH_LOCK )
         {
-            throw new AppException( "Platform step " + nStepNumber + " cannot be skipped" );
-        }
+            PlatformRelease stored = PlatformReleaseHome.findByPrimaryKeyWithSteps( campaign.getId( ) );
+            if ( stored == null || !canSkipStep( stored, nStepNumber ) )
+            {
+                throw new AppException( "Platform step " + nStepNumber + " cannot be skipped" );
+            }
 
-        closeStep( campaign, getStep( campaign, nStepNumber ), PlatformReleaseStatus.SKIPPED );
+            closeStep( stored, getStep( stored, nStepNumber ), PlatformReleaseStatus.SKIPPED );
+        }
+    }
+
+    /**
+     * Removes a campaign unless one of its steps, the step 0 included, is running : checked and done under the launch lock.
+     *
+     * @param nIdPlatformRelease
+     *            the campaign id
+     * @return true when removed, false when running
+     */
+    public static boolean removePlatformReleaseIfIdle( int nIdPlatformRelease )
+    {
+        synchronized( LAUNCH_LOCK )
+        {
+            PlatformRelease stored = PlatformReleaseHome.findByPrimaryKeyWithSteps( nIdPlatformRelease );
+            // Not while a build runs, a census is taken, or a screen clones its aggregate (the directory would be deleted under it)
+            if ( stored != null && ( isRunning( stored ) || PlatformPrecheckService.isCensusRunning( nIdPlatformRelease ) || LOADING.contains( nIdPlatformRelease ) ) )
+            {
+                return false;
+            }
+            removePlatformRelease( nIdPlatformRelease );
+
+            return true;
+        }
+    }
+
+    /**
+     * Records that the export of the plugins step was checked by a human : only that flag is written, on a fresh copy of the campaign.
+     *
+     * @param nIdPlatformRelease
+     *            the campaign id
+     */
+    public static void markExportVerified( int nIdPlatformRelease )
+    {
+        synchronized( LAUNCH_LOCK )
+        {
+            PlatformRelease stored = PlatformReleaseHome.findByPrimaryKey( nIdPlatformRelease );
+            if ( stored != null )
+            {
+                stored.setExportVerified( true );
+                PlatformReleaseHome.update( stored );
+            }
+        }
     }
 
     /**
@@ -422,28 +494,210 @@ public final class PlatformReleaseService
     public static void launchStep( PlatformRelease campaign, int nStepNumber, PlatformReleasePlan plan, ReleaserUser user, Locale locale )
             throws IOException
     {
-        String strLockReason;
-        if ( nStepNumber == PlatformPrecheckService.STEP_NUMBER )
+        List<String> listUnexpected = getUnexpectedPlanValues( plan );
+        if ( !listUnexpected.isEmpty( ) )
         {
-            strLockReason = PlatformPrecheckService.canLaunch( campaign ) ? null : MESSAGE_STEP_LOCKED_RUNNING;
-        }
-        else
-        {
-            strLockReason = getStepLockReason( campaign, nStepNumber, false );
-        }
-        if ( strLockReason != null )
-        {
-            throw new AppException( I18nService.getLocalizedString( strLockReason, locale ) );
+            throw new AppException( I18nService.getLocalizedString( MESSAGE_PLAN_UNEXPECTED_VALUES, new String [ ] {
+                    StringEscapeUtils.escapeHtml4( String.join( " ; ", listUnexpected ) )
+            }, locale ) );
         }
         checkPlanCredentials( plan, user, locale );
         if ( plan.isVerify( ) )
         {
             plan.setParallelism( AppPropertiesService.getPropertyInt( ConstanteUtils.PROPERTY_PLATFORM_VERIFY_PARALLELISM, DEFAULT_VERIFY_PARALLELISM ) );
         }
+        // The plan must be the one of this campaign : the screen it was built from may have been replaced by another tab
+        if ( plan.getCampaignId( ) != campaign.getId( ) || plan.getStep( ) != nStepNumber )
+        {
+            throw new AppException( I18nService.getLocalizedString( MESSAGE_STEP_CHANGED, locale ) );
+        }
+        synchronized( LAUNCH_LOCK )
+        {
+            PlatformRelease stored = PlatformReleaseHome.findByPrimaryKeyWithSteps( campaign.getId( ) );
+            if ( stored == null || nStepNumber != PlatformPrecheckService.STEP_NUMBER
+                    && !getStepStamp( getStep( stored, nStepNumber ) ).equals( getStepStamp( getStep( campaign, nStepNumber ) ) ) )
+            {
+                throw new AppException( I18nService.getLocalizedString( MESSAGE_STEP_CHANGED, locale ) );
+            }
+            String strLockReason;
+            if ( nStepNumber == PlatformPrecheckService.STEP_NUMBER )
+            {
+                strLockReason = PlatformPrecheckService.canLaunch( stored ) ? null : MESSAGE_STEP_LOCKED_RUNNING;
+            }
+            else
+            {
+                strLockReason = getStepLockReason( stored, nStepNumber, false );
+            }
+            if ( strLockReason != null )
+            {
+                throw new AppException( I18nService.getLocalizedString( strLockReason, locale ) );
+            }
+            PlatformReleaseStep step = getStep( stored, nStepNumber );
+            startStep( stored, step, plan );
+            new PlatformStepTask( stored.getId( ), nStepNumber, plan, PlatformStepTask.buildCredentialParameters( user ) ).submit( step.getId( ) );
+        }
+    }
 
-        startStep( campaign, getStep( campaign, nStepNumber ), plan );
-        WorkflowReleaseContextService.getService( )
-                .execute( new PlatformStepTask( campaign.getId( ), nStepNumber, plan, PlatformStepTask.buildCredentialParameters( user ) ) );
+    /**
+     * Lists the values of a plan the step pipeline would refuse (validatePlan of platform-step-helpers.groovy) : they are put in shell
+     * commands and must have a strict shape. Checked before the launch, so that the whole plan is not rejected by Jenkins.
+     *
+     * @param plan
+     *            the plan
+     * @return the unexpected values, empty when the plan is acceptable
+     */
+    static List<String> getUnexpectedPlanValues( PlatformReleasePlan plan )
+    {
+        List<String> listUnexpected = new ArrayList<>( );
+        List<PlatformPlanResource> listResources = new ArrayList<>( plan.getComponents( ) );
+        if ( plan.getAggregate( ) != null )
+        {
+            listResources.add( plan.getAggregate( ) );
+        }
+        for ( PlatformPlanResource resource : listResources )
+        {
+            String strWho = StringUtils.defaultString( resource.getArtifactId( ), "?" );
+            checkPlanValue( listUnexpected, "artifactId", resource.getArtifactId( ), SAFE_PLAN_NAME, true );
+            checkPlanValue( listUnexpected, "groupId of " + strWho, resource.getGroupId( ), SAFE_PLAN_NAME, true );
+            checkPlanValue( listUnexpected, "scmUrl of " + strWho, resource.getScmUrl( ), SAFE_PLAN_SCM_URL, true );
+            if ( resource.getScmUrl( ) != null && !GitUtils.isAllowedRepository( resource.getScmUrl( ) ) )
+            {
+                listUnexpected.add( "scmUrl of " + strWho + " '" + resource.getScmUrl( ) + "' (" + ConstanteUtils.PROPERTY_ALLOWED_REPOSITORY_URLS + ")" );
+            }
+            checkPlanValue( listUnexpected, "verifiedCommit of " + strWho, resource.getVerifiedCommit( ), SAFE_PLAN_COMMIT, false );
+            checkPlanValue( listUnexpected, "deployRepository of " + strWho, resource.getDeployRepository( ), SAFE_PLAN_DEPLOY_REPOSITORY, false );
+            checkPlanValue( listUnexpected, "branch of " + strWho, resource.getBranch( ), SAFE_PLAN_BRANCH, true );
+            checkPlanValue( listUnexpected, "masterBranch of " + strWho, resource.getMasterBranch( ), SAFE_PLAN_BRANCH, false );
+            checkPlanValue( listUnexpected, "targetVersion of " + strWho, resource.getTargetVersion( ), SAFE_PLAN_NAME,
+                    plan.getMode( ) != PlatformStepMode.PRECHECK );
+            checkPlanValue( listUnexpected, "nextSnapshotVersion of " + strWho, resource.getNextSnapshotVersion( ), SAFE_PLAN_NAME, false );
+            checkPlanValue( listUnexpected, "parentVersion of " + strWho, resource.getParentVersion( ), SAFE_PLAN_NAME, false );
+            checkPlanValue( listUnexpected, "versionProperty of " + strWho, resource.getVersionProperty( ), SAFE_PLAN_NAME, false );
+            checkPlanValue( listUnexpected, "sourceTag of " + strWho, resource.getSourceTag( ), SAFE_PLAN_NAME, false );
+            if ( resource.getVersionUpdates( ) != null )
+            {
+                for ( Map.Entry<String, String> entry : resource.getVersionUpdates( ).getProperties( ).entrySet( ) )
+                {
+                    checkPlanValue( listUnexpected, "version property", entry.getKey( ), SAFE_PLAN_NAME, true );
+                    checkPlanValue( listUnexpected, "value of " + entry.getKey( ), entry.getValue( ), SAFE_PLAN_NAME, true );
+                }
+                for ( Map.Entry<String, String> entry : resource.getVersionUpdates( ).getDependencies( ).entrySet( ) )
+                {
+                    checkPlanValue( listUnexpected, "dependency", entry.getKey( ), SAFE_PLAN_COORDINATES, true );
+                    checkPlanValue( listUnexpected, "version of " + entry.getKey( ), entry.getValue( ), SAFE_PLAN_NAME, true );
+                }
+            }
+        }
+        if ( plan.getCampaignCoordinates( ) != null )
+        {
+            for ( String strCoordinates : plan.getCampaignCoordinates( ) )
+            {
+                checkPlanValue( listUnexpected, "campaign coordinates", strCoordinates, SAFE_PLAN_COORDINATES, true );
+            }
+        }
+
+        return listUnexpected;
+    }
+
+    /**
+     * Keeps the last release and the last SNAPSHOT of a component on the line of the version the aggregate references (same major) : a
+     * component maintained for core 7 and core 8 has the versions of both lines in Nexus, and the other line must not be proposed nor
+     * released.
+     *
+     * @param component
+     *            the component, with its Nexus versions
+     * @return true when the last versions changed, the target versions must then be computed again
+     */
+    static boolean restrictToCurrentLine( Component component )
+    {
+        if ( component.getCurrentVersion( ) == null || !component.isSnapshotVersion( ) )
+        {
+            return false;
+        }
+        int nMajor;
+        try
+        {
+            nMajor = Version.parse( component.getCurrentVersion( ) ).getMajor( );
+        }
+        catch( VersionParsingException e )
+        {
+            return false;
+        }
+        String strLastRelease = VersionUtils.getLastVersionUsingMajor( component.getReleaseVersions( ), nMajor );
+        String strLastSnapshot = VersionUtils.getLastVersionUsingMajor( component.getSnapshotVersions( ), nMajor );
+        if ( strLastSnapshot == null && component.getSnapshotVersions( ) != null && component.getSnapshotVersions( ).contains( component.getCurrentVersion( ) ) )
+        {
+            strLastSnapshot = component.getCurrentVersion( );
+        }
+        boolean bChanged = !Objects.equals( strLastRelease, component.getLastAvailableVersion( ) )
+                || strLastSnapshot != null && !strLastSnapshot.equals( component.getLastAvailableSnapshotVersion( ) );
+        component.setLastAvailableVersion( strLastRelease );
+        if ( strLastSnapshot != null )
+        {
+            component.setLastAvailableSnapshotVersion( strLastSnapshot );
+        }
+
+        return bChanged;
+    }
+
+    /**
+     * Escapes the arguments of a message shown as HTML : they come from Git, Nexus or the POMs.
+     *
+     * @param strArgs
+     *            the arguments, null tolerated
+     * @return the escaped arguments
+     */
+    private static String [ ] htmlArgs( String... strArgs )
+    {
+        String [ ] strEscaped = new String [ strArgs.length];
+        for ( int i = 0; i < strArgs.length; i++ )
+        {
+            strEscaped [i] = StringEscapeUtils.escapeHtml4( strArgs [i] );
+        }
+
+        return strEscaped;
+    }
+
+    /**
+     * Whether "groupId:artifactId" coordinates have the shape the pipeline accepts.
+     *
+     * @param strCoordinates
+     *            the coordinates, null tolerated
+     * @return true when acceptable
+     */
+    static boolean isSafeCoordinates( String strCoordinates )
+    {
+        return strCoordinates != null && SAFE_PLAN_COORDINATES.matcher( strCoordinates ).matches( );
+    }
+
+    /**
+     * Adds a value to the unexpected ones when it is missing although required, or does not match its pattern.
+     *
+     * @param listUnexpected
+     *            the unexpected values
+     * @param strWhat
+     *            what the value is
+     * @param strValue
+     *            the value, null when absent
+     * @param pattern
+     *            the expected shape
+     * @param bRequired
+     *            true when the value is required
+     */
+    private static void checkPlanValue( List<String> listUnexpected, String strWhat, String strValue, Pattern pattern, boolean bRequired )
+    {
+        if ( StringUtils.isEmpty( strValue ) )
+        {
+            if ( bRequired )
+            {
+                listUnexpected.add( strWhat + " missing" );
+            }
+        }
+        else
+            if ( !pattern.matcher( strValue ).matches( ) )
+            {
+                listUnexpected.add( strWhat + " '" + strValue + "'" );
+            }
     }
 
     /**
@@ -471,9 +725,7 @@ public final class PlatformReleaseService
             RepositoryType type = host.getRepoType( );
             if ( type != null && ( user == null || user.getCredential( type ) == null ) )
             {
-                throw new AppException( I18nService.getLocalizedString( MESSAGE_CREDENTIALS_REQUIRED, new String [ ] {
-                        type.name( ), resource.getArtifactId( )
-                }, locale ) );
+                throw new AppException( I18nService.getLocalizedString( MESSAGE_CREDENTIALS_REQUIRED, htmlArgs( type.name( ), resource.getArtifactId( ) ), locale ) );
             }
         }
     }
@@ -509,15 +761,11 @@ public final class PlatformReleaseService
             List<String> listBranches = mapBranches.computeIfAbsent( resource.getScmUrl( ), url -> listRemoteBranches( url, user, sbError ) );
             if ( sbError.length( ) > 0 )
             {
-                return I18nService.getLocalizedString( MESSAGE_REMOTE_BRANCHES_UNAVAILABLE, new String [ ] {
-                        resource.getArtifactId( ), sbError.toString( )
-                }, locale );
+                return I18nService.getLocalizedString( MESSAGE_REMOTE_BRANCHES_UNAVAILABLE, htmlArgs( resource.getArtifactId( ), sbError.toString( ) ), locale );
             }
             if ( !listBranches.contains( resource.getMasterBranch( ) ) )
             {
-                return I18nService.getLocalizedString( MESSAGE_MASTER_BRANCH_MISSING, new String [ ] {
-                        resource.getMasterBranch( ), resource.getArtifactId( )
-                }, locale );
+                return I18nService.getLocalizedString( MESSAGE_MASTER_BRANCH_MISSING, htmlArgs( resource.getMasterBranch( ), resource.getArtifactId( ) ), locale );
             }
         }
 
@@ -799,11 +1047,36 @@ public final class PlatformReleaseService
         component.setGroupId( resource.getGroupId( ) );
         component.setArtifactId( resource.getArtifactId( ) );
         component.setScmDeveloperConnection( resource.getScmUrl( ) );
-        component.setCurrentVersion( resource.getCurrentVersion( ) );
+        // Released from a tag, or stayed in beta or RC : the Redmine version in development is the stable one released, not the branch one
+        String strCurrent = resource.getSourceTag( ) != null ? strReleasedVersion
+                : StringUtils.defaultString( getStableOfPrerelease( resource.getCurrentVersion( ) ), resource.getCurrentVersion( ) );
+        component.setCurrentVersion( strCurrent );
         component.setTargetVersion( strReleasedVersion );
-        component.setNextSnapshotVersion( resource.getNextSnapshotVersion( ) );
+        component.setNextSnapshotVersion( StringUtils.defaultString( resource.getNextSnapshotVersion( ) ) );
         commandResult.getLog( ).append( resource.getArtifactId( ) ).append( ' ' ).append( strReleasedVersion ).append( " :\n" );
         BugtrackerService.getService( ).updateComponentVersions( component, commandResult );
+    }
+
+    /**
+     * Records the cause of a lost follow-up on a running step : only the Jenkins result text is written, the status stays RUNNING so that
+     * the step can be rearmed on its build.
+     *
+     * @param step
+     *            the running step
+     * @param strResult
+     *            the cause
+     */
+    public static void recordFollowUpGivenUp( PlatformReleaseStep step, String strResult )
+    {
+        synchronized( LAUNCH_LOCK )
+        {
+            PlatformReleaseStep stored = PlatformReleaseStepHome.findByPlatformReleaseAndNumber( step.getIdPlatformRelease( ), step.getStepNumber( ) );
+            if ( stored != null && stored.getStatus( ) == PlatformReleaseStatus.RUNNING )
+            {
+                stored.setJenkinsResult( truncateResult( strResult ) );
+                PlatformReleaseStepHome.update( stored );
+            }
+        }
     }
 
     /**
@@ -855,29 +1128,34 @@ public final class PlatformReleaseService
      */
     public static boolean rearmStep( PlatformRelease campaign, int nStepNumber )
     {
-        PlatformReleaseStep step = getStep( campaign, nStepNumber );
-        if ( step == null || step.getStatus( ) != PlatformReleaseStatus.RUNNING || isStepFollowed( step ) )
+        // Under the launch lock : two rearms at the same instant would both see the step unfollowed and start two followers
+        synchronized( LAUNCH_LOCK )
         {
-            return false;
-        }
-        if ( StringUtils.isBlank( step.getJenkinsBuildUrl( ) ) || StringUtils.isBlank( step.getPlanJson( ) ) )
-        {
-            failStep( campaign, step, RESULT_INTERRUPTED_WITHOUT_BUILD );
+            // Fresh row : the task may have recorded the result between the screen and this click
+            PlatformReleaseStep step = PlatformReleaseStepHome.findByPlatformReleaseAndNumber( campaign.getId( ), nStepNumber );
+            if ( step == null || step.getStatus( ) != PlatformReleaseStatus.RUNNING || isStepFollowed( step ) )
+            {
+                return false;
+            }
+            if ( StringUtils.isBlank( step.getJenkinsBuildUrl( ) ) || StringUtils.isBlank( step.getPlanJson( ) ) )
+            {
+                // The trigger may have reached Jenkins before the follow-up was lost : the user must look at the queue before relaunching
+                failStep( campaign, step, RESULT_INTERRUPTED_WITHOUT_BUILD );
+                return true;
+            }
+            try
+            {
+                PlatformReleasePlan plan = MapperJsonUtil.parse( step.getPlanJson( ), PlatformReleasePlan.class );
+                new PlatformStepTask( campaign.getId( ), nStepNumber, plan, step.getJenkinsBuildUrl( ), step.getJenkinsBuildNumber( ) ).submit( step.getId( ) );
+            }
+            catch( IOException e )
+            {
+                AppLogService.error( "Releaser : unreadable plan of platform step " + nStepNumber + " of campaign " + campaign.getId( ), e );
+                failStep( campaign, step, RESULT_INTERRUPTED_WITHOUT_BUILD );
+            }
+
             return true;
         }
-        try
-        {
-            PlatformReleasePlan plan = MapperJsonUtil.parse( step.getPlanJson( ), PlatformReleasePlan.class );
-            WorkflowReleaseContextService.getService( )
-                    .execute( new PlatformStepTask( campaign.getId( ), nStepNumber, plan, step.getJenkinsBuildUrl( ), step.getJenkinsBuildNumber( ) ) );
-        }
-        catch( IOException e )
-        {
-            AppLogService.error( "Releaser : unreadable plan of platform step " + nStepNumber + " of campaign " + campaign.getId( ), e );
-            failStep( campaign, step, RESULT_INTERRUPTED_WITHOUT_BUILD );
-        }
-
-        return true;
     }
 
     /**
@@ -1096,7 +1374,8 @@ public final class PlatformReleaseService
      */
     public static boolean isRunning( PlatformRelease campaign )
     {
-        if ( campaign.getStatus( ) == PlatformReleaseStatus.RUNNING )
+        if ( campaign.getStatus( ) == PlatformReleaseStatus.RUNNING
+                || campaign.getPrecheckStep( ) != null && campaign.getPrecheckStep( ).getStatus( ) == PlatformReleaseStatus.RUNNING )
         {
             return true;
         }
@@ -1169,7 +1448,49 @@ public final class PlatformReleaseService
                     Integer.toString( nStepNumber )
             }, locale ) );
         }
+        // The clone directory is shared by every tab, user and the census : one load at a time per directory, and no screen load while
+        // the census (which runs in its own thread and loads every step itself) holds the directories
+        if ( nStepNumber != PlatformPrecheckService.STEP_NUMBER && PlatformPrecheckService.isCensusRunning( campaign.getId( ) )
+                && !PlatformPrecheckService.isCensusThread( ) )
+        {
+            throw new AppException( I18nService.getLocalizedString( MESSAGE_STEP_LOCKED_RUNNING, locale ) );
+        }
+        Object lock = CLONE_LOCKS.computeIfAbsent( getLocalDirectoryName( campaign.getId( ), code ), key -> new Object( ) );
+        synchronized( lock )
+        {
+            LOADING.add( campaign.getId( ) );
+            try
+            {
+                return doLoadStepAggregate( campaign, nStepNumber, code, definition, user, locale );
+            }
+            finally
+            {
+                LOADING.remove( campaign.getId( ) );
+            }
+        }
+    }
 
+    /**
+     * Loads the aggregate of a step, see {@link #loadStepAggregate(PlatformRelease, int, ReleaserUser, Locale)} : called under the lock of
+     * its clone directory.
+     *
+     * @param campaign
+     *            the campaign, loaded with its steps
+     * @param nStepNumber
+     *            the step number
+     * @param code
+     *            the step code
+     * @param definition
+     *            the step definition
+     * @param user
+     *            the releaser user (credentials)
+     * @param locale
+     *            the locale of the comments
+     * @return the transient site
+     */
+    private static Site doLoadStepAggregate( PlatformRelease campaign, int nStepNumber, PlatformStepCode code, PlatformStepDefinition definition,
+            ReleaserUser user, Locale locale )
+    {
         Site site = new Site( );
         site.setArtifactId( getLocalDirectoryName( campaign.getId( ), code ) );
         int nCoreMajor = campaign.getCoreMajor( );
@@ -1180,9 +1501,7 @@ public final class PlatformReleaseService
         RepositoryType repositoryType = site.getRepoType( );
         if ( repositoryType == null )
         {
-            throw new AppException( I18nService.getLocalizedString( MESSAGE_LOAD_UNSUPPORTED_REPOSITORY, new String [ ] {
-                    definition.getScmUrl( )
-            }, locale ) );
+            throw new AppException( I18nService.getLocalizedString( MESSAGE_LOAD_UNSUPPORTED_REPOSITORY, htmlArgs( definition.getScmUrl( ) ), locale ) );
         }
         Credential credential = user != null ? user.getCredential( repositoryType ) : null;
         if ( credential == null )
@@ -1201,15 +1520,11 @@ public final class PlatformReleaseService
             saveStepBranch( campaign.getId( ), nStepNumber, null );
             site.setBranchReleaseFrom( getStepBranch( code, nCoreMajor ) );
             strPom = vcsService.fetchPom( site, credential.getLogin( ), credential.getPassword( ) );
-            site.addReleaseComment( I18nService.getLocalizedString( MESSAGE_BRANCH_OVERRIDE_RESET, new String [ ] {
-                    strOverride, site.getBranchReleaseFrom( )
-            }, locale ) );
+            site.addReleaseComment( I18nService.getLocalizedString( MESSAGE_BRANCH_OVERRIDE_RESET, htmlArgs( strOverride, site.getBranchReleaseFrom( ) ), locale ) );
         }
         if ( strPom == null )
         {
-            throw new AppException( I18nService.getLocalizedString( MESSAGE_LOAD_POM_UNREADABLE, new String [ ] {
-                    definition.getScmUrl( ), site.getBranchReleaseFrom( )
-            }, locale ) );
+            throw new AppException( I18nService.getLocalizedString( MESSAGE_LOAD_POM_UNREADABLE, htmlArgs( definition.getScmUrl( ), site.getBranchReleaseFrom( ) ), locale ) );
         }
         listBranches.remove( site.getBranchReleaseFrom( ) );
         site.setBranches( listBranches );
@@ -1244,6 +1559,14 @@ public final class PlatformReleaseService
         site.setParentVersion( nCoreMajor + ".0.0" );
 
         ReleasePreparationService.initComponents( site, user, component -> isProjectComponent( campaign.getId( ), nStepNumber, component.getArtifactId( ) ) );
+        for ( Component component : site.getComponents( ) )
+        {
+            if ( restrictToCurrentLine( component ) )
+            {
+                ReleasePreparationService.defineTargetVersion( component );
+                ReleasePreparationService.defineNextSnapshotVersion( component );
+            }
+        }
         ReleasePreparationService.defineAggregateVersions( site, strLastReleaseVersion );
 
         PlatformReleaseType releaseType = getStepReleaseType( campaign, code );
@@ -1267,11 +1590,178 @@ public final class PlatformReleaseService
                 continue;
             }
             checkComponentBranch( component, nCoreMajor, user, locale );
-            applyFromTagChoice( campaign, nStepNumber, component, user, locale );
+            applyFromTagChoice( campaign, nStepNumber, site, component, user, locale );
         }
+        applyVersionChoices( campaign, nStepNumber, site );
         loadParentVersions( campaign, nStepNumber, site );
 
         return site;
+    }
+
+    /**
+     * Applies again the version choices made on the screen (target version of a component or of the aggregate, use of the last release
+     * instead of releasing, use of a newer release) : they are kept for the campaign like the other choices, a reload of the step must not
+     * silently drop them. A choice that no longer applies is forgotten.
+     *
+     * @param campaign
+     *            the campaign
+     * @param nStepNumber
+     *            the step number
+     * @param site
+     *            the transient site of the step
+     */
+    static void applyVersionChoices( PlatformRelease campaign, int nStepNumber, Site site )
+    {
+        String strAggregateKey = getVersionChoiceDataKey( campaign.getId( ), nStepNumber, AGGREGATE_CHOICE_NAME );
+        String strAggregateChoice = DatastoreService.getDataValue( strAggregateKey, null );
+        if ( strAggregateChoice != null )
+        {
+            int nIndex = site.getTargetVersions( ) != null ? site.getTargetVersions( ).indexOf( strAggregateChoice ) : -1;
+            if ( nIndex >= 0 )
+            {
+                site.setNextReleaseVersion( strAggregateChoice );
+                site.setTargetVersionIndex( nIndex );
+                site.setNextSnapshotVersion( Version.getNextSnapshotVersion( strAggregateChoice ) );
+            }
+            else
+            {
+                DatastoreService.removeData( strAggregateKey );
+            }
+        }
+        for ( Component component : site.getComponents( ) )
+        {
+            String strKey = getVersionChoiceDataKey( campaign.getId( ), nStepNumber, component.getArtifactId( ) );
+            String strChoice = DatastoreService.getDataValue( strKey, null );
+            if ( strChoice == null || component.getBlockingReleaseComment( ) != null )
+            {
+                continue;
+            }
+            // Only a component to release carries a choice : a stale one is forgotten
+            if ( !component.isProject( ) && !CHOICE_UPGRADE.equals( strChoice ) )
+            {
+                DatastoreService.removeData( strKey );
+                continue;
+            }
+            if ( CHOICE_DOWNGRADE.equals( strChoice ) )
+            {
+                SiteService.downgradeComponent( site, component.getArtifactId( ) );
+            }
+            else
+                if ( CHOICE_UPGRADE.equals( strChoice ) )
+                {
+                    SiteService.upgradeComponent( site, component.getArtifactId( ) );
+                }
+                else
+                {
+                    String strTarget = StringUtils.removeStart( strChoice, CHOICE_TARGET_PREFIX );
+                    int nIndex = component.getTargetVersions( ) != null ? component.getTargetVersions( ).indexOf( strTarget ) : -1;
+                    if ( strChoice.startsWith( CHOICE_TARGET_PREFIX ) && nIndex >= 0 )
+                    {
+                        component.setTargetVersion( strTarget );
+                        component.setTargetVersionIndex( nIndex );
+                        component.setNextSnapshotVersion( Version.getNextSnapshotVersion( strTarget ) );
+                    }
+                    else
+                    {
+                        DatastoreService.removeData( strKey );
+                    }
+                }
+        }
+    }
+
+    /**
+     * Keeps, or forgets with a null choice, a version choice of a step ({@link #applyVersionChoices(PlatformRelease, int, Site)}).
+     *
+     * @param campaign
+     *            the campaign
+     * @param nStepNumber
+     *            the step number
+     * @param strName
+     *            the component artifactId, or {@link #AGGREGATE_CHOICE_NAME}
+     * @param strChoice
+     *            the choice, null to forget it
+     */
+    private static void saveVersionChoice( PlatformRelease campaign, int nStepNumber, String strName, String strChoice )
+    {
+        String strKey = getVersionChoiceDataKey( campaign.getId( ), nStepNumber, strName );
+        if ( strChoice == null )
+        {
+            DatastoreService.removeData( strKey );
+        }
+        else
+        {
+            DatastoreService.setDataValue( strKey, strChoice );
+        }
+    }
+
+    /**
+     * Returns the Datastore key of a version choice, under the prefix of the campaign so that it is purged with it.
+     *
+     * @param nIdPlatformRelease
+     *            the campaign id
+     * @param nStepNumber
+     *            the step number
+     * @param strName
+     *            the component artifactId, or {@link #AGGREGATE_CHOICE_NAME}
+     * @return the key
+     */
+    private static String getVersionChoiceDataKey( int nIdPlatformRelease, int nStepNumber, String strName )
+    {
+        return getProjectDataKeyPrefix( nIdPlatformRelease ) + nStepNumber + DATA_KEY_SEPARATOR + VERSION_CHOICE_KEY + DATA_KEY_SEPARATOR + strName;
+    }
+
+    /**
+     * Uses, instead of releasing it, the last release of a component of a step, and keeps the choice.
+     *
+     * @param campaign
+     *            the campaign
+     * @param nStepNumber
+     *            the step number
+     * @param site
+     *            the transient site of the step
+     * @param strArtifactId
+     *            the component artifactId
+     */
+    public static void downgradeComponent( PlatformRelease campaign, int nStepNumber, Site site, String strArtifactId )
+    {
+        SiteService.downgradeComponent( site, strArtifactId );
+        saveVersionChoice( campaign, nStepNumber, strArtifactId, CHOICE_DOWNGRADE );
+    }
+
+    /**
+     * Uses the newer release published in Nexus for a component of a step, and keeps the choice.
+     *
+     * @param campaign
+     *            the campaign
+     * @param nStepNumber
+     *            the step number
+     * @param site
+     *            the transient site of the step
+     * @param strArtifactId
+     *            the component artifactId
+     */
+    public static void upgradeComponent( PlatformRelease campaign, int nStepNumber, Site site, String strArtifactId )
+    {
+        SiteService.upgradeComponent( site, strArtifactId );
+        saveVersionChoice( campaign, nStepNumber, strArtifactId, CHOICE_UPGRADE );
+    }
+
+    /**
+     * Cancels the use of a newer release for a component of a step, and forgets the choice.
+     *
+     * @param campaign
+     *            the campaign
+     * @param nStepNumber
+     *            the step number
+     * @param site
+     *            the transient site of the step
+     * @param strArtifactId
+     *            the component artifactId
+     */
+    public static void cancelUpgradeComponent( PlatformRelease campaign, int nStepNumber, Site site, String strArtifactId )
+    {
+        SiteService.cancelUpgradeComponent( site, strArtifactId );
+        saveVersionChoice( campaign, nStepNumber, strArtifactId, null );
     }
 
     /**
@@ -1284,12 +1774,9 @@ public final class PlatformReleaseService
      */
     private static void setPomParent( AbstractReleaserResource resource, Dependency parent )
     {
-        if ( parent != null )
-        {
-            resource.setPomParentGroupId( parent.getGroupId( ) );
-            resource.setPomParentArtifactId( parent.getArtifactId( ) );
-            resource.setPomParentVersion( parent.getVersion( ) );
-        }
+        resource.setPomParentGroupId( parent != null ? parent.getGroupId( ) : null );
+        resource.setPomParentArtifactId( parent != null ? parent.getArtifactId( ) : null );
+        resource.setPomParentVersion( parent != null ? parent.getVersion( ) : null );
     }
 
     /**
@@ -1312,10 +1799,10 @@ public final class PlatformReleaseService
             return;
         }
         boolean bParent = ReleasePreparationService.getParentCoreLine( site ) != null;
-        site.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_AGGREGATE_CORE_MISMATCH, new String [ ] {
-                site.getBranchReleaseFrom( ), Integer.toString( nCoreLine ), bParent ? site.getPomParentArtifactId( ) : site.getArtifactId( ),
-                bParent ? site.getPomParentVersion( ) : site.getVersion( ), Integer.toString( nCoreMajor )
-        }, locale ) );
+        site.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_AGGREGATE_CORE_MISMATCH,
+                htmlArgs( site.getBranchReleaseFrom( ), Integer.toString( nCoreLine ), bParent ? site.getPomParentArtifactId( ) : site.getArtifactId( ),
+                        bParent ? site.getPomParentVersion( ) : site.getVersion( ), Integer.toString( nCoreMajor ) ),
+                locale ) );
     }
 
     /**
@@ -1361,18 +1848,24 @@ public final class PlatformReleaseService
         {
             return null;
         }
-        if ( strExpected != null )
-        {
-            return strExpected.equals( strCurrent ) ? null : PomVersionDecision.Problem.MISMATCH;
-        }
-        try
-        {
-            return ReleasePreparationService.toCoreLine( Version.parse( strCurrent ).getMajor( ) ) == nCoreMajor ? null : PomVersionDecision.Problem.WRONG_CORE;
-        }
-        catch( VersionParsingException e )
+        if ( strExpected != null && strExpected.equals( strCurrent ) )
         {
             return null;
         }
+        // A version of another core is wrong whatever the published versions : it must never be kept in a released POM
+        try
+        {
+            if ( ReleasePreparationService.toCoreLine( Version.parse( strCurrent ).getMajor( ) ) != nCoreMajor )
+            {
+                return PomVersionDecision.Problem.WRONG_CORE;
+            }
+        }
+        catch( VersionParsingException e )
+        {
+            return strExpected != null ? PomVersionDecision.Problem.MISMATCH : null;
+        }
+
+        return strExpected != null ? PomVersionDecision.Problem.MISMATCH : null;
     }
 
     /**
@@ -1421,7 +1914,7 @@ public final class PlatformReleaseService
     {
         PomVersionDecision decision = new PomVersionDecision( );
         decision.setCurrent( strCurrent );
-        String strExpected = strReleased != null ? strReleased : VersionUtils.getLastVersionUsingMajor( listPublished, nCoreMajor );
+        String strExpected = strReleased != null ? strReleased : getLastVersionPreferringStable( listPublished, nCoreMajor );
         decision.setExpected( strExpected );
         decision.setExpectedReleased( strReleased != null );
         PomVersionDecision.Problem problem = getPomVersionProblem( strCurrent, strExpected, nCoreMajor );
@@ -1430,8 +1923,10 @@ public final class PlatformReleaseService
         {
             return decision;
         }
-        decision.setKeepAllowed( strReleased == null && problem == PomVersionDecision.Problem.MISMATCH );
-        if ( isPomVersionChoiceApplicable( strChoice, strReleased, problem ) )
+        // A SNAPSHOT can never be kept in a released POM, even when nothing was released by the campaign
+        boolean bKeepable = strReleased == null && problem == PomVersionDecision.Problem.MISMATCH && !Version.isSnapshot( strCurrent );
+        decision.setKeepAllowed( bKeepable );
+        if ( isPomVersionChoiceApplicable( strChoice, strReleased, problem ) && ( bKeepable || !POM_VERSION_KEEP.equals( strChoice ) ) )
         {
             if ( POM_VERSION_KEEP.equals( strChoice ) )
             {
@@ -1578,9 +2073,7 @@ public final class PlatformReleaseService
         };
         if ( decision.getTarget( ) != null )
         {
-            site.addReleaseComment( I18nService.getLocalizedString( MESSAGE_POM_VERSION_WILL_BE_SET, new String [ ] {
-                    strArtifactId, decision.getTarget( )
-            }, locale ) );
+            site.addReleaseComment( I18nService.getLocalizedString( MESSAGE_POM_VERSION_WILL_BE_SET, htmlArgs( strArtifactId, decision.getTarget( ) ), locale ) );
             return;
         }
         if ( decision.isKept( ) )
@@ -1629,7 +2122,8 @@ public final class PlatformReleaseService
         if ( !POM_VERSION_KEEP.equals( strValue ) && !isAcceptablePomVersion( campaign, site, bParent, strValue ) )
         {
             throw new AppException( I18nService.getLocalizedString( MESSAGE_POM_VERSION_UNKNOWN, new String [ ] {
-                    bParent ? site.getPomParentArtifactId( ) : ConstanteUtils.TAG_LUTECE_CORE, strValue, Integer.toString( campaign.getCoreMajor( ) )
+                    bParent ? site.getPomParentArtifactId( ) : ConstanteUtils.TAG_LUTECE_CORE, StringEscapeUtils.escapeHtml4( strValue ),
+                    Integer.toString( campaign.getCoreMajor( ) )
             }, locale ) );
         }
         DatastoreService.setDataValue( strKey, strValue );
@@ -1771,7 +2265,36 @@ public final class PlatformReleaseService
         parent.setArtifactId( strArtifactId );
         MavenRepoComponentInfoProvider.getInstance( ).setComponentRemoteInformations( parent );
 
-        return VersionUtils.getLastVersionUsingMajor( parent.getReleaseVersions( ), campaign.getCoreMajor( ) );
+        return getLastVersionPreferringStable( parent.getReleaseVersions( ), campaign.getCoreMajor( ) );
+    }
+
+    /**
+     * Returns the last published version of a major, a stable one when there is one : a beta or RC is proposed only when the major has no
+     * stable version yet.
+     *
+     * @param listVersions
+     *            the published versions, null tolerated
+     * @param nMajor
+     *            the major
+     * @return the version, null when none
+     */
+    static String getLastVersionPreferringStable( List<String> listVersions, int nMajor )
+    {
+        if ( listVersions == null )
+        {
+            return null;
+        }
+        List<String> listStable = new ArrayList<>( );
+        for ( String strVersion : listVersions )
+        {
+            if ( !Version.isBeta( strVersion ) && !Version.isCandidate( strVersion ) && !Version.isSnapshot( strVersion ) )
+            {
+                listStable.add( strVersion );
+            }
+        }
+        String strStable = VersionUtils.getLastVersionUsingMajor( listStable, nMajor );
+
+        return strStable != null ? strStable : VersionUtils.getLastVersionUsingMajor( listVersions, nMajor );
     }
 
     /**
@@ -1892,9 +2415,8 @@ public final class PlatformReleaseService
                 component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_THEME_NOT_RELEASABLE, locale ) );
                 break;
             case SNAPSHOT_UNKNOWN_IN_NEXUS:
-                component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_SNAPSHOT_UNKNOWN_IN_NEXUS, new String [ ] {
-                        component.getCurrentVersion( ), component.getLastAvailableSnapshotVersion( )
-                }, locale ) );
+                component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_SNAPSHOT_UNKNOWN_IN_NEXUS,
+                        htmlArgs( component.getCurrentVersion( ), component.getLastAvailableSnapshotVersion( ) ), locale ) );
                 break;
             default:
                 component.setBlockingReleaseComment( I18nService.getLocalizedString( ReleasePreparationService.MESSAGE_BRANCH_CORE_MISMATCH,
@@ -2144,8 +2666,9 @@ public final class PlatformReleaseService
     }
 
     /**
-     * Tells whether a component stayed in beta or RC in a stable step : the aggregate references a beta or RC whose stable, or a later release,
-     * is not in Nexus. It can be released in stable from its tag ; nothing is selected nor blocked, a beta may be wanted.
+     * Tells whether a component stayed in beta or RC in a stable step : the aggregate references a beta or RC whose stable is not in Nexus,
+     * and no later release either (a later beta or RC is to be used first, not skipped). It can be released in stable from its tag ; nothing
+     * is selected nor blocked, a beta may be wanted.
      *
      * @param component
      *            the component
@@ -2162,7 +2685,8 @@ public final class PlatformReleaseService
         }
 
         return ( component.getReleaseVersions( ) == null || !component.getReleaseVersions( ).contains( strStable ) )
-                && ( component.getLastAvailableVersion( ) == null || ReleaserUtils.compareVersion( component.getLastAvailableVersion( ), strStable ) < 0 );
+                && ( component.getLastAvailableVersion( ) == null
+                        || ReleaserUtils.compareVersion( component.getLastAvailableVersion( ), component.getCurrentVersion( ) ) <= 0 );
     }
 
     /**
@@ -2253,13 +2777,12 @@ public final class PlatformReleaseService
             String strTag = findPrereleaseTag( component, user );
             if ( strTag == null )
             {
-                throw new AppException( I18nService.getLocalizedString( MESSAGE_FROM_TAG_NOT_FOUND, new String [ ] {
-                        component.getArtifactId( ), component.getCurrentVersion( )
-                }, locale ) );
+                throw new AppException( I18nService.getLocalizedString( MESSAGE_FROM_TAG_NOT_FOUND,
+                        htmlArgs( component.getArtifactId( ), component.getCurrentVersion( ) ), locale ) );
             }
             DatastoreService.setDataValue( getFromTagDataKey( campaign.getId( ), nStepNumber, strArtifactId ), strTag );
             setProjectComponent( campaign, nStepNumber, site, component, true, user, locale );
-            applyFromTagChoice( campaign, nStepNumber, component, user, locale );
+            applyFromTagChoice( campaign, nStepNumber, site, component, user, locale );
         }
     }
 
@@ -2293,13 +2816,16 @@ public final class PlatformReleaseService
 
     /**
      * Applies the release in stable from its tag of a flagged component that stayed in beta or RC : target the stable version, and next
-     * snapshot computed from the version of its branch, none when the branch is already beyond. The choice is forgotten when the component
-     * no longer stayed in beta or RC.
+     * snapshot computed from the version of its branch, none when the branch is already beyond. A blocked component keeps its choice (the
+     * launch is refused with its blocking comment, never left out silently) ; a component that no longer stayed in beta or RC (its stable or a
+     * later release is published) is taken out of the release, choice forgotten.
      *
      * @param campaign
      *            the campaign
      * @param nStepNumber
      *            the step number
+     * @param site
+     *            the transient site of the step
      * @param component
      *            the component
      * @param user
@@ -2307,29 +2833,34 @@ public final class PlatformReleaseService
      * @param locale
      *            the locale of the messages
      */
-    private static void applyFromTagChoice( PlatformRelease campaign, int nStepNumber, Component component, ReleaserUser user, Locale locale )
+    private static void applyFromTagChoice( PlatformRelease campaign, int nStepNumber, Site site, Component component, ReleaserUser user,
+            Locale locale )
     {
-        String strKey = getFromTagDataKey( campaign.getId( ), nStepNumber, component.getArtifactId( ) );
-        if ( !component.isProject( ) || DatastoreService.getDataValue( strKey, null ) == null )
+        String strTag = getFromTag( campaign.getId( ), nStepNumber, component );
+        if ( strTag == null || component.getBlockingReleaseComment( ) != null )
         {
             return;
         }
         if ( !isStayedInPrerelease( component, getStepReleaseType( campaign, PlatformStepCode.fromStepNumber( nStepNumber ) ) ) )
         {
-            DatastoreService.removeData( strKey );
+            setProjectComponent( campaign, nStepNumber, site, component, false, null, null );
+            // On the aggregate : the comments of a component are rebuilt at every display, those of the aggregate are kept
+            site.addReleaseComment( I18nService.getLocalizedString( MESSAGE_FROM_TAG_DROPPED, htmlArgs( component.getArtifactId( ), strTag ), locale ) );
             return;
         }
         component.setTargetVersion( getStableOfPrerelease( component.getCurrentVersion( ) ) );
         component.setNextSnapshotVersion( null );
-        checkFromTagBranch( component, campaign.getCoreMajor( ), user, locale );
+        checkFromTagBranch( component, strTag, campaign.getCoreMajor( ), user, locale );
     }
 
     /**
-     * Reads the branch of a component released from its tag : its version gives the next snapshot, and the parent of the tag must be of the
-     * core version of the campaign. An unreadable POM or a mismatch is a blocking anomaly.
+     * Reads the branch of a component released from its tag : its version gives the next snapshot ; the parent of the tag, read from the POM
+     * of that beta or RC in Nexus, must be of the core version of the campaign. An unreadable POM or a mismatch is a blocking anomaly.
      *
      * @param component
      *            the component, target version set
+     * @param strTag
+     *            the tag the component is released from
      * @param nCoreMajor
      *            the core version of the campaign
      * @param user
@@ -2337,7 +2868,7 @@ public final class PlatformReleaseService
      * @param locale
      *            the locale of the messages
      */
-    private static void checkFromTagBranch( Component component, int nCoreMajor, ReleaserUser user, Locale locale )
+    private static void checkFromTagBranch( Component component, String strTag, int nCoreMajor, ReleaserUser user, Locale locale )
     {
         RepositoryType repositoryType = component.getRepoType( );
         String strRepository = repositoryType != null ? repositoryType.name( ) : "";
@@ -2345,28 +2876,29 @@ public final class PlatformReleaseService
         String strBranch = component.getBranchReleaseFrom( );
         if ( credential == null )
         {
-            component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_BRANCH_CREDENTIALS_MISSING, new String [ ] {
-                    strRepository, strBranch
-            }, locale ) );
+            component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_BRANCH_CREDENTIALS_MISSING, htmlArgs( strRepository, strBranch ), locale ) );
             return;
         }
         String strPom = GitUtils.getRemoteFileContent( component.getScmUrl( ), strBranch, POM_FILE, credential.getLogin( ), credential.getPassword( ) );
         if ( strPom == null )
         {
-            component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_BRANCH_POM_UNREADABLE, new String [ ] {
-                    strBranch, strRepository
-            }, locale ) );
+            component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_BRANCH_POM_UNREADABLE, htmlArgs( strBranch, strRepository ), locale ) );
             return;
         }
-        try
+        String strBranchVersion = new PomParser( ).parseVersion( strPom );
+        if ( strBranchVersion == null )
         {
-            component.setNextSnapshotVersion( Version.getBranchVersionAfterRelease( new PomParser( ).parseVersion( strPom ), component.getTargetVersion( ) ) );
+            component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_BRANCH_POM_UNREADABLE, htmlArgs( strBranch, strRepository ), locale ) );
+            return;
         }
-        catch( VersionParsingException e )
+        if ( component.getPomParentArtifactId( ) == null )
         {
-            AppLogService.error( "Releaser : unreadable version on branch " + strBranch + " of " + component.getArtifactId( ), e );
+            component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_TAG_PARENT_UNKNOWN, htmlArgs( strTag ), locale ) );
+            return;
         }
-        checkParentCore( component, component.getPomParentArtifactId( ), component.getPomParentVersion( ), strBranch, nCoreMajor, locale );
+        component.setNextSnapshotVersion( getBranchVersionAfterRelease( strBranchVersion, component.getTargetVersion( ) ) );
+        checkParentCore( component, component.getPomParentArtifactId( ), component.getPomParentVersion( ), MESSAGE_TAG_PARENT_MISMATCH, strTag,
+                nCoreMajor, locale );
     }
 
     /**
@@ -2431,8 +2963,8 @@ public final class PlatformReleaseService
     /**
      * Checks that the branch of a component to release carries what the plan expects, before anything is sent to the pipeline : the version of
      * its POM must be the SNAPSHOT referenced by the aggregate, and a parent of the core line (lutece-global-pom, lutece-site-pom) must be of
-     * the core version of the campaign. An unreadable POM or a mismatch is a blocking anomaly. A component that is not to be released is not
-     * checked.
+     * the core version of the campaign. An unreadable POM or a mismatch is a blocking anomaly. A component that is not to be released, or
+     * that is blocked, is not checked ; the tag of a component released from a tag is checked by checkFromTagBranch.
      *
      * @param component
      *            the component
@@ -2455,17 +2987,13 @@ public final class PlatformReleaseService
         String strBranch = component.getBranchReleaseFrom( );
         if ( credential == null )
         {
-            component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_BRANCH_CREDENTIALS_MISSING, new String [ ] {
-                    strRepository, strBranch
-            }, locale ) );
+            component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_BRANCH_CREDENTIALS_MISSING, htmlArgs( strRepository, strBranch ), locale ) );
             return;
         }
         String strPom = GitUtils.getRemoteFileContent( component.getScmUrl( ), strBranch, POM_FILE, credential.getLogin( ), credential.getPassword( ) );
         if ( strPom == null )
         {
-            component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_BRANCH_POM_UNREADABLE, new String [ ] {
-                    strBranch, strRepository
-            }, locale ) );
+            component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_BRANCH_POM_UNREADABLE, htmlArgs( strBranch, strRepository ), locale ) );
             return;
         }
 
@@ -2473,9 +3001,8 @@ public final class PlatformReleaseService
         String strBranchVersion = parser.parseVersion( strPom );
         if ( !Objects.equals( strBranchVersion, component.getCurrentVersion( ) ) )
         {
-            component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_BRANCH_VERSION_MISMATCH, new String [ ] {
-                    strBranch, StringUtils.defaultString( strBranchVersion, "?" ), component.getCurrentVersion( )
-            }, locale ) );
+            component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_BRANCH_VERSION_MISMATCH,
+                    htmlArgs( strBranch, StringUtils.defaultString( strBranchVersion, "?" ), component.getCurrentVersion( ) ), locale ) );
             return;
         }
 
@@ -2483,7 +3010,7 @@ public final class PlatformReleaseService
         setPomParent( component, parent );
         if ( parent != null )
         {
-            checkParentCore( component, parent.getArtifactId( ), parent.getVersion( ), strBranch, nCoreMajor, locale );
+            checkParentCore( component, parent.getArtifactId( ), parent.getVersion( ), MESSAGE_BRANCH_PARENT_MISMATCH, strBranch, nCoreMajor, locale );
         }
     }
 
@@ -2496,15 +3023,17 @@ public final class PlatformReleaseService
      *            the artifactId of the parent, may be null
      * @param strParentVersion
      *            the version of the parent
-     * @param strBranch
-     *            the branch, for the message
+     * @param strMessageKey
+     *            the blocking message, for a branch or a tag
+     * @param strRef
+     *            the branch or the tag the parent was read on, for the message
      * @param nCoreMajor
      *            the core version of the campaign
      * @param locale
      *            the locale of the messages
      */
-    private static void checkParentCore( Component component, String strParentArtifactId, String strParentVersion, String strBranch, int nCoreMajor,
-            Locale locale )
+    private static void checkParentCore( Component component, String strParentArtifactId, String strParentVersion, String strMessageKey, String strRef,
+            int nCoreMajor, Locale locale )
     {
         if ( strParentArtifactId == null || strParentVersion == null || !ReleasePreparationService.CORE_LINE_PARENTS.contains( strParentArtifactId ) )
         {
@@ -2514,14 +3043,13 @@ public final class PlatformReleaseService
         {
             if ( ReleasePreparationService.toCoreLine( Version.parse( strParentVersion ).getMajor( ) ) != nCoreMajor )
             {
-                component.setBlockingReleaseComment( I18nService.getLocalizedString( MESSAGE_BRANCH_PARENT_MISMATCH, new String [ ] {
-                        strParentArtifactId, strParentVersion, strBranch, Integer.toString( nCoreMajor )
-                }, locale ) );
+                component.setBlockingReleaseComment( I18nService.getLocalizedString( strMessageKey,
+                        htmlArgs( strParentArtifactId, strParentVersion, strRef, Integer.toString( nCoreMajor ) ), locale ) );
             }
         }
         catch( VersionParsingException e )
         {
-            AppLogService.error( "Releaser : unreadable parent version " + strParentVersion + " of " + component.getArtifactId( ) + " on branch " + strBranch );
+            AppLogService.error( "Releaser : unreadable parent version " + strParentVersion + " of " + component.getArtifactId( ) + " on " + strRef );
         }
     }
 
@@ -2723,9 +3251,7 @@ public final class PlatformReleaseService
             String strReleasedVersion = mapReleasedVersions.get( getCoordinates( component ) );
             if ( strReleasedVersion != null )
             {
-                throw new AppException( I18nService.getLocalizedString( MESSAGE_TOGGLE_ALREADY_RELEASED, new String [ ] {
-                        strArtifactId, strReleasedVersion
-                }, locale ) );
+                throw new AppException( I18nService.getLocalizedString( MESSAGE_TOGGLE_ALREADY_RELEASED, htmlArgs( strArtifactId, strReleasedVersion ), locale ) );
             }
             setProjectComponent( campaign, nStepNumber, site, component, !component.isProject( ), user, locale );
         }
@@ -2868,7 +3394,10 @@ public final class PlatformReleaseService
         {
             clearLatestSnapshotChoice( campaign, nStepNumber, site, component );
             DatastoreService.removeData( getFromTagDataKey( campaign.getId( ), nStepNumber, component.getArtifactId( ) ) );
+            // A version choice belongs to a release : it goes with the flag, otherwise it would come back on reload
+            saveVersionChoice( campaign, nStepNumber, component.getArtifactId( ), null );
             component.setDowngrade( false );
+            component.setUpgrade( false );
             ReleasePreparationService.defineTargetVersion( component );
             ReleasePreparationService.defineNextSnapshotVersion( component );
         }
@@ -3021,6 +3550,7 @@ public final class PlatformReleaseService
                     component.setTargetVersion( strTargetVersion );
                     component.setTargetVersionIndex( nIndex );
                     component.setNextSnapshotVersion( Version.getNextSnapshotVersion( strTargetVersion ) );
+                    saveVersionChoice( campaign, nStepNumber, strArtifactId, CHOICE_TARGET_PREFIX + strTargetVersion );
                 }
             }
         }
@@ -3046,6 +3576,7 @@ public final class PlatformReleaseService
             site.setNextReleaseVersion( strTargetVersion );
             site.setTargetVersionIndex( nIndex );
             site.setNextSnapshotVersion( Version.getNextSnapshotVersion( strTargetVersion ) );
+            saveVersionChoice( campaign, nStepNumber, AGGREGATE_CHOICE_NAME, strTargetVersion );
         }
     }
 
@@ -3064,6 +3595,7 @@ public final class PlatformReleaseService
     public static void cancelDowngradeComponent( PlatformRelease campaign, int nStepNumber, Site site, String strArtifactId )
     {
         SiteService.cancelDowngradeComponent( site, strArtifactId );
+        saveVersionChoice( campaign, nStepNumber, strArtifactId, null );
         PlatformReleaseType releaseType = getStepReleaseType( campaign, PlatformStepCode.fromStepNumber( nStepNumber ) );
         for ( Component component : site.getComponents( ) )
         {
@@ -3077,7 +3609,7 @@ public final class PlatformReleaseService
     /**
      * Builds the plan of a step : the flagged components that must be released, with the same rule as a site release
      * ({@link Component#shouldBeReleased()} : a component whose snapshot is not the last one available, a downgrade or a theme is not released),
-     * in release order, then the aggregate with the version updates to apply to its POM.
+     * plus the components released from a tag, in release order, then the aggregate with the version updates to apply to its POM.
      *
      * @param campaign
      *            the campaign, loaded with its steps
@@ -3210,9 +3742,113 @@ public final class PlatformReleaseService
                     String.join( ", ", listNoPrivateRepository )
             }, locale ) );
         }
+        List<String> listUnpublished = getUnpublishedTargets( site, plan, getReleasedVersions( campaign, nStepNumber ) );
+        if ( mode != PlatformStepMode.VERIFY && !listUnpublished.isEmpty( ) )
+        {
+            throw new AppException( I18nService.getLocalizedString( MESSAGE_UNPUBLISHED_TARGETS, htmlArgs( String.join( ", ", listUnpublished ) ), locale ) );
+        }
+        List<String> listWrongTargets = getWrongTargets( plan, site, code, releaseType, getStepResult( campaign, nStepNumber ), listToRelease );
+        if ( mode != PlatformStepMode.VERIFY && !listWrongTargets.isEmpty( ) )
+        {
+            throw new AppException( I18nService.getLocalizedString( MESSAGE_WRONG_TARGETS, htmlArgs( String.join( ", ", listWrongTargets ) ), locale ) );
+        }
         plan.setAggregate( aggregate );
 
         return plan;
+    }
+
+    /**
+     * Lists the targets of a plan that cannot be released : a version already in Nexus (a tag or a deploy would collide), a version not of the
+     * release type of the step (a beta campaign cannot release a stable version because a RC already exists), an aggregate version already
+     * published by a previous attempt of the step.
+     *
+     * @param plan
+     *            the plan, components and aggregate built
+     * @param site
+     *            the transient site of the step
+     * @param code
+     *            the step code
+     * @param releaseType
+     *            the release type of the step
+     * @param previousResult
+     *            the result of the previous attempts of the step, null when none
+     * @param listToRelease
+     *            the components of the plan
+     * @return the "artifactId version : reason" of the wrong targets, empty when none
+     */
+    static List<String> getWrongTargets( PlatformReleasePlan plan, Site site, PlatformStepCode code, PlatformReleaseType releaseType,
+            PlatformStepResult previousResult, List<Component> listToRelease )
+    {
+        List<String> listWrong = new ArrayList<>( );
+        for ( Component component : listToRelease )
+        {
+            String strTarget = component.getTargetVersion( );
+            if ( component.getReleaseVersions( ) != null && component.getReleaseVersions( ).contains( strTarget ) )
+            {
+                listWrong.add( component.getArtifactId( ) + " " + strTarget + " : " + REASON_ALREADY_IN_NEXUS );
+            }
+            else
+                if ( releaseType != PlatformReleaseType.STABLE && strTarget != null && !matchesReleaseType( strTarget, releaseType ) )
+                {
+                    listWrong.add( component.getArtifactId( ) + " " + strTarget + " : " + REASON_NOT_OF_TYPE + releaseType );
+                }
+        }
+        PlatformPlanResource aggregate = plan.getAggregate( );
+        if ( aggregate != null && code != null && code.isAggregateReleased( ) && aggregate.getTargetVersion( ) != null )
+        {
+            if ( previousResult != null && aggregate.getTargetVersion( ).equals( previousResult.getAggregateVersion( ) ) )
+            {
+                listWrong.add( site.getArtifactId( ) + " " + aggregate.getTargetVersion( ) + " : " + REASON_ALREADY_RELEASED_BY_STEP );
+            }
+            else
+                if ( releaseType != PlatformReleaseType.STABLE && aggregate.getSourceTag( ) == null
+                        && !matchesReleaseType( aggregate.getTargetVersion( ), releaseType ) )
+                {
+                    listWrong.add( site.getArtifactId( ) + " " + aggregate.getTargetVersion( ) + " : " + REASON_NOT_OF_TYPE + releaseType );
+                }
+        }
+
+        return listWrong;
+    }
+
+    /**
+     * Lists the component versions the aggregate would reference although they will not exist : neither in Nexus, nor released by this plan,
+     * nor by a previous step or attempt. The aggregate would then not build.
+     *
+     * @param site
+     *            the transient site of the step
+     * @param plan
+     *            the plan, components already added
+     * @param mapReleasedVersions
+     *            the versions released by the previous steps and attempts, keyed by "groupId:artifactId"
+     * @return the "artifactId version" that will not exist, empty when every referenced version exists
+     */
+    static List<String> getUnpublishedTargets( Site site, PlatformReleasePlan plan, Map<String, String> mapReleasedVersions )
+    {
+        Set<String> setInPlan = new HashSet<>( );
+        for ( PlatformPlanResource resource : plan.getComponents( ) )
+        {
+            setInPlan.add( resource.getCoordinates( ) );
+        }
+        List<String> listUnpublished = new ArrayList<>( );
+        for ( Component component : site.getComponents( ) )
+        {
+            String strTargetVersion = component.getTargetVersion( );
+            if ( strTargetVersion == null || ConstanteUtils.NO_VERSION_DEFINED_IN_POM.equals( strTargetVersion )
+                    || strTargetVersion.equals( component.getCurrentVersion( ) ) || Version.isSnapshot( strTargetVersion ) )
+            {
+                continue;
+            }
+            String strCoordinates = getCoordinates( component );
+            boolean bExists = setInPlan.contains( strCoordinates ) || strTargetVersion.equals( mapReleasedVersions.get( strCoordinates ) )
+                    || component.getReleaseVersions( ) != null && component.getReleaseVersions( ).contains( strTargetVersion );
+            if ( !bExists )
+            {
+                listUnpublished.add( component.getArtifactId( ) + " " + strTargetVersion );
+            }
+        }
+
+        return listUnpublished;
     }
 
     /**
@@ -3485,7 +4121,7 @@ public final class PlatformReleaseService
         aggregate.setArtifactId( site.getArtifactId( ) );
         aggregate.setType( code == PlatformStepCode.CORE ? ConstanteUtils.DEPENDENCY_TYPE_LUTECE_CORE : TYPE_POM );
         aggregate.setCoreVersion( site.getCoreVersionDecision( ) != null ? site.getCoreVersionDecision( ).getTarget( ) : null );
-        aggregate.setScmUrl( site.getScmUrl( ) );
+        aggregate.setScmUrl( GitUtils.getRepoUrl( site.getScmUrl( ) ) );
         aggregate.setBranch( site.getBranchReleaseFrom( ) );
         aggregate.setMasterBranch( getMasterBranch( site.getBranchReleaseFrom( ), site.getNextReleaseVersion( ) ) );
         aggregate.setCurrentVersion( site.getVersion( ) );
@@ -3989,32 +4625,70 @@ public final class PlatformReleaseService
      *            true to record the decision, false to cancel it
      * @param bFromTag
      *            true to release from the tag, false from the SNAPSHOT
-     * @return false when the last verification of the resource found no untested commits, or no tag for a release from the tag
+     * @return false when the last verification of the resource found no untested commits, or no tag for a release from the tag ; for a
+     *         cancel, false when there was no decision (a decision can always be cancelled, even once the resource is verified from its tag)
      * @throws IOException
      *             if the result cannot be serialized
      */
     public static boolean setUntestedDecision( PlatformReleaseStep step, String strCoordinates, String strUserName, boolean bAccept, boolean bFromTag )
             throws IOException
     {
+        synchronized( LAUNCH_LOCK )
+        {
+            // Fresh copy : a running step is written by its task, a decision taken meanwhile would be lost or would lose its result
+            PlatformReleaseStep stored = PlatformReleaseStepHome.findByPlatformReleaseAndNumber( step.getIdPlatformRelease( ), step.getStepNumber( ) );
+            if ( stored == null || stored.getStatus( ) == PlatformReleaseStatus.RUNNING )
+            {
+                return false;
+            }
+
+            return writeUntestedDecision( stored, strCoordinates, strUserName, bAccept, bFromTag );
+        }
+    }
+
+    /**
+     * Writes or cancels the decision of {@link #setUntestedDecision(PlatformReleaseStep, String, String, boolean, boolean)} on a step.
+     *
+     * @param step
+     *            the step, freshly read
+     * @param strCoordinates
+     *            the "groupId:artifactId" of the resource
+     * @param strUserName
+     *            the person deciding
+     * @param bAccept
+     *            true to accept, false to cancel the decision
+     * @param bFromTag
+     *            true to release from the beta or RC tag
+     * @return true when something was written
+     * @throws IOException
+     *             if the result cannot be serialized
+     */
+    private static boolean writeUntestedDecision( PlatformReleaseStep step, String strCoordinates, String strUserName, boolean bAccept, boolean bFromTag )
+            throws IOException
+    {
         PlatformStepResult result = parseResult( step );
+        if ( !bAccept )
+        {
+            if ( result == null || result.getUntestedDecisions( ).remove( strCoordinates ) == null )
+            {
+                return false;
+            }
+            step.setResultJson( MapperJsonUtil.getJson( result ) );
+            PlatformReleaseStepHome.update( step );
+
+            return true;
+        }
         PlatformResourceVerification verification = result != null ? result.getVerifications( ).get( strCoordinates ) : null;
-        if ( !hasUntestedCommits( verification ) || ( bAccept && bFromTag && StringUtils.isBlank( verification.getUntestedSinceTag( ) ) ) )
+        if ( !hasUntestedCommits( verification ) || ( bFromTag && StringUtils.isBlank( verification.getUntestedSinceTag( ) ) ) )
         {
             return false;
         }
-        if ( bAccept )
-        {
-            PlatformUntestedDecision decision = new PlatformUntestedDecision( );
-            decision.setCommit( verification.getCommit( ) );
-            decision.setUserName( strUserName );
-            decision.setDate( new Timestamp( System.currentTimeMillis( ) ).toString( ) );
-            decision.setSourceTag( bFromTag ? verification.getUntestedSinceTag( ).trim( ) : null );
-            result.getUntestedDecisions( ).put( strCoordinates, decision );
-        }
-        else
-        {
-            result.getUntestedDecisions( ).remove( strCoordinates );
-        }
+        PlatformUntestedDecision decision = new PlatformUntestedDecision( );
+        decision.setCommit( verification.getCommit( ) );
+        decision.setUserName( strUserName );
+        decision.setDate( new Timestamp( System.currentTimeMillis( ) ).toString( ) );
+        decision.setSourceTag( bFromTag ? verification.getUntestedSinceTag( ).trim( ) : null );
+        result.getUntestedDecisions( ).put( strCoordinates, decision );
         step.setResultJson( MapperJsonUtil.getJson( result ) );
         PlatformReleaseStepHome.update( step );
 
@@ -4177,16 +4851,39 @@ public final class PlatformReleaseService
         String strTargetVersion = bPomOnly ? null : resource.getTargetVersion( );
         String strNextSnapshotVersion = bPomOnly ? null : resource.getNextSnapshotVersion( );
 
-        sb.append( step.getStepNumber( ) ).append( CSV_SEPARATOR ).append( StringUtils.defaultString( resource.getGroupId( ) ) ).append( CSV_SEPARATOR )
-                .append( StringUtils.defaultString( resource.getArtifactId( ) ) ).append( CSV_SEPARATOR )
-                .append( StringUtils.defaultString( resource.getCurrentVersion( ) ) ).append( CSV_SEPARATOR )
-                .append( StringUtils.defaultString( strTargetVersion ) ).append( CSV_SEPARATOR ).append( StringUtils.defaultString( strNextSnapshotVersion ) )
-                .append( CSV_SEPARATOR ).append( StringUtils.defaultString( resource.getBranch( ) ) ).append( CSV_SEPARATOR )
-                .append( StringUtils.defaultString( resource.getCurrentParentVersion( ) ) ).append( CSV_SEPARATOR )
-                .append( StringUtils.defaultString( resource.getParentVersion( ) ) ).append( CSV_SEPARATOR )
+        sb.append( step.getStepNumber( ) ).append( CSV_SEPARATOR ).append( csvField( resource.getGroupId( ) ) ).append( CSV_SEPARATOR )
+                .append( csvField( resource.getArtifactId( ) ) ).append( CSV_SEPARATOR )
+                .append( csvField( resource.getCurrentVersion( ) ) ).append( CSV_SEPARATOR )
+                .append( csvField( strTargetVersion ) ).append( CSV_SEPARATOR ).append( csvField( strNextSnapshotVersion ) )
+                .append( CSV_SEPARATOR ).append( csvField( resource.getBranch( ) ) ).append( CSV_SEPARATOR )
+                .append( csvField( resource.getCurrentParentVersion( ) ) ).append( CSV_SEPARATOR )
+                .append( csvField( resource.getParentVersion( ) ) ).append( CSV_SEPARATOR )
                 .append( bReleased ? CSV_RELEASED : CSV_NOT_RELEASED ).append( CSV_SEPARATOR )
-                .append( getCsvStatus( step, plan, result, resource, bAggregate, bReleased, bPomOnly ) )
+                .append( csvField( getCsvStatus( step, plan, result, resource, bAggregate, bReleased, bPomOnly ) ) )
                 .append( CSV_LINE_SEPARATOR );
+    }
+
+    /**
+     * Makes a value safe for a CSV cell : a value a spreadsheet would read as a formula is prefixed with an apostrophe, and a value holding
+     * the separator, a quote or a line break is quoted.
+     *
+     * @param strValue
+     *            the value, null tolerated
+     * @return the cell content
+     */
+    static String csvField( String strValue )
+    {
+        String strCell = StringUtils.defaultString( strValue );
+        if ( !strCell.isEmpty( ) && "=+-@\t\r".indexOf( strCell.charAt( 0 ) ) >= 0 )
+        {
+            strCell = "'" + strCell;
+        }
+        if ( strCell.contains( CSV_SEPARATOR ) || strCell.contains( "\"" ) || strCell.contains( "\n" ) || strCell.contains( "\r" ) )
+        {
+            strCell = "\"" + strCell.replace( "\"", "\"\"" ) + "\"";
+        }
+
+        return strCell;
     }
 
     /**

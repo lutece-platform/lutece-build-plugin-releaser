@@ -73,6 +73,7 @@ public class Site extends AbstractReleaserResource implements RBACResource, Seri
     /** The str artifact id. */
     @NotEmpty( message = "#i18n{releaser.validation.site.ArtifactId.notEmpty}" )
     @Size( max = 50, message = "#i18n{releaser.validation.site.ArtifactId.size}" )
+    @Pattern( regexp = "[A-Za-z0-9][A-Za-z0-9._-]*", message = "#i18n{releaser.validation.site.ArtifactId.pattern}" )
     private String _strArtifactId;
 
     /** The n id cluster. */

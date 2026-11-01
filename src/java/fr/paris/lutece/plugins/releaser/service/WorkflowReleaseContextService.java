@@ -33,7 +33,11 @@
  */
 package fr.paris.lutece.plugins.releaser.service;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,6 +49,10 @@ import java.util.concurrent.Executors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.bind.JAXBException;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -73,6 +81,7 @@ import fr.paris.lutece.plugins.releaser.util.file.FileUtils;
 import fr.paris.lutece.plugins.releaser.util.git.GitUtils;
 import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
 import fr.paris.lutece.plugins.releaser.util.pom.PomUpdater;
+import fr.paris.lutece.plugins.releaser.util.pom.SaxPomHandler;
 import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
 import fr.paris.lutece.portal.business.user.AdminUser;
@@ -428,6 +437,61 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
      * @param locale
      *            the locale
      */
+    /**
+     * Refuses a release:prepare whose work tree declares another repository than the one cloned : maven-release pushes with the credentials
+     * to the developerConnection (connection when absent) of the local pom.xml, which anyone writing on the branch could point elsewhere.
+     * Called before any push so that a refusal leaves nothing to undo.
+     *
+     * @param strPomPath
+     *            the pom.xml of the work tree
+     * @param strOriginUrl
+     *            the repository URL the work tree was cloned from
+     */
+    static void checkPomScmBeforePrepare( String strPomPath, String strOriginUrl )
+    {
+        File filePom = new File( strPomPath );
+        String strPom;
+        try
+        {
+            strPom = new String( Files.readAllBytes( filePom.toPath( ) ), StandardCharsets.UTF_8 );
+        }
+        catch( IOException e )
+        {
+            throw new AppException( "Unreadable " + filePom + " before release:prepare : " + e.getMessage( ), e );
+        }
+        SaxPomHandler handler = new SaxPomHandler( );
+        try
+        {
+            PomParser.newSaxParserFactory( ).newSAXParser( ).parse( new InputSource( new StringReader( strPom ) ), handler );
+        }
+        catch( ParserConfigurationException | SAXException | IOException e )
+        {
+            throw new AppException( "Unparsable " + filePom + " before release:prepare : " + e.getMessage( ), e );
+        }
+        String strExpected = normalizeRepositoryUrl( strOriginUrl );
+        String strDeclared = StringUtils.defaultIfBlank( handler.getScmDeveloperConnection( ), handler.getScmConnection( ) );
+        if ( StringUtils.isNotBlank( strDeclared ) && ( !GitUtils.isAllowedRepository( strDeclared ) || !strExpected.equals( normalizeRepositoryUrl( strDeclared ) ) ) )
+        {
+            AppLogService.error( "Releaser : the <scm> of " + filePom + " names " + strDeclared + " instead of " + strOriginUrl + ", release refused" );
+            throw new AppException( "The <scm> of the pom.xml does not name the released repository, release refused before any push" );
+        }
+    }
+
+    /**
+     * Normalizes a repository URL for comparison : "scm:git:" prefix, ".git" suffix, trailing slash and case removed.
+     *
+     * @param strUrl
+     *            the URL, null tolerated
+     * @return the normalized URL
+     */
+    private static String normalizeRepositoryUrl( String strUrl )
+    {
+        String strNormalized = StringUtils.trimToEmpty( GitUtils.getRepoUrl( StringUtils.trimToEmpty( strUrl ) ) ).toLowerCase( Locale.ROOT );
+        strNormalized = StringUtils.removeEnd( strNormalized, "/" );
+
+        return StringUtils.removeEnd( strNormalized, ".git" );
+    }
+
     public void releasePrepareComponent( WorkflowReleaseContext context, Locale locale )
     {
         String strComponentName = context.getComponent( ).getName( );
@@ -446,6 +510,8 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
             String strLocalComponentPath = ReleaserUtils.getLocalPath( context );
             String strLocalComponentPomPath = ReleaserUtils.getLocalPomPath( context );
             String StrLocalComponentPomEffectivePath = ReleaserUtils.getLocalEffectivePomPath(context);
+
+            checkPomScmBeforePrepare( strLocalComponentPomPath, component.getScmUrl( ) );
 
              //parse effective POM to get target JDK
 
@@ -686,6 +752,7 @@ public class WorkflowReleaseContextService implements IWorkflowReleaseContextSer
         String strSiteBranch = context.getSite( ).getBranchReleaseFrom( );
         try
         {
+            checkPomScmBeforePrepare( strSitePomLocalBasePath, context.getSite( ).getScmUrl( ) );
             PomUpdater.updateSiteBeforeTag( context.getSite( ), ReleaserUtils.getLocalPomPath( context ) );
             cvsService.updateBranch( context, strSiteBranch, locale, "[site-release] update pom before tag" );
 

@@ -247,9 +247,9 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
             }
             catch( AppException e )
             {
-
-                return redirect( request, JSP_MANAGE_CLUSTERS + "?action=releaseSite&error=" + e.getMessage( ) + "&" + PARAMETER_SITE_ID + "=" + strSiteId );
-
+                // The message stays in the session bean of the clusters screen : never in the URL, where it would be reflected as HTML
+                ClusterJspBean.setPendingSiteError( request, org.apache.commons.lang3.StringEscapeUtils.escapeHtml4( e.getMessage( ) ) );
+                return redirect( request, JSP_MANAGE_CLUSTERS + "?action=releaseSite&" + PARAMETER_SITE_ID + "=" + ReleaserUtils.convertStringToInt( strSiteId ) );
             }
         }
 
@@ -727,7 +727,9 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
                 
         ReleaserUser user = setReleaserUser ( request );
         
-        Component component = ComponentService.getService( ).getComponentBranchList( getCurentComponent( strArtifactId ), _site.getRepoType( ), user );
+        // The credential of the repository of the component, not of the site : a GitLab site may hold GitHub components
+        Component current = getCurentComponent( strArtifactId );
+        Component component = ComponentService.getService( ).getComponentBranchList( current, current != null ? current.getRepoType( ) : null, user );
 
         return redirectView( request, VIEW_MANAGE_SITE_RELEASE );
     }
@@ -753,7 +755,7 @@ public class ManageSiteReleaseJspBean extends MVCAdminJspBean
         // The site branch list is now populated via ls-remote (no clone), so the getChangeBranch clone step is
         // bypassed. Clone the component repository locally first, otherwise getLastBranchVersion.Git.open( ) fails
         // with "repository not found".
-        ComponentService.getService( ).getComponentBranchList( component, _site.getRepoType( ), user );
+        ComponentService.getService( ).getComponentBranchList( component, component.getRepoType( ), user );
 
         component = ComponentService.getService( ).getLastBranchVersion( component, strReleaseBranchName, user );
 
