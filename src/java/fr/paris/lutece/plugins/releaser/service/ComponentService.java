@@ -652,8 +652,7 @@ public class ComponentService implements IComponentService
             component.getBranches( ).add( component.getBranchReleaseFrom( ) );
         }
         component.setBranchReleaseFrom( branchName );
-        int indx = component.getBranches( ).indexOf( branchName );
-        component.getBranches( ).remove( indx );
+        component.getBranches( ).remove( branchName );
 
         CommandResult commandResult = new CommandResult( );
         WorkflowReleaseContext context = new WorkflowReleaseContext( );

@@ -1016,7 +1016,7 @@ public class GitUtils
      *            the login
      * @param strPassword
      *            the password or token
-     * @return the credentials, null (anonymous) when the repository is not allowed
+     * @return the credentials, null (anonymous) when the repository is not allowed or when no login or password is known for its host
      */
     public static CredentialsProvider credentialsFor( String strRepoUrl, String strLogin, String strPassword )
     {
@@ -1024,6 +1024,11 @@ public class GitUtils
         {
             AppLogService.error( "Releaser : repository " + strRepoUrl + " is not allowed (" + ConstanteUtils.PROPERTY_ALLOWED_REPOSITORY_URLS
                     + "), no credentials sent" );
+            return null;
+        }
+
+        if ( strLogin == null || strPassword == null )
+        {
             return null;
         }
 
