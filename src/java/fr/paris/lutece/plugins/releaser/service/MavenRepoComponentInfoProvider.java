@@ -34,7 +34,6 @@ import fr.paris.lutece.plugins.releaser.util.ConstanteUtils;
 import fr.paris.lutece.plugins.releaser.util.maven.MavenUtils;
 import fr.paris.lutece.plugins.releaser.util.pom.PomParser;
 import fr.paris.lutece.plugins.releaser.util.pom.SaxPomHandler;
-import fr.paris.lutece.plugins.releaser.util.version.Version;
 import fr.paris.lutece.plugins.releaser.util.version.VersionParsingException;
 import fr.paris.lutece.plugins.releaser.util.version.VersionUtils;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
@@ -186,10 +185,9 @@ public final class MavenRepoComponentInfoProvider
             }
             else
                 if ( strReleaseUrl != null && strCurrentVersion != null && component.getReleaseVersions( ) != null
-                        && component.getReleaseVersions( ).contains( strCurrentVersion )
-                        && ( Version.isBeta( strCurrentVersion ) || Version.isCandidate( strCurrentVersion ) ) )
+                        && component.getReleaseVersions( ).contains( strCurrentVersion ) )
                 {
-                    // A beta or RC referenced as such : its parent is the one a release in stable from its tag keeps
+                    // A released version referenced as such : its parent is the one of its published POM
                     getPomParent( component, getSnapshotPomUrl( strReleaseUrl, strArtifactId, strCurrentVersion ) );
                 }
 
